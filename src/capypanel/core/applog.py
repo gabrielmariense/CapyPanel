@@ -1,12 +1,12 @@
-"""The app log: one small rotating file per user, attached to bug reports. Never log secrets."""
+"""Never log a secret: the log goes with bug reports."""
 
 import logging
 import threading
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-LINES_SIZE, LINES_KEEP = 2_000_000, 5  # a lines log (append_line): bytes per file, older kept
-_LINES_LOCK = threading.Lock()  # several hosts at once write to one log
+LINES_SIZE, LINES_KEEP = 2_000_000, 5  # bytes per file, files kept
+_LINES_LOCK = threading.Lock()
 
 
 def setup_logging(log_file: Path, level: int = logging.INFO) -> Path:
@@ -21,8 +21,6 @@ def setup_logging(log_file: Path, level: int = logging.INFO) -> Path:
 
 
 def append_line(log_file: Path, line: str) -> None:
-    """One line at the end of a log of its own (the user profiles log), moved aside when full.
-    One writer at a time, so the lines of hosts worked on together never mix."""
     with _LINES_LOCK:
         log_file.parent.mkdir(parents=True, exist_ok=True)
         if log_file.exists() and log_file.stat().st_size > LINES_SIZE:

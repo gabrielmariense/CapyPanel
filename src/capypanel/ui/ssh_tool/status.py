@@ -1,5 +1,3 @@
-"""What an SSH host's last port check says in words and colours, in its cell and Details."""
-
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -11,28 +9,24 @@ from capypanel.ui.checks import when_text
 
 @dataclass(frozen=True)
 class Checked:
-    """One host's last check of its SSH port."""
-
     when: datetime
     state: PortState
-    address: str | None = None  # the address that answered: open or refused
+    address: str | None = None
     port: int = DEFAULT_PORT
 
 
 @dataclass(frozen=True)
 class Cell:
-    """The Status cell: its words, tooltip and dot (a status colour's name, "" for none)."""
-
     text: str
     tip: str
     color: str
-    quiet: bool = False  # greyed: anything but Online
-    nothing: bool = False  # "Not checked": sorts last
+    quiet: bool = False
+    nothing: bool = False
 
 
 _COLORS = {
     PortState.OPEN: "online",
-    PortState.CLOSED: "attention",  # it answered, but ssh.exe would fail
+    PortState.CLOSED: "attention",
     PortState.NO_ANSWER: "offline",
     PortState.NOT_FOUND: "not-found",
 }
@@ -76,5 +70,4 @@ def cell(checked: Checked | None) -> Cell:
 
 
 def status_words() -> tuple[str, ...]:
-    """Every word the Status column can show, so its first width cuts none of them."""
     return (*(state_text(state) for state in PortState), _("Not checked"))

@@ -1,5 +1,3 @@
-"""The Home page, shown when no tool is: the mascot, name and tagline, and a tile per tool."""
-
 import math
 from collections.abc import Sequence
 
@@ -35,7 +33,7 @@ class ToolTile(QFrame):
         self.tool = tool
         self.setObjectName("homeTile")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_Hover)  # the accent edge under the pointer
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.setFixedSize(*TILE_SIZE)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.badge = QLabel()
@@ -76,8 +74,6 @@ class ToolTile(QFrame):
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        # Its own colours, once they've changed: the page's change came first, while a tile
-        # still had the previous theme's, and its icon kept the old colour.
         if event.type() == QEvent.Type.PaletteChange:
             self.restyle()
 
@@ -90,10 +86,9 @@ class ToolTile(QFrame):
 
 
 class HomePage(QWidget):
-    tool_picked = Signal(str)  # a tool's id
+    tool_picked = Signal(str)
 
     def __init__(self, tools: Sequence[ToolInfo]) -> None:
-        """tools: in the rail's order."""
         super().__init__()
         self.mascot = QLabel()
         self.title = QLabel("CapyPanel")
@@ -106,13 +101,10 @@ class HomePage(QWidget):
         self.tiles = [ToolTile(tool, f"Ctrl+{index}") for index, tool in enumerate(tools, start=1)]
         for tile in self.tiles:
             tile.clicked.connect(lambda t=tile: self.tool_picked.emit(t.tool.tool_id))
-        # From four tools on, two even rows; a narrow window wraps them into more, still centred
-        # (see _place_tiles and resizeEvent).
         self._grid = QGridLayout()
         self._grid.setSpacing(TILE_GAP)
         self._columns = 0
         column = QVBoxLayout(self)
-        # The tiles' row never holds the window wide: they wrap instead (see minimumSizeHint).
         column.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
         column.setContentsMargins(40, 24, 40, 24)
         column.addStretch(2)
@@ -139,11 +131,9 @@ class HomePage(QWidget):
     def restyle(self) -> None:
         self.mascot.setPixmap(branding.mascot(MASCOT_HEIGHT, self.devicePixelRatioF()))
         for tile in self.tiles:
-            tile.restyle()  # each also redraws on its own colour change
+            tile.restyle()
 
     def _place_tiles(self, fit: int) -> None:
-        """`fit`: tiles that fit side by side. Up to three share a row, four or more two even rows;
-        a narrower window wraps them into more rows, as even as they go."""
         count = len(self.tiles)
         if not count:
             return
@@ -159,12 +149,11 @@ class HomePage(QWidget):
             self._grid.addWidget(tile, index // columns, index % columns)
 
     def minimumSizeHint(self) -> QSize:
-        """One tile wide: more tiles wrap into rows."""
         return QSize(TILE_SIZE[0] + 80, super().minimumSizeHint().height())
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        room = self.width() - 80  # the page's side margins
+        room = self.width() - 80
         self._place_tiles((room + TILE_GAP) // (TILE_SIZE[0] + TILE_GAP))
 
     def changeEvent(self, event: QEvent) -> None:

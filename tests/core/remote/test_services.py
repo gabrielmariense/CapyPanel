@@ -8,8 +8,6 @@ from capypanel.core.remote.access import Reason, RemoteError
 
 
 class FakeAdvapi:
-    """The service manager: `states` is what each status query finds after the stop."""
-
     def __init__(self, states: list[int], stop_error: int = 0) -> None:
         self.calls: list[str] = []
         self.states = states
@@ -28,7 +26,7 @@ class FakeAdvapi:
         ctypes.set_last_error(self.stop_error)
         if self.stop_error:
             return False
-        ctypes.cast(status, ctypes.POINTER(services._Status)).contents.state = 3  # stop pending
+        ctypes.cast(status, ctypes.POINTER(services._Status)).contents.state = 3
         return True
 
     def QueryServiceStatus(self, service: int, status: Any) -> bool:  # noqa: N802
@@ -75,7 +73,7 @@ def test_a_stopped_service_is_just_started(
 def test_a_service_that_wont_stop_gives_up_and_closes_its_handles(
     monkeypatch: pytest.MonkeyPatch, reachable: None
 ) -> None:
-    fake = FakeAdvapi(states=[])  # stays "stop pending"
+    fake = FakeAdvapi(states=[])
     monkeypatch.setattr(services, "_advapi32", fake)
     with pytest.raises(TimeoutError):
         services.restart_service("192.0.2.10", services.SPOOLER, sleep=lambda s: None)
@@ -91,7 +89,7 @@ def test_a_refused_stop_says_why(monkeypatch: pytest.MonkeyPatch, reachable: Non
 
 def test_an_unreachable_host_is_never_asked() -> None:
     with pytest.raises(RemoteError) as caught:
-        services.restart_service("192.0.2.1", services.SPOOLER)  # a documentation address
+        services.restart_service("192.0.2.1", services.SPOOLER)
     assert caught.value.reason is Reason.UNREACHABLE
 
 

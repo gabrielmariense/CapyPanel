@@ -1,5 +1,3 @@
-"""The Commands window: every command for one PC, in groups, with what one found beside them."""
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -72,18 +70,17 @@ from capypanel.ui.themes import engine as themes
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
 
-SIZE = (1120, 620)  # as it opens the first time; from there the person's own size is kept
-SIZE_KEY = "commands_size"  # in the person's settings: [width, height]
-GROUPS_WIDTH = 150  # px, at least
+SIZE = (1120, 620)
+SIZE_KEY = "commands_size"
+GROUPS_WIDTH = 150
 GROUP_ROOM = 34  # px past a group's name: the rows' padding (10 + 10), the frame and air
-ROW_SPACING = 2  # px between the commands; a gap widget adds one more
-RESULTS_WIDTH = 400  # px at least: the rest goes to the commands, whose names are longer in pt
-PROFILE_WIDTH = 160  # the profile list beside Host: room for a long profile name
-ROW = 28  # px: a command's line
-APART = 8  # px: the gap above a command set apart, where menus draw a line
+ROW_SPACING = 2
+RESULTS_WIDTH = 400
+PROFILE_WIDTH = 160
+ROW = 28
+APART = 8
 ICON = 16
-LISTS = ("printers", "programs", "drives")  # their answer is a table on the right
-# Each command's part of the docs, for the window's ? and F1 while it's picked.
+LISTS = ("printers", "programs", "drives")
 COMMAND_PLACES = {
     "all-checks": "hosts-checking-check-your-hosts",
     "status": "hosts-checking-check-your-hosts",
@@ -107,12 +104,11 @@ COMMAND_PLACES = {
     "shut-down": "commands-restart-or-shut-down-a-pc",
     "cancel-restart": "commands-restart-or-shut-down-a-pc",
 }
-TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
-MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
+TABLE_ROW = 30
+MOST_TABLE = 330
 
 
 def split_address(typed: str) -> Target:
-    """ "PC-01" or "192.0.2.7:5901": a port after one colon is the connection's port."""
     typed = typed.strip()
     name, colon, port = typed.rpartition(":")
     if colon and name and ":" not in name and port.isdigit() and 0 < int(port) < 65536:
@@ -122,8 +118,6 @@ def split_address(typed: str) -> Target:
 
 @dataclass(frozen=True)
 class Shown:
-    """What the results side shows: the PC, its status, and the picked command's answer."""
-
     target: HostTarget
     command: HostCommand
     status: tuple[Status, datetime] | None
@@ -135,13 +129,10 @@ class Shown:
 
 @dataclass(frozen=True)
 class Listed:
-    """Printers, Installed programs or Mapped drives as read for the right side: rows, or why
-    not."""
-
     reading: bool = True
     when: datetime | None = None
-    rows: Sequence[Any] = field(default_factory=tuple)  # for Mapped drives, the people
-    spooler: str = ""  # the Print Spooler's state, for printers: "running", "stopped"…
+    rows: Sequence[Any] = field(default_factory=tuple)
+    spooler: str = ""
 
 
 def list_title(command_id: str) -> str:
@@ -150,8 +141,6 @@ def list_title(command_id: str) -> str:
 
 
 class Results(HostDetailsPanel):
-    """The right side: the Details panel's heading and parts, for the picked command only."""
-
     list_menu_requested = Signal(str, int, QPoint)  # command id, row (-1: none), where
 
     def item_id(self, shown: object) -> str:
@@ -186,8 +175,6 @@ class Results(HostDetailsPanel):
             self._outcome(layout, shown.outcome)
 
     def _listed(self, layout: QVBoxLayout, shown: Shown) -> None:
-        """A read-only grid table under its heading, with a line under it; what can be done
-        with a row is on its right-click."""
         listed, printers = shown.listed, shown.command.id == "printers"
         mapped = shown.command.id == "drives"
         title = list_title(shown.command.id)
@@ -199,8 +186,6 @@ class Results(HostDetailsPanel):
             self._outcome(layout, shown.outcome)
             return
         when = check_texts.clock_text(listed.when)
-        # Mapped drives for one person: their name goes in the heading, not in a column of its
-        # own repeated on every row, so the path has the room.
         one_person = mapped and len({p.user for p in listed.rows}) == 1
         if one_person:
             self.section(layout, _("{title} · {person} · {when}").format(
@@ -226,8 +211,6 @@ class Results(HostDetailsPanel):
         elif mapped:
             shown_rows = drive_windows.drive_rows(listed.rows)
             table.setHeaderLabels(drive_windows.drive_header())
-            # A share's last folder tells two paths apart, so a path too long loses its
-            # middle; the whole of it is in the tooltip.
             table.setTextElideMode(Qt.TextElideMode.ElideMiddle)
             for drive in shown_rows:
                 texts = drive_windows.row_text(drive)
@@ -242,7 +225,7 @@ class Results(HostDetailsPanel):
                 table.addTopLevelItem(QTreeWidgetItem([program.name, program.version]))
         header = table.header()
         header.setStretchLastSection(False)
-        stretch = 2 if mapped else 0  # the path, for drives
+        stretch = 2 if mapped else 0
         fit, fill = header.ResizeMode.ResizeToContents, header.ResizeMode.Stretch
         for column in range(table.columnCount()):
             header.setSectionResizeMode(column, fill if column == stretch else fit)
@@ -283,7 +266,6 @@ class Results(HostDetailsPanel):
         self.copied.emit(_("the answer and its output"))
 
     def _outcome(self, layout: QVBoxLayout, outcome: Outcome | None) -> None:
-        """The last answer, and Try another account… when the account was refused."""
         if outcome is None:
             return
         answer = QLabel(outcome.text)
@@ -294,7 +276,7 @@ class Results(HostDetailsPanel):
             answer.setObjectName("warningText")
         layout.addWidget(answer)
         place = reason_place(outcome.error) if outcome.error is not None else ""
-        if place:  # "What does this mean?" inside the answer, as in Hosts' strip
+        if place:
             link = help_links.anchor(place, answer.palette(), help_links.CARD)
             answer.setText(f"{outcome.text}&nbsp;&nbsp;{link}")
             answer.setOpenExternalLinks(False)
@@ -303,7 +285,6 @@ class Results(HostDetailsPanel):
             )
             answer.linkActivated.connect(lambda _href: help_links.open_place(place))
             answer.setToolTip(help_links.url(place))
-        # The answer as plain text, to paste into a message or a ticket.
         whole = QTextDocumentFragment.fromHtml(outcome.text).toPlainText()
         copy = QLabel(f'<a href="copy">{_escape(_("Copy all"))}</a>')
         copy.setTextFormat(Qt.TextFormat.RichText)
@@ -318,9 +299,6 @@ class Results(HostDetailsPanel):
 
 
 class CommandRow(QFrame):
-    """One command: its icon, name and shortcut (in grey) on one line; picked, it grows to
-    show its description and Run. Risky ones are amber, with an amber left edge."""
-
     def __init__(self, window: "CommandsWindow", command: HostCommand, shortcut: str = "") -> None:
         super().__init__()
         self.command = command
@@ -328,12 +306,12 @@ class CommandRow(QFrame):
         self.setProperty("risky", command.risky)
         self.setProperty("picked", False)
         self._window = window
-        self.gap: QWidget | None = None  # above a command set apart
+        self.gap: QWidget | None = None
         icon = self._icon = QLabel()
         self.restyle()
         self.name = QLabel()
         self.name.setObjectName("commandName")
-        self.name.setWordWrap(True)  # a long name wraps rather than widen the list
+        self.name.setWordWrap(True)
         self.name.setProperty("risky", command.risky)
         self.keys = QLabel(shortcut)
         self.keys.setObjectName("hint")
@@ -358,7 +336,6 @@ class CommandRow(QFrame):
         self.set_picked(False)
 
     def restyle(self) -> None:
-        """Its icon in the theme's colours: the text's, or amber for a risky command."""
         text = self.palette().color(QPalette.ColorRole.Text)
         color = QColor(themes.status_color("attention")) if self.command.risky else text
         self._icon.setPixmap(tabler_icon(self.command.icon, color, ICON).pixmap(ICON, ICON))
@@ -372,9 +349,9 @@ class CommandRow(QFrame):
         font.setBold(picked)
         self.name.setFont(font)
         self.run.setVisible(picked)
-        self.run.setDefault(picked)  # Enter runs the picked one
+        self.run.setDefault(picked)
         self.about.setVisible(picked)
-        self.setMinimumHeight(ROW)  # one line at least; more when the name wraps or it's picked
+        self.setMinimumHeight(ROW)
         self.style().unpolish(self)
         self.style().polish(self)
 
@@ -389,17 +366,14 @@ class CommandsWindow(QDialog):
     def __init__(
         self, tool: "HostsTool", target: HostTarget | None, profile: str, typed: str = ""
     ) -> None:
-        # A window of its own, not owned by the main one: either can be in front, to work in
-        # the list and here by turns. Quitting CapyPanel closes it (MainWindow.closeEvent).
+        # Not owned by the main window, so either can be in front; MainWindow.closeEvent closes it.
         super().__init__(None)
         self._tool = tool
-        self._typed = target is None  # opened as Manual connection: nothing picked yet
-        self._shown_key = target.key if target else ""  # whose profile the dropdown shows
-        self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
+        self._typed = target is None
+        self._shown_key = target.key if target else ""
+        self._outcomes: dict[tuple[str, str], Outcome] = {}
         self._lists: dict[tuple[str, str], Listed] = {}
 
-        # ---- the top line: the PC, typed or picked from what the Hosts panel shows; the arrows
-        # go host by host. Then the addresses typed here before. ----
         self.address = QComboBox()
         self.address.setEditable(True)
         self.address.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
@@ -427,11 +401,9 @@ class CommandsWindow(QDialog):
         profile_label = QLabel(_("&Profile:"))
         profile_label.setBuddy(self.profile)
         self.connect_button = QPushButton(_("&Connect"))
-        self.connect_button.setObjectName("primary")  # the main action; Enter stays Run's
+        self.connect_button.setObjectName("primary")
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
-        # Where the profiles are made, beside the one picked: a square button, its name in
-        # the tooltip.
         profiles_name = _("Connection &profiles…").replace("&", "")
         self.profiles_button = QPushButton()
         self.profiles_button.setAutoDefault(False)
@@ -441,12 +413,11 @@ class CommandsWindow(QDialog):
         side = self.profile.sizeHint().height()
         self.profiles_button.setFixedSize(side, side)
         self.connect_button.setFixedHeight(side)  # the Windows themes pad the main button more
-        # One line: the PC, how to connect, and Connect, which ends where the command list ends.
         top = QHBoxLayout()
         top.setSpacing(spacing.CONTROLS)
         top.addWidget(address_label)
         top.addWidget(self.address, 1)
-        top.addSpacing(spacing.CONTROLS)  # the PC, then how to reach it
+        top.addSpacing(spacing.CONTROLS)
         top.addWidget(profile_label)
         self.profile.setMinimumWidth(PROFILE_WIDTH)
         top.addWidget(self.profile)
@@ -456,7 +427,6 @@ class CommandsWindow(QDialog):
                               (self.profiles_button, self.connect_button)):  # fmt: skip
             QWidget.setTabOrder(before, after)
 
-        # ---- the groups, the commands, the results ----
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Search"))
         self.search.setClearButtonEnabled(True)
@@ -466,8 +436,6 @@ class CommandsWindow(QDialog):
         self.groups.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.groups.itemClicked.connect(self._jump)
         self.groups.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # Wide enough for the longest group name in any language, so none is cut off and the
-        # columns don't move on a language switch.
         metrics = self.groups.fontMetrics()
         longest = max(
             metrics.horizontalAdvance(name)
@@ -482,7 +450,7 @@ class CommandsWindow(QDialog):
         left.addWidget(self.search)
         left.addWidget(self.groups, 1)
         self._headings: dict[CommandGroup, QLabel] = {}
-        self._gaps: dict[CommandGroup, QWidget] = {}  # above each heading
+        self._gaps: dict[CommandGroup, QWidget] = {}
         self.rows: list[CommandRow] = []
         column = QWidget()
         rows = QVBoxLayout(column)
@@ -495,7 +463,6 @@ class CommandsWindow(QDialog):
                 continue
             heading = QLabel(_(GROUP_NAMES[group]).upper())
             heading.setObjectName("groupHeading")
-            # Gaps are widgets, so they hide with their group or command (a search).
             self._gaps[group] = _gap(6 - ROW_SPACING)
             rows.addWidget(self._gaps[group])
             rows.addWidget(heading)
@@ -506,7 +473,7 @@ class CommandsWindow(QDialog):
             for command in commands:
                 row = CommandRow(self, command, shortcuts.get(command.id, ""))
                 if command.apart:
-                    row.gap = _gap(APART - ROW_SPACING)  # where menus draw a line
+                    row.gap = _gap(APART - ROW_SPACING)
                     rows.addWidget(row.gap)
                 self.rows.append(row)
                 rows.addWidget(row)
@@ -515,7 +482,7 @@ class CommandsWindow(QDialog):
         self.list.setWidget(column)
         self.list.setWidgetResizable(True)
         self.list.setFrameShape(QFrame.Shape.NoFrame)
-        self.list.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # in a narrow window it scrolls sideways
+        self.list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.list.verticalScrollBar().valueChanged.connect(self._follow_scroll)
         self.results = Results()
         self.results.setMinimumWidth(RESULTS_WIDTH)
@@ -526,8 +493,6 @@ class CommandsWindow(QDialog):
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
                         "small window; risky ones ask first."))  # fmt: skip
         hint.setObjectName("hint")
-        # Always in the footer, greyed when there's nothing to add (_update_add); last but Close
-        # in the Tab order.
         self.add_button = QPushButton(_("A&dd to host list…"))
         self.add_button.setAutoDefault(False)
         self.add_button.setToolTip(_("Adds this PC to the open host list"))
@@ -545,7 +510,7 @@ class CommandsWindow(QDialog):
         grid.addWidget(_divider(), 1, 1, 2, 1)
         grid.addWidget(self.list, 1, 2, 2, 1)
         grid.addWidget(_divider(), 1, 3, 2, 1)
-        grid.addWidget(self.results, 0, 4, 3, 1)  # from the top: nothing above it now
+        grid.addWidget(self.results, 0, 4, 3, 1)
         grid.addWidget(hint, 3, 0, 1, 5)
         self.help_button = help_links.HelpButton(self.help_place)
         bottom = QHBoxLayout()
@@ -555,8 +520,6 @@ class CommandsWindow(QDialog):
         bottom.addWidget(close)
         grid.addLayout(bottom, 4, 0, 1, 5)
         grid.setColumnMinimumWidth(0, groups_width)
-        # Wider than it opens, the commands and the results share the width as they do at
-        # first; narrower, the results keep theirs and the commands' names wrap.
         fixed = 2 * spacing.WINDOW + groups_width + 2 + 4 * grid.horizontalSpacing()
         grid.setColumnStretch(2, max(SIZE[0] - fixed - RESULTS_WIDTH, 1))
         grid.setColumnStretch(4, RESULTS_WIDTH)
@@ -573,33 +536,25 @@ class CommandsWindow(QDialog):
         self._show_target()
         (self.address if self._typed else self.search).setFocus()
 
-    # ---- the PC ----
-
     def _put_target(self, target: HostTarget | None, typed: str = "") -> None:
-        """Writes the PC into the Host field: picked when the Hosts panel shows it. None: what
-        was typed (a search's Connect to {host}…), or nothing."""
         if target is None:
             self.address.setCurrentIndex(-1)
             self.address.setEditText(typed)
         elif (index := self.address.findData(target.key)) >= 0:
             self.address.setCurrentIndex(index)
-        else:  # not among what the panel shows (a search changed since): by its name
+        else:
             self.address.setCurrentIndex(-1)
             self.address.setEditText(target.name)
 
     def switch_to(self, target: HostTarget | None, profile: str, typed: str = "") -> None:
-        """Another PC asked for while the window is open: it turns to that PC, keeping every answer
-        it has, per PC. None: Manual connection, with `typed` in Host."""
         self._typed = target is None
-        self._put_target(target, typed)  # the Host field changing shows the PC and its answers
+        self._put_target(target, typed)
         if target is not None and (index := self.profile.findData(profile)) >= 0:
             self.profile.setCurrentIndex(index)
         self._show_target()
         (self.address if self._typed else self.search).setFocus()
 
     def _add_heading(self, text: str) -> None:
-        """A muted title in the Host list, between the panel's hosts and the typed addresses:
-        it can't be picked, and the arrows skip it."""
         self.address.addItem(text.upper())
         model = self.address.model()
         assert isinstance(model, QStandardItemModel)
@@ -612,12 +567,10 @@ class CommandsWindow(QDialog):
         item.setForeground(self.palette().color(QPalette.ColorRole.PlaceholderText))
 
     def target(self) -> HostTarget | None:
-        """The PC in the Host field: a host of the list (picked, or typed by its name or
-        address), else the address typed, which isn't in the list."""
         typed = self.address.currentText().strip()
         if not typed:
             return None
-        index = self.address.findText(typed, Qt.MatchFlag.MatchFixedString)  # any case
+        index = self.address.findText(typed, Qt.MatchFlag.MatchFixedString)
         picked = self._choices.get(self.address.itemData(index)) if index >= 0 else None
         if picked is not None:
             return picked
@@ -631,7 +584,6 @@ class CommandsWindow(QDialog):
         target = self.target()
         key = target.key if target else ""
         if key != self._shown_key and target is not None and not target.key.startswith("@"):
-            # Another host of the list: its own profile, as Connect would use.
             index = self.profile.findData(self._tool.profile_for(target))
             if index >= 0:
                 self.profile.setCurrentIndex(index)
@@ -645,8 +597,6 @@ class CommandsWindow(QDialog):
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
         for row in self.rows:
             row.run.setEnabled(target is not None)
-        # Enabled while it waits for a host too: a click then goes to Host. Greyed, it goes
-        # unnoticed.
         self.connect_button.setEnabled(self.profile.count() > 0)
         self._style_connect(waiting=target is None)
         self._update_add()
@@ -654,15 +604,12 @@ class CommandsWindow(QDialog):
         self._show_results()
 
     def _update_add(self) -> None:
-        """Add to host list… stays, greyed with nothing to add and its tooltip saying why: for a PC
-        the list has, where it is. Hidden, the window seems to lack something."""
         target = self.target()
         why = self._tool.why_not_add(target.name, target.address) if target else ""
         self.add_button.setEnabled(target is not None and not why)
         self.add_button.setToolTip(why or _("Adds this PC to the open host list"))
 
     def _update_names(self) -> None:
-        """The user's folder row names the person: "ana.admin's folder"."""
         target = self.target()
         found = self._tool.users_found(target.key) if target else None
         who = folder_user(found[0] if found else None)
@@ -677,8 +624,6 @@ class CommandsWindow(QDialog):
             self._update_names()
             self._show_results()
 
-    # ---- the commands ----
-
     def pick(self, row: CommandRow) -> None:
         if self._picked is row:
             return
@@ -686,16 +631,14 @@ class CommandsWindow(QDialog):
             self._picked.set_picked(False)
         self._picked = row
         row.set_picked(True)
-        QTimer.singleShot(0, self, lambda: self._scroll_to(row))  # dropped if the window goes
+        QTimer.singleShot(0, self, lambda: self._scroll_to(row))
         self._show_results()
 
     def _scroll_to(self, row: CommandRow) -> None:
-        """Up or down to the row; never sideways, which cut the group headings off."""
         self.list.ensureWidgetVisible(row, 0, 4)
         self.list.horizontalScrollBar().setValue(0)
 
     def help_place(self) -> str:
-        """Where its ? and F1 open the docs: the picked command's part, or the window's."""
         command = self.picked()
         window = "commands-the-commands-window"
         return COMMAND_PLACES.get(command.id, window) if command else window
@@ -707,15 +650,13 @@ class CommandsWindow(QDialog):
         target = self.target()
         if target is None:
             return
-        if target.key.startswith("@"):  # typed, not in the list: offered again next time
+        if target.key.startswith("@"):
             self._tool.remember_address(self.address.currentText().strip())
         if command.id in LISTS:
             self._read_list(command.id, target)
         else:
             self._tool.runner.run(command.id, target, self._reporter(target), parent=self)
         self._show_results()
-
-    # ---- printers and programs, as tables on the right ----
 
     def _read_list(self, command_id: str, target: HostTarget) -> None:
         key = (target.key, command_id)
@@ -737,7 +678,7 @@ class CommandsWindow(QDialog):
             try:
                 spooler = services.service_state(target.address, services.SPOOLER, account)
             except RemoteError:
-                spooler = ""  # listed anyway: only its state line goes
+                spooler = ""
             return Listed(False, datetime.now(UTC), rows, spooler)
 
         def done(listed: Listed) -> None:
@@ -835,13 +776,9 @@ class CommandsWindow(QDialog):
         )
 
     def _alive(self) -> bool:
-        """Still open: an answer can come back after the window was closed and deleted."""
         return shiboken6.isValid(self) and shiboken6.isValid(self.results)
 
     def _reporter(self, target: HostTarget) -> Callable[[str, Outcome], None]:
-        """Where a command's answer goes: to the PC it ran on, also when the window has turned
-        to another PC since."""
-
         def report(command_id: str, outcome: Outcome) -> None:
             if self._alive():
                 self._outcomes[(target.key, command_id)] = outcome
@@ -870,8 +807,6 @@ class CommandsWindow(QDialog):
         )
 
     def _style_connect(self, *, waiting: bool) -> None:
-        """Connect in the main button's fill, or an accent outline while no host is typed; its
-        plug icon in its text's colour, white on the fill."""
         button = self.connect_button
         if button.property("waiting") != waiting:
             button.setProperty("waiting", waiting)
@@ -884,15 +819,12 @@ class CommandsWindow(QDialog):
         self.profiles_button.setIcon(tabler_icon("settings", text))
 
     def _restyle(self) -> None:
-        """After a theme switch: the icons and dots drawn in the old theme's colours."""
         for row in self.rows:
             row.restyle()
         self._style_connect(waiting=self.target() is None)
         self._show_results()
 
     def profiles_changed(self) -> None:
-        """Settings changed the connection profiles: the dropdown lists them as they are now,
-        on the one it showed while that one is still there."""
         shown = self.profile.currentData()
         self.profile.clear()
         for profile_id, text in self._tool.connector.choices():
@@ -916,7 +848,6 @@ class CommandsWindow(QDialog):
         self.pick(shown[max(0, min(len(shown) - 1, index + step))])
 
     def _filter(self) -> None:
-        """Typing narrows every group to the commands whose name or description match."""
         needle = self.search.text().strip().casefold()
         for row in self.rows:
             text = f"{row.name.text()} {row.about.text()}".casefold()
@@ -929,7 +860,7 @@ class CommandsWindow(QDialog):
             group = CommandGroup(item.data(Qt.ItemDataRole.UserRole))  # Qt hands back a str
             any_shown = any(not r.isHidden() for r in self.rows if r.command.group == group)
             self._headings[group].setHidden(not any_shown)
-            self._gaps[group].setHidden(not any_shown or first)  # none above the first
+            self._gaps[group].setHidden(not any_shown or first)
             first = first and not any_shown
             item.setHidden(not any_shown)
         shown = self._visible_rows()
@@ -947,7 +878,6 @@ class CommandsWindow(QDialog):
             self.pick(rows[0])
 
     def _follow_scroll(self, value: int) -> None:
-        """The group in view is the one marked on the left, as in Settings."""
         current = None
         for index in range(self.groups.count()):
             item = self.groups.item(index)
@@ -957,7 +887,7 @@ class CommandsWindow(QDialog):
             if heading.y() <= value + ROW:
                 current = item
         bar = self.list.verticalScrollBar()
-        if value >= bar.maximum() and bar.maximum() > 0:  # at the end: the last group
+        if value >= bar.maximum() and bar.maximum() > 0:
             shown = [self.groups.item(i) for i in range(self.groups.count())
                      if not self.groups.item(i).isHidden()]  # fmt: skip
             current = shown[-1] if shown else current
@@ -966,10 +896,7 @@ class CommandsWindow(QDialog):
             self.groups.setCurrentItem(current)
             self.groups.blockSignals(False)
 
-    # ---- the keyboard ----
-
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        """↑ and ↓ in the search field move the pick, as everywhere else in the window."""
         if (
             watched is self.search
             and isinstance(event, QKeyEvent)
@@ -981,13 +908,10 @@ class CommandsWindow(QDialog):
         return super().eventFilter(watched, event)
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        """Closing deletes the window: its key watch on the search goes first, so no key
-        reaches it while its parts are being deleted."""
         self.search.removeEventFilter(self)
         super().closeEvent(event)
 
     def done(self, result: int) -> None:
-        """Closed (its X, Close or Esc): the size it's left at is how it opens next time."""
         size = [self.width(), self.height()]
         if size != self._tool.prefs.get(SIZE_KEY, list(SIZE)):
             self._tool.keep_pref(SIZE_KEY, size)
@@ -1005,18 +929,16 @@ class CommandsWindow(QDialog):
             & (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier)
         ):
             self.search.setFocus()
-            self.search.insert(text)  # typing searches, wherever the focus was
+            self.search.insert(text)
             return
         super().keyPressEvent(event)
 
-    # ---- the bottom and top buttons ----
-
     def _connect(self) -> None:
         target = self.target()
-        if target is None:  # nothing typed yet: where the host goes
+        if target is None:
             self.address.setFocus(Qt.FocusReason.OtherFocusReason)
             return
-        if target.key.startswith("@"):  # typed: its port too, as typed
+        if target.key.startswith("@"):
             typed = self.address.currentText().strip()
             self._tool.remember_address(typed)
             where = split_address(typed)

@@ -1,5 +1,3 @@
-"""The small windows host commands open, and the questions before what disturbs a PC."""
-
 import logging
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
@@ -47,22 +45,18 @@ log = logging.getLogger(__name__)
 
 
 def log_failed(read: str, host: str, error: BaseException) -> None:
-    """A read that failed goes in the log too, not only on screen, so a report can quote it:
-    "Installed programs on DESK-03 failed: RemoteError: Access is denied."."""
     log.warning("%s on %s failed: %s: %s", read, host, type(error).__name__, error)
 
 
 MAX_MESSAGE = 255  # Windows' message box shows about this much
 MAX_PATH = 1024
 RECENT_PATHS = 10
-DELAYS = (0, 60, 5 * 60, 15 * 60)  # Restart's When: now, or in 1, 5 or 15 minutes
-DEFAULT_DELAY = 0  # When's first pick: now (Cancel stays the default button)
-WIDE = 460  # px: a question names a person, a session and a time; narrower, it wraps badly
+DELAYS = (0, 60, 5 * 60, 15 * 60)
+DEFAULT_DELAY = 0
+WIDE = 460
 
 
 def where_text(session: Session) -> str:
-    """Where someone is signed in, for questions and tooltips: "at the PC, active, since 8:05 AM"
-    or "Remote Desktop from LAB-01, disconnected, since 7:40 AM"."""
     kinds = {"console": _("at the PC"), "rdp": _("Remote Desktop")}
     states = {"active": _("active"), "disconnected": _("disconnected"), "idle": _("idle")}
     parts = [kinds.get(session.kind, "")]
@@ -82,9 +76,6 @@ def risky_button(text: str) -> QPushButton:
 
 
 class Question(QDialog):
-    """A question before what disturbs whoever uses the PC: warning sign, bold question, what
-    happens, the amber action and Cancel, the default so Enter never confirms. F1 opens `place`."""
-
     def __init__(self, parent: QWidget | None, title: str, question: str, text: str,
                  action: str, *, place: str = "") -> None:  # fmt: skip
         super().__init__(parent)
@@ -112,7 +103,7 @@ class Question(QDialog):
         top.addWidget(sign, 0, Qt.AlignmentFlag.AlignTop)
         top.addLayout(self.body, 1)
         self.action = risky_button(action)
-        self.action.setAutoDefault(True)  # Enter runs it once Tab has put the keyboard on it
+        self.action.setAutoDefault(True)
         self.cancel = QPushButton(_("Cancel"))
         quiet_default(self.cancel)
         self.action.clicked.connect(self.accept)
@@ -131,8 +122,7 @@ class Question(QDialog):
             help_links.key(self, lambda: place)
 
     def sizeHint(self) -> QSize:
-        """WIDE at least, as tall as its words wrap at that width: Qt measures a wrapped label's
-        height at its own narrow width, leaving a line's gap under the question once widened."""
+        """Qt measures a wrapped label's height at its narrow width: a gap once it's widened."""
         hint = super().sizeHint()
         width = max(hint.width(), self.minimumWidth())
         layout = self.layout()
@@ -143,7 +133,6 @@ class Question(QDialog):
 
 def ask_session_action(parent: QWidget | None, host: str, session: Session, *,
                        log_off: bool) -> bool:  # fmt: skip
-    """Log off… or Disconnect… one person: what it means for them, then yes or Cancel."""
     who, where = session.user, where_text(session)
     if log_off:
         question = _("Log off {user} on {host}?").format(user=who, host=host)
@@ -199,13 +188,7 @@ def ask_clear_queue(parent: QWidget | None, host: str, printer: HostPrinter) -> 
     return run_modal(box) == QDialog.DialogCode.Accepted
 
 
-# ---- Open a path… ----
-
-
 class OpenPathDialog(QDialog):
-    """A folder on the PC, typed or pasted as File Explorer copies it (quotes and all), or a
-    full \\\\PC\\D$\\… path; a line shows what opens. Keeps the last folders opened."""
-
     def __init__(self, parent: QWidget | None, host: str, recent: Sequence[str]) -> None:
         super().__init__(parent)
         self._host = host
@@ -263,12 +246,7 @@ class OpenPathDialog(QDialog):
         self.open_button.setEnabled(bool(shown))
 
 
-# ---- Send a message… ----
-
-
 class MessageDialog(QDialog):
-    """A message for everyone at their screen on the PC: who gets it shows as chips."""
-
     def __init__(self, parent: QWidget | None, host: str, to: Sequence[Session]) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Send a message to {host}").format(host=host))
@@ -323,13 +301,7 @@ class MessageDialog(QDialog):
         self.send.setEnabled(self._can_send and bool(self.text()))
 
 
-# ---- Restart… and Shut down… ----
-
-
 class PowerDialog(Question):
-    """Restart… or Shut down…: this window is the question. It names who is signed in; When is
-    now, or in 1, 5 or 15 minutes with a message Windows shows them with a countdown."""
-
     def __init__(self, parent: QWidget | None, host: str, found: Sequence[Session] | None, *,
                  restart: bool) -> None:  # fmt: skip
         self._restart = restart
@@ -365,12 +337,10 @@ class PowerDialog(Question):
         self.body.addSpacing(4)
         self.body.addLayout(form)
         self.body.addWidget(self.note)
-        self._typed = False  # once they type, the message is theirs: When no longer rewrites it
+        self._typed = False
         self.box.textChanged.connect(self._edited)
         self.when.currentIndexChanged.connect(self._update)
         self._update()
-        # The keyboard starts in When: arrows pick, Tab goes to the message (when there is one),
-        # then to the action, where Enter runs it. Enter anywhere else is still Cancel.
         self.setTabOrder(self.when, self.box)
         self.setTabOrder(self.box, self.action)
         self.setTabOrder(self.action, self.cancel)
@@ -447,15 +417,9 @@ def _delay_text(delay: int) -> str:
     return ngettext("In {n} minute", "In {n} minutes", minutes).format(n=minutes)
 
 
-# ---- the lists a PC is read for ----
-
-
 class ReadList(QDialog):
-    """A window that reads a list from the PC on a background thread: "Reading…" until it's
-    back, then the rows, or why it couldn't. Read again reads it once more."""
-
-    READ = "A list"  # what it reads, for the log (in English, as the rest of the log)
-    HELP_PLACE = ""  # its command's part of the docs, for its ? and F1
+    READ = "A list"
+    HELP_PLACE = ""
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget") -> None:
         super().__init__(parent)
@@ -490,7 +454,6 @@ class ReadList(QDialog):
         raise NotImplementedError
 
     def _alive(self) -> bool:
-        """Still open: the list can come back after the window was closed and deleted."""
         return shiboken6.isValid(self) and shiboken6.isValid(self.table)
 
     def _read(self, found: Any) -> None:
@@ -513,9 +476,6 @@ class ReadList(QDialog):
 
 
 class PrintersDialog(ReadList):
-    """Printers on this PC: name, driver, port, status and documents waiting; Clear queue… for
-    the printer picked and Restart Print Spooler… for them all, both asking first."""
-
     READ = "Printers"
     HELP_PLACE = "commands-fix-a-pcs-printing"
 
@@ -617,18 +577,14 @@ class PrintersDialog(ReadList):
 
 
 class ProgramsDialog(ReadList):
-    """Installed programs: a search, the count and when it was read, then Copy list and Export
-    CSV… for the rows shown."""
-
     READ = "Installed programs"
     HELP_PLACE = "commands-see-whats-installed-and-mapped"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  folder: Callable[[str | None], str], found: Sequence[Any] | None = None,
                  read_at: datetime | None = None) -> None:  # fmt: skip
-        """`found`: a list already read (the Commands window's), shown without reading again."""
         super().__init__(parent, runner, target)
-        self._folder = folder  # the last folder a CSV went to; called with one to keep it
+        self._folder = folder
         self._programs: list[Any] = []
         self.setWindowTitle(_("Installed programs on {host}").format(host=target.name))
         self.table.setHeaderLabels([_("Name"), _("Publisher"), _("Version"), _("Installed on")])
@@ -750,7 +706,6 @@ def export_csv(
     rows: Sequence[Sequence[str]],
     folder: Callable[[str | None], str],
 ) -> None:
-    """Export CSV…: the programs, in the CSV Excel opens on this PC; the folder is kept."""
     start = folder(None)
     if not start or not Path(start).is_dir():
         start = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
@@ -765,7 +720,7 @@ def export_csv(
     path = Path(name)
     text = write_csv(header, rows, list_separator())
     try:
-        path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
+        path.write_text(text, encoding="utf-8-sig")
     except OSError as e:
         text = _("Couldn't save “{path}”: {error}\n\nIf the file is open in another "
                  "program, such as Excel, close it there and save again.")  # fmt: skip
@@ -776,8 +731,6 @@ def export_csv(
 
 
 def printer_dot(printer: HostPrinter) -> str:
-    """The Printers tool's status colours: green ready, grey offline, red stopped, amber the
-    rest that needs someone."""
     if not printer.problems:
         return "online"
     if "offline" in printer.problems:
@@ -795,8 +748,6 @@ SORT_KEY = Qt.ItemDataRole.UserRole + 1
 
 
 class _ProgramRow(QTreeWidgetItem):
-    """Sorted by the date itself in Installed on, and by the text, case aside, elsewhere."""
-
     def __lt__(self, other: QTreeWidgetItem) -> bool:
         tree = self.treeWidget()
         column = tree.sortColumn() if tree is not None else 0
@@ -807,7 +758,6 @@ class _ProgramRow(QTreeWidgetItem):
 
 
 def problem_text(problem: str) -> str:
-    """What the print spooler reports, as core.remote.host_printers names it, in words."""
     texts = {
         "error": _("Error"), "paper jam": _("Paper jam"), "out of paper": _("Out of paper"),
         "paper problem": _("Paper problem"), "offline": _("Offline"),

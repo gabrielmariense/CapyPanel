@@ -1,13 +1,9 @@
-"""CapyPanel: manage the computers on your network from one window."""
-
 from pathlib import Path
 
-STAMP = "build.txt"  # in a packaged build, beside this file: "0.26.0 472 0386a6c"
+STAMP = "build.txt"
 
 
 def _stamped(package: Path) -> tuple[str, str, str] | None:
-    """A packaged build's version, build number and commit, written into it when it was built
-    (scripts/build_exe.py): it has no pyproject.toml and no git to ask."""
     try:
         words = (package / STAMP).read_text(encoding="utf-8").split()
     except OSError:
@@ -16,8 +12,7 @@ def _stamped(package: Path) -> tuple[str, str, str] | None:
 
 
 def _version() -> str:
-    """A source checkout reads its own pyproject.toml, right even when the environment wasn't
-    synced after a pull; an installed copy asks its package data."""
+    """pyproject.toml first: an installed copy's metadata lags a pull until the venv is synced."""
     if _STAMPED is not None:
         return _STAMPED[0]
     try:
@@ -33,7 +28,7 @@ def _version() -> str:
 
     try:
         return version("capypanel")
-    except PackageNotFoundError:  # running from a copy that was never installed
+    except PackageNotFoundError:
         return "0.0.0+unknown"
 
 
@@ -46,25 +41,24 @@ def _commit() -> str:
     try:
         head = (git / "HEAD").read_text(encoding="utf-8").strip()
         if not head.startswith("ref: "):
-            return head[:7]  # a detached checkout names the commit itself
+            return head[:7]
         ref = head.removeprefix("ref: ")
         if (git / ref).is_file():
             return (git / ref).read_text(encoding="utf-8").strip()[:7]
         for line in (git / "packed-refs").read_text(encoding="utf-8").splitlines():
             if line.endswith(f" {ref}"):
                 return line[:7]
-    except OSError:  # not a checkout (installed app), or a worktree's .git file
+    except OSError:
         pass
     return ""
 
 
-# Commits that PRs #1–#35 had before squash merges folded each into one: 336 in 35 PRs.
+# PRs #1–#35 had 336 commits before squash merges made each one.
 _SQUASHED = 336 - 35
 
 
 def _build_number(root: Path, commit: str) -> str:
-    """Every commit toward this build, the squashed ones too: a bigger number is newer.
-    Kept in .git and asked of git once per commit, since git can take seconds on a cold start."""
+    """Cached in .git per commit: git can take seconds on a cold start."""
     import contextlib
     import subprocess
 
@@ -73,7 +67,7 @@ def _build_number(root: Path, commit: str) -> str:
         was, _space, number = kept.read_text(encoding="utf-8").strip().partition(" ")
         if was == commit and number.isdigit():
             return number
-    except OSError:  # nothing kept yet, or a worktree's .git file
+    except OSError:
         pass
     try:
         done = subprocess.run(
@@ -87,13 +81,11 @@ def _build_number(root: Path, commit: str) -> str:
     if done.returncode != 0 or not counted.isdigit():
         return ""
     number = str(int(counted) + _SQUASHED)
-    with contextlib.suppress(OSError):  # a checkout that can't be written: asked again
+    with contextlib.suppress(OSError):
         kept.write_text(f"{commit} {number}", encoding="utf-8")
     return number
 
 
-# What About and the log show: "0.8.1", plus "build N (commit)" from source and in a
-# packaged build: the number to compare with the build a test asks for, and its commit.
 if _STAMPED is not None:
     _NUMBER, _COMMIT = _STAMPED[1], _STAMPED[2]
 else:

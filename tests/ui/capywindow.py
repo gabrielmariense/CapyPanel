@@ -1,5 +1,3 @@
-"""The window as CapyPanel makes it, with typed access to its tools; it opens on Hosts."""
-
 from typing import Any
 
 from capypanel.core import settings

@@ -1,5 +1,3 @@
-"""Messages the docs quote under Messages you may see are the app's words, in both languages."""
-
 import re
 from pathlib import Path
 from typing import Literal
@@ -16,34 +14,29 @@ HEADING = re.compile(r"^#+ (Messages you may see|Mensagens que você pode ver)\b
 ANCHOR = re.compile(r'<a id="([^"]*)"></a>')
 QUOTED = re.compile(r'"((?:[^"\\]|\\.)+)"')
 FIELD = re.compile(r"\{[^{}]*\}")
-GAP = "\x00"  # a part that varies: {name} or … in the docs, {name} in the app
+GAP = "\x00"
 WORD = re.compile(r"[^\W\d_]{2,}")
 DATED = re.compile(r"[^\W\d_]+ \d+|\d[\d.,]* [^\W\d_]+")  # "October 2026", "12 GB"
 SENTENCES = re.compile(r"(?<=[.!?])\s+")
-LIST = re.compile(r",\s*|\s*\(|\)")  # "a (x), b (y)": a list the code puts together
+LIST = re.compile(r",\s*|\s*\(|\)")
 SSH_EXE = "sshexe-"  # rows quoting ssh.exe, whose words are its own, in English
 NOT_OURS = ("[SSL: CERTIFICATE_VERIFY_FAILED]", "unable to get local issuer certificate")
-Mode = Literal["whole", "start", "part"]  # all of an app string, its start, or any part of it
+Mode = Literal["whole", "start", "part"]
 
 
 def _value(run: str, named: bool) -> bool:
-    """A name, number or date the docs put where the app has a placeholder: never a sentence.
-    A name the app shows in “” may have spaces."""
     if GAP in run or len(run) > 40 or run.endswith((".", "!", "?")):
         return False
     return named or run.split() == [run] or DATED.fullmatch(run) is not None
 
 
 class _Catalog:
-    """One language's app strings, a GAP for each placeholder, and the quotes they explain."""
-
     def __init__(self, texts: list[str]) -> None:
         self.texts = list(dict.fromkeys(FIELD.sub(GAP, t) for t in texts if t))
         self.words = [{w.lower() for w in WORD.findall(t)} for t in self.texts]
         self.known: dict[tuple[str, Mode, int], bool] = {}
 
     def candidates(self, quote: str) -> list[str]:
-        """The strings with most of the quote's words, or the quote with most of theirs."""
         want = {w.lower() for w in WORD.findall(quote)}
         if not want:
             return self.texts
@@ -55,8 +48,6 @@ class _Catalog:
         return [text for _shared, text in sorted(found, key=lambda pair: -pair[0])]
 
     def explains(self, quote: str, mode: Mode = "part", depth: int = 0) -> bool:
-        """Whether app strings hold `quote` as `mode` says, their placeholders filled, or hold
-        each of its sentences."""
         key = (quote, mode, depth)
         if key not in self.known:
             self.known[key] = any(
@@ -68,7 +59,6 @@ class _Catalog:
         return self.known[key]
 
     def fill(self, run: str, depth: int, named: bool, mode: Mode | None) -> bool:
-        """A value, or app strings as `mode` says; None: one word only."""
         if mode is None:
             return run.split() == [run] and _value(run, False)
         if _value(run, named):
@@ -81,8 +71,6 @@ class _Catalog:
         return len(items) > 1 and all(self.fill(p, depth + 1, False, "whole") for p in items)
 
     def matches(self, quote: str, text: str, mode: Mode, depth: int) -> bool:
-        """A GAP in the quote takes any part of the text; one in the text takes a run of the
-        quote that fill() accepts."""
         n, m = len(quote), len(text)
         todo = [(0, j) for j in (range(m) if mode == "part" else [0])]
         seen = set(todo)
@@ -103,9 +91,9 @@ class _Catalog:
                         continue
                     held: Mode | None = "whole"
                     if i == 0 and j > 0 and mode == "part":
-                        held = None  # the quote starts in this placeholder: one word
+                        held = None
                     elif k == n and mode != "whole":
-                        held = "start"  # it ends in it, maybe partway through a string
+                        held = "start"
                     edges = quote[i - 1 : i] + quote[k : k + 1]
                     named = edges == text[j - 1 : j] + text[j + 1 : j + 2] == "“”"
                     if self.fill(quote[i:k], depth, named, held):
@@ -134,11 +122,10 @@ def _pattern(quote: str) -> str:
     words = quote.replace("\\|", "|").replace("\\*", "*").replace("…", GAP)
     for other in NOT_OURS:
         words = words.replace(other, GAP)
-    return re.sub(r"\x00(?:\s*\x00)+", GAP, FIELD.sub(GAP, words))  # gaps side by side: one
+    return re.sub(r"\x00(?:\s*\x00)+", GAP, FIELD.sub(GAP, words))
 
 
 def _quotes(language: str) -> list[tuple[str, str]]:
-    """Each message quoted in a Messages you may see table's first column, with where it is."""
     found = []
     pages = sorted(DOCS.rglob("*.pt-BR.md" if language == "pt-BR" else "*.md"))
     for page in pages:
@@ -166,7 +153,7 @@ def _quotes(language: str) -> list[tuple[str, str]]:
 def test_each_message_the_docs_quote_is_the_app_s_wording(language: str) -> None:
     catalog = _catalog(language)
     quotes = _quotes(language)
-    assert len(quotes) > 50  # the tables were found
+    assert len(quotes) > 50
     stale = [
         f"{where}: {quote}" for where, quote in quotes if not catalog.explains(_pattern(quote))
     ]

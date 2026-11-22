@@ -1,5 +1,3 @@
-"""Refresh: the status and logged-on checks in the background, and how their results read."""
-
 import threading
 from collections.abc import Callable, Sequence
 from dataclasses import replace
@@ -35,10 +33,7 @@ MAX_TEXT = 256
 
 
 class CheckRun(QObject):
-    """One Refresh over some hosts, on a background thread. `found` arrives once per host.
-    `accounts` gives each host's account (by host id); hosts sharing one go together."""
-
-    found = Signal(str, object)  # host id, Found
+    found = Signal(str, object)
     finished = Signal()
 
     def __init__(
@@ -59,10 +54,9 @@ class CheckRun(QObject):
             parts.setdefault(key, (account, []))[1].append(target)
         self._batches = [self._batch(found, account, wanted) for account, found in parts.values()]
         self._stop = threading.Event()
-        self.rejected: list[Account] = []  # typed accounts a host rejected: not tried further
+        self.rejected: list[Account] = []
 
     def account_of(self, key: str) -> Account | None:
-        """The account a host's users are read with; None: the Windows account."""
         return self._accounts(key)
 
     def _batch(
@@ -74,7 +68,6 @@ class CheckRun(QObject):
             targets,
             lambda target: checks.run(target[1], wanted),
             self._report,
-            # A typed password goes host by host until one accepts it, and stops at a rejection.
             halts=checks.account_rejected if typed else lambda _r, _e: False,
             proves=checks.account_proven if typed else None,
         )
@@ -89,12 +82,10 @@ class CheckRun(QObject):
 
     @property
     def stopped(self) -> bool:
-        """By Stop, or by a rejected account."""
         return self._stop.is_set() or any(batch.stopped for _a, batch in self._batches)
 
     @property
     def halted(self) -> bool:
-        """A host rejected a typed account, so the hosts left for it weren't tried."""
         return bool(self.rejected)
 
     def _run(self) -> None:
@@ -111,15 +102,12 @@ class CheckRun(QObject):
     def _report(
         self, target: tuple[str, str], found: Found | None, error: Exception | None
     ) -> None:
-        if found is None:  # a bug in a check: show it as unreadable rather than lose the host
+        if found is None:
             found = Found(users_error=RemoteError(Reason.OTHER)) if error else Found()
         self.found.emit(target[0], found)
 
 
 class AccountDialog(QDialog):
-    """Another account for other PCs, when the Windows login can't: which PCs it's for (`uses`,
-    most specific first, each a link with no user yet) and whether Windows remembers it."""
-
     def __init__(
         self,
         parent: QWidget | None,
@@ -137,7 +125,7 @@ class AccountDialog(QDialog):
         self.user = QLineEdit(user)
         self.user.setMaxLength(MAX_TEXT)
         self.user.setPlaceholderText(_("DOMAIN\\user"))
-        self.user.setReadOnly(fixed_user)  # its password only: the account is set in Settings
+        self.user.setReadOnly(fixed_user)
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setMaxLength(MAX_TEXT)
@@ -145,8 +133,6 @@ class AccountDialog(QDialog):
         for label, link in uses:
             self.use_for.addItem(label, link)
         self.remember = QCheckBox(_("&Remember it on this computer"))
-        # `saved`: Windows already remembers `user`'s password, so the tick starts on and
-        # typing it again doesn't un-save it; it goes off when another account is typed.
         self.remember.setChecked(saved)
         self._saved_user = user.strip().casefold() if saved else None
         self._ticked_by_hand = False
@@ -187,13 +173,12 @@ class AccountDialog(QDialog):
             self.remember.setChecked(self.user.text().strip().casefold() == self._saved_user)
 
     def _tick_clicked(self) -> None:
-        self._ticked_by_hand = True  # the person's own choice stays
+        self._ticked_by_hand = True
 
     def account(self) -> Account:
         return Account(self.user.text().strip(), self.password.text())
 
     def link(self) -> Link | None:
-        """The PCs picked in Use it for, as a link to this account; None when not asked."""
         picked = self.use_for.currentData()
         return replace(picked, user=self.account().user) if isinstance(picked, Link) else None
 
@@ -204,15 +189,13 @@ def when_text(when: datetime) -> str:
 
 
 def date_text(day: date) -> str:
-    """A day with its month's short name: "Aug 20, 2026", "20 ago 2026"."""
     language = i18n.language()
     pattern = "MMM d, yyyy" if language.startswith("en") else "d MMM yyyy"
     return QLocale(language).toString(QDate(day.year, day.month, day.day), pattern)
 
 
 def local(when: datetime) -> datetime:
-    """`when` in this PC's time zone. Windows can't convert a time before 1970 (or past 3000),
-    and dates read from other PCs can be anything: those stay as they are."""
+    """Windows can't convert times before 1970 or past 3000: those stay as they are."""
     try:
         return when.astimezone()
     except (OSError, OverflowError, ValueError):
@@ -220,7 +203,6 @@ def local(when: datetime) -> datetime:
 
 
 def clock_text(when: datetime) -> str:
-    """Just the time for today ("10:41"); the date too for an older result."""
     moment = QDateTime.fromSecsSinceEpoch(int(when.timestamp()), QTimeZone.systemTimeZone())
     if moment.date() == QDateTime.currentDateTime().date():
         return QLocale(i18n.language()).toString(moment.time(), QLocale.FormatType.ShortFormat)
@@ -237,7 +219,7 @@ def status_text(status: Status) -> str:
 
 def status_tip(status: Status, when: datetime, answered: Answer | None = None) -> str:
     checked = _("Checked {when}.").format(when=when_text(when))
-    if answered is not None:  # e.g. only the Wi-Fi address answers: the cable is out
+    if answered is not None:
         address, port = answered
         how = (
             _("Answered a ping at {address}.")
@@ -256,7 +238,7 @@ def status_tip(status: Status, when: datetime, answered: Answer | None = None) -
     return f"{checked} {why}".strip()
 
 
-_show_domains = True  # View > Users > Show domain
+_show_domains = True
 
 
 def show_domains(shown: bool) -> None:
@@ -265,15 +247,12 @@ def show_domains(shown: bool) -> None:
 
 
 def user_name(session: Session, *, full: bool = False) -> str:
-    """How a logged-on user reads everywhere: "DOMAIN\\name", or "name" with domains off.
-    full: always with the domain, for tooltips (a local "admin" isn't the domain's)."""
     if session.domain and (_show_domains or full):
         return f"{session.domain}\\{session.user}"
     return session.user
 
 
 def by_state(sessions: Sequence[Session]) -> list[Session]:
-    """Active sessions first: who is really at the computer, then disconnected ones."""
     return sorted(sessions, key=lambda s: s.state != "active")
 
 

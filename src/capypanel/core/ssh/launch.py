@@ -1,4 +1,4 @@
-"""Starting Windows' ssh.exe with only a checked address, port and name: no password passes."""
+"""Only a checked address, port and name reach ssh.exe, never a password."""
 
 import ctypes
 import logging
@@ -22,20 +22,18 @@ REFUSED_IN_ADDRESS = frozenset("\"$&'(),;<>\\`{|}")
 
 
 class SshMissing(Exception):
-    """Windows' SSH client isn't installed: it's an optional feature, "OpenSSH Client"."""
+    pass
 
 
 def ssh_exe() -> Path | None:
-    """Windows' own ssh.exe by its full path, or None when it isn't installed. Never looked up
-    through PATH, where another ssh.exe could stand in for it."""
+    """By its full path, never through PATH, where another ssh.exe could stand in for it."""
     root = Path(os.environ.get("SYSTEMROOT") or r"C:\Windows")
     path = root / "System32" / "OpenSSH" / "ssh.exe"
     return path if path.is_file() else None
 
 
 def is_destination(text: str) -> bool:
-    """An address or a computer name ssh.exe can be given: no spaces or control characters, no
-    leading "-", which ssh.exe would read as an option, and none of REFUSED_IN_ADDRESS."""
+    """No leading "-" (ssh.exe would read an option), no spaces, controls or REFUSED_IN_ADDRESS."""
     return (
         0 < len(text) <= MAX_ADDRESS
         and not text.startswith("-")
@@ -44,8 +42,6 @@ def is_destination(text: str) -> bool:
 
 
 def command_line(exe: Path, destination: str, info: SshInfo) -> list[str]:
-    """ssh.exe's arguments: the port unless 22, the name unless none (its config decides), "--",
-    then the address. Raises ValueError for an address, port or name ssh.exe would misread."""
     if not is_destination(destination):
         raise ValueError("not an address ssh.exe can take")
     argv = [str(exe)]
@@ -61,44 +57,38 @@ def command_line(exe: Path, destination: str, info: SshInfo) -> list[str]:
 
 
 def tab_command(destination: str, info: SshInfo) -> list[str]:
-    """ssh.exe's command line for a connection in a tab, which runs it on a pseudo console.
-    Raises SshMissing or ValueError, as connect does."""
     exe = ssh_exe()
     if exe is None:
         raise SshMissing
     argv = command_line(exe, destination, info)
-    log.info("Starting ssh.exe %s in a tab", subprocess.list2cmdline(argv[1:]))  # no secret
+    log.info("Starting ssh.exe %s in a tab", subprocess.list2cmdline(argv[1:]))
     return argv
 
 
 def connect(destination: str, info: SshInfo, name: str = "") -> subprocess.Popen[bytes]:
-    """ssh.exe in a window of its own, the holder's; `name` is the host as its words say it. Returns
-    once the holder started (it outlives CapyPanel). Raises SshMissing, ValueError or OSError."""
     exe = ssh_exe()
     if exe is None:
         raise SshMissing
     argv = command_line(exe, destination, info)
-    log.info("Starting ssh.exe %s", subprocess.list2cmdline(argv[1:]))  # no secret in it
+    log.info("Starting ssh.exe %s", subprocess.list2cmdline(argv[1:]))
     return subprocess.Popen(  # noqa: S603 -- CapyPanel's own exe; ssh.exe's arguments checked
         [*own_start(), *holder.args_for(argv, name or destination, i18n.language())],
         # No console from CapyPanel: typing goes to ssh.exe in the holder's own. No new process
         # group either: it would start ignoring Ctrl+C.
         creationflags=subprocess.DETACHED_PROCESS,
         close_fds=True,
-        env={**os.environ, NO_SPLASH: "1"},  # the built exe's launcher shows no splash
+        env={**os.environ, NO_SPLASH: "1"},
     )
 
 
 def own_start() -> list[str]:
-    """How CapyPanel starts itself: its exe when built, `python -m capypanel` from source."""
     if getattr(sys, "frozen", False):
         return [sys.executable]
     return [sys.executable, "-m", "capypanel"]
 
 
 def open_windows() -> int:
-    """How many separate windows this copy has open (its exe in this Windows session, other than
-    this process): they hold its files, which an update can't replace. 0 from source."""
+    """Other windows of this copy hold its files, which an update can't replace."""
     if not getattr(sys, "frozen", False):
         return 0
     exe = Path(sys.executable)
@@ -114,7 +104,7 @@ def open_windows() -> int:
 @dataclass(frozen=True)
 class Running:
     pid: int
-    path: str  # its exe's full path; "" when Windows won't say
+    path: str
     session: int | None
 
 
@@ -165,7 +155,6 @@ _k32.CloseHandle.restype = wt.BOOL
 
 
 def _running(exe_name: str) -> list[Running]:
-    """Every process whose exe has this file name, with its path and Windows session."""
     snapshot = _k32.CreateToolhelp32Snapshot(_SNAPPROCESS, 0)
     if snapshot in (None, _INVALID_HANDLE):
         return []

@@ -1,5 +1,3 @@
-"""Profile cleanup's Hosts tab: the group's hosts and their scans, never started by itself."""
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -32,29 +30,24 @@ from capypanel.ui.profiles_tool.side import GroupFacts, HostCard, HostFacts
 from capypanel.ui.tables import grid_table
 
 NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)
-ID_ROLE = Qt.ItemDataRole.UserRole  # the row's host
+ID_ROLE = Qt.ItemDataRole.UserRole
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1
 RIGHT_ALIGNED = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
 @dataclass(frozen=True)
 class RowFacts:
-    """What the Hosts tab shows of one host beside its name and address."""
-
-    status: str  # "Online", or "Not checked"
-    status_color: str  # its dot; "" for none
-    status_tip: str  # when Hosts checked it
-    profiles: int | None  # once scanned
+    status: str
+    status_color: str
+    status_tip: str
+    profiles: int | None
     deletable: int | None
-    scan: str  # "10:41", "scanning…", "didn't answer", or ""
-    scan_time: float | None  # what the Scan column sorts by
-    scan_color: str  # "" for the text's own colour
+    scan: str
+    scan_time: float | None
+    scan_color: str
 
 
 class _Row(QTreeWidgetItem):
-    """Sorts by what a cell means. The Scan column goes by time, the hosts with no time after
-    the others whichever way it's sorted; ties stay in name order."""
-
     def __lt__(self, other: QTreeWidgetItem) -> bool:
         tree = self.treeWidget()
         column = tree.sortColumn() if tree is not None else NAME
@@ -63,7 +56,7 @@ class _Row(QTreeWidgetItem):
         )
         mine, theirs = self.data(column, SORT_ROLE), other.data(column, SORT_ROLE)
         if column == SCAN and (mine is None) != (theirs is None):
-            return (mine is None) == down  # no time: last, both ways
+            return (mine is None) == down
         if mine == theirs:
             names = self.data(NAME, SORT_ROLE), other.data(NAME, SORT_ROLE)
             return bool(names[1] < names[0]) if down else bool(names[0] < names[1])
@@ -71,13 +64,10 @@ class _Row(QTreeWidgetItem):
 
 
 class HostsTable(QWidget):
-    """The hosts of the group picked. No tick column: picking rows is enough. Double-click or
-    Enter opens a host's tab and goes to it; a middle-click or Ctrl+Enter opens it behind."""
-
-    open_requested = Signal(list, bool)  # host ids, and whether to go to the tab
+    open_requested = Signal(list, bool)
     picked = Signal()
-    menu_requested = Signal(QPoint)  # a right-click on a host: where (global)
-    scan_typed = Signal(str)  # "Scan 192.0.2.50": in the empty table, or under the rows
+    menu_requested = Signal(QPoint)
+    scan_typed = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -86,7 +76,6 @@ class HostsTable(QWidget):
         self.tree.setUniformRowHeights(True)
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tree.header().setStretchLastSection(True)
-        # At a narrow width Name gives up room first; Scan, the last one, stays whole.
         self.squeeze = Squeeze(self.tree, ((NAME, 90), (ADDRESS, 80)), self._scan_least)
         self.squeeze.narrowed.connect(lambda _narrow: self._title_deletable())
         self.tree.setSortingEnabled(True)
@@ -98,7 +87,6 @@ class HostsTable(QWidget):
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self._menu)
         self._fitted = False
-        # The empty table's note, when a search finds no host of the list.
         self._empty = QWidget(self.tree.viewport())
         self._empty_text = QLabel()
         self._empty_text.setAlignment(Qt.AlignmentFlag.AlignHCenter)
@@ -118,7 +106,6 @@ class HostsTable(QWidget):
         self._empty.hide()
         self._typed = ""
         self._offered = False
-        # The same Scan {host}, as the list's last line while the search has rows.
         self._offer = RowsOffer(self.tree)
         self._scan_action = QAction(self)
         self._scan_action.triggered.connect(lambda: self.scan_typed.emit(self._typed))
@@ -147,13 +134,10 @@ class HostsTable(QWidget):
         self.show_typed(self._typed, self._offered)
 
     def _title_deletable(self) -> None:
-        """ "Can be deleted", or one short word while the columns don't fit at full width;
-        the tooltip has the whole phrase either way."""
         narrow = self.squeeze.is_narrow()
         self.tree.headerItem().setText(DELETABLE, _("Deletable") if narrow else _("Can be deleted"))
 
     def _scan_least(self) -> int:
-        """Scan's width for its longest words, so where a host stands is never cut."""
         words = [
             _("deleting {n} of {total}").format(n=99, total=99),
             _("account refused"),
@@ -173,7 +157,7 @@ class HostsTable(QWidget):
             item = _Row()
             item.setData(NAME, ID_ROLE, host.id)
             item.setText(NAME, host.name)
-            item.setToolTip(NAME, host.name)  # whole, when the column is narrow
+            item.setToolTip(NAME, host.name)
             item.setData(NAME, SORT_ROLE, natural_key(host.name))
             item.setText(ADDRESS, host.address)
             item.setData(ADDRESS, SORT_ROLE, natural_key(host.address))
@@ -192,8 +176,6 @@ class HostsTable(QWidget):
             self._fill(item, facts)
 
     def show_typed(self, typed: str, offer: bool) -> None:
-        """With no rows, the note ("No host of the list with …") and, if `offer`, Scan {host}; with
-        rows, Scan {host} alone as the list's last line, if `offer`. "" hides both."""
         self._typed, self._offered = typed, offer
         offer = offer and bool(typed)
         rows = self.tree.topLevelItemCount() > 0
@@ -202,17 +184,15 @@ class HostsTable(QWidget):
             self.scan_button.setText(_("Scan {host}").format(host=typed))
             self._scan_action.setText(self.scan_button.text().replace("&", "&&"))
         self.scan_button.setVisible(offer)
-        self._empty_hint.setVisible(offer)  # it says what the button does
+        self._empty_hint.setVisible(offer)
         self._empty.setVisible(bool(typed) and not rows)
         self._place_empty()
         self._offer.show_actions([self._scan_action] if offer and rows else [])
 
     def offer_buttons(self) -> list[QPushButton]:
-        """The buttons under the rows, while shown (for tests)."""
         return self._offer.buttons
 
     def selected_ids(self) -> list[str]:
-        """The rows picked, in the order on screen."""
         found = (self.tree.topLevelItem(i) for i in range(self.tree.topLevelItemCount()))
         return [i.data(NAME, ID_ROLE) for i in found if i is not None and i.isSelected()]
 
@@ -222,7 +202,6 @@ class HostsTable(QWidget):
             self.tree.setCurrentItem(item)
 
     def texts(self) -> list[list[str]]:
-        """Every row's cells, in the order on screen (for tests)."""
         found = (self.tree.topLevelItem(i) for i in range(self.tree.topLevelItemCount()))
         return [[item.text(c) for c in range(SCAN + 1)] for item in found if item]
 
@@ -256,7 +235,7 @@ class HostsTable(QWidget):
             self.open_requested.emit(ids, focus)
 
     def _menu(self, point: QPoint) -> None:
-        if self.tree.itemAt(point) is not None:  # the click picked it already
+        if self.tree.itemAt(point) is not None:
             self.menu_requested.emit(self.tree.viewport().mapToGlobal(point))
 
     def _item(self, host_id: str) -> QTreeWidgetItem | None:
@@ -309,15 +288,13 @@ class HostsTable(QWidget):
 
 
 class HostsPage(QObject):
-    """The pinned Hosts tab: `box` in the middle, `side` on the right."""
-
     def __init__(self) -> None:
         super().__init__()
         self.search = SearchBox()
         self.table = HostsTable()
         self.box = TabBox(self.search, self.table)
         self.host_card = HostCard()
-        self.side = self.host_card  # the right panel's card for this tab
+        self.side = self.host_card
         self.search.to_results.connect(self._to_results)
         self.retranslate()
 
@@ -330,7 +307,6 @@ class HostsPage(QObject):
         self.box.show_title(name, about)
 
     def show_host(self, facts: HostFacts | GroupFacts) -> None:
-        """The card under Progress: the one host picked, or the hosts on show as a whole."""
         if isinstance(facts, HostFacts):
             self.host_card.show_host(facts)
         else:

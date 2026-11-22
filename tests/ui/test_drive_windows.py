@@ -1,5 +1,3 @@
-"""Mapped drives: rows and window; every call to another PC is replaced, so no network."""
-
 import time
 from collections.abc import Iterator
 from pathlib import Path

@@ -1,4 +1,4 @@
-"""A secret handed to a program through a named pipe only this account can open, once: no file."""
+"""Only this account can open the pipe, and only once: the secret never touches a file."""
 
 import ctypes
 import logging
@@ -45,8 +45,6 @@ _kernel32.CreateFileW.restype = wintypes.HANDLE
 
 
 class SecretPipe:
-    """Create it before starting the program, pass `path` to it, then call serve()."""
-
     def __init__(self) -> None:
         self.path = rf"\\.\pipe\capypanel-{secrets.token_hex(16)}"
         sddl = f"D:P(A;;GA;;;{winsec.current_user_sid()})"  # this account only
@@ -62,7 +60,6 @@ class SecretPipe:
         self._given_up = False
 
     def serve(self, secret: bytes, timeout: float = 60.0) -> threading.Thread:
-        """Writes `secret` to the first reader, in the background. Gives up after `timeout`."""
         timer = threading.Timer(timeout, self._give_up)
         timer.daemon = True
         worker = threading.Thread(target=self._serve, args=(secret, timer), daemon=True)
@@ -73,27 +70,25 @@ class SecretPipe:
     def _serve(self, secret: bytes, timer: threading.Timer) -> None:
         handle = self._handle
         try:
-            connected = _kernel32.ConnectNamedPipe(handle, None)  # waits for the reader
+            connected = _kernel32.ConnectNamedPipe(handle, None)
             if not connected and ctypes.get_last_error() != _ERROR_PIPE_CONNECTED:
                 log.warning("Password pipe: no reader (%s)", ctypes.get_last_error())
                 return
             if self._given_up:
-                return  # the reader is our own _give_up(), not the program
+                return
             written = wintypes.DWORD()
             buffer = ctypes.create_string_buffer(secret, len(secret))
             _kernel32.WriteFile(handle, buffer, len(secret), ctypes.byref(written), None)
-            _kernel32.FlushFileBuffers(handle)  # returns once the reader has it
+            _kernel32.FlushFileBuffers(handle)
             ctypes.memset(buffer, 0, len(secret))
         finally:  # closing (not disconnecting) lets the reader see a normal end of file
             timer.cancel()
             _kernel32.CloseHandle(handle)
 
     def close(self) -> None:
-        """Closes a pipe that will never be served, e.g. when the program didn't start."""
         _kernel32.CloseHandle(self._handle)
 
     def _give_up(self) -> None:
-        """Unblocks a server still waiting, by connecting to it ourselves without reading."""
         self._given_up = True
         client = _kernel32.CreateFileW(self.path, _GENERIC_READ, 0, None, _OPEN_EXISTING, 0, None)
         if client not in (None, _INVALID_HANDLE):

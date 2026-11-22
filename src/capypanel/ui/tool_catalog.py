@@ -1,5 +1,3 @@
-"""Every tool CapyPanel has, in the rail's order, imported by load() alone."""
-
 import importlib
 from dataclasses import dataclass
 
@@ -10,10 +8,10 @@ from capypanel.ui.main_window.tool import ToolKind
 @dataclass(frozen=True)
 class ToolInfo:
     tool_id: str
-    icon: str  # a Tabler icon's name
-    name: str  # N_() texts: shown through _()
-    blurb: str  # what the tool is for, in one line
-    module: str  # where its class lives
+    icon: str
+    name: str
+    blurb: str
+    module: str
     class_name: str
 
     def load(self) -> ToolKind:

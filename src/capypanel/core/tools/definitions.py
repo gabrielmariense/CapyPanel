@@ -1,5 +1,3 @@
-"""A tool definition: how to find and start one external program, one JSON file per tool."""
-
 import json
 import re
 import string
@@ -16,34 +14,33 @@ PLACEHOLDERS = ("address", "port", "user", "password", "password_file", "setting
 SECRET = "password"
 PASSWORD_FILE = "password_file"
 SETTINGS_FILE = "settings_file"
-# How the tool gets the password: none, on its command line, or as a VNC password file that
-# is really a private pipe (nothing on disk; see pipe.py). Each needs its own placeholder.
+# A VNC password "file" is really a private pipe: nothing goes to disk (pipe.py).
 CREDENTIALS = {"none": None, "arguments": SECRET, "vnc_password_file": PASSWORD_FILE}
 _ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 _EXTENSION = re.compile(r"^\.[a-z0-9]{1,8}$")
 
 
 class ToolDefinitionError(ValueError):
-    """A tool definition file is broken; the message says what's wrong."""
+    pass
 
 
 @dataclass(frozen=True)
 class Detect:
-    installed_as: tuple[str, ...] = ()  # names in Windows' list of installed programs
-    exe: str = ""  # file name inside the install folder
-    paths: tuple[str, ...] = ()  # usual full paths; %ProgramFiles% and the like are expanded
+    installed_as: tuple[str, ...] = ()
+    exe: str = ""
+    paths: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class SettingsFile:
-    extension: str  # ".vnc"
-    clear: tuple[str, ...] = ()  # emptied: they name the computer the file was saved for
+    extension: str
+    clear: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class ArgumentGroup:
     arguments: tuple[str, ...]
-    option: str | None = None  # used only when a profile turns this option on
+    option: str | None = None
 
 
 @dataclass(frozen=True)
@@ -54,20 +51,19 @@ class ToolDefinition:
     arguments: tuple[ArgumentGroup, ...]
     credentials: str = "none"
     port: int | None = None
-    options: Mapping[str, str] = field(default_factory=dict)  # option id -> name in English
-    option_names: Mapping[str, Mapping[str, str]] = field(default_factory=dict)  # by language
+    options: Mapping[str, str] = field(default_factory=dict)
+    option_names: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
     # VNC login types (RFB security types) that ask for a user and password: an account profile
     # first checks the server offers one, so a Windows password never goes to a VNC-only server.
     account_types: tuple[int, ...] = ()
-    max_password: Mapping[str, int] = field(default_factory=dict)  # login -> longest password
-    settings_file: SettingsFile | None = None  # the tool reads a settings file a profile can carry
-    website: str = ""  # where to download it
-    executable: str = ""  # set by the user; empty means "find it"
+    max_password: Mapping[str, int] = field(default_factory=dict)
+    settings_file: SettingsFile | None = None
+    website: str = ""
+    executable: str = ""
     detect: Detect = field(default_factory=Detect)
-    extra: Mapping[str, Any] = field(default_factory=dict)  # keys from newer versions, kept
+    extra: Mapping[str, Any] = field(default_factory=dict)
 
     def option_name(self, option_id: str, language: str) -> str:
-        """The option's name in `language` when the tool has one, else its English name."""
         names = self.option_names.get(option_id, {})
         return names.get(language) or self.options.get(option_id, option_id)
 
@@ -89,8 +85,7 @@ def command_line(
     values: Mapping[str, str],
     options: Collection[str] = (),
 ) -> list[str]:
-    """The exact argument list for one launch. Never a shell string: an address can't turn
-    into a command. Groups with an empty placeholder or an option that's off are dropped."""
+    """An argument list, never a shell string: an address can't turn into a command."""
     argv = [str(executable)]
     for group in tool.arguments:
         if group.option is not None and group.option not in options:
@@ -102,7 +97,6 @@ def command_line(
 
 
 def redacted(argv: Sequence[str], secrets: Sequence[str]) -> list[str]:
-    """The argument list with secrets replaced, for logs and error messages."""
     hidden = [s for s in secrets if s]
     out = []
     for arg in argv:
@@ -264,8 +258,6 @@ def _max_password(value: object) -> dict[str, int]:
 
 
 def _options(value: object) -> tuple[dict[str, str], dict[str, dict[str, str]]]:
-    """English names, and the per-language names of options that have them."""
-
     def is_name(v: object) -> bool:
         return isinstance(v, str) and bool(v.strip())
 
@@ -319,7 +311,7 @@ def _arguments(value: object, options: Mapping[str, str]) -> tuple[ArgumentGroup
 def _names(arg: str) -> list[str]:
     try:
         return [name for _text, name, _spec, _conv in string.Formatter().parse(arg) if name]
-    except ValueError as e:  # an unpaired "{" or "}"
+    except ValueError as e:
         raise ToolDefinitionError(_("Broken placeholder in “{arg}”.").format(arg=arg)) from e
 
 

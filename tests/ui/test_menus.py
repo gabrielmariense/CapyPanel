@@ -9,7 +9,7 @@ from capypanel.ui.themes import engine as themes
 def test_shortcuts_are_drawn_dimmed_at_the_right_edge_not_after_the_text(
     qapp: QApplication,
 ) -> None:
-    themes.apply(themes.DEFAULT_THEME)  # its watcher keeps the room in every menu
+    themes.apply(themes.DEFAULT_THEME)
     menu = QMenu()
     edit = menu.addAction("&Edit selected…")
     edit.setShortcut(QKeySequence("F2"))
@@ -20,7 +20,7 @@ def test_shortcuts_are_drawn_dimmed_at_the_right_edge_not_after_the_text(
     assert (name, tab) == ("&Edit selected…", "\t") and room and not room.strip()  # Qt draws blanks
     assert menus.label(edit) == "&Edit selected…" and plain.text() == "&Status"
     assert menus.shortcut_text(connect) == "Enter"  # Windows' name for the key
-    edit.setText("&Edit…")  # a language switch: the room comes back
+    edit.setText("&Edit…")
     assert menus.label(edit) == "&Edit…" and "\t" in edit.text()
     menu.popup(QPoint(-3000, -3000))
     qapp.processEvents()

@@ -1,5 +1,3 @@
-"""The main window: the shell around the tools, with its menus, rail, status bar and Settings."""
-
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import fields, replace
@@ -49,7 +47,7 @@ from capypanel.ui.tool_catalog import CATALOG, ToolInfo
 from capypanel.ui.updater import Updater
 
 log = logging.getLogger(__name__)
-OFFER_RETRY_MS = 2000  # a found update waits this long between tries while something is in the way
+OFFER_RETRY_MS = 2000
 
 
 class MainWindow(QMainWindow):
@@ -62,7 +60,6 @@ class MainWindow(QMainWindow):
         registry: themes.Registry | None = None,
         catalog: Sequence[ToolInfo] = CATALOG,
     ):
-        """tools: in the rail's order. catalog: what Home and Settings show of each tool."""
         super().__init__()
         self.paths = paths
         self.prefs = prefs
@@ -74,9 +71,8 @@ class MainWindow(QMainWindow):
         self.rail.tool_picked.connect(self.show_tool)
         self._catalog = list(catalog)
         self.tools: dict[str, Tool] = {}
-        # Each tool's toolbar on top of the tool, one page each; the page shown is the tool's.
         self._pages = QStackedWidget()
-        self._tool_actions = QActionGroup(self)  # View's Home and tools: one shown at a time
+        self._tool_actions = QActionGroup(self)
         self._tool_actions.setExclusive(True)
         self._home_action = QAction(self)
         self._home_action.setCheckable(True)
@@ -84,16 +80,14 @@ class MainWindow(QMainWindow):
         self._home_action.triggered.connect(lambda _c=False: self.show_home())
         self._tool_actions.addAction(self._home_action)
         self.addAction(self._home_action)
-        self._status: dict[str, _StatusGroup] = {}  # each tool's, on the status bar's right
-        self._badges: dict[str, int] = {}  # each tool's count of items needing attention
+        self._status: dict[str, _StatusGroup] = {}
+        self._badges: dict[str, int] = {}
         self.tray = Tray(self)
-        self._in_tray = False  # the window's X sent it to the tray
-        self._quitting = False  # Quit CapyPanel: the X's choice isn't asked
-        self._notified_by: str | None = None  # the tool behind the last notification
-        self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
+        self._in_tray = False
+        self._quitting = False
+        self._notified_by: str | None = None
+        self._page_of: dict[str, QWidget] = {}
 
-        # The rail on the left; the tool shown, its toolbar on top, fills the rest. This frame comes
-        # before the tools: a widget put into a styled one is restyled whole, so each goes in once.
         central = QWidget()
         row = QHBoxLayout(central)
         row.setContentsMargins(0, 0, 0, 0)
@@ -102,36 +96,33 @@ class MainWindow(QMainWindow):
         row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
 
-        self._building = True  # the tools' lists wait to be filled until one is shown
+        self._building = True
         for make in tools:
             self._add_tool(make(self))
-        self._shown: str | None = None  # the tool shown; None: Home
+        self._shown: str | None = None
         self.home = HomePage(self._infos())
         self.home.tool_picked.connect(self.show_tool)
         self._pages.insertWidget(0, self.home)
 
         self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
-        self._update_shown = ""  # the version whose window opened in this run: once is enough
+        self._update_shown = ""
         self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
-        # An update asked the tools already, or Windows is ending the session: closing asks no
-        # more.
         self._tools_agreed = False
         self._build_menus()
         for action in (self._home_action, self.commands.settings):
-            action.changed.connect(self._rail_tips)  # a new key shows in its tip
+            action.changed.connect(self._rail_tips)
         self.keys = Keys(self.prefs, self.save_prefs)
-        self.keys.load(self._key_commands())  # this person's keys, over today's defaults
+        self.keys.load(self._key_commands())
         self._connect()
         self._connect_tray()
         themes.switches().switched.connect(self._restyle)
         self._restore_layout()
-        # Home, unless the user picked a tool, or the tool shown last, in Settings.
         start = self.prefs.get(settings.START_KEY, settings.START_HOME)
         if start == settings.START_LAST:
             start = self.prefs.get(settings.TOOL_KEY)
         start = start if isinstance(start, str) and start in self.tools else None
         if start is not None and self.tools[start].first_use_pending():
-            start = None  # its warning comes first, from Home, once the window shows
+            start = None
         self._building = False
         self._show(start)
 
@@ -139,7 +130,7 @@ class MainWindow(QMainWindow):
         tool_id = tool.TOOL_ID
         self.tools[tool_id] = tool
         page = QWidget()
-        self._pages.addWidget(page)  # in place first: the tool is restyled once, going in
+        self._pages.addWidget(page)
         column = QVBoxLayout(page)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(0)
@@ -153,9 +144,9 @@ class MainWindow(QMainWindow):
         if len(self.tools) <= 9:
             action.setShortcut(QKeySequence(f"Ctrl+{len(self.tools)}"))
         action.triggered.connect(lambda _c=False: self.show_tool(tool_id))
-        action.changed.connect(lambda t=tool_id: self._rail_tip(t))  # a new key shows in its tip
+        action.changed.connect(lambda t=tool_id: self._rail_tip(t))
         self._tool_actions.addAction(action)
-        self.addAction(action)  # its shortcut works wherever the focus is
+        self.addAction(action)
         self.statusBar().addWidget(tool.status_label, 1)
         right = _StatusGroup(tool.status_widgets())
         self.statusBar().addPermanentWidget(right)
@@ -165,18 +156,13 @@ class MainWindow(QMainWindow):
         tool.notify_requested.connect(lambda title, text, t=tool_id: self._notify(t, title, text))
 
     def shown_tool(self) -> Tool | None:
-        """None while Home is shown."""
         return None if self._shown is None else self.tools[self._shown]
 
     def help_place(self) -> str:
-        """Where F1, the rail's ? and Help › Help for this screen open the docs: the shown
-        tool's part, or Home's in Getting started."""
         tool = self.shown_tool()
-        # A tool with no place of its own yet opens the nearest: Getting started's Home part.
         return (tool.help_place() if tool is not None else "") or "start-run-capypanel"
 
     def show_tool(self, tool_id: str) -> bool:
-        """False when the tool's first-use warning was cancelled: the window stays where it was."""
         self._show(tool_id)
         return self._shown == tool_id
 
@@ -184,20 +170,18 @@ class MainWindow(QMainWindow):
         self._show(None)
 
     def _show(self, tool_id: str | None) -> None:
-        """The rail, View, the toolbar, the tool and the status bar follow; Home has no toolbar.
-        A tool's first-use warning comes before its first showing, its guide after."""
         if tool_id is not None and on_screen(self):
             tool = self.tools[tool_id]
             if tool.first_use_pending() and not tool.first_use_warning(self):
-                self.rail.show_tool(self._shown)  # Cancel: where it was
+                self.rail.show_tool(self._shown)
                 return
         if self.guides.running and self.guides.running != (tool_id or "home"):
-            self.guides.stop()  # left its screen: it shows again the next time
+            self.guides.stop()
         self._shown = tool_id
         tool = self.shown_tool()
         self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
         if tool is not None:
-            tool.came_to_front()  # its lists, if they waited while another tool was shown
+            tool.came_to_front()
         self.rail.show_tool(tool_id)
         self._home_action.setChecked(tool_id is None)
         for action in self._tool_list_actions():
@@ -213,21 +197,15 @@ class MainWindow(QMainWindow):
             self.prefs[settings.TOOL_KEY] = tool_id
 
     def _infos(self) -> list[ToolInfo]:
-        """The catalog's entries for the window's tools, in the rail's order."""
         return [info for info in self._catalog if info.tool_id in self.tools]
 
     def _tool_list_actions(self) -> list[QAction]:
-        """View's tools, without Home."""
         return [a for a in self._tool_actions.actions() if a is not self._home_action]
 
     def _tool_action(self, tool_id: str) -> QAction:
         return next(a for a in self._tool_list_actions() if a.data() == tool_id)
 
-    # ---- what tools ask of the shell ----
-
     def fills_now(self, tool_id: str) -> bool:
-        # Lists behind another tool wait: with 480 hosts, SSH's and Profile cleanup's cost about
-        # a tenth of a second at every start, and again at every change made in Hosts.
         return not self._building and self._shown == tool_id
 
     def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
@@ -246,8 +224,6 @@ class MainWindow(QMainWindow):
         dialog = self.settings_dialog()
         geometry = self.prefs.get("settings_geometry")
         opens_at = [SETTINGS_WIDTH, SETTINGS_HEIGHT]
-        # A size kept while Settings opened at another one was never a choice against this
-        # one: the new opening size shows once, and what the person makes of it is kept.
         if isinstance(geometry, str) and self.prefs.get("settings_opens_at") == opens_at:
             dialog.own_size = dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
         if page:
@@ -256,7 +232,7 @@ class MainWindow(QMainWindow):
         self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self.prefs["settings_opens_at"] = opens_at
         self.save_prefs()
-        self._update_tray()  # Refresh on its own may have been switched on or off
+        self._update_tray()
 
     def kept_logins(self) -> list[KeptLogin]:
         return [login for tool in self.tools.values() for login in tool.kept_logins()]
@@ -266,22 +242,16 @@ class MainWindow(QMainWindow):
 
     def open_saved_credentials(self, parent: QWidget | None = None) -> None:
         run_modal(SavedCredentialsDialog(parent or self, self.kept_logins))
-        if isinstance(parent, SettingsDialog):  # its pages show what's kept
+        if isinstance(parent, SettingsDialog):
             parent.credentials_changed()
 
-    # ---- building ----
-
     def _build_menus(self) -> None:
-        """Menus are built without text; retranslate() fills it in, now and on every switch."""
         a = self.commands
         bar = self.menuBar()
         self._file_menu = bar.addMenu("")
-        # Lists are the tools': they're in each tool's list dropdown, not here.
         self._file_menu.addAction(a.settings)
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.exit)
-        # It stays open while parts are ticked, so several can be shown or hidden in one go.
-        # A tool's own commands live in its toolbar: the menu bar is the same for every tool.
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
         self._help_menu = bar.addMenu("")
@@ -290,7 +260,6 @@ class MainWindow(QMainWindow):
         )
         self._help_menu.addSeparator()
         self._help_menu.addActions([a.check_updates, a.about])
-        # A newer release: a button at the menu bar's right end, the same in every tool.
         self.update_button = QToolButton()
         self.update_button.setObjectName("updateButton")
         self.update_button.setAutoRaise(True)
@@ -301,13 +270,11 @@ class MainWindow(QMainWindow):
         self._retranslate_menus()
 
     def _fill_view_menu(self) -> None:
-        """Home and the tools first, then the shown tool's panels, then the window's parts;
-        theme and language are in Settings."""
         menu = self._view_menu
         for action in menu.actions():  # not clear(): it deletes the tools' own actions
             menu.removeAction(action)
             if action.isSeparator():
-                action.deleteLater()  # the menu's own
+                action.deleteLater()
         menu.addAction(self._home_action)
         menu.addSeparator()
         menu.addActions(self._tool_list_actions())
@@ -336,7 +303,7 @@ class MainWindow(QMainWindow):
         a.help_screen.triggered.connect(lambda: help_links.open_place(self.help_place()))
         self.rail.help_button.clicked.connect(a.help_screen.trigger)
         a.report_problem.triggered.connect(self._report_problem)
-        a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
+        a.about.triggered.connect(lambda: self.open_settings("about"))
         a.check_updates.triggered.connect(lambda: self.open_updates())
         a.show_guide.triggered.connect(lambda: self._guide_now(force=True))
         a.show_all_guides.triggered.connect(self.show_all_guides_again)
@@ -376,7 +343,6 @@ class MainWindow(QMainWindow):
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
 
     def _view_choices(self) -> dict[str, QAction]:
-        """The shell's View menu ticks, by the key they're saved under."""
         a = self.commands
         return {"toolbar": a.show_toolbar, "status_bar": a.show_status_bar}
 
@@ -391,8 +357,6 @@ class MainWindow(QMainWindow):
         self._tray_counts()
 
     def _rail_tips(self) -> None:
-        """The rail's tips, each with its command's key as it is now (Settings › Keyboard
-        shortcuts changes them): Home's, the ?'s, Settings' and each tool's."""
         home, help_words = self._home_action, _("Help for this screen")
         self.rail.home_button.setToolTip(key_tip(plain(label(home)), home))
         self.rail.help_button.setToolTip(key_tip(help_words, self.commands.help_screen))
@@ -402,8 +366,6 @@ class MainWindow(QMainWindow):
             self._rail_tip(tool_id)
 
     def _rail_tip(self, tool_id: str) -> None:
-        """The rail icon's tip, "Printers (Ctrl+2)" with the key View's Printers has now, and
-        under it what the red count means, while there's one."""
         tool = self.tools[tool_id]
         tip = key_tip(tool.tool_name(), self._tool_action(tool_id))
         count = self._badges.get(tool_id, 0)
@@ -416,14 +378,10 @@ class MainWindow(QMainWindow):
             self._show_title(self.tools[tool_id].title())
 
     def _show_title(self, name: str) -> None:
-        """The title, e.g. "Clinic — CapyPanel 0.26.1": the version only; About has the build."""
         app = f"CapyPanel {__version__}"
         self.setWindowTitle(f"{name} — {app}" if name else app)
 
-    # ---- settings ----
-
     def settings_dialog(self) -> SettingsDialog:
-        """Settings, wired up: every choice applies as it's made, with no Save."""
         groups = [g for t in self.tools.values() if (g := t.settings_group()) is not None]
         start = self.prefs.get(settings.START_KEY)
         closing = self.prefs.get(settings.CLOSE_KEY)
@@ -436,7 +394,6 @@ class MainWindow(QMainWindow):
             start=start if isinstance(start, str) else settings.START_HOME,
             updates=self.updater.how_often(),
             updates_editable=self.updater.can_set(),
-            # What's saved, so the page shows it, and picking "Ask" again is a change it saves.
             closing=closing if isinstance(closing, str) else settings.CLOSE_ASK,
             keys=self.keys,
             place_names={tool_id: tool.tool_name() for tool_id, tool in self.tools.items()},
@@ -450,8 +407,6 @@ class MainWindow(QMainWindow):
         return dialog
 
     def _key_commands(self) -> list[KeyCommand]:
-        """Every command a key can run, in menu order: the window's own (File, View's tools,
-        Help…), then each tool's."""
         a = self.commands
         own = [getattr(a, f.name) for f in fields(a)]
         made = [KeyCommand(f"app.{f.name}", action, EVERYWHERE, portable(action.shortcut()),
@@ -480,8 +435,6 @@ class MainWindow(QMainWindow):
         self.prefs[settings.CLOSE_KEY] = closing
         self.save_prefs()
 
-    # ---- the tray ----
-
     def _connect_tray(self) -> None:
         self.tray.open_requested.connect(self.open_from_tray)
         self.tray.quit_requested.connect(self.quit_app)
@@ -495,14 +448,11 @@ class MainWindow(QMainWindow):
         self._update_tray()
 
     def _session_ending(self) -> None:
-        """Windows is logging off or shutting down: the X quits asking nothing, its own or a tool's,
-        and no tray, so CapyPanel never holds the shutdown up."""
+        """Windows is logging off or shutting down: quit without asking, never holding it up."""
         self._quitting = True
         self._tools_agreed = True
 
     def _update_tray(self) -> None:
-        """The tray icon shows while the window is in the tray, or while a tool works on its
-        own: its notifications need it."""
         working = any(t.works_in_background() for t in self.tools.values())
         self.tray.set_shown(self._in_tray or working)
 
@@ -513,7 +463,7 @@ class MainWindow(QMainWindow):
 
     def _notify(self, tool_id: str, title: str, text: str) -> None:
         self._notified_by = tool_id
-        self.tray.set_shown(True)  # already shown while a tool works on its own
+        self.tray.set_shown(True)
         self.tray.notify(title, text)
 
     def _notification_clicked(self) -> None:
@@ -523,16 +473,14 @@ class MainWindow(QMainWindow):
             self.open_from_tray()
 
     def _show_attention(self, tool_id: str) -> None:
-        """The tool, listing just its items needing attention."""
         self.open_from_tray()
         self.show_tool(tool_id)
         self.tools[tool_id].show_attention()
 
     def to_tray(self) -> None:
-        """Hidden, still running: the tools' Refresh on its own and warnings go on."""
         self._save_state()
         self._in_tray = True
-        QApplication.setQuitOnLastWindowClosed(False)  # a box closing now mustn't quit
+        QApplication.setQuitOnLastWindowClosed(False)
         self.hide()
         self._update_tray()
         log.info("Window sent to the tray")
@@ -549,15 +497,12 @@ class MainWindow(QMainWindow):
         self._update_tray()
 
     def quit_app(self) -> None:
-        """Quit CapyPanel, from the tray's menu: no question asked."""
         self._quitting = True
         hidden = self._in_tray
         if self.close() and hidden:
             QApplication.quit()  # a hidden window closing doesn't end the app by itself
 
     def _close_choice(self) -> str | None:
-        """What the X does now: CLOSE_TRAY, CLOSE_QUIT, or None to stay open. "Ask each time" asks
-        even with nothing running: from the tray it's back at once, a new start takes seconds."""
         if self._quitting or not self.tray.available():
             return settings.CLOSE_QUIT
         choice = self.prefs.get(settings.CLOSE_KEY, settings.CLOSE_ASK)
@@ -568,26 +513,20 @@ class MainWindow(QMainWindow):
             self._set_closing(answer)
         return answer
 
-    # ---- look ----
-
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
-        themes.apply(theme)  # _restyle follows it
+        themes.apply(theme)
         self.prefs["theme"] = theme.id
         self.save_prefs()
         log.info("Theme: %s", theme.id)
 
     def _restyle(self) -> None:
-        """After every theme switch, the one Windows starts under "follow system" too."""
         for tool in self.tools.values():
             tool.restyle()
-        self._tray_counts()  # the count on the tray's icon is in the theme's red
+        self._tray_counts()
         self._paint_update_button()
 
-    # ---- updates ----
-
     def open_updates(self, parent: QWidget | None = None) -> None:
-        """The update window: the release on offer, or a look at GitHub first."""
         from capypanel.ui.updater import UpdateWindow
 
         if self.updater.offer is not None:
@@ -597,12 +536,10 @@ class MainWindow(QMainWindow):
             working=self.tools_working, quit_for_update=self.quit_for_update,
         )  # fmt: skip
         run_modal(window)
-        if window._release is not None:  # found while it was open
+        if window._release is not None:
             self._update_shown = window._release.version
 
     def _offer_update(self) -> None:
-        """A newer release, found on its own: its window opens, once per run, when nothing
-        else is in the way (a guide, another window, CapyPanel in the tray)."""
         offer = self.updater.offer
         if offer is None or offer.version == self._update_shown or self._quitting:
             return
@@ -622,17 +559,13 @@ class MainWindow(QMainWindow):
             self.update_button.setToolTip(_("A newer CapyPanel is out: see what's new"))
             self._paint_update_button()
             self.update_button.adjustSize()
-            # The menu bar sizes its corner when it's given one: given again, it fits the words.
             self.menuBar().setCornerWidget(self.update_button, Qt.Corner.TopRightCorner)
 
     def _paint_update_button(self) -> None:
         color = self.update_button.palette().color(QPalette.ColorRole.Link)
         self.update_button.setIcon(tabler_icon("download", color, 16))
 
-    # ---- first-run guides ----
-
     def _guide_for(self, tool_id: str | None) -> Guide | None:
-        """The screen's guide; a tool's own ends on the View menu, the same for every tool."""
         if tool_id is None:
             return self._home_guide()
         tool = self.tools[tool_id]
@@ -649,14 +582,12 @@ class MainWindow(QMainWindow):
             spot = bar.actionGeometry(self._view_menu.menuAction())
             return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
 
-        return Step(pgettext("guide", "View"),  # the card's title, without the menu's &
+        return Step(pgettext("guide", "View"),
                     _("The View menu, on the menu bar, shows and hides this screen's panels, "
                       "like Tags and Details."), lambda: None, lambda: tool,
                     area=view_title)  # fmt: skip
 
     def _guide_now(self, *, force: bool = False) -> None:
-        """The shown screen's guide: the first time it's shown (once its page is laid out), or
-        now from Help."""
         guide = self._guide_for(self._shown)
         if guide is None:
             if force:
@@ -674,10 +605,9 @@ class MainWindow(QMainWindow):
         )
 
     def _home_guide(self) -> Guide:
-        """What every tool shares, said once, on the very first start."""
         home, rail, bar = self.home, self.rail, self.menuBar()
 
-        def help_title() -> QRect:  # "Help" on the menu bar, which has no widget of its own
+        def help_title() -> QRect:
             spot = bar.actionGeometry(self._help_menu.menuAction())
             return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
 
@@ -710,8 +640,6 @@ class MainWindow(QMainWindow):
         return any(tool.working() for tool in self.tools.values())
 
     def quit_for_update(self, start_helper: Callable[[], None]) -> bool:
-        """Closes CapyPanel for an update once every tool agrees (a profile delete asks first),
-        `start_helper` running just before. False: a tool kept it open and nothing was started."""
         if not all(tool.quit_question(self) for tool in self.tools.values()):
             return False
         start_helper()
@@ -723,15 +651,12 @@ class MainWindow(QMainWindow):
         return True
 
     def show_restart_note(self, kind: str, version: str, why: str) -> None:
-        """After the update's helper started CapyPanel again: what happened. What the update
-        left is cleared at every start (ui/app.py)."""
         from capypanel.ui.updater import RestartWindow, restart_text
 
         log.info("%s", restart_text(kind, version, why))
         run_modal(RestartWindow(self, kind, version, why, self.updater.take_installed()))
 
     def set_language(self, code: str) -> None:
-        """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
         code = language.apply(code)
         self.prefs["language"] = code
         self.save_prefs()
@@ -747,11 +672,11 @@ class MainWindow(QMainWindow):
         self.home.retranslate()
         for tool in self.tools.values():
             tool.retranslate()
-        self._tray_counts()  # the tray's menu, in the new language
+        self._tray_counts()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
-        self._guide_now()  # Home's on the very first start
+        self._guide_now()
         themes.paint_title_bar(self)  # the window handle only exists once it's shown
         self._align_toolbar()
 
@@ -772,11 +697,10 @@ class MainWindow(QMainWindow):
             event.ignore()
             self._quitting = False
             return
-        if not self._in_tray:  # saved when it went there, as it was shown
+        if not self._in_tray:
             self._save_state()
         self.tray.set_shown(False)
         QApplication.setQuitOnLastWindowClosed(True)
-        # Windows of CapyPanel's own that no window owns, such as Commands: they go too.
         for other in QApplication.topLevelWidgets():
             if other is not self and other.isWindow() and other.isVisible():
                 other.close()
@@ -797,8 +721,7 @@ def _docs_page(page: str) -> str:
 
 
 class _StatusGroup(QWidget):
-    """A tool's widgets on the status bar's right. Shown only while its tool is and one of them
-    is: an empty group would still draw a separator line in some themes."""
+    """Shown only with a visible widget: an empty group still draws a separator in some themes."""
 
     def __init__(self, widgets: list[QWidget]) -> None:
         super().__init__()
@@ -810,7 +733,6 @@ class _StatusGroup(QWidget):
         for widget in widgets:
             row.addWidget(widget)
             widget.installEventFilter(self)
-            # As tall as they are even while hidden, so the bar never changes height.
             self.setMinimumHeight(max(self.minimumHeight(), widget.sizeHint().height()))
         self._update()
 

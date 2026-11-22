@@ -1,5 +1,3 @@
-"""Saved credentials: every login CapyPanel keeps, in one table with Forget and Forget all."""
-
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -26,17 +24,14 @@ log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class KeptLogin:
-    """One login a tool keeps, as the window lists it. Its password never shows."""
-
-    used_for: str  # "RealVNC", "Logged-on users"
-    tool: str  # what signs in with it: "RealVNC Viewer", "Hosts › Refresh"
-    user: str  # as shown: "EXAMPLE\ana", "(password only)"
-    saved: bool  # in Windows Credential Manager; otherwise temporary, until CapyPanel closes
-    forget: Callable[[], object]  # raises OSError when Windows didn't delete it
+    used_for: str
+    tool: str
+    user: str
+    saved: bool
+    forget: Callable[[], object]
 
 
 def kept_text(logins: list[KeptLogin]) -> str:
-    """Settings' line: how many are kept, and where."""
     if not logins:
         return _("None kept.")
     saved = sum(login.saved for login in logins)
@@ -64,7 +59,6 @@ def forget_failed(parent: QWidget, error: OSError) -> None:
 
 
 def forget_details(logins: list[KeptLogin]) -> str:
-    """The logins the question names, by where they're kept, then what forgetting means."""
     parts = []
     for heading, saved in (
         (_("Saved in Credential Manager:"), True),
@@ -77,8 +71,6 @@ def forget_details(logins: list[KeptLogin]) -> str:
 
 
 class SavedCredentialsDialog(QDialog):
-    """The logins `kept` returns, read again after each Forget."""
-
     def __init__(self, parent: QWidget | None, kept: Callable[[], list[KeptLogin]]) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Saved credentials"))
@@ -119,14 +111,13 @@ class SavedCredentialsDialog(QDialog):
         self.resize(720, self.sizeHint().height())
 
     def _fill(self, row: int) -> None:
-        """Lists what's kept now, picking the row at `row` (or the last)."""
         self._logins = sorted(self._kept(), key=lambda login: login.used_for.casefold())
         self.table.clear()
         for login in self._logins:
             place = _("Credential Manager") if login.saved else _("Temporary")
             item = QTreeWidgetItem([login.used_for, login.tool, login.user, place])
             for index in range(4):
-                item.setToolTip(index, item.text(index))  # whole, if the column cuts it
+                item.setToolTip(index, item.text(index))
             self.table.addTopLevelItem(item)
         fit_rows(self.table)
         for index, width in enumerate((160, 150, 170)):
@@ -161,7 +152,6 @@ class SavedCredentialsDialog(QDialog):
             self._fill(0)
 
     def _run(self, logins: list[KeptLogin]) -> None:
-        """Forgets each; says so once when Windows didn't delete one."""
         failed: OSError | None = None
         for login in logins:
             try:

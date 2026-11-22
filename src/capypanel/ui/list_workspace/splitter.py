@@ -1,5 +1,3 @@
-"""The splitter between the panes: a double-click on the edge between two panes says which."""
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QSplitter, QSplitterHandle
@@ -14,7 +12,7 @@ class _Handle(QSplitterHandle):
 
 
 class PaneSplitter(QSplitter):
-    edge_double_clicked = Signal(int)  # the edge on the left of this pane's index
+    edge_double_clicked = Signal(int)
 
     def createHandle(self) -> QSplitterHandle:
         return _Handle(self.orientation(), self)

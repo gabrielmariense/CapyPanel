@@ -1,5 +1,3 @@
-"""Saved network drives over WMI: this PC's for real, others from an answer written by hand."""
-
 import getpass
 
 import pytest
@@ -23,7 +21,7 @@ def test_saved_drives_are_sorted_with_their_letters_written_as_windows_shows_the
         {"user": "ana", "domain": "EXAMPLE", "drives": [
             {"letter": "s", "path": "\\\\FS01\\Setores"}, {"letter": "H", "path": "\\\\FS01\\ana"},
         ]},
-        {"user": "", "domain": "", "drives": []},  # a hive with no one: never listed
+        {"user": "", "domain": "", "drives": []},
     ]  # fmt: skip
     monkeypatch.setattr(drives, "check_reachable", lambda host: None)
     monkeypatch.setattr(inventory, "run_cim", lambda script, host, account: answer)

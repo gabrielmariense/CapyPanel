@@ -1,4 +1,4 @@
-"""One program on a Windows pseudo console, in a job object; nothing typed or printed is logged."""
+"""Nothing typed or printed is logged."""
 
 from __future__ import annotations
 
@@ -187,8 +187,7 @@ _ctrl_c_allowed = False
 
 
 def allow_ctrl_c_in_children() -> None:
-    """Clears an "ignore Ctrl+C" flag this process may have inherited. Its children inherit the
-    flag in turn, and with it Ctrl+C never stops ping in cmd."""
+    """Clears an inherited "ignore Ctrl+C" flag: with it, Ctrl+C never stops ping in cmd."""
     global _ctrl_c_allowed
     if not _ctrl_c_allowed:
         k32.SetConsoleCtrlHandler(None, False)
@@ -200,8 +199,6 @@ def _environment_block(env: Mapping[str, str]) -> ctypes.Array[ctypes.c_wchar]:
     return ctypes.create_unicode_buffer("".join(f"{k}={v}\0" for k, v in items) + "\0")
 
 
-# The engines ----------------------------------------------------------------------------------
-
 CARRIED_DIR = Path(__file__).resolve().parents[2] / "vendor" / "conpty"
 WINDOWS_11 = 22000  # Windows 11's first build: from it on, Windows' own engine is enough
 _GLYPH_WIDTH_CONSOLE = 0x18  # the carried engine counts cells as Windows' own console does
@@ -209,27 +206,22 @@ _GLYPH_WIDTH_CONSOLE = 0x18  # the carried engine counts cells as Windows' own c
 
 @dataclass(frozen=True)
 class Engine:
-    """What makes, resizes and closes a pseudo console. The carried engine's functions take
-    what Windows' own take."""
-
-    name: str  # for the log
+    name: str
     create: Callable[..., int]
     resize: Callable[..., int]
     close: Callable[..., None]
-    flags: int = 0  # added to every pseudo console it makes
-    # The cells it gives a regional indicator, half of a flag: every other character takes the
-    # cells Windows' own console gives it in both (tests/core/test_ssh_conpty.py).
+    flags: int = 0
+    # Half a flag (a regional indicator): the one character the two engines count apart.
     regional_indicator_cells: int = 2
 
 
 WINDOWS = Engine(
     "Windows' own engine", k32.CreatePseudoConsole, k32.ResizePseudoConsole, k32.ClosePseudoConsole
 )
-_carried: list[Engine | None] = []  # loaded once, by the first pseudo console that needs it
+_carried: list[Engine | None] = []
 
 
 def carried_engine() -> Engine | None:
-    """The engine in vendor/conpty, loaded on first use; None when it isn't there or won't load."""
     if not _carried:
         _carried.append(_load_carried())
     return _carried[0]
@@ -265,8 +257,7 @@ def _windows_build() -> int:
 
 
 def default_engine() -> Engine:
-    """Windows before 11 gets the carried engine: Windows 10's own takes no key once ssh.exe logs
-    in. Windows 11, or a carried engine that won't load, gets Windows' own."""
+    """Windows 10's own engine takes no key once ssh.exe logs in: it gets the carried one."""
     if _windows_build() < WINDOWS_11:
         carried = carried_engine()
         if carried is not None:
@@ -275,8 +266,7 @@ def default_engine() -> Engine:
 
 
 class PseudoConsole:
-    """One program on its own pseudo console. `on_ready()` and `on_exit(code)` are called on this
-    class's own threads: whoever receives them must hand the work to its own thread."""
+    """on_ready and on_exit come on this class's own threads: receivers hand the work to theirs."""
 
     def __init__(
         self,
@@ -292,8 +282,7 @@ class PseudoConsole:
         flags: int = 0,
         engine: Engine | None = None,
     ) -> None:
-        """`flags` go to the engine, with its own added (not INHERIT_CURSOR: it asks for the cursor
-        position at start). `engine`: default_engine()'s, unless given."""
+        """Never INHERIT_CURSOR: it asks for the cursor position at start."""
         self.argv = list(argv)
         self.engine = engine or default_engine()
         self._on_ready = on_ready
@@ -323,7 +312,7 @@ class PseudoConsole:
             )
             self.engine = WINDOWS
             hr = self._create(cols, rows, in_r, out_w, flags)
-        k32.CloseHandle(in_r)  # the pseudo console keeps its own copies
+        k32.CloseHandle(in_r)
         k32.CloseHandle(out_w)
         if hr != 0:
             k32.CloseHandle(in_w)
@@ -390,7 +379,7 @@ class PseudoConsole:
             and k32.AssignProcessToJobObject(self._job, self._pi.hProcess)
         ):
             error = ctypes.get_last_error()
-            k32.TerminateProcess(self._pi.hProcess, 1)  # still suspended: it never ran
+            k32.TerminateProcess(self._pi.hProcess, 1)
             k32.CloseHandle(self._pi.hThread)
             k32.CloseHandle(self._pi.hProcess)
             if self._job:
@@ -411,8 +400,6 @@ class PseudoConsole:
         size, flags = COORD(cols, rows), flags | self.engine.flags
         return self.engine.create(size, in_r, out_w, flags, ctypes.byref(self._hpc))
 
-    # Output -----------------------------------------------------------------------------------
-
     def _read(self) -> None:
         buf = ctypes.create_string_buffer(65536)
         got = wt.DWORD()
@@ -432,7 +419,6 @@ class PseudoConsole:
         self._on_ready()
 
     def take(self, limit: int) -> bytes:
-        """Up to `limit` bytes of output, oldest first. Called on the window's thread."""
         with self._cond:
             data = bytes(self._pending[:limit])
             del self._pending[:limit]
@@ -449,10 +435,7 @@ class PseudoConsole:
         with self._cond:
             return self._eof and not self._pending
 
-    # Input ------------------------------------------------------------------------------------
-
     def write(self, data: bytes) -> None:
-        """Queues typed keys or pasted text; never blocks the caller."""
         if data and not self._closed:
             self._writes.put(data)
 
@@ -463,14 +446,10 @@ class PseudoConsole:
             if data is None:
                 return
             if not k32.WriteFile(self._in, data, len(data), ctypes.byref(done), None):
-                return  # the pseudo console is gone
+                return
             self.bytes_written += len(data)
 
-    # Life -------------------------------------------------------------------------------------
-
     def _undo_start(self) -> None:
-        """A start that failed part way: frees the pseudo console, its pipes and the attribute
-        list (a failed job assignment left them open). close() never runs."""
         self._closed = True
         self.engine.close(self._hpc)
         k32.CloseHandle(self._in)
@@ -494,8 +473,6 @@ class PseudoConsole:
             self.engine.resize(self._hpc, COORD(max(1, cols), max(1, rows)))
 
     def close(self) -> float:
-        """Ends the program (if it still runs) and everything it started, and frees the pseudo
-        console. Returns the seconds ClosePseudoConsole took. The reader drains what's left."""
         if self._closed:
             return 0.0
         self._closed = True
@@ -508,7 +485,7 @@ class PseudoConsole:
         self._writes.put(None)
         self._writer.join(2)
         k32.CloseHandle(self._in)
-        k32.CloseHandle(self._job)  # ends whatever the program started and left running
+        k32.CloseHandle(self._job)
         self._reader.join(3)
         self._waiter.join(3)
         k32.CloseHandle(self._out)

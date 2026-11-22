@@ -37,7 +37,6 @@ from capypanel.ui.themes import engine as themes
 
 @pytest.fixture(autouse=True)
 def remove_only(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Remove asks whether to delete the file too; in tests, the answer is "remove only"."""
     monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: host_lists.REMOVE)
 
 
@@ -62,7 +61,7 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[CapyWindow]:
     win = CapyWindow(paths, {"schema": 1})
     yield win
     win.close()
-    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+    if themes.current() is not themes.DEFAULT_THEME:
         themes.apply(themes.DEFAULT_THEME)
 
 
@@ -76,7 +75,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert isinstance(file_menu, QMenu) and window.commands.settings in file_menu.actions()
     dialog = window.settings_dialog()
     rows = [dialog.page_list.item(i).text().strip() for i in range(dialog.page_list.count())]
-    assert rows == [  # each group's label, then one row per page
+    assert rows == [
         "CapyPanel",
         "General",
         "Keyboard shortcuts",
@@ -100,20 +99,18 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert titles(dialog.general) == ["Appearance", "Startup and closing", "Updates"]
     hosts = dialog.group(HostsSettings)
     assert titles(hosts.general) == ["Host lists", "Refresh", "Details panel"]
-    assert titles(hosts.connections) == ["Connection profiles", "Remote tools"]  # shared
-    assert titles(hosts.accounts_page) == ["Accounts", "Passwords"]  # only yours
+    assert titles(hosts.connections) == ["Connection profiles", "Remote tools"]
+    assert titles(hosts.accounts_page) == ["Accounts", "Passwords"]
     printers = dialog.group(PrintersSettings).general
     assert titles(printers) == ["Printer lists"]
     assert titles(printers.warnings_page) == ["Refresh", "Warnings", "Supplies"]
     assert titles(printers.connecting_page) == ["SNMP", "Doc360 MPS"]
-    # F1 and the ? on each: the part of Checking printers that says what the page sets
     assert printers.place == "settings-printers"
     assert printers.warnings_page.place == "printers-checking-choose-which-problems-warn"
     assert printers.connecting_page.place == "printers-checking-set-the-snmp-account"
 
 
 def test_page_list_rows_never_overlap(window: CapyWindow) -> None:
-    # Rows placed before the theme's padding arrives would overlap once it does.
     window.show()
     window.set_theme("windows-light")
     window.set_theme("capypanel-dark")
@@ -129,7 +126,6 @@ def test_page_list_rows_never_overlap(window: CapyWindow) -> None:
 
 
 def _rows(view: ListsView) -> list[tuple[str, str, bool]]:
-    """Each row: its kind, its access, and whether it's the list open now (bold)."""
     rows = []
     for i in range(view.tree.topLevelItemCount()):
         item = view.tree.topLevelItem(i)
@@ -145,11 +141,11 @@ def _answer_open_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
 def test_host_lists_shows_every_list_with_the_open_one_in_bold(
     window: CapyWindow, office: Path
 ) -> None:
-    window.hosts.open_list(office)  # an opened list is added to Host lists from now on
+    window.hosts.open_list(office)
     view = window.settings_dialog().group(HostsSettings).general.view
     assert _rows(view) == [
-        ("Shared", "Read/write", False),  # the default list: the first start created it
-        ("Yours", "Created when opened", False),  # the personal list
+        ("Shared", "Read/write", False),
+        ("Yours", "Created when opened", False),
         ("Added", "Read/write", True),
     ]
     names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
@@ -171,9 +167,8 @@ def test_a_default_list_another_user_made_cant_be_picked(
     assert _rows(view)[0][1] == "Not used: made by another user"
     view.select(window.hosts._default_list)
     before = window.hosts.document
-    view.open_picked()  # a double-click
+    view.open_picked()
     assert window.hosts.document is before
-    # Its line in the docs quotes this box and leads to the default list's own line.
     why = "“default.json” can't be opened: not used: made by another user"
     assert help_boxes == [(why, "hosts-list-cant-open")]
 
@@ -190,9 +185,9 @@ def test_how_often_to_check_goes_back_when_it_can_t_be_saved_and_can_be_tried_ag
     other = next(i for i in range(updates.count()) if updates.itemData(i) != saved)
     for _try in range(2):
         updates.setCurrentIndex(other)
-        assert updates.currentData() == saved  # back to what's saved
+        assert updates.currentData() == saved
     box = ("Couldn't save how often to check: access denied", "settings-updates-not-saved")
-    assert help_boxes == [box, box]  # picked again, tried again
+    assert help_boxes == [box, box]
 
 
 def test_first_start_creates_and_opens_the_default_list(
@@ -203,7 +198,7 @@ def test_first_start_creates_and_opens_the_default_list(
         and window.hosts.document.path == paths.lists("hosts").default
     )
     assert [g.name for g in window.hosts.document.hosts.groups] == ["Default group"]
-    assert not paths.lists("hosts").personal.exists()  # made only when someone chooses it
+    assert not paths.lists("hosts").personal.exists()
 
 
 def test_a_default_list_another_user_made_is_not_opened(
@@ -229,9 +224,9 @@ def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     view.select(office)
     assert view.remove_button.isEnabled()
     view.remove_button.click()
-    assert [r[0] for r in _rows(view)] == ["Shared", "Yours"]  # the default and personal lists
+    assert [r[0] for r in _rows(view)] == ["Shared", "Yours"]
     view.select(window.hosts._default_list)
-    assert not view.remove_button.isEnabled()  # the default and personal lists always stay
+    assert not view.remove_button.isEnabled()
     assert window.hosts.prefs["host_lists"] == [] and office.is_file()
 
 
@@ -249,10 +244,9 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.open_list(office)
-    # The new list window, answered: replace the open list (the user confirmed it).
     monkeypatch.setattr(host_lists, "ask_new_list", lambda *_a, **_k: office)
     dialog = window.settings_dialog()
-    dialog.group(HostsSettings).general.view.new_button.click()  # a new list opens at once
+    dialog.group(HostsSettings).general.view.new_button.click()
     assert window.hosts.document is not None and window.hosts.document.path == office
     assert [g.name for g in window.hosts.document.hosts.groups] == ["Default group"]
     assert not window.hosts.document.hosts.hosts
@@ -262,12 +256,12 @@ def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
-    window.hosts.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
+    window.hosts.commands.open_list.trigger()
     assert window.hosts.document is not None and window.hosts.document.path == office
     assert window.hosts.prefs["host_lists"] == [str(office)]
-    window.hosts.list_picker.menu().aboutToShow.emit()  # filled as it opens
+    window.hosts.list_picker.menu().aboutToShow.emit()
     texts = [label(a) for a in window.hosts.list_picker.menu().actions() if a.text()]
-    assert texts[:3] == ["Default", "Personal", "office"]  # by file name
+    assert texts[:3] == ["Default", "Personal", "office"]
     assert texts[3:] == ["&New list…", "&Open list…", "&Manage host lists…"]
     assert window.hosts.list_picker.text() == "office"
     assert window.windowTitle().startswith("office —")
@@ -279,15 +273,14 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
         for a in window.menuBar().actions()
         if isinstance(m := a.menu(), QMenu)
     }
-    assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
-    assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
+    assert list(menus) == ["&File", "&View", "&Help"]
+    assert menus["&File"] == ["&Settings…", "E&xit"]
     assert menus["&View"] == [
         "Hom&e", "&Hosts", "&Printers", "Profile clean&up", "SSH", "&Groups pane", "T&ags pane",
         "&Details pane", "&Customize the details panel…",
         "Show users' do&main",
         "T&oolbar", "&Status bar",
     ]  # fmt: skip
-    # The tool's own commands are in its toolbar.
     inventory = [label(a) for a in window.hosts.toolbar.inventory_menu.actions() if a.text()]
     assert inventory == [
         "Add &host…",
@@ -299,7 +292,6 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     window.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
     connect = [label(a) for a in window.hosts.toolbar.connect_menu.actions() if a.text()][-3:]
     assert connect == ["&Manual connection…", "Connection &profiles…", "Sa&ved credentials…"]
-    # Commands outside the menu bar keep their shortcuts.
     a = window.hosts.commands
     shortcuts = {a.edit, a.remove, a.copy_address, a.add_host, a.add_group, a.manual_connect}
     assert shortcuts <= set(window.hosts.actions())
@@ -308,7 +300,7 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
 def test_start_list_choice_is_opened_next_time(
     window: CapyWindow, paths: settings.Paths, office: Path
 ) -> None:
-    window.hosts.open_list(office)  # the last used list...
+    window.hosts.open_list(office)
     dialog = window.settings_dialog()
     general = dialog.group(HostsSettings).general.start_list
     assert general.currentData() == "last"
@@ -318,7 +310,7 @@ def test_start_list_choice_is_opened_next_time(
         "personal",
         str(office),
     ]
-    general.setCurrentIndex(general.findData("personal"))  # kept at once, with no Save
+    general.setCurrentIndex(general.findData("personal"))
     again = CapyWindow(paths, settings.load_settings(paths.settings_file))
     assert (
         again.hosts.document is not None
@@ -354,7 +346,7 @@ def test_picking_a_theme_applies_it_at_once(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     combo = dialog.general.theme
     combo.setCurrentIndex(combo.findData("paper"))
-    assert themes.current().id != "paper"  # once the dropdown has closed
+    assert themes.current().id != "paper"
     QApplication.processEvents()
     assert themes.current().id == "paper"
     assert settings.load_settings(window.paths.settings_file)["theme"] == "paper"
@@ -395,12 +387,12 @@ def test_removing_the_open_list_switches_to_the_default_list(
     dialog = window.settings_dialog()
     view = dialog.group(HostsSettings).general.view
     view.select(office)
-    view.remove_button.click()  # the default list opens in its place, at once
+    view.remove_button.click()
     assert (
         window.hosts.document is not None
         and window.hosts.document.path == paths.lists("hosts").default
     )
-    assert _rows(view)[0][2]  # marked in use
+    assert _rows(view)[0][2]
 
 
 def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow) -> None:
@@ -416,25 +408,25 @@ def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow)
 
     def results() -> list[str]:
         return [
-            re.sub("<[^>]+>", "", w.text())  # the search's marks are rich text
+            re.sub("<[^>]+>", "", w.text())
             for w in dialog._results.findChildren(QLabel)  # pyright: ignore[reportPrivateUsage]
             if w.objectName() in ("hint", "sectionTitle") and w.isVisibleTo(dialog._results)  # pyright: ignore[reportPrivateUsage]
         ]
 
-    dialog.search.setText("th")  # too short: the pages as they were
+    dialog.search.setText("th")
     assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "general"
     dialog.search.setText("theme")
     assert dialog.current_page() == "search" and listed() == ["CapyPanel", "General"]
-    assert results()[:2] == ["CapyPanel › General", "Appearance"]  # under its page's name
+    assert results()[:2] == ["CapyPanel › General", "Appearance"]
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
-    assert [w.objectName() for w in marks.marked_labels()][:1] == ["rowName"]  # Theme's row
-    dialog.search.setText("folder")  # each lists section's note (SSH's lists are Hosts'), …
+    assert [w.objectName() for w in marks.marked_labels()][:1] == ["rowName"]
+    dialog.search.setText("folder")
     assert listed() == ["Hosts", "General", "Connecting", "Printers", "General"]
-    assert not dialog.pinned_list.isRowHidden(0)  # About, with its Folders and Open folder
-    assert "About" in results() and "Folders" in results()  # its sections, under its name
-    dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
+    assert not dialog.pinned_list.isRowHidden(0)
+    assert "About" in results() and "Folders" in results()
+    dialog.search.setText("syst")
     assert listed() == ["CapyPanel", "General"]
-    dialog.show_page("about")  # picking ends the search: everything goes home
+    dialog.show_page("about")
     assert dialog.search.text() == "" and dialog.current_page() == "about"
     assert dialog.about.folders is not None and dialog.about.folders.parent() is dialog.about
     assert len(listed()) == dialog.page_list.count()
@@ -450,12 +442,12 @@ def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
     view.select(branch)
     assert view.remove_button.isEnabled()
     view.remove_button.click()
-    assert len(_rows(view)) == 2 and branch.is_file()  # hidden here, the file stays
+    assert len(_rows(view)) == 2 and branch.is_file()
     window.hosts.list_picker.menu().aboutToShow.emit()
     assert "branch" not in [label(a) for a in window.hosts.list_picker.menu().actions()]
     view = window.settings_dialog().group(HostsSettings).general.view
     _answer_open_dialog(monkeypatch, branch)
-    view.add_button.click()  # Add existing… brings it back
+    view.add_button.click()
     assert len(_rows(view)) == 3 and view.hidden == [] and view.added == []
 
 
@@ -468,7 +460,7 @@ def test_open_folder_opens_the_picked_list_s_folder(
     view = window.settings_dialog().group(HostsSettings).general.view
     view.select(office)
     menu = QMenu()
-    view.fill_row_menu(menu)  # what a right-click on the row opens
+    view.fill_row_menu(menu)
     assert [label(a) for a in menu.actions() if a.text()] == [
         "&Open", "Save a &copy…", "Open &folder", "&Remove"
     ]  # fmt: skip
@@ -487,9 +479,9 @@ def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
     dialog.show_page("hosts")
     QApplication.processEvents()
     tree = dialog.group(HostsSettings).general.view.tree
-    assert tree.viewport().height() == 6 * tree.sizeHintForRow(0)  # no 7th row peeking in
+    assert tree.viewport().height() == 6 * tree.sizeHintForRow(0)
     page = dialog.group(HostsSettings).general
-    assert page.width() >= page.minimumSizeHint().width() + ROOM  # widened, with room to spare
+    assert page.width() >= page.minimumSizeHint().width() + ROOM
     dialog.close()
 
 
@@ -524,11 +516,11 @@ def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(
     dialog = window.settings_dialog()
     view = dialog.group(HostsSettings).general.view
     view.add_button.click()
-    assert window.hosts.prefs["host_lists"] == [str(office)]  # kept, with no Save
-    assert window.hosts.document is before  # adding a list doesn't open it
-    view.open_picked()  # a double-click opens it
+    assert window.hosts.prefs["host_lists"] == [str(office)]
+    assert window.hosts.document is before
+    view.open_picked()
     assert window.hosts.document is not None and window.hosts.document.path == office
-    assert _rows(view)[2][2]  # marked as the one in use now
+    assert _rows(view)[2][2]
 
 
 def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
@@ -539,7 +531,7 @@ def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
     _answer_save_dialog(monkeypatch, copy)
     view = window.settings_dialog().group(HostsSettings).general.view
     view.select(office)
-    view.copy_picked()  # the row's right-click: Save a copy…
+    view.copy_picked()
     assert listfile.load(copy).hosts == listfile.load(office).hosts
     assert view.selected() == copy and str(copy) in window.hosts.prefs["host_lists"]
     assert window.hosts.document is not None and window.hosts.document.path == office
@@ -548,15 +540,15 @@ def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
 def test_every_choice_applies_at_once_and_only_close_is_left(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     dialog.group(HostsSettings).general.pick_every(5)
-    assert window.hosts.auto_status()[0]  # kept and running, with no Save
+    assert window.hosts.auto_status()[0]
     page = dialog.group(HostsSettings).connections.profiles
     page.default.setCurrentIndex(page.default.findData("realvnc"))
-    assert page.store.default_id() == "realvnc"  # written for everyone at once
+    assert page.store.default_id() == "realvnc"
     dialog.show()
     QApplication.processEvents()
-    assert not dialog.findChildren(QDialogButtonBox)  # no Close: the X or Esc closes it
+    assert not dialog.findChildren(QDialogButtonBox)
     assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
-    dialog.reject()  # Esc: nothing to ask, it just closes
+    dialog.reject()
     assert not dialog.isVisible()
 
 
@@ -569,7 +561,7 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
         dialog.show_page("general")
         dialog.group(HostsSettings).general.pick_every(5)
         dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
-        QApplication.processEvents()  # the window follows once the dropdown has closed
+        QApplication.processEvents()
         seen.append(
             (
                 dialog.windowTitle(),
@@ -581,7 +573,6 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
 
     monkeypatch.setattr(SettingsDialog, "exec", run)
     window.open_settings()
-    # The app and Settings are in Portuguese; the tick, applied already, still shows.
     assert seen == [("Configurações", "general", True)]
     assert window.menuBar().actions()[0].text() == "&Arquivo"
     window.set_language("en")
@@ -629,7 +620,7 @@ def test_a_right_click_picks_the_row_and_opens_its_menu(
     office_row = tree.topLevelItem(2)
     assert office_row is not None
     tree.customContextMenuRequested.emit(tree.visualItemRect(office_row).center())
-    assert tree.currentItem() is office_row  # picked by the right-click
+    assert tree.currentItem() is office_row
     assert shown == [["&Open", "Save a &copy…", "Open &folder", "&Remove"]]
     dialog.close()
 
@@ -646,13 +637,13 @@ def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
     ]  # fmt: skip
     assert every.currentText() == "Off"
     monkeypatch.setattr(pages, "ask_minutes", lambda _parent, _start: 7)
-    every.activated.emit(every.findData(-1))  # Custom…
+    every.activated.emit(every.findData(-1))
     assert every.currentText() == "Every 7 minutes" and window.hosts.auto_status() == (True, 7)
     monkeypatch.setattr(pages, "ask_minutes", lambda _parent, _start: None)
-    every.activated.emit(every.findData(-1))  # Custom…, then Cancel: stays as it was
+    every.activated.emit(every.findData(-1))
     assert every.currentText() == "Every 7 minutes"
-    every.activated.emit(every.findData(0))  # Off
-    assert window.hosts.auto_status() == (False, 7)  # the last interval is kept for next time
+    every.activated.emit(every.findData(0))
+    assert window.hosts.auto_status() == (False, 7)
 
 
 def test_a_new_list_can_be_shared_or_personal(
@@ -662,15 +653,15 @@ def test_a_new_list_can_be_shared_or_personal(
     dialog = NewListDialog(
         None, shared_dir=places.shared_dir, user_dir=places.user_dir, texts=texts
     )
-    assert not dialog.create_button.isEnabled()  # a name first
+    assert not dialog.create_button.isEnabled()
     dialog.name.setText("Branch offices")
     assert dialog.create_button.isEnabled() and dialog.kind() == "shared"
     assert dialog.path() == paths.lists("hosts").shared_dir / "Branch offices.json"
     dialog.personal.setChecked(True)
     assert dialog.path() == paths.lists("hosts").user_dir / "Branch offices.json"
-    dialog.name.setText("a/b")  # not a file name
+    dialog.name.setText("a/b")
     assert not dialog.create_button.isEnabled()
-    dialog.elsewhere.setChecked(True)  # the file dialog asks for the name instead
+    dialog.elsewhere.setChecked(True)
     assert dialog.create_button.isEnabled() and not dialog.name.isEnabled()
     dialog.deleteLater()
 
@@ -698,7 +689,7 @@ def test_new_list_from_the_dropdown_makes_a_shared_list(
         and window.hosts.document is not None
         and window.hosts.document.path == shared
     )
-    assert not window.hosts.prefs.get("host_lists")  # in a lists folder: it shows up by itself
+    assert not window.hosts.prefs.get("host_lists")
 
 
 def test_remove_can_also_move_the_file_to_the_recycle_bin(
@@ -711,13 +702,13 @@ def test_remove_can_also_move_the_file_to_the_recycle_bin(
     monkeypatch.setattr(host_lists.QFile, "moveToTrash", lambda path: trashed.append(path) or True)
     view = window.settings_dialog().group(HostsSettings).general.view
     view.select(branch)
-    monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: None)  # Cancel
+    monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: None)
     view.remove_button.click()
     assert trashed == [] and len(_rows(view)) == 3
     monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: host_lists.DELETE)
     view.remove_button.click()
     assert [Path(t) for t in trashed] == [branch]
-    assert len(_rows(view)) == 2 and view.hidden == []  # gone, not just hidden
+    assert len(_rows(view)) == 2 and view.hidden == []
     assert (
         window.hosts.document is not None
         and window.hosts.document.path == paths.lists("hosts").default
@@ -730,7 +721,7 @@ def test_a_list_that_can_t_be_deleted_is_only_removed(
     window.hosts.prefs["host_lists"] = [str(office.with_name("gone.json"))]
     monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: pytest.fail("asked"))
     view = window.settings_dialog().group(HostsSettings).general.view
-    view.select(office.with_name("gone.json"))  # no file to delete
+    view.select(office.with_name("gone.json"))
     view.remove_button.click()
     assert len(_rows(view)) == 2
 
@@ -739,7 +730,7 @@ def test_about_is_pinned_at_the_bottom_and_one_page_is_picked_at_a_time(
     window: CapyWindow,
 ) -> None:
     dialog = window.settings_dialog()
-    dialog.pinned_list.setCurrentRow(0)  # About, at the very bottom
+    dialog.pinned_list.setCurrentRow(0)
     assert dialog.current_page() == "about" and dialog.page_list.currentRow() == -1
     dialog.show_page("hosts")
     assert dialog.current_page() == "hosts" and dialog.pinned_list.currentRow() == -1
@@ -751,12 +742,12 @@ def test_searching_a_link_s_words_marks_them_and_keeps_the_link(window: CapyWind
     dialog = window.settings_dialog()
     dialog.search.setText("github")
     links = [w for w in dialog._marks.marked_labels() if "href=" in w.text()]  # pyright: ignore[reportPrivateUsage]
-    assert links  # the Documentation and Source code links
+    assert links
     for link in links:
         shown = QTextDocumentFragment.fromHtml(link.text()).toPlainText()
-        assert "href" not in shown and "<a" not in shown  # the link, not its code
+        assert "href" not in shown and "<a" not in shown
     dialog.search.clear()
-    assert all("<span" not in w.text() for w in links)  # back as they were
+    assert all("<span" not in w.text() for w in links)
 
 
 def test_each_page_shows_on_its_own_from_its_top_and_the_list_never_jumps(
@@ -767,7 +758,6 @@ def test_each_page_shows_on_its_own_from_its_top_and_the_list_never_jumps(
     QApplication.processEvents()
 
     def row(name: str, after: str) -> int:
-        """The row named `name` in the group whose label is `after`."""
         names = [dialog.page_list.item(r).text().strip() for r in range(dialog.page_list.count())]  # type: ignore[union-attr]
         return names.index(name, names.index(after))
 
@@ -780,12 +770,12 @@ def test_each_page_shows_on_its_own_from_its_top_and_the_list_never_jumps(
     assert holder is not None and dialog.group(HostsSettings).connections.parent() is holder
     assert dialog.group(HostsSettings).general.isHidden() or not dialog.group(
         HostsSettings
-    ).general.isVisibleTo(dialog)  # one page at a time
+    ).general.isVisibleTo(dialog)
     assert dialog.current_page() == "connections" and view.verticalScrollBar().value() == 0
-    view.verticalScrollBar().setValue(view.verticalScrollBar().maximum())  # scrolling by hand
-    assert dialog.page_list.currentRow() == connecting  # the list stays put
+    view.verticalScrollBar().setValue(view.verticalScrollBar().maximum())
+    assert dialog.page_list.currentRow() == connecting
     dialog.page_list.setCurrentRow(row("General", "Hosts"))
-    dialog.page_list.setCurrentRow(connecting)  # back again: from its top
+    dialog.page_list.setCurrentRow(connecting)
     assert view.verticalScrollBar().value() == 0
     dialog.close()
 
@@ -803,7 +793,6 @@ def test_the_picked_list_s_path_is_under_the_table_and_a_click_copies_it(
     QApplication.processEvents()
     line = view.path_label
     assert line.full == str(deep) and line.toolTip().splitlines() == [str(deep), "Click to copy"]
-    # Too long for the page: both ends stay, the middle goes.
     assert "…" in line.text() and line.text().endswith("branch.json")
     assert line.text().startswith(str(deep)[:6])
     QTest.mouseClick(line, Qt.MouseButton.LeftButton)
@@ -815,11 +804,11 @@ def test_a_section_for_everyone_on_this_pc_says_who_can_change_it(qapp: QApplica
     from capypanel.ui.settings.pages import Section
 
     shared = Section("Remote tools")
-    assert shared.scope_tag.isHidden() and shared.scope_line.isHidden()  # yours: no mark
+    assert shared.scope_tag.isHidden() and shared.scope_line.isHidden()
     shared.for_everyone(True)
     assert not shared.scope_tag.isHidden()
     assert shared.scope_line.text() == "A change here reaches everyone on this PC."
-    shared.for_everyone(False)  # Windows doesn't let this person write the shared folder
+    shared.for_everyone(False)
     assert shared.scope_line.text() == (
         "Read-only for you. An administrator of this PC can change it."
     )

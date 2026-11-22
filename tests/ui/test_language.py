@@ -42,7 +42,7 @@ def _menus(win: CapyWindow) -> list[QMenu]:
 
 def _switch(win: CapyWindow, code: str) -> None:
     win.set_language(code)
-    QApplication.processEvents()  # the LanguageChange event arrives through the event loop
+    QApplication.processEvents()
 
 
 def test_switching_language_updates_the_open_window_live(window: CapyWindow) -> None:
@@ -65,7 +65,6 @@ def test_switching_language_updates_the_open_window_live(window: CapyWindow) -> 
 
 
 def _texts(win: CapyWindow) -> list[str]:
-    """Every text the window holds: widgets, actions, combo items, tabs, headers and rows."""
     found = []
     for widget in [win, *win.findChildren(QWidget)]:
         found += [widget.windowTitle(), widget.toolTip()]
@@ -89,8 +88,6 @@ def _texts(win: CapyWindow) -> list[str]:
 
 
 def test_a_window_is_built_in_its_language(qapp: QApplication, tmp_path: Path) -> None:
-    # At start the language is set before the window exists, and nothing translates the window
-    # again once it's built: every text must be there from the start.
     language.apply("pt_BR")
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, hq = HostList().add_group("Headquarters")
@@ -104,9 +101,9 @@ def test_a_window_is_built_in_its_language(qapp: QApplication, tmp_path: Path) -
         win.retranslate = lambda: again.append(1)  # type: ignore[method-assign]
         for _round in range(3):  # Qt passes the app's event on to each window as a new one
             QApplication.processEvents()
-        assert again == []  # the start's LanguageChange never reaches it
+        assert again == []
         assert _menus(win)[0].title() == "&Arquivo"
-        # A note's old buttons wait for deleteLater: gone first, so only today's are counted.
+        # Old buttons wait for deleteLater: flushed first, so only today's are counted.
         QApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         built = _texts(win)
         retranslate()
@@ -132,17 +129,16 @@ def test_language_is_remembered(window: CapyWindow) -> None:
 
 def test_the_language_dropdown_in_appearance_switches_at_once(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
-    assert "language" not in dialog.pages  # a dropdown on General, not a page
+    assert "language" not in dialog.pages
     dialog.language_picked.connect(window.set_language)
     combo = dialog.general.language
-    combo.setCurrentIndex(combo.findData("pt_BR"))  # no Save needed
+    combo.setCurrentIndex(combo.findData("pt_BR"))
     QApplication.processEvents()
     assert i18n.language() == "pt_BR" and _menus(window)[0].title() == "&Arquivo"
 
 
 @pytest.mark.parametrize("code", list(i18n.LANGUAGES))
 def test_access_keys_are_unique_in_every_menu(window: CapyWindow, code: str) -> None:
-    # Two items with the same underlined letter make Alt+letter ambiguous.
     _switch(window, code)
     for menu in [*_menus(window), window.hosts.toolbar.inventory_menu]:
         texts = [label(a) for a in menu.actions() if "&" in a.text()]

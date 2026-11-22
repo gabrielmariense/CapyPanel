@@ -1,5 +1,3 @@
-"""Every place help opens is on its docs page in both languages; CI's help-links job runs it."""
-
 import re
 from pathlib import Path
 
@@ -14,8 +12,6 @@ LANGUAGES = ("en", "pt-BR")
 
 
 def _source(page: str, language: str) -> Path:
-    """A page's Markdown: "hosts/connecting/" is docs/hosts/connecting.md, or .pt-BR.md; the
-    site's root is README."""
     name = page.rstrip("/") or "README"
     return DOCS / f"{name}{'.pt-BR' if language == 'pt-BR' else ''}.md"
 

@@ -1,5 +1,3 @@
-"""The host commands; every call to another PC is replaced: nothing reaches the network."""
-
 import time
 from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime, timedelta
@@ -55,7 +53,6 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 
 @pytest.fixture
 def calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
-    """Every call to another PC, recorded; each one works unless a test says otherwise."""
     seen: list[tuple[Any, ...]] = []
 
     def record(name: str, value: Any = None) -> Callable[..., Any]:
@@ -67,7 +64,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
 
     monkeypatch.setattr(access, "check_reachable", record("reach"))
     monkeypatch.setattr(places, "open_folder", record("folder"))
-    monkeypatch.setattr(places, "require_folder", lambda path: None)  # no file sharing here
+    monkeypatch.setattr(places, "require_folder", lambda path: None)
     monkeypatch.setattr(places, "open_console", record("console"))
     monkeypatch.setattr(sessions, "read_sessions", record("sessions", [ANA, BRUNO]))
     monkeypatch.setattr(sessions, "log_off", record("log-off"))
@@ -89,7 +86,7 @@ def _select(win: CapyWindow, name: str) -> HostTarget:
 
 
 def _settle(win: CapyWindow) -> None:
-    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
         QApplication.processEvents()
         if not win.hosts.runner.busy():
@@ -99,7 +96,6 @@ def _settle(win: CapyWindow) -> None:
 
 
 def _answer(monkeypatch: pytest.MonkeyPatch, answer: Callable[[QDialog], int]) -> list[QDialog]:
-    """Windows the commands open are answered by `answer` instead of waiting for a click."""
     opened: list[QDialog] = []
 
     def run(dialog: QDialog) -> int:
@@ -140,7 +136,6 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
         assert isinstance(submenu, QMenu)
         return [label(a) if a.text() else "—" for a in submenu.actions()]
 
-    # Installed programs is apart: a long table, not part of Refresh host; Power comes last.
     assert names("Check") == [
         "Refresh host", "Status", "Logged-on users", "PC facts", "—", "Installed programs",
     ]  # fmt: skip
@@ -161,23 +156,23 @@ def _ids(win: CapyWindow, *names: str) -> list[str]:
 def test_details_shows_a_grid_of_worded_buttons(window: CapyWindow) -> None:
     _select(window, "PC-1")
     buttons = window.hosts.details.buttons
-    assert list(buttons) == [  # the fixed row, then this admin's quick commands
+    assert list(buttons) == [
         "refresh", "commands", "users", "power",
         "quick:c-share", "quick:user-folder", "quick:computer-management", "quick:message",
     ]  # fmt: skip
     words = [b.text() for b in buttons.values()]
     assert words == ["Refresh", "Commands", "Users ▾", "Power ▾", "C$", "Folder", "Manage",
                      "Message"]  # fmt: skip
-    assert len({b.size().toTuple() for b in buttons.values()}) == 1  # every button the same size
-    assert buttons["quick:computer-management"].toolTip() == "Computer Management"  # the full name
-    assert not buttons["users"].isEnabled()  # nobody checked yet
+    assert len({b.size().toTuple() for b in buttons.values()}) == 1
+    assert buttons["quick:computer-management"].toolTip() == "Computer Management"
+    assert not buttons["users"].isEnabled()
     target = window.hosts.selected_target()
     assert target is not None
     window.hosts.keep_users(target.key, (ANA,), None)
     buttons = window.hosts.details.buttons
     assert buttons["users"].isEnabled()
     assert buttons["quick:user-folder"].toolTip() == "User's folder (ana)"
-    window.hosts.keep_users(target.key, (), None)  # a check just found nobody
+    window.hosts.keep_users(target.key, (), None)
     folder = window.hosts.details.buttons["quick:user-folder"]
     assert not folder.isEnabled() and folder.toolTip() == "User's folder (nobody signed in)"
 
@@ -187,9 +182,9 @@ def test_details_buttons_follow_the_admin_s_quick_commands(window: CapyWindow) -
     window.hosts.prefs["quick_commands"] = ["spooler", "status"]
     window.hosts._selection_changed()
     buttons = window.hosts.details.buttons
-    assert list(buttons)[4:] == ["quick:status", "quick:spooler"]  # the Commands window's order
-    assert buttons["quick:spooler"].property("risky") is True  # amber there too
-    window.hosts.prefs["quick_commands"] = []  # none picked: only the fixed row
+    assert list(buttons)[4:] == ["quick:status", "quick:spooler"]
+    assert buttons["quick:spooler"].property("risky") is True
+    window.hosts.prefs["quick_commands"] = []
     window.hosts._selection_changed()
     assert list(window.hosts.details.buttons) == ["refresh", "commands", "users", "power"]
     assert window.hosts.details.minimumWidth() >= window.hosts.details.minimum_width() > 300
@@ -223,7 +218,7 @@ def test_a_pc_that_doesnt_answer_says_so_in_red(
     strip = window.hosts.result_strip
     assert strip.isVisibleTo(window.hosts) and strip.property("failed") is True
     assert "Couldn't open Startup folder on PC-1: it didn't answer." in strip.text()
-    assert not strip.retry_button.isVisibleTo(window.hosts)  # another account won't help
+    assert not strip.retry_button.isVisibleTo(window.hosts)
     assert ("folder",) not in [c[:1] for c in calls]
 
 
@@ -264,7 +259,7 @@ def test_access_denied_offers_another_account_and_runs_again(
     monkeypatch.setattr(sessions, "log_off", log_off)
 
     def answer(dialog: QDialog) -> int:
-        if hasattr(dialog, "user"):  # the account window
+        if hasattr(dialog, "user"):
             dialog.user.setText("CORP\\admin")  # type: ignore[attr-defined]
             dialog.password.setText("secret")  # type: ignore[attr-defined]
         return ACCEPT
@@ -297,7 +292,7 @@ def test_send_a_message_goes_to_everyone_active_but_the_sender(
     window.hosts.host_actions["message"].trigger()
     _settle(window)
     sent = [c for c in calls if c[0] == "message"]
-    assert [c[2] for c in sent] == [1]  # ana only: bruno is disconnected, caio is the sender
+    assert [c[2] for c in sent] == [1]
     assert sent[0][4] == "Restarting at noon"
     assert window.hosts.result_strip.text() == "Message sent to <b>ana</b> on PC-1."
 
@@ -307,7 +302,7 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 ) -> None:
     def answer(dialog: QDialog) -> int:
         assert isinstance(dialog, PowerDialog)
-        assert dialog.delay() == 0  # Restart's default: now
+        assert dialog.delay() == 0
         dialog.when.setCurrentIndex(dialog.when.findData(5 * 60))
         return ACCEPT
 
@@ -330,19 +325,19 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 
 def test_restart_now_has_no_message(qapp: QApplication) -> None:
     dialog = PowerDialog(None, "PC-1", [ANA], restart=True)
-    assert dialog.delay() == 0 and dialog.message() == ""  # Now, without picking it
-    assert PowerDialog(None, "PC-1", [ANA], restart=False).delay() == 0  # Shut down too
+    assert dialog.delay() == 0 and dialog.message() == ""
+    assert PowerDialog(None, "PC-1", [ANA], restart=False).delay() == 0
     dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
     dialog.show()
-    assert dialog.focusWidget() is dialog.when  # arrows pick at once
-    assert dialog.cancel.isDefault()  # Enter in When cancels
-    QTest.keyClick(dialog.when, Qt.Key.Key_Return)  # Enter in When: Cancel
+    assert dialog.focusWidget() is dialog.when
+    assert dialog.cancel.isDefault()
+    QTest.keyClick(dialog.when, Qt.Key.Key_Return)
     assert dialog.result() == QDialog.DialogCode.Rejected
     dialog.show()
     dialog.when.setFocus()
-    dialog.focusNextChild()  # Tab: no message to type for Now, so straight to the action
+    dialog.focusNextChild()
     assert dialog.focusWidget() is dialog.action
-    QTest.keyClick(dialog.action, Qt.Key.Key_Return)  # Enter there runs it
+    QTest.keyClick(dialog.action, Qt.Key.Key_Return)
     assert dialog.result() == QDialog.DialogCode.Accepted
     assert not dialog.box.isEnabled()
     assert dialog.action.text() == "&Restart now"
@@ -369,7 +364,7 @@ def test_a_restarted_pc_that_answers_again_is_announced(
     window.hosts.notify_requested.connect(lambda title, text: notes.append((title, text)))
     window.hosts._watch_power()
     _settle(window)
-    assert not notes  # it went away
+    assert not notes
     window.hosts._watch_power()
     _settle(window)
     assert notes and notes[0][0] == "PC-1 is back online"
@@ -424,8 +419,7 @@ def test_pc_facts_say_which_part_needs_an_admin(
     assert facts is not None and not facts.reading and facts.space == DiskSpace(1, 2)
     assert isinstance(facts.pc_error, RemoteError)
     details = window.hosts.details
-    assert details.shown_value("windows") == ""  # a warning instead of a value
-    # The warning copies on a click, as a value does, so it can go in a report.
+    assert details.shown_value("windows") == ""
     assert details.shown_value("windows_error") == "No access: needs an admin account on this PC"
 
 
@@ -543,7 +537,7 @@ def test_a_click_on_commands_opens_the_window_for_the_selected_host(window: Capy
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow) and commands.target() == target
     window.hosts.table.clearSelection()
-    window.hosts.toolbar.commands_button.click()  # no host: an address typed in it
+    window.hosts.toolbar.commands_button.click()
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow) and commands.target() is None
     commands.close()
@@ -566,7 +560,7 @@ def test_a_path_to_a_file_is_never_opened(
     _select(window, "PC-1")
     window.hosts.host_actions["path"].trigger()
     _settle(window)
-    assert not any(c[0] == "folder" for c in calls)  # a file would have run on this PC
+    assert not any(c[0] == "folder" for c in calls)
     assert "there's no folder there." in window.hosts.result_strip.text()
 
 
@@ -588,9 +582,9 @@ def test_the_host_menu_shows_the_first_four_quick_commands(window: CapyWindow) -
         "event-viewer",
         "services",
     )  # fmt: skip  -- the Commands window's order, whatever order they were kept in
-    texts = _host_menu(window)  # the first four ticked; Services, the fifth, isn't there
+    texts = _host_menu(window)
     assert texts[2:7] == ["Status", "C$ share", "Open a path…", "Event Viewer", "&All commands…"]
-    window.hosts.prefs["quick_commands"] = []  # none picked: the block isn't there
+    window.hosts.prefs["quick_commands"] = []
     assert _host_menu(window)[:3] == ["&Connect", "Re&fresh host", "&All commands…"]
 
 
@@ -599,12 +593,12 @@ def test_commands_for_a_person_say_who_or_that_nobody_is_signed_in(window: CapyW
     target = window.hosts.selected_target()
     assert target is not None
     folder, message = window.hosts.host_actions["user-folder"], window.hosts.host_actions["message"]
-    window.hosts._update_host_actions()  # before any check: plain, and usable
+    window.hosts._update_host_actions()
     assert (folder.text(), folder.isEnabled()) == ("User's folder", True)
     window.hosts.keep_users(target.key, (ANA,), None)
     window.hosts._update_host_actions()
     assert folder.text() == "User's folder (ana)" and message.text() == "Send a message…"
-    window.hosts.keep_users(target.key, (), None)  # a check just found nobody
+    window.hosts.keep_users(target.key, (), None)
     window.hosts._update_host_actions()
     assert (folder.text(), folder.isEnabled()) == ("User's folder (nobody signed in)", False)
     assert (message.text(), message.isEnabled()) == ("Send a message (nobody signed in)", False)
@@ -623,9 +617,6 @@ def test_a_group_s_menu_has_one_refresh(window: CapyWindow) -> None:
     assert texts[-1] == "Re&fresh group" and sum("fresh" in t for t in texts) == 1
 
 
-# ---- Customize the details panel ----
-
-
 def _rows(table: Any) -> list[Any]:
     return [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
 
@@ -637,17 +628,17 @@ def test_the_chooser_keeps_one_order_and_nothing_moves_when_ticked(
 
     chooser = QuickChooser(host_commands.QUICK, {"c-share": "Ctrl+E"})
     names = [r.text(0) for r in _rows(chooser.table)]
-    assert names[:4] == ["CHECK", "Status", "Logged-on users", "PC facts"]  # the Commands window's
-    assert "Restart…" not in names and "Refresh host" not in names  # can't be quick; fixed
+    assert names[:4] == ["CHECK", "Status", "Logged-on users", "PC facts"]
+    assert "Restart…" not in names and "Refresh host" not in names
     assert chooser.count.text() == "4 of 15 ticked · 1 row on the panel"
-    assert not hasattr(chooser, "up") and not hasattr(chooser, "down")  # no order of its own
+    assert not hasattr(chooser, "up") and not hasattr(chooser, "down")
     seen: list[list[str]] = []
     chooser.changed.connect(seen.append)
     status = next(r for r in _rows(chooser.table) if r.data(0, ID) == "status")
     status.setCheckState(0, Qt.CheckState.Checked)
-    assert seen[-1] == ["status", *host_commands.QUICK]  # applied at once, in the list's order
+    assert seen[-1] == ["status", *host_commands.QUICK]
     QApplication.processEvents()
-    assert [r.text(0) for r in _rows(chooser.table)] == names  # nothing moved
+    assert [r.text(0) for r in _rows(chooser.table)] == names
     assert shiboken6.isValid(status) and chooser.count.text().endswith("2 rows on the panel")
     first = next(r for r in _rows(chooser.table) if r.data(0, ID) == "c-share")
     first.setCheckState(0, Qt.CheckState.Unchecked)
@@ -664,7 +655,7 @@ def test_restoring_the_default_quick_commands_asks_first(
     answers = iter([False, True])
     monkeypatch.setattr(quick_chooser, "confirm", lambda *_a, **_k: next(answers))
     chooser.restore.click()
-    assert chooser.picked() == ["services"]  # Cancel: nothing changes
+    assert chooser.picked() == ["services"]
     chooser.restore.click()
     assert chooser.picked() == list(host_commands.QUICK) and not chooser.restore.isEnabled()
 
@@ -672,18 +663,18 @@ def test_restoring_the_default_quick_commands_asks_first(
 def test_quick_commands_and_hidden_parts_apply_at_once_and_are_kept(window: CapyWindow) -> None:
     _select(window, "PC-1")
     window.hosts.set_quick_commands(["services", "restart", "status"])
-    assert window.hosts.prefs["quick_commands"] == ["status", "services"]  # what can be, in order
+    assert window.hosts.prefs["quick_commands"] == ["status", "services"]
     assert list(window.hosts.details.buttons)[4:] == ["quick:status", "quick:services"]
     window.hosts.set_hidden_parts(["notes", "tags", "nonsense"])
     assert window.hosts.hidden_parts() == {"notes", "tags"}
     headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
     assert "Notes" not in headings and "Tags" not in headings and "Connection" in headings
-    assert any(h.startswith("2 parts hidden") for h in headings)  # and the way back
+    assert any(h.startswith("2 parts hidden") for h in headings)
     window.hosts.set_hidden_parts([])
     headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
     assert "Notes" in headings and not any("hidden" in h for h in headings)
     window.hosts.prefs["details_hidden"] = ["tags", {"edited": "by hand"}, 7]
-    assert window.hosts.hidden_parts() == {"tags"}  # anything else in the file is skipped
+    assert window.hosts.hidden_parts() == {"tags"}
 
 
 def test_the_customize_window_has_two_tabs_and_three_doors(
@@ -694,9 +685,9 @@ def test_the_customize_window_has_two_tabs_and_three_doors(
     opened: list[customize.CustomizeDialog] = []
     monkeypatch.setattr(workspace, "run_modal", lambda dialog: opened.append(dialog) or 0)
     _select(window, "PC-1")
-    window.hosts.commands.customize_details.trigger()  # View's line
-    window.hosts.details.customize_requested.emit()  # the panel's right-click and its link
-    window.hosts.customize_details(1)  # straight to Information
+    window.hosts.commands.customize_details.trigger()
+    window.hosts.details.customize_requested.emit()
+    window.hosts.customize_details(1)
     assert len(opened) == 3
     dialog = opened[0]
     tabs = [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())]
@@ -706,12 +697,12 @@ def test_the_customize_window_has_two_tabs_and_three_doors(
         "Connection", "Logged-on users", "PC facts", "Tags", "Notes",
     ]  # fmt: skip
     notes = _rows(dialog.parts.table)[4]
-    notes.setCheckState(0, Qt.CheckState.Unchecked)  # applies as you tick
+    notes.setCheckState(0, Qt.CheckState.Unchecked)
     assert window.hosts.hidden_parts() == {"notes"}
     dialog.parts.restore.click()
     assert window.hosts.hidden_parts() == frozenset()
     panes = [a.text() for a in window.hosts.view_actions()[0]]
-    assert panes[-2:] == ["&Details pane", "&Customize the details panel…"]  # right under it
+    assert panes[-2:] == ["&Details pane", "&Customize the details panel…"]
     assert window.hosts.details.customizable
 
 
@@ -729,17 +720,17 @@ def test_the_commands_window_turns_to_another_pc_and_keeps_its_answers(
     answer("status", Outcome("<b>PC-1</b> is online"))
     late = commands._reporter(first)  # pyright: ignore[reportPrivateUsage]  # still running
     second = _select(window, "PC-2")
-    window.hosts.details.buttons["commands"].click()  # the same window, on the other PC
+    window.hosts.details.buttons["commands"].click()
     assert window.hosts._commands_window is commands  # pyright: ignore[reportPrivateUsage]
     assert commands.target() == second and commands.windowTitle() == "Commands · PC-2"
-    late("users", Outcome("Nobody is logged on"))  # it answers after the switch
+    late("users", Outcome("Nobody is logged on"))
     kept = commands._outcomes  # pyright: ignore[reportPrivateUsage]
-    assert set(kept) == {(first.key, "status"), (first.key, "users")}  # on the PC they ran on
+    assert set(kept) == {(first.key, "status"), (first.key, "users")}
     _select(window, "PC-1")
-    window.hosts.toolbar.commands_button.click()  # back: its answers are still there
+    window.hosts.toolbar.commands_button.click()
     assert commands.target() == first and kept[(first.key, "status")].text.endswith("online")
     window.hosts.table.clearSelection()
-    window.hosts.toolbar.commands_button.click()  # no host picked: an address typed in it
+    window.hosts.toolbar.commands_button.click()
     assert commands.target() is None and commands.windowTitle() == "Manual connection"
     assert len(kept) == 2
     commands.close()

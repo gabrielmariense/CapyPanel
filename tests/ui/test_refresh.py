@@ -51,7 +51,7 @@ def _ids(win: CapyWindow, *names: str) -> list[str]:
 
 
 def _wait(win: CapyWindow) -> None:
-    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
         QApplication.processEvents()
         if win.hosts._run is None:
@@ -70,7 +70,6 @@ def _cells(win: CapyWindow, name: str) -> tuple[str, str]:
 
 @pytest.fixture
 def answers(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    """What each address answers; records every check and the account it used."""
     plan: dict[str, Any] = {"seen": []}
 
     def run(address: str, wanted: Checks) -> Found:
@@ -94,8 +93,8 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     assert _cells(window, "PC-2") == ("Offline", "Unreachable")
     first = window.hosts.table._rows[_ids(window, "PC-1")[0]]
     assert "Answered at 10.0.0.1, port 445." in first.toolTip(window.hosts.table.STATUS)
-    assert _cells(window, "PC-3") == ("Not checked", "")  # not selected: not checked
-    assert {a for a, *_ in answers["seen"]} == {"10.0.0.1", "10.0.0.2"}  # no address: skipped
+    assert _cells(window, "PC-3") == ("Not checked", "")
+    assert {a for a, *_ in answers["seen"]} == {"10.0.0.1", "10.0.0.2"}
     window.hosts.table.select_ids(_ids(window, "PC-1"))
     assert window.hosts.details.shown_value("users") == "CORP\\ana"
 
@@ -151,7 +150,7 @@ def test_refresh_checks_every_host_shown_even_with_nothing_selected(
     _pick_group(window, "Desks")
     assert window.hosts.table.selected_ids() == []
     window.hosts.refresh_panel.users_box.setChecked(False)
-    window.hosts.toolbar.refresh_button.click()  # what the right-click panel has ticked
+    window.hosts.toolbar.refresh_button.click()
     _wait(window)
     assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
 
@@ -159,7 +158,7 @@ def test_refresh_checks_every_host_shown_even_with_nothing_selected(
 def test_the_panel_runs_several_checks_and_remembers_its_ticks(
     window: CapyWindow, answers: dict[str, Any]
 ) -> None:
-    _pick_group(window, "Office")  # the group and the one inside it
+    _pick_group(window, "Office")
     panel = window.hosts.refresh_panel
     panel.users_box.setChecked(False)
     panel.run_button.click()
@@ -176,7 +175,7 @@ def test_f5_runs_what_the_panel_has_ticked(window: CapyWindow, answers: dict[str
     f5.trigger()
     _wait(window)
     assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
-    assert {users for _a, _s, users, _acc in answers["seen"]} == {False}  # only what's ticked
+    assert {users for _a, _s, users, _acc in answers["seen"]} == {False}
 
 
 def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
@@ -202,7 +201,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-3"))
     window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
-    _wait(window)  # the retry with the typed account
+    _wait(window)
     assert asked == ["Account for other PCs"]
     assert uses == ["This PC (PC-3)", "Every PC in group Office › Desks",
                     "Every PC in group Office", "Every PC"]  # fmt: skip
@@ -212,7 +211,6 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     [kept] = window.hosts.kept_logins()
     assert (kept.used_for, kept.user, kept.saved) == ("PC-3 (10.0.0.3)", "CORP\\admin", False)
 
-    # The next Refresh: that PC only gets the typed account, the others still Windows'.
     answers["seen"].clear()
     window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
@@ -234,15 +232,14 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "PC-3"))
     window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
-    assert len(answers["seen"]) == 1  # one host refused it; the batch stopped
+    assert len(answers["seen"]) == 1
 
 
 def _question(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """The texts of the account question, each time it's asked; answered with Cancel."""
     asked: list[str] = []
 
     def cancel(dialog: check_ui.AccountDialog) -> int:
-        asked.append(dialog.findChildren(QLabel)[0].text())  # what it's about, on top
+        asked.append(dialog.findChildren(QLabel)[0].text())
         return QDialog.DialogCode.Rejected
 
     monkeypatch.setattr(check_ui.AccountDialog, "exec", cancel)
@@ -252,8 +249,6 @@ def _question(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 def test_a_host_refusing_a_proven_account_never_stops_the_others(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # The password is right (PC-1 accepted it), but PC-2 is set up oddly in the domain and
-    # refuses every account: PC-3 is still read, and the question afterwards names PC-2.
     admin = Account("CORP\\admin", "right")
     window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=False)
     answers["10.0.0.2"] = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 5))
@@ -271,8 +266,6 @@ def test_a_host_refusing_a_proven_account_never_stops_the_others(
 def test_a_host_that_refused_goes_last_next_time(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # PC-1 refuses the account before any host accepted it: as a wrong password would, it stops the
-    # run. The next Refresh tries it last, after PC-2 proved the account, so nothing stops then.
     admin = Account("CORP\\admin", "right")
     window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=False)
     answers["10.0.0.1"] = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 5))
@@ -293,8 +286,8 @@ def test_a_host_that_refused_goes_last_next_time(
 def test_the_account_question_names_a_few_hosts_and_counts_the_rest(window: CapyWindow) -> None:
     ids = _ids(window, "PC-1", "PC-2", "PC-3")
     assert window.hosts._names_line(ids) == "PC-1, PC-2, PC-3"
-    assert window.hosts._names_line(ids * 3) == "PC-1, PC-2, PC-3"  # each name once
-    many = [*ids, *(f"gone-{n}" for n in range(5))]  # hosts no longer in the list: their ids
+    assert window.hosts._names_line(ids * 3) == "PC-1, PC-2, PC-3"
+    many = [*ids, *(f"gone-{n}" for n in range(5))]
     assert window.hosts._names_line(many).endswith(" and 3 more")
 
 
@@ -306,7 +299,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     class Recorded(workspace_module.QMenu):  # type: ignore[misc]
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
             seen.extend(label(a) for a in self.actions() if a.text())
-            assert not any(isinstance(a, QWidgetAction) for a in self.actions())  # no headings
+            assert not any(isinstance(a, QWidgetAction) for a in self.actions())
 
     monkeypatch.setattr(workspace_module, "QMenu", Recorded)
     window.show()
@@ -315,9 +308,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     first = window.hosts.table.topLevelItem(0)
     assert first is not None
     row = window.hosts.table.visualItemRect(first)
-    window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
-    # One PC: refresh it, the four quick commands, the door to every command and to Profile
-    # cleanup, then managing it.
+    window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))
     assert seen == [
         "&Connect", "Re&fresh host",
         "C$ share", "User's folder", "Computer Management", "Send a message…",
@@ -328,7 +319,6 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     seen.clear()
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2"))
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))
-    # Several PCs: only what works on all of them; Commands run as stays, Edit goes.
     assert seen == [
         "&Connect", "Re&fresh 2 hosts", "&Open 2 hosts in Profile cleanup", "Commands run a&s",
         "Co&py", "&Move to", "&Tags", "&Remove",
@@ -342,21 +332,21 @@ def test_the_toolbar_lines_up_with_the_panes(window: CapyWindow) -> None:
         QApplication.processEvents()
     window.hosts._align_toolbar()
     QApplication.processEvents()
-    bar = window.hosts.toolbar  # Connect, Refresh | Inventory | Report, from the left
+    bar = window.hosts.toolbar
     order = [bar.connect_button, bar.refresh_button, bar.inventory_button, bar.report_button]
     lefts = [b.mapTo(window, QPoint(0, 0)).x() for b in order]
     assert (
         lefts == sorted(lefts)
         and bar.refresh_button.parentWidget() is bar.connect_button.parentWidget()
     )
-    search, nav = window.hosts.search, window.hosts.nav  # the search box's top meets the panes'
+    search, nav = window.hosts.search, window.hosts.nav
     assert search.mapTo(window, QPoint(0, 0)).y() == nav.mapTo(window, QPoint(0, 0)).y()
-    connect = window.hosts.toolbar.connect_button  # and Connect starts where the panes do
+    connect = window.hosts.toolbar.connect_button
     assert abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
 
 
 def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: CapyWindow) -> None:
-    # Each theme pads the toolbar differently; the Windows style ignores padding altogether.
+    # Each theme pads the toolbar its own way; the Windows style ignores padding.
     window.resize(1200, 600)
     window.show()
     for theme in ("capypanel-dark", "windows-dark", "paper"):
@@ -367,9 +357,9 @@ def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: CapyWindow) -> 
         assert (
             abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
         )
-        above = connect.mapTo(window.hosts.toolbar, QPoint(0, 0)).y()  # 6 px above and below
+        above = connect.mapTo(window.hosts.toolbar, QPoint(0, 0)).y()
         assert above == 6 and window.hosts.toolbar.height() - above - connect.height() == 6
-    window.set_theme(themes.DEFAULT_THEME.id)  # as the other tests expect
+    window.set_theme(themes.DEFAULT_THEME.id)
 
 
 def test_a_large_users_check_asks_first(
@@ -388,7 +378,7 @@ def test_a_large_users_check_asks_first(
     assert asked == ["Check who is logged on to 3 hosts?"] and answers["seen"] == []
     panel.status_box.setChecked(True)
     panel.users_box.setChecked(False)
-    window.hosts.toolbar.refresh_button.click()  # Status never asks
+    window.hosts.toolbar.refresh_button.click()
     _wait(window)
     assert len(answers["seen"]) == 3 and len(asked) == 1
 
@@ -401,7 +391,7 @@ def test_automatic_status_is_off_by_default_and_checks_only_status(
     dialog.group(HostsSettings).general.pick_every(3)  # Custom…: every 3 minutes
     assert window.hosts._auto_timer.isActive() and window.hosts._auto_timer.interval() == 3 * 60_000
     assert window.hosts.prefs["auto_status"] == {"on": True, "minutes": 3}
-    window.hosts._auto_status_check()  # what the timer does
+    window.hosts._auto_status_check()
     _wait(window)
     assert answers["seen"] and all(s and not u for _a, s, u, _acc in answers["seen"])
 
@@ -415,7 +405,6 @@ def test_a_host_never_checked_says_so_and_sorts_last_either_way(
         rows = (table.topLevelItem(i) for i in range(table.topLevelItemCount()))
         return [row.text(0) for row in rows if row is not None]
 
-    # Status says it in words, greyed; User stays empty until a check.
     assert _cells(window, "PC-1") == ("Not checked", "")
     first = table._rows[_ids(window, "PC-1")[0]]
     assert first.toolTip(table.STATUS) == "Not checked: use Refresh"
@@ -424,8 +413,8 @@ def test_a_host_never_checked_says_so_and_sorts_last_either_way(
     window.hosts.check_hosts(window.hosts.selected_items(), status=True, users=False)
     _wait(window)
     table.sortByColumn(table.STATUS, Qt.SortOrder.AscendingOrder)
-    assert names() == ["PC-2", "PC-1", "Desk 4", "PC-3"]  # Offline, Online; then the unread
+    assert names() == ["PC-2", "PC-1", "Desk 4", "PC-3"]
     assert [h.name for h in table.in_shown_order(window.hosts.visible_items())] == names()
     table.sortByColumn(table.STATUS, Qt.SortOrder.DescendingOrder)
-    assert names() == ["PC-1", "PC-2", "Desk 4", "PC-3"]  # Z–A: still last, by name A–Z
+    assert names() == ["PC-1", "PC-2", "Desk 4", "PC-3"]
     assert [h.name for h in table.in_shown_order(window.hosts.visible_items())] == names()

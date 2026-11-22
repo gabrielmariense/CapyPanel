@@ -1,5 +1,3 @@
-"""A tool's tab bar: the pinned list, then a tab per thing opened, never reordered."""
-
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPainter, QPaintEvent, QPalette
 from PySide6.QtWidgets import (
@@ -16,15 +14,15 @@ from PySide6.QtWidgets import (
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes import engine as themes
 
-PINNED = ""  # the pinned tab's key; every other tab has a key of its own
-GAP = 14  # px between the pinned tab and the others
-ARROW = 18  # px: the chevrons of the scroll arrows and ▾, buttons the theme draws (toolTabs)
-CUT = 4  # px of the bar's own colour between the tabs and a scroll arrow
+PINNED = ""
+GAP = 14
+ARROW = 18
+CUT = 4
 
 
 class _Bar(QTabBar):
-    """A tab bar that can show none of its tabs as the current one: the pinned tab and the
-    others are two bars, and only one of them holds the tab in front."""
+    """Qt's bar always shows a current tab; this one can show none: the pinned tab is a bar of
+    its own."""
 
     middle_clicked = Signal(int)
 
@@ -38,12 +36,12 @@ class _Bar(QTabBar):
         self.setUsesScrollButtons(True)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self._height = 0  # every tab's, once the strip gives one; until then the style's
+        self._height = 0
         self._hidden_from = -1  # x from which tabs are hidden before the arrows; -1: none
 
     def set_tab_height(self, height: int) -> None:
         self._height = height
-        self.setElideMode(self.elideMode())  # Qt lays the tabs out again; the mode is ours
+        self.setElideMode(self.elideMode())  # makes Qt lay the tabs out again
         self.updateGeometry()  # hidden, Qt only marks them: the strip asks again on its own
 
     def tabSizeHint(self, index: int) -> QSize:  # noqa: N802 -- Qt's name
@@ -63,20 +61,18 @@ class _Bar(QTabBar):
         self.update()
 
     def _scrollers(self) -> list[QToolButton]:
-        """Qt's own two buttons, left then right."""
         names = ("ScrollLeftButton", "ScrollRightButton")
         return [b for name in names if (b := self.findChild(QToolButton, name)) is not None]
 
     def tabLayoutChange(self) -> None:
-        """Qt gives its two buttons their arrows back each time it lays the tabs out, and a
-        button with an arrow draws no icon."""
+        """Qt gives its scroll buttons their arrows back on each layout, and a button with an arrow
+        draws no icon."""
         super().tabLayoutChange()
         for button in self._scrollers():
             if button.arrowType() != Qt.ArrowType.NoArrow:
                 button.setArrowType(Qt.ArrowType.NoArrow)
 
     def restyle(self) -> None:
-        """The scroll arrows' chevrons; the end the bar is at gets a faded one."""
         color = self.palette().color(QPalette.ColorRole.ButtonText)
         window = self.palette().color(QPalette.ColorRole.Window)
         muted = QColor(
@@ -95,8 +91,6 @@ class _Bar(QTabBar):
             button.setIconSize(QSize(ARROW, ARROW))
 
     def paintEvent(self, event: QPaintEvent) -> None:
-        """The tabs stop CUT px before a scroll arrow; a tab that would reach under one isn't
-        shown, so no tab is ever half drawn there."""
         super().paintEvent(event)
         arrows = [b for b in self._scrollers() if b.isVisible()]
         if not arrows or self.isRightToLeft():
@@ -121,7 +115,6 @@ class _Bar(QTabBar):
         painter.end()
 
     def hides(self, rect: QRect) -> bool:
-        """Whether `rect` is where tabs are hidden before the arrows."""
         return self._hidden_from >= 0 and rect.left() >= self._hidden_from
 
     def initStyleOption(self, option: QStyleOptionTab, index: int) -> None:
@@ -131,7 +124,7 @@ class _Bar(QTabBar):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() != Qt.MouseButton.LeftButton:
-            event.accept()  # Qt picks a tab on any press: a middle-click went there, then closed
+            event.accept()  # Qt makes any pressed tab current, a middle-clicked one too
             return
         super().mousePressEvent(event)
 
@@ -145,8 +138,6 @@ class _Bar(QTabBar):
 
 
 class _Close(QToolButton):
-    """A tab's ×, neither drawn nor clicked while its tab is hidden before the arrows."""
-
     def _hidden(self) -> bool:
         bar = self.parentWidget()
         return isinstance(bar, _Bar) and bar.hides(self.geometry())
@@ -157,18 +148,15 @@ class _Close(QToolButton):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if self._hidden():
-            event.ignore()  # the bar takes it, as a click on the hidden tab
+            event.ignore()
             return
         super().mousePressEvent(event)
 
 
 class TabStrip(QWidget):
-    """Which tab is in front is a key: PINNED, or another tab's key. `pinned_icon` is the
-    pinned tab's Tabler icon."""
-
-    picked = Signal(str)  # a tab was clicked: its key
-    close_requested = Signal(str)  # its ×, or a middle-click
-    menu_requested = Signal(str, QPoint)  # a right-click on a tab: its key, where (global)
+    picked = Signal(str)
+    close_requested = Signal(str)
+    menu_requested = Signal(str, QPoint)
 
     def __init__(self, pinned_icon: str) -> None:
         super().__init__()
@@ -178,9 +166,9 @@ class TabStrip(QWidget):
         self.pinned.addTab("")
         self.pinned.setUsesScrollButtons(False)
         self.line = QFrame()
-        self.line.setObjectName("toolDivider")  # styled as the toolbar's lines are
+        self.line.setObjectName("toolDivider")
         self.line.setFixedSize(1, 16)
-        self.line.hide()  # with the list alone it parted nothing, and looked like a text cursor
+        self.line.hide()
         gap = QWidget()
         gap.setFixedWidth(GAP)
         inside = QHBoxLayout(gap)
@@ -189,11 +177,11 @@ class TabStrip(QWidget):
         self.bar = _Bar()
         self.more = QToolButton()
         self.more.setObjectName("tabsMenu")
-        self.more.setFixedWidth(28)  # as each scroll arrow
+        self.more.setFixedWidth(28)
         self.more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more.setMenu(QMenu(self.more))
         self.more.menu().aboutToShow.connect(self._fill_more)
-        self._more_items: list[tuple[str, str, QIcon]] = []  # every tab: key, text, mark
+        self._more_items: list[tuple[str, str, QIcon]] = []
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(0)
@@ -209,8 +197,6 @@ class TabStrip(QWidget):
         self.restyle()
 
     def set_height(self, height: int) -> None:
-        """As tall as `height` (the list dropdown's, plus the gap under it), its tabs filling it,
-        so the panels under the tabs start where the Groups panel does."""
         for bar in (self.pinned, self.bar):
             bar.set_tab_height(height)
         self.more.setFixedHeight(height)
@@ -233,7 +219,6 @@ class TabStrip(QWidget):
         self.pinned.setTabToolTip(0, tip)
 
     def tab_keys(self) -> list[str]:
-        """The tabs after the pinned one, left to right."""
         return [self.key_at(i) for i in range(self.bar.count())]
 
     def key_at(self, index: int) -> str:
@@ -244,14 +229,13 @@ class TabStrip(QWidget):
         return next((i for i in range(self.bar.count()) if self.key_at(i) == key), -1)
 
     def add(self, key: str, text: str) -> None:
-        """A tab at the right end."""
         self.bar.blockSignals(True)
         index = self.bar.addTab(text)
         self.bar.setTabData(index, key)
-        close = _Close()  # a plain × in the theme's colour: Qt's own is a grey block here
+        close = _Close()  # Qt's own × is a grey block here
         close.setAutoRaise(True)
         close.setFixedSize(18, 18)
-        close.setStyleSheet("QToolButton { padding: 0px; }")  # the theme's padding hides it
+        close.setStyleSheet("QToolButton { padding: 0px; }")
         close.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         close.setIcon(
             tabler_icon("x", self.palette().color(QPalette.ColorRole.PlaceholderText), 14)
@@ -272,8 +256,6 @@ class TabStrip(QWidget):
             self.line.setVisible(self.bar.count() > 0)
 
     def show_tab(self, key: str, text: str, icon: QIcon, tip: str, closable: bool) -> None:
-        """A tab as it stands: its name, its mark and the mark's words, and its × only while it
-        may close."""
         index = self.index_of(key)
         if index < 0:
             return
@@ -297,7 +279,6 @@ class TabStrip(QWidget):
             self.bar.blockSignals(False)
 
     def set_more(self, items: list[tuple[str, str, QIcon]]) -> None:
-        """What ▾ lists: every tab's key, its words ("LAB-01 · deleting 2 of 3") and mark."""
         self._more_items = items
 
     def _clicked(self, index: int) -> None:
@@ -320,5 +301,4 @@ class TabStrip(QWidget):
 
 
 def mark_icon(name: str, color: str) -> QIcon:
-    """A tab's mark; none when `name` is "" (a host simply scanned)."""
     return tabler_icon(name, QColor(color), 16) if name else QIcon()

@@ -1,5 +1,3 @@
-"""Running a host command on a background thread, its answer coming back as one Outcome."""
-
 import getpass
 import logging
 import threading
@@ -31,37 +29,33 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-RETRY_REASONS = (Reason.NOT_ADMIN, Reason.REJECTED)  # another account may do
+RETRY_REASONS = (Reason.NOT_ADMIN, Reason.REJECTED)
 
 
 @dataclass(frozen=True)
 class HostTarget:
-    """The PC a command is for: a host of the open list, or an address typed on the spot."""
-
-    key: str  # the host's id, or "@" and the address: where its results are kept
+    key: str
     name: str
     address: str
 
 
 @dataclass(frozen=True)
 class Outcome:
-    text: str  # rich text: names in bold
-    error: BaseException | None = None  # None: it worked
-    retry: Callable[[], None] | None = None  # run it again once another account is typed
-    running: bool = False  # not an answer yet: it was started and is still going
+    text: str
+    error: BaseException | None = None
+    retry: Callable[[], None] | None = None
+    running: bool = False
 
     @property
     def failed(self) -> bool:
         return self.error is not None
 
 
-Report = Callable[[str, Outcome], None]  # command id, its outcome
+Report = Callable[[str, Outcome], None]
 
 
 class Job(QObject):
-    """One piece of work on a background thread; `done` brings back its value or its error."""
-
-    done = Signal(object, object)  # value, exception
+    done = Signal(object, object)
 
     def __init__(self, work: Callable[[], Any]) -> None:
         super().__init__()
@@ -81,16 +75,11 @@ class Job(QObject):
             self.done.emit(value, None)
 
 
-# ---- how answers read ----
-
-
 def bold(text: str) -> str:
     return f"<b>{escape(text)}</b>"
 
 
 def reason_text(error: BaseException, host: str = "") -> str:
-    """Why it failed, as the end of "Couldn't … on DESK-02: …". `host` names the other PC where
-    the reason is about it."""
     if isinstance(error, RemoteError):
         return {
             Reason.UNREACHABLE: _(
@@ -113,8 +102,6 @@ def reason_text(error: BaseException, host: str = "") -> str:
 
 
 def reason_place(error: BaseException) -> str:
-    """The line in the docs that explains `error`, for the "What does this mean?" after a failed
-    command; "" where the docs have none, so no link promises an answer that isn't there."""
     if isinstance(error, RemoteError):
         return {
             Reason.UNREACHABLE: "pc-unreachable",
@@ -132,19 +119,16 @@ def reason_place(error: BaseException) -> str:
 
 
 def failed_text(action: str, host: str, error: BaseException) -> str:
-    """`action` is rich text already, e.g. "log off <b>ana</b>"."""
     return _("Couldn't {action} on {host}: {reason}").format(
         action=action, host=escape(host), reason=escape(reason_text(error, host))
     )
 
 
 def person(session: Session) -> str:
-    """A signed-in person in messages and menus: the name, without the domain."""
     return session.user
 
 
 def own_session(session: Session) -> bool:
-    """Whether it's the person using CapyPanel: their own session isn't sent messages."""
     try:
         me = getpass.getuser()
     except (OSError, KeyError):
@@ -153,13 +137,10 @@ def own_session(session: Session) -> bool:
 
 
 def recipients(found: Sequence[Session]) -> list[Session]:
-    """Who Send a message reaches: everyone at their screen, not disconnected sessions or the
-    person sending it."""
     return [s for s in check_texts.by_state(found) if s.state == "active" and not own_session(s)]
 
 
 def folder_user(found: Sequence[Session] | None) -> Session | None:
-    """Whose folder "User's folder" opens: the person at the PC, else the first one active."""
     people = check_texts.by_state(found or ())
     for session in people:
         if session.kind == "console" and session.state == "active":
@@ -168,17 +149,13 @@ def folder_user(found: Sequence[Session] | None) -> Session | None:
 
 
 class Runner(QObject):
-    """Runs the host commands for the Hosts tool and its windows."""
-
-    facts_changed = Signal(str)  # a target's key: its PC facts were read, or are being read
+    facts_changed = Signal(str)
 
     def __init__(self, tool: "HostsTool") -> None:
         super().__init__(tool)
         self._tool = tool
         self._jobs: set[Job] = set()
-        self._parent: QWidget | None = None  # the window a command's questions open over
-
-    # ---- the common parts ----
+        self._parent: QWidget | None = None
 
     def _start(
         self,
@@ -211,8 +188,6 @@ class Runner(QObject):
         *,
         ask: bool = True,
     ) -> bool:
-        """`work` gets `target`'s account (Accounts; None: the Windows account). A password not
-        typed yet is asked first, unless not `ask`; False when it wasn't, and nothing started."""
         go, account = self._tool.accounts.account_for(target, self._window() if ask else None)
         if go:
             self._start(lambda: work(account), done, failed)
@@ -236,8 +211,6 @@ class Runner(QObject):
     def another_account(
         self, target: HostTarget, error: BaseException | None, again: Callable[[], None]
     ) -> None:
-        """Try another account…: asks for one and which PCs it's for (Settings' Accounts keeps
-        it), then runs `again`."""
         accounts = self._tool.accounts
         current = accounts.link_for(target)
         if isinstance(error, RemoteError) and error.reason is Reason.REJECTED and current:
@@ -255,13 +228,13 @@ class Runner(QObject):
             saved=current is not None and accounts.saved(current.user),
             uses=uses,
         )
-        if current is not None:  # the PCs it was for, unless a narrower choice is wanted
+        if current is not None:
             for index, (_label, link) in enumerate(uses):
                 if link.same_place(current):
                     dialog.use_for.setCurrentIndex(index)
         if run_modal(dialog) == QDialog.DialogCode.Accepted:
             link = dialog.link()
-            assert link is not None  # "Every PC" at least
+            assert link is not None
             accounts.use(link, dialog.account(), remember=dialog.remember.isChecked())
             again()
 
@@ -277,8 +250,6 @@ class Runner(QObject):
         *,
         fresh: bool = False,
     ) -> None:
-        """Who is signed in, from the last check, or read now when there's none (always now
-        with `fresh`: the last check may be from before someone signed in)."""
         known = None if fresh else self._tool.users_found(target.key)
         if known is not None and known[0] is not None:
             then(known[0], None)
@@ -298,8 +269,6 @@ class Runner(QObject):
 
         self._start_as(target, read, done, failed)
 
-    # ---- running a command ----
-
     def run(
         self,
         command_id: str,
@@ -309,8 +278,6 @@ class Runner(QObject):
         parent: QWidget | None = None,
         session: Session | None = None,
     ) -> None:
-        """Runs one command of core.hosts.commands for `target`. `session`: the person a
-        per-person command is for. `parent`: the window its questions open over."""
         self._parent = parent
         handler = {
             "all-checks": self._all_checks,
@@ -342,7 +309,7 @@ class Runner(QObject):
         handler[command_id](target, report)
 
     def _window(self) -> QWidget:
-        if self._parent is not None and shiboken6.isValid(self._parent):  # not closed since
+        if self._parent is not None and shiboken6.isValid(self._parent):
             return self._parent
         return self._parent_widget()
 
@@ -350,13 +317,10 @@ class Runner(QObject):
         self._tool.check_target(target, status=True, users=True, report=report)
         self.read_facts(target, report=report)
 
-    # ---- Open ----
-
     def _open(
         self, target: HostTarget, report: Report, command_id: str, where: Callable[[], str]
     ) -> None:
-        """File Explorer on `where()`, once the PC answers: Explorer itself can hang for half a
-        minute on a PC that's off."""
+        """Once the PC answers: Explorer can hang for half a minute on a PC that's off."""
         name = _(host_commands.command(command_id).name)
 
         def check() -> str:
@@ -410,8 +374,6 @@ class Runner(QObject):
             places.open_console(target.address, console)
         except OSError as e:
             self._tool.say(_("Couldn't open it: {error}").format(error=e))
-
-    # ---- Users ----
 
     def _message(self, target: HostTarget, report: Report, only: Session | None) -> None:
         def ask(found: Sequence[Session] | None, error: BaseException | None) -> None:
@@ -484,14 +446,10 @@ class Runner(QObject):
 
         self._start_as(target, act, done, failed)
 
-    # ---- Drives and caches ----
-
     def _drives(self, target: HostTarget, report: Report) -> None:
         from capypanel.ui.hosts_tool.drive_windows import DrivesDialog
 
         run_modal(DrivesDialog(self._window(), self, target))
-
-    # ---- Power ----
 
     def _power(self, target: HostTarget, report: Report, *, restart: bool) -> None:
         def ask(found: Sequence[Session] | None, error: BaseException | None) -> None:
@@ -565,8 +523,6 @@ class Runner(QObject):
 
         self._start_as(target, act, done, failed)
 
-    # ---- Printers ----
-
     def _printers(self, target: HostTarget, report: Report) -> None:
         dialog = windows.PrintersDialog(self._window(), self, target, report)
         run_modal(dialog)
@@ -601,18 +557,12 @@ class Runner(QObject):
         failed: Callable[[BaseException], None],
         target: HostTarget | None = None,
     ) -> None:
-        """For the command windows: `work` runs on a background thread and gets the account
-        that signs in to `target`; with no target, None (nothing on a PC needs one)."""
         if target is None:
             self._start(lambda: work(None), done, failed)
         else:
             self._start_as(target, work, done, failed)
 
-    # ---- Check ----
-
     def read_facts(self, target: HostTarget, *, report: Report | None = None) -> None:
-        """PC facts: free space and the last restart at once, then the rest over WMI. Read on
-        its own (no `report`), it never asks for a password: it waits for one typed."""
         go, account = self._tool.accounts.account_for(
             target, self._window() if report is not None else None
         )
@@ -620,7 +570,7 @@ class Runner(QObject):
             return
         self._tool.facts_reading(target.key)
         self.facts_changed.emit(target.key)
-        from capypanel.core.remote import inventory  # its PowerShell parts load on first use
+        from capypanel.core.remote import inventory
 
         def quick() -> tuple[Any, Any]:
             return (inventory.disk_space(target.address, account),
@@ -639,7 +589,7 @@ class Runner(QObject):
             self._tool.keep_facts(target.key, quick_error=error)
             self.facts_changed.emit(target.key)
             if isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE:
-                self._tool.keep_facts(target.key, slow_error=error)  # WMI would only time out
+                self._tool.keep_facts(target.key, slow_error=error)
                 self._facts_failed(target, error, report)
                 return
             self._start(slow, slow_done, slow_failed)

@@ -1,5 +1,3 @@
-"""Many hosts at once: reading a pasted list or a CSV file, planning an import, writing a CSV."""
-
 import csv
 import ctypes
 import io
@@ -12,7 +10,7 @@ from enum import StrEnum
 from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleError, is_hostname
 from capypanel.core.i18n import _
 
-PATH = "/"  # between a group path's levels
+PATH = "/"
 LOCALE_SLIST = 0x0C  # GetLocaleInfoEx: the list separator
 _HEADERS = {
     "name": {"name", "nome", "host", "hostname", "computer", "computador"},
@@ -27,30 +25,25 @@ _HEADERS = {
 class ImportRow:
     name: str
     address: str = ""
-    group: str = ""  # a path as typed; "" = the group picked for the import
+    group: str = ""
     tags: tuple[str, ...] = ()
     notes: str = ""
-    # A caller's own columns (parse's `more`), as (key, cell) pairs; empty cells left out.
     more: tuple[tuple[str, str], ...] = ()
 
 
-# A caller's own columns: each key and the header names it's read under (its key among them,
-# so to_csv's header reads back).
 More = Mapping[str, Iterable[str]]
 
 
 @dataclass(frozen=True)
 class Parsed:
     rows: tuple[ImportRow, ...]
-    ignored: tuple[str, ...] = ()  # header columns CapyPanel doesn't use
-    # Columns it can't name: more than a name and an address, or a file, with no header row.
-    # Then there are no rows.
+    ignored: tuple[str, ...] = ()
     needs_header: bool = False
 
 
 class Verdict(StrEnum):
     ADD = "add"
-    SKIP = "skip"  # a host that's already there: left alone, never overwritten
+    SKIP = "skip"
     BAD = "bad"
 
 
@@ -58,15 +51,15 @@ class Verdict(StrEnum):
 class Planned:
     row: ImportRow
     verdict: Verdict
-    reason: str  # empty for ADD; for SKIP it names the host or row it repeats
-    group: tuple[str, ...]  # where it goes, as group names from the top
+    reason: str
+    group: tuple[str, ...]
 
 
 @dataclass(frozen=True)
 class Plan:
     items: tuple[Planned, ...]
     new_groups: tuple[tuple[str, ...], ...]
-    result: HostList  # the list as it would be after the import
+    result: HostList
 
     @property
     def adding(self) -> int:
@@ -74,8 +67,6 @@ class Plan:
 
 
 def parse(text: str, *, file: bool = False, more: More | None = None) -> Parsed:
-    """file: a CSV file, which needs a header row; pasted text may be plain "name, address" lines.
-    more: the caller's own columns (Printers' brand, model…), read into ImportRow.more."""
     lines = [line for line in text.splitlines() if line.strip()]
     if not lines:
         return Parsed(())
@@ -91,20 +82,16 @@ def parse(text: str, *, file: bool = False, more: More | None = None) -> Parsed:
         return Parsed((), needs_header=True)
     delimiter = _delimiter(lines[0])
     if any(len(_split(line, delimiter)) > 2 for line in lines):
-        # Without a header, a third column could be anything: say so rather than guess.
         return Parsed((), needs_header=True)
     return _read((_split(line, delimiter) for line in lines), ["name", "address"], delimiter, more)
 
 
 def _fold(text: str) -> str:
-    """For matching headers: lower case, no accents, no spaces, "_" or "-" ("Endereço IP" =
-    "enderecoip", "GroupName" = "Group_name" = "groupname")."""
     plain = unicodedata.normalize("NFKD", text.casefold())
     return "".join(c for c in plain if not unicodedata.combining(c) and c not in " \t_-")
 
 
 def _columns(cells: Sequence[str], more: More) -> list[str]:
-    """Each header cell's meaning: a known column's key, or the cell as typed."""
     named = {**_HEADERS, **more}
     known = {key: {_fold(name) for name in names} for key, names in named.items()}
     return [
@@ -113,7 +100,6 @@ def _columns(cells: Sequence[str], more: More) -> list[str]:
 
 
 def _header(line: str, more: More) -> tuple[str, list[str]] | None:
-    """The delimiter and each column's meaning, when the first line names a "name" column."""
     for delimiter in ("\t", ";", ","):
         columns = _columns(_split(line, delimiter), more)
         if "name" in columns:
@@ -129,13 +115,10 @@ def _split(line: str, delimiter: str) -> list[str]:
     return next(csv.reader([line], delimiter=delimiter), [])
 
 
-# A cell in a table lined up with spaces: words with one space between them; columns have more.
 _ALIGNED_CELL = re.compile(r"\S+(?: \S+)*")
 
 
 def _aligned(lines: Sequence[str], more: More) -> Parsed | None:
-    """A table whose columns are lined up with spaces, as some programs copy one: the header
-    row's titles mark where each column starts. None when the first line isn't such a header."""
     titles = list(_ALIGNED_CELL.finditer(lines[0]))
     columns = _columns([t.group() for t in titles], more)
     if len(titles) < 2 or "name" not in columns:
@@ -146,7 +129,6 @@ def _aligned(lines: Sequence[str], more: More) -> Parsed | None:
         found = _ALIGNED_CELL.findall(line)
         if len(found) == len(starts):
             return found
-        # An empty cell, or one that runs into the next: cut where the titles start.
         return [line[a:b] for a, b in zip(starts, [*starts[1:], None], strict=True)]
 
     return _read((cells(line) for line in lines[1:]), columns, " ", more)
@@ -174,7 +156,6 @@ def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str, mor
 
 
 def _unguarded(cell: str) -> str:
-    """A cell as it was before a Report wrote it spreadsheet-safe."""
     guarded = cell.startswith(GUARD) and cell[len(GUARD) :].startswith(FORMULA_START)
     return cell[len(GUARD) :] if guarded else cell
 
@@ -186,15 +167,13 @@ def plan(
     *,
     problem: Callable[[ImportRow], str | None] | None = None,
 ) -> Plan:
-    """What the import would do, row by row, and the list it would make; nothing is saved here.
-    default_group: for rows without one (NO_GROUP: none). problem: the caller's own row check."""
     result, items, new_groups = host_list, [], []
     names: dict[str, Host] = {}
     targets: dict[str, Host] = {}
     for host in host_list.hosts:
         names.setdefault(host.name.casefold(), host)
         targets.setdefault(host.target.casefold(), host)
-    seen_names: dict[str, int] = {}  # row numbers, from 1
+    seen_names: dict[str, int] = {}
     seen_targets: dict[str, int] = {}
     for number, row in enumerate(rows, 1):
         name, address = row.name.strip(), row.address.strip()
@@ -226,14 +205,11 @@ def plan(
 
 
 def place(host_list: HostList, host: Host) -> str:
-    """Where a host sits, said in a sentence: "in “Clinic A › Floor 2”", or "with no group"."""
     path = " › ".join(_names(host_list, host.group))
     return _("in “{group}”").format(group=path) if path else _("with no group")
 
 
 def listed_at(host_list: HostList, host: Host, typed: str) -> str:
-    """A host of the list at the address of the PC `typed` (by its name or its address), and where
-    it is: "Already in the list, in “Clinic A”", or "“DESK-01” has this address, …"."""
     if host.name.casefold() == typed.strip().casefold():
         return _("Already in the list, {place}").format(place=place(host_list, host))
     return _("“{name}” has this address, {place}").format(
@@ -242,7 +218,6 @@ def listed_at(host_list: HostList, host: Host, typed: str) -> str:
 
 
 def _in_list(host_list: HostList, same_name: Host | None, same_address: Host | None) -> str:
-    """Which hosts already in the list a row matches, and where they are."""
     if same_name is not None and same_name is same_address:
         return _("Already in the list, {place}").format(place=place(host_list, same_name))
     found = []
@@ -262,7 +237,6 @@ def _in_list(host_list: HostList, same_name: Host | None, same_address: Host | N
 
 
 def _repeated(same_name: int | None, same_address: int | None) -> str:
-    """The earlier rows of this import a row repeats."""
     if same_name is not None and same_name == same_address:
         return _("Same as row {n}").format(n=same_name)
     found = []
@@ -279,14 +253,12 @@ def _problem(name: str, address: str) -> str:
     if address and not is_hostname(address):
         return _("Not a computer name or IP address")
     if not address and not is_hostname(name):
-        # With no address, CapyPanel connects by the name, so it must be the computer's own.
         return _("No address: the name must then be the computer's name on the network")
     return ""
 
 
 def _path(host_list: HostList, typed: str) -> tuple[str, ...]:
-    """The typed path's levels. A group whose own name has a "/" is found by its whole path
-    first, so a list exported and imported back lands in the same groups."""
+    """A name with "/" is matched whole first: an exported list imports into the same groups."""
     wanted = typed.strip().casefold()
     for group in host_list.groups:
         names = _names(host_list, group.id)
@@ -296,7 +268,6 @@ def _path(host_list: HostList, typed: str) -> tuple[str, ...]:
 
 
 def _names(host_list: HostList, group_id: str) -> tuple[str, ...]:
-    """A group's path, as names from the top."""
     path: list[str] = []
     group = host_list.group(group_id)
     while group is not None:
@@ -308,8 +279,6 @@ def _names(host_list: HostList, group_id: str) -> tuple[str, ...]:
 def _group(
     host_list: HostList, path: tuple[str, ...]
 ) -> tuple[HostList, str, list[tuple[str, ...]]]:
-    """The group at `path` (names matched without regard to case), making the missing levels.
-    Returns the list, the group's id, and the paths it made."""
     made: list[tuple[str, ...]] = []
     parent: str | None = None
     for depth, name in enumerate(path):
@@ -320,11 +289,10 @@ def _group(
             host_list, found = host_list.add_group(name, parent)
             made.append(path[: depth + 1])
         parent = found.id
-    assert parent is not None  # a path always has a level
+    assert parent is not None
     return host_list, parent, made
 
 
-# A spreadsheet runs a cell that starts with one of these as a formula.
 FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
 GUARD = "'"  # put before such a cell, so it's shown as text; the import takes it off again
 
@@ -341,8 +309,6 @@ def write_csv(
     *,
     guard: bool = True,
 ) -> str:
-    """guard: cells a spreadsheet would run as formulas are written as text (spreadsheet_safe).
-    Off only for text that never reaches a spreadsheet."""
     out = io.StringIO()
     writer = csv.writer(out, delimiter=delimiter, lineterminator="\n")
     writer.writerow([spreadsheet_safe(c) for c in header] if guard else header)
@@ -351,8 +317,6 @@ def write_csv(
 
 
 def to_csv(rows: Iterable[ImportRow], delimiter: str = ",", more: Sequence[str] = ()) -> str:
-    """Rows as CSV with a header row, for the import window's edited table; with ";" between
-    columns, tags are joined by ",". more: the caller's own columns, after the hosts' ones."""
     between_tags = "," if delimiter == ";" else ";"
     return write_csv(
         ["name", "address", "group", "tags", "notes", *more],
@@ -362,12 +326,11 @@ def to_csv(rows: Iterable[ImportRow], delimiter: str = ",", more: Sequence[str] 
             for r in rows
         ),
         delimiter,
-        guard=False,  # read back by the import window itself
+        guard=False,
     )
 
 
 def host_fields(host_list: HostList, host: Host, between_tags: str = ";") -> dict[str, str]:
-    """A host's columns as Import hosts reads them back: its group as a path, tags joined."""
     return {
         "name": host.name,
         "address": host.address,
@@ -378,7 +341,6 @@ def host_fields(host_list: HostList, host: Host, between_tags: str = ";") -> dic
 
 
 def export(host_list: HostList, hosts: Iterable[Host], delimiter: str = ",") -> str:
-    """Hosts as CSV that imports back: name, address, group path, tags and notes."""
     between_tags = "," if delimiter == ";" else ";"
     fields = [host_fields(host_list, h, between_tags) for h in hosts]
     keys = ["name", "address", "group", "tags", "notes"]
@@ -386,13 +348,12 @@ def export(host_list: HostList, hosts: Iterable[Host], delimiter: str = ",") -> 
 
 
 def list_separator() -> str:
-    """Windows' list separator (Region settings): what Excel splits a CSV file on when it's
-    opened, e.g. "," in English and ";" in Portuguese. "," when it can't be read."""
+    """What Excel splits a CSV on: Windows' list separator ("," in English, ";" in Portuguese)."""
     try:
         text = ctypes.create_unicode_buffer(8)
         found = ctypes.windll.kernel32.GetLocaleInfoEx(None, LOCALE_SLIST, text, len(text))
         if found and text.value in (",", ";", "\t"):
             return text.value
-    except (AttributeError, OSError):  # not Windows
+    except (AttributeError, OSError):
         pass
     return ","

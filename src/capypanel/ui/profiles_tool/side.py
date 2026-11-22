@@ -1,5 +1,3 @@
-"""Profile cleanup's right panel: Progress, the tab's card and Delete, always in sight."""
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from html import escape
@@ -41,55 +39,47 @@ from capypanel.ui.menus import popup
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.panels import ProfileDetails, Shown, amber, card
 
-FOOT = 36  # px: the foot button's height
-MARK = 14  # px: a line's icon
-TAB_LINES = 4  # Progress shows this many tabs
-TICKED_LINES = 6  # a host's card shows this many profiles
+FOOT = 36
+MARK = 14
+TAB_LINES = 4
+TICKED_LINES = 6
 
 
 @dataclass(frozen=True)
 class Entry:
-    """One line of a card: a mark, a name, and words on the right."""
-
     key: str
     name: str
     words: str = ""
     icon: str = ""
-    color: str = ""  # the icon's
-    words_color: str = ""  # "" for grey
+    color: str = ""
+    words_color: str = ""
     tip: str = ""
-    muted: bool = False  # the name in grey too: it waits
+    muted: bool = False
 
 
 @dataclass(frozen=True)
 class HostFacts:
-    """The picked host, on the Hosts tab."""
-
     name: str
-    dot: str  # its status colour; "" for none
-    status: str  # "Offline · checked by Hosts at 10:30"
+    dot: str
+    status: str
     address: str
     group: str
-    scanned: str  # "10:41", or "—"
-    account: str  # who signs in, or "—"
+    scanned: str
+    account: str
 
 
 @dataclass(frozen=True)
 class GroupFacts:
-    """The hosts on show, when no single host is picked: how many answer by Hosts' last check,
-    the check under way, and what the scans found so far."""
-
-    name: str  # the group's name, or "All hosts"
-    status: str  # "Refreshing status: 12 of 31…", or when Hosts last checked
-    checked: str  # "28 online · 3 offline"
+    name: str
+    status: str
+    checked: str
     unchecked: int
-    scanned: str  # "4 of 31"
-    deletable: str  # "66", or "—" before any scan
-    empty: bool = False  # no host on show
+    scanned: str
+    deletable: str
+    empty: bool = False
 
 
 def caption(text: str = "") -> QLabel:
-    """A card's small heading, in capitals: what the card is."""
     label = QLabel(text)
     label.setObjectName("hint")
     font = QFont(label.font())
@@ -100,7 +90,6 @@ def caption(text: str = "") -> QLabel:
 
 
 def big(text: str = "") -> QLabel:
-    """A card's main line."""
     label = QLabel(text)
     font = QFont(label.font())
     font.setBold(True)
@@ -118,9 +107,6 @@ def _thin_bar() -> QProgressBar:
 
 
 class Name(QWidget):
-    """A name on a line: it takes the room the line leaves and ends in "…" when it can't fit,
-    the whole name in its tooltip, so the words beside it always show."""
-
     def __init__(self) -> None:
         super().__init__()
         self._text = ""
@@ -164,9 +150,6 @@ class Name(QWidget):
 
 
 class Line(QWidget):
-    """One entry: its mark, its name, and its words on the right, which are never cut (the name
-    gives way). A click says its key."""
-
     clicked = Signal(str)
 
     def __init__(self) -> None:
@@ -210,9 +193,6 @@ class Line(QWidget):
 
 
 class Lines(QWidget):
-    """A fixed number of lines, so a card never scrolls. The rest is a link, "and 3 more…", whose
-    menu lists them; with `own_more` it gets a line of its own, else the last line's place."""
-
     clicked = Signal(str)
 
     def __init__(self, slots: int, own_more: bool) -> None:
@@ -223,13 +203,11 @@ class Lines(QWidget):
         self.slots = [Line() for _slot in range(slots)]
         self.more = QLabel()
         self.more.setTextFormat(Qt.TextFormat.RichText)
-        self.more.setTextInteractionFlags(help_links.LINK_KEYS)  # Tab reaches it, Enter opens it
+        self.more.setTextInteractionFlags(help_links.LINK_KEYS)
         self.more.linkActivated.connect(lambda _href: self.show_rest())
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(2)
-        # One height for every line, whatever it holds, so a card's height never depends on
-        # which lines have a mark.
         self._line = max(self.fontMetrics().height(), MARK) + 2
         for line in self.slots:
             line.setFixedHeight(self._line)
@@ -240,7 +218,6 @@ class Lines(QWidget):
         self.show_entries((), lambda _n: "")
 
     def show_entries(self, entries: Sequence[Entry], more: Callable[[int], str]) -> None:
-        """`more`: the words for the entries that don't fit, given how many."""
         room = len(self.slots)
         if len(entries) > room and not self._own_more:
             room -= 1
@@ -255,7 +232,6 @@ class Lines(QWidget):
         self.more.setVisible(bool(self._rest))
 
     def rest_menu(self) -> QMenu:
-        """The entries that don't fit; picking one acts as a click on its line."""
         menu = QMenu(self)
         for entry in self._rest:
             text = f"{entry.name} · {entry.words}" if entry.words else entry.name
@@ -277,31 +253,26 @@ class Lines(QWidget):
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:  # a new theme's link colour
+        if event.type() == QEvent.Type.PaletteChange:
             self._show_more()
 
     def shown(self) -> list[tuple[str, str]]:
-        """Each line on show, as (name, words), then the link to the rest (for tests)."""
         found = [(s.name.text(), s.words.text()) for s in self.slots if not s.isHidden()]
         return found + ([(self._more_words, "")] if not self.more.isHidden() else [])
 
     def full_height(self) -> int:
-        """Its height with every line on show."""
         return len(self.slots) * self._line + (len(self.slots) - 1) * 2
 
 
 def _column(frame: QFrame) -> QVBoxLayout:
     column = QVBoxLayout(frame)
-    column.setContentsMargins(14, 12, 14, 12)  # as Details' own page
+    column.setContentsMargins(14, 12, 14, 12)
     column.setSpacing(3)
     return column
 
 
 class ProgressCard(QFrame):
-    """Progress, the same on every tab: how many hosts have a tab and are done, then a line per
-    tab, the working ones first; a click goes to that tab. Its height never changes."""
-
-    go_to = Signal(str)  # a host's key: its tab comes to the front
+    go_to = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -324,7 +295,6 @@ class ProgressCard(QFrame):
         self.show_tabs((), 0)
 
     def show_tabs(self, entries: Sequence[Entry], done: int) -> None:
-        """`entries`: every host with a tab, in the order to show. `done`: how many ended."""
         total = len(entries)
         self.caption.setText(_("PROGRESS"))
         if total:
@@ -348,7 +318,6 @@ class ProgressCard(QFrame):
         self.setFixedHeight(self._height())
 
     def _height(self) -> int:
-        """Room for the heading, one grey line, the bar and every line: about 190 px."""
         one_line = self.summary.fontMetrics().height()
         parts = (self.caption.sizeHint().height(), self.title.sizeHint().height(), one_line,
                  self.bar.height(), self.lines.full_height())  # fmt: skip
@@ -371,9 +340,6 @@ def _rule() -> QFrame:
 
 
 class HostCard(QFrame):
-    """The Hosts tab's card: the host picked, or the hosts on show as a whole; under it, the
-    tabs that have profiles ticked and waiting. A click on a value copies it."""
-
     go_to = Signal(str)
     copied = Signal(str)
 
@@ -384,13 +350,11 @@ class HostCard(QFrame):
         self.dot = QLabel()
         self.name = CopyValue("")
         self.name.setFont(big().font())
-        # Its padding and the label's own edge would start the name further in than the lines
-        # around it.
         self.name.setStyleSheet("QLabel#copyValue { padding-left: 0px; margin-left: -4px; }")
         self.name.copied.connect(self.copied)
         self.status = DetailsPanel.muted("")
         top = QHBoxLayout()
-        top.setSpacing(10)  # the name's own edge takes 4 of them back
+        top.setSpacing(10)
         top.addWidget(self.dot)
         top.addWidget(self.name, 1)
         self._labels = [QLabel() for _n in range(4)]
@@ -431,8 +395,6 @@ class HostCard(QFrame):
         self.show_ticked(())
 
     def show_group(self, facts: GroupFacts) -> None:
-        """No single host picked: the hosts on show as a whole. With none on show (a search
-        that found nothing), it says so and has no rows."""
         self.heading.setText(_("HOSTS SHOWN"))
         self.name.set_text(facts.name)
         self.dot.hide()
@@ -467,14 +429,12 @@ class HostCard(QFrame):
         )
 
     def show_ticked(self, entries: Sequence[Entry]) -> None:
-        """The tabs with profiles ticked, or deleting them; the section shows only with some."""
         self._ticked_title.setText(_("Ticked in tabs"))
         self._ticked_hint.setText(_("A click goes to the host's tab."))
         self.ticked.show_entries(entries, lambda n: _("and {n} more…").format(n=n))
         self._section.setVisible(bool(entries))
 
     def values(self) -> dict[str, str]:
-        """The rows on show, label to value (for tests)."""
         pairs = zip(self._labels, self._values, strict=True)
         return {a.text(): b.copy_text() for a, b in pairs if not a.isHidden()}
 
@@ -487,10 +447,7 @@ class HostCard(QFrame):
 
 
 class TickedCard(QFrame):
-    """A host's card: the profiles ticked to delete, their count and size in amber, one line
-    each. A click on a line shows that profile in the table."""
-
-    picked = Signal(str)  # a profile's ident
+    picked = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -511,7 +468,6 @@ class TickedCard(QFrame):
         self.show_ticked((), {}, scanned=False)
 
     def show_ticked(self, ticked: Sequence[Profile], sizes: dict[str, int], scanned: bool) -> None:
-        """`sizes`: bytes of the rows counted. `scanned`: the host has a list to tick in."""
         self.caption.setText(_("TICKED TO DELETE"))
         entries = [
             Entry(p.ident, rows.user_text(p),
@@ -544,10 +500,7 @@ class TickedCard(QFrame):
 
 
 class RunCard(QFrame):
-    """A host's card during and after a delete run: where it is, the bar, a line per profile; once
-    over, Open the history, and Close, which brings the ticked profiles' card back."""
-
-    picked = Signal(str)  # a profile's ident
+    picked = Signal(str)
     log_requested = Signal()
     closed = Signal()
 
@@ -588,7 +541,6 @@ class RunCard(QFrame):
 
     def show_run(self, over: bool, title: str, second: str, ended: int, total: int,
                  entries: Sequence[Entry]) -> None:  # fmt: skip
-        """`title`: "2 of 3 profiles", or how the run ended. `second`: the grey line under it."""
         self._over = over
         self.caption.setText(_("DELETION FINISHED") if over else _("DELETING PROFILES"))
         self.title.setText(title)
@@ -614,9 +566,6 @@ class RunCard(QFrame):
 
 
 class Foot(QWidget):
-    """The button at the foot of a host's panel, the panel's full width: the amber Delete, or,
-    while the host deletes, a plain Cancel the rest in its place."""
-
     def __init__(self) -> None:
         super().__init__()
         self.delete_button = risky_button("")
@@ -649,9 +598,6 @@ class Foot(QWidget):
 
 
 class ProfileWindow(QDialog):
-    """A profile's details in a window, with a tick for deleting it and Close. It shows the
-    profile it was opened for."""
-
     tick_toggled = Signal(bool)
     copied = Signal(str)
 
@@ -680,7 +626,6 @@ class ProfileWindow(QDialog):
         self.close_button.setFocus()
 
     def show_profile(self, shown: Shown, ticked: bool, can_tick: bool) -> None:
-        """`can_tick`: the row has a tick box that may change now."""
         self.details.show_item(shown, 1)
         self.tick.blockSignals(True)
         self.tick.setChecked(ticked)

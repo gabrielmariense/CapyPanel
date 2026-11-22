@@ -1,5 +1,3 @@
-"""A host tab's parts in Profile cleanup: the profiles table, a profile's details, Delete."""
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -66,25 +64,23 @@ from capypanel.ui.profiles_tool.rows import Filters, Result
 from capypanel.ui.tables import fit_rows, grid_table
 from capypanel.ui.themes import engine as themes
 
-LEFT, RIGHT = 234, 284  # px: the narrowest the Groups panel opens at, and the right panel can be
-DETAILS = 340  # px: the right panel's first width, as Hosts' Details
-TICK, USER, USED, SIZE, STATE = range(5)  # the table's columns; a profile's kind is in its details
-SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
-ARROW = 16  # px a column title needs for the sort arrow
-IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
+LEFT, RIGHT = 234, 284
+DETAILS = 340
+TICK, USER, USED, SIZE, STATE = range(5)
+SORT_ROLE = Qt.ItemDataRole.UserRole + 1
+ARROW = 16
+IDENT_ROLE = Qt.ItemDataRole.UserRole
 CAREFUL_ROLE = Qt.ItemDataRole.UserRole + 2  # ticked: deleted on Delete…
-COUNTING_ROLE = Qt.ItemDataRole.UserRole + 3  # its size is being counted now
-INFO = 22  # px: the (i) at the end of the clicked row, which opens the profile's window
-INFO_GAP = 4  # px between it and the row's right edge
+COUNTING_ROLE = Qt.ItemDataRole.UserRole + 3
+INFO = 22
+INFO_GAP = 4
 
 
 def amber() -> str:
-    """What deletes, everywhere in the app: the current theme's amber."""
     return themes.status_color("attention")
 
 
 def card() -> QFrame:
-    """A box with the lists' background, as the other tools' panels."""
     frame = QFrame()
     frame.setObjectName("card")
     frame.setFrameShape(QFrame.Shape.StyledPanel)
@@ -97,19 +93,11 @@ def _fold(text: str) -> str:
     return text.strip().casefold()
 
 
-# ---- a tab's box ----
-
-
 def second_line_height() -> int:
-    """The second line's height on every tab: the taller of a search box and a dropdown, so the
-    table's top edge is at the same place whichever tab is in front."""
     return max(QLineEdit().sizeHint().height(), QComboBox().sizeHint().height())
 
 
 class TabBox(QFrame):
-    """A tab's one box: a bold name and a grey line about it on top, a second line under them
-    (the search, or the filters), a thin rule, then `body` flush to the box's edges."""
-
     def __init__(self, second: QWidget, body: QWidget) -> None:
         super().__init__()
         self.setObjectName("card")
@@ -150,10 +138,7 @@ class TabBox(QFrame):
 
 
 class Squeeze(QObject):
-    """Keeps a table's columns in its box: when they don't fit, those in `order` give up width in
-    turn, down to their least, the last keeping `last_least`; only then does it scroll sideways."""
-
-    narrowed = Signal(bool)  # the full widths stopped, or started, fitting
+    narrowed = Signal(bool)
 
     def __init__(
         self,
@@ -165,22 +150,20 @@ class Squeeze(QObject):
         self._tree = tree
         self._order = order
         self._last_least = last_least
-        self._full: dict[int, int] = {}  # every column but the last, at its full width
-        self._narrow_widths: dict[int, int] = {}  # full widths that apply only while narrow
+        self._full: dict[int, int] = {}
+        self._narrow_widths: dict[int, int] = {}
         self._narrow = False
         self._busy = False
         tree.viewport().installEventFilter(self)
         tree.header().sectionResized.connect(self._dragged)
 
     def set_full(self) -> None:
-        """The widths the columns have now are their full ones."""
         last = self._tree.columnCount() - 1
         self._full = {c: self._tree.columnWidth(c) for c in range(last)}
-        self._tree.header().setStretchLastSection(False)  # apply() sizes it from here on
+        self._tree.header().setStretchLastSection(False)
         self.apply()
 
     def set_narrow_width(self, column: int, width: int) -> None:
-        """While narrow, `column` is this wide at most (its title got shorter)."""
         self._narrow_widths[column] = width
         self.apply()
 
@@ -197,7 +180,6 @@ class Squeeze(QObject):
             self._full[column] = new
 
     def apply(self, room: int | None = None) -> None:
-        """`room`: the width to fit in; the table's own when not given."""
         if not self._full:
             return
         tree = self._tree
@@ -228,10 +210,7 @@ class Squeeze(QObject):
 
 
 class Count(QWidget):
-    """A host tab's second line's right end: how many rows show or, with ticked rows, a bin and "3
-    ticked · 12.4 GB" in bold amber. It never widens its row; the tooltip has the whole text."""
-
-    GAP = 5  # px between the bin and the words
+    GAP = 5
     BIN = 14
 
     def __init__(self) -> None:
@@ -243,8 +222,6 @@ class Count(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
     def show_count(self, text: str, ticked: bool, short: str = "", least: str = "") -> None:
-        """What stands in for `text` when it can't all fit: `short` ("3 ticked", without the size),
-        then `least` (just "3", beside the bin). Words aren't cut: without both, it ends in "…"."""
         self._text, self._ticked, self._short, self._least = text, ticked, short, least
         font = QFont(self.font())
         font.setBold(ticked)
@@ -260,7 +237,6 @@ class Count(QWidget):
         return self._ticked
 
     def shown_text(self) -> str:
-        """The words as drawn at this width."""
         room = max(0, self.width() - (self.BIN + self.GAP if self._ticked else 0))
         metrics = self.fontMetrics()
         for words in (self._text, self._short):
@@ -308,8 +284,6 @@ class Count(QWidget):
 
 
 class FilterRow(QWidget):
-    """A host tab's second line: which rows to show, and how many are shown."""
-
     changed = Signal()
 
     def __init__(self) -> None:
@@ -332,7 +306,7 @@ class FilterRow(QWidget):
         pair.addWidget(self.since)
         row.addLayout(pair)
         row.addSpacing(10)
-        row.addWidget(self.shown, 1)  # the room left, its words on the right
+        row.addWidget(self.shown, 1)
         self.retranslate()
         self.hide_own.toggled.connect(self.changed)
         self.leftovers.toggled.connect(self.changed)
@@ -362,8 +336,6 @@ class FilterRow(QWidget):
 
     def show_count(self, shown: str, ticked: str = "", short: str = "", least: str = "",
                    shown_short: str = "") -> None:  # fmt: skip
-        """How many rows show, or how many are ticked and their size in bold amber, with the bin.
-        Short of room: `short`, then `least`, or `shown_short` ("12 of 15"). No word is cut."""
         if ticked:
             self.shown.show_count(ticked, True, short, least)
         else:
@@ -378,8 +350,6 @@ class FilterRow(QWidget):
 
 
 class HintCard(QFrame):
-    """The middle of the page when there's no table to show: what to do, or what happened."""
-
     def __init__(
         self,
         icon: str,
@@ -428,18 +398,12 @@ class HintCard(QFrame):
         column.addStretch(3)
 
 
-# ---- the table ----
-
-
 class _Row(QTreeWidgetItem):
-    """Sorts by what a cell means (a date, a size), not by how it's written; rows that tie stay
-    in name order."""
-
     def __lt__(self, other: QTreeWidgetItem) -> bool:
         tree = self.treeWidget()
         column = tree.sortColumn() if tree is not None else USER
         mine, theirs = self.data(column, SORT_ROLE), other.data(column, SORT_ROLE)
-        if mine == theirs:  # by name, A to Z, whichever way the column is sorted
+        if mine == theirs:
             names = self.data(USER, SORT_ROLE), other.data(USER, SORT_ROLE)
             down = tree is not None and (
                 tree.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
@@ -449,15 +413,11 @@ class _Row(QTreeWidgetItem):
 
 
 def info_rect(cell: QRect) -> QRect:
-    """Where the (i) sits in a row's last cell."""
     return QRect(cell.right() - INFO - INFO_GAP + 1, cell.top() + (cell.height() - INFO) // 2,
                  INFO, INFO)  # fmt: skip
 
 
 class _Careful(QStyledItemDelegate):
-    """A 2 px amber outline round a ticked row, inside it so no row grows, over the selection's
-    colour; and at the end of the clicked row, the (i) that opens the profile's window."""
-
     def paint(
         self,
         painter: QPainter,
@@ -480,7 +440,7 @@ class _Careful(QStyledItemDelegate):
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setPen(palette.color(QPalette.ColorRole.Mid))
             painter.setBrush(palette.color(QPalette.ColorRole.Button))
-            corner = themes.current().control  # a small button, drawn by hand
+            corner = themes.current().control
             painter.drawRoundedRect(box, corner, corner)
             icon = tabler_icon("info-circle", palette.color(QPalette.ColorRole.ButtonText), 16)
             icon.paint(painter, box.adjusted(3, 3, -3, -3))
@@ -505,8 +465,6 @@ class _Careful(QStyledItemDelegate):
         option: QStyleOptionViewItem,
         index: QModelIndex | QPersistentModelIndex,
     ) -> bool:
-        """A press on a tick box picks its row like a press anywhere on it; the box changes on
-        the release. Space is the table's own (ProfilesTable.eventFilter)."""
         if event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.KeyPress):
             return False
         return super().editorEvent(event, model, option, index)
@@ -518,7 +476,6 @@ class _Careful(QStyledItemDelegate):
         option: QStyleOptionViewItem,
         index: QModelIndex | QPersistentModelIndex,
     ) -> bool:
-        """Over the (i): what it does, in place of the State cell's own tip."""
         rect: QRect = option.rect  # type: ignore[attr-defined]
         if (
             isinstance(view, QTreeWidget)
@@ -532,51 +489,43 @@ class _Careful(QStyledItemDelegate):
 
 
 class ProfilesTable(QWidget):
-    """A row per profile and leftover; only a deletable one has a tick box, the rest greyed, their
-    state saying why. Ticked: amber, "Will be deleted", an outline; after a run, how it ended."""
-
-    picked = Signal()  # another row has the selection
+    picked = Signal()
     ticked_changed = Signal()
-    details_requested = Signal(str)  # a row's ident
+    details_requested = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
         self.tree = grid_table([""] * 5)
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.tree.setFrameShape(QFrame.Shape.NoFrame)  # flush to its box's edges
+        self.tree.setFrameShape(QFrame.Shape.NoFrame)
         self.tree.setUniformRowHeights(True)
         self.tree.header().setStretchLastSection(True)
-        # At a narrow width User gives up room; the ticks and State stay.
         self.squeeze = Squeeze(self.tree, ((USER, 110),), self._state_least)
         self.tree.setSortingEnabled(True)
-        # Newest first, as people scan the list for who still uses the PC; a click on Last used
-        # turns it round, the oldest on top.
         self.tree.sortByColumn(USED, Qt.SortOrder.DescendingOrder)
         self._sorted = (USED, Qt.SortOrder.DescendingOrder)
         self.tree.header().sortIndicatorChanged.connect(self._sort_picked)
         self.tree.setItemDelegate(_Careful(self.tree))
         self.tree.itemSelectionChanged.connect(self.picked)
         self.tree.itemChanged.connect(self._changed)
-        # Space ticks the selected rows, a double-click the row clicked.
         self.tree.itemDoubleClicked.connect(self._double_clicked)
         self.tree.installEventFilter(self)
         self.tree.viewport().installEventFilter(self)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self._menu)
-        self._info_pressed = ""  # the row whose (i) the mouse went down on
+        self._info_pressed = ""
         self._profiles: dict[str, Profile] = {}
         self._ticked: set[str] = set()
         self._results: dict[str, Result] = {}
-        self._locked = False  # during a delete run no tick changes
+        self._locked = False
         self._fitted = False
-        self._root = ""  # the host's Users folder
+        self._root = ""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tree)
         self.retranslate()
 
     def retranslate(self) -> None:
-        """The titles, and the bin over the ticks in the theme's muted colour."""
         self.tree.setHeaderLabels(["", _("User"), _("Last used"), _("Size"), _("State")])
         header = self.tree.headerItem()
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
@@ -587,7 +536,6 @@ class ProfilesTable(QWidget):
         )
 
     def _sort_picked(self, column: int, order: Qt.SortOrder) -> None:
-        """A click on the ticks' title does nothing: no sort, no tick-all."""
         if column == TICK:
             header = self.tree.header()
             header.blockSignals(True)
@@ -603,8 +551,6 @@ class ProfilesTable(QWidget):
         results: dict[str, Result] | None = None,
         root: str = "",
     ) -> None:
-        """`sizes`: bytes per row counted, None while counting; `results`: a delete run's rows.
-        `root`: the host's Users folder, for State's tips. Ticks on rows not shown are dropped."""
         self._root = root
         kept = {item.data(USER, IDENT_ROLE) for item in self.tree.selectedItems()}
         current = self.selected()
@@ -625,21 +571,18 @@ class ProfilesTable(QWidget):
                 self.tree.setCurrentItem(item, TICK, QItemSelectionModel.SelectionFlag.NoUpdate)
         self.tree.blockSignals(False)
         self.tree.setSortingEnabled(True)
-        if not self._fitted and profiles:  # once: widths the admin drags afterwards stay
+        if not self._fitted and profiles:
             self.fit()
         self.picked.emit()
         if before != self._ticked:
             self.ticked_changed.emit()
 
     def show_size(self, ident: str, sizes: dict[str, int | None], so_far: int = 0) -> None:
-        """One row's size changed: counted, or being counted (`so_far`: the bytes counted up
-        to now, shown as "1.2 GB…" so the count is seen moving)."""
         item = self._item(ident)
         if item is not None:
             self._fill_size(item, ident, sizes, so_far)
 
     def show_result(self, ident: str, result: Result | None) -> None:
-        """One row moved on in a delete run; None takes it out of the run again."""
         if result is None:
             self._results.pop(ident, None)
         else:
@@ -653,7 +596,6 @@ class ProfilesTable(QWidget):
             self.tree.blockSignals(False)
 
     def lock(self, locked: bool) -> None:
-        """While profiles are deleted, the ticks can't change."""
         self._locked = locked
         self.tree.blockSignals(True)
         for ident in self._profiles:
@@ -663,19 +605,16 @@ class ProfilesTable(QWidget):
         self.tree.blockSignals(False)
 
     def fit(self) -> None:
-        """Each column as wide as its text, and no wider: State, the last one, must stay in
-        sight when the progress panel takes room on the right."""
         header = self.tree.header()
-        header.setSortIndicatorShown(False)  # or every title is sized for an arrow it lacks
+        header.setSortIndicatorShown(False)
         for column in range(USER, STATE):
             self.tree.resizeColumnToContents(column)
             self.tree.setColumnWidth(column, self.tree.columnWidth(column) + 6)
         header.setSortIndicatorShown(True)
         sorted_by = header.sortIndicatorSection()
-        if USER <= sorted_by < STATE:  # the one title that does have the arrow
+        if USER <= sorted_by < STATE:
             self.tree.setColumnWidth(sorted_by, self.tree.columnWidth(sorted_by) + ARROW)
         self.tree.setColumnWidth(TICK, 34)
-        # Size starts empty: room for "counting…" and a size, so neither is ever cut.
         widest = max(
             self.tree.fontMetrics().horizontalAdvance(text)
             for text in (_("counting…"), rows.size_text(888 * rows.GB))
@@ -685,34 +624,28 @@ class ProfilesTable(QWidget):
         self.squeeze.set_full()
 
     def _state_least(self) -> int:
-        """State's width for its longest word with its icon, so it's never cut."""
         words = [rows.state_name(state) for state in rows.STATE_ORDER]
         words += [_(name) for name in rows.RESULT_NAMES.values()]
         words += [_("Will be deleted"), _("State")]
         metrics = self.tree.fontMetrics()
         widest = max(metrics.horizontalAdvance(word) for word in words)
-        return widest + 16 + 26 + INFO + INFO_GAP  # its icon, the padding, the (i)
+        return widest + 16 + 26 + INFO + INFO_GAP
 
     def selected(self) -> Profile | None:
-        """The clicked row, the one with the (i)."""
         item = self.tree.currentItem()
         return self._profiles.get(item.data(USER, IDENT_ROLE)) if item is not None else None
 
     def shown(self) -> list[Profile]:
-        """The rows, in the order on screen."""
         found = (self.tree.topLevelItem(i) for i in range(self.tree.topLevelItemCount()))
         return [self._profiles[item.data(USER, IDENT_ROLE)] for item in found if item]
 
     def ticked(self) -> list[Profile]:
-        """The rows ticked, in the order on screen."""
         return [p for p in self.shown() if p.ident in self._ticked]
 
     def tick(self, ident: str, on: bool = True) -> None:
-        """Ticks a row as a click on its box does; a row without a box stays as it is."""
         self.tick_rows([ident], on)
 
     def tick_rows(self, idents: Sequence[str], on: bool) -> None:
-        """Ticks or unticks rows, with one ticked_changed for them all."""
         changed = False
         self.tree.blockSignals(True)
         for ident in idents:
@@ -727,7 +660,6 @@ class ProfilesTable(QWidget):
             self.ticked_changed.emit()
 
     def toggle(self, ident: str) -> None:
-        """Ticks a row, or unticks it; a row without a box stays as it is."""
         self.tick(ident, ident not in self._ticked)
 
     def profile(self, ident: str) -> Profile | None:
@@ -737,19 +669,15 @@ class ProfilesTable(QWidget):
         return ident in self._ticked
 
     def can_tick(self, ident: str) -> bool:
-        """The row has a tick box, and it may change now."""
         return self._tickable(ident) and not self._locked
 
     def select(self, ident: str) -> None:
-        """The row gets the selection and comes into view."""
         item = self._item(ident)
         if item is not None:
             self.tree.setCurrentItem(item)
             self.tree.scrollToItem(item)
 
     def info_box(self, ident: str) -> QRect | None:
-        """Where the (i) of `ident`'s row is, in the table's inside; None unless that row is the
-        clicked one, the only one that has it."""
         item = self._item(ident)
         if item is None or item is not self.tree.currentItem():
             return None
@@ -758,7 +686,6 @@ class ProfilesTable(QWidget):
         return info_rect(QRect(left, cell.top(), self.tree.columnWidth(STATE), cell.height()))
 
     def info_at(self, point: QPoint) -> str:
-        """The row whose (i) is at `point` of the table's inside: only the clicked row has one."""
         item = self.tree.itemAt(point)
         if item is None or item is not self.tree.currentItem():
             return ""
@@ -782,7 +709,7 @@ class ProfilesTable(QWidget):
             watched is self.tree.viewport()
             and isinstance(event, QMouseEvent)
             and event.button() == Qt.MouseButton.LeftButton
-        ):  # the (i): down and up on it, on the row that was already the clicked one
+        ):
             if event.type() == QEvent.Type.MouseButtonPress:
                 self._info_pressed = self.info_at(event.position().toPoint())
             elif event.type() == QEvent.Type.MouseButtonRelease:
@@ -803,7 +730,6 @@ class ProfilesTable(QWidget):
         popup(menu, self.tree.viewport().mapToGlobal(point))
 
     def _tick_picked(self) -> None:
-        """Space: ticks the selected rows (or the clicked one), or unticks them if all are."""
         items = self.tree.selectedItems() or [self.tree.currentItem()]
         idents = [item.data(USER, IDENT_ROLE) for item in items if item is not None]
         idents = [ident for ident in idents if self.can_tick(ident)]
@@ -811,11 +737,10 @@ class ProfilesTable(QWidget):
             self.tick_rows(idents, not all(ident in self._ticked for ident in idents))
 
     def _double_clicked(self, item: QTreeWidgetItem, column: int) -> None:
-        if column != TICK:  # on the box itself, the two clicks already ticked and unticked
+        if column != TICK:
             self.toggle(item.data(USER, IDENT_ROLE))
 
     def texts(self) -> list[list[str]]:
-        """Every row's cells, in the order on screen (for tests); the tick's cell has no text."""
         found = (self.tree.topLevelItem(i) for i in range(self.tree.topLevelItemCount()))
         return [[item.text(c) for c in range(STATE + 1)] for item in found if item]
 
@@ -827,7 +752,6 @@ class ProfilesTable(QWidget):
         return None
 
     def _tickable(self, ident: str) -> bool:
-        """Ready, and not already through a delete run."""
         profile = self._profiles.get(ident)
         return profile is not None and profile.ready and self._results.get(ident) not in rows.ENDED
 
@@ -840,13 +764,13 @@ class ProfilesTable(QWidget):
             return
         (self._ticked.add if on else self._ticked.discard)(ident)
         self.tree.blockSignals(True)
-        self._fill_state(item, self._profiles[ident])  # its careful look on, or off
+        self._fill_state(item, self._profiles[ident])
         self.tree.blockSignals(False)
         self.ticked_changed.emit()
 
     def _fill(self, item: QTreeWidgetItem, profile: Profile, sizes: dict[str, int | None]) -> None:
         item.setText(USER, rows.user_text(profile))
-        item.setToolTip(USER, rows.user_text(profile))  # whole, when the column is narrow
+        item.setToolTip(USER, rows.user_text(profile))
         item.setData(USER, SORT_ROLE, natural_key(profile.user))
         item.setText(USED, rows.date_text(profile.last_used) or "—")
         used = profile.last_used.timestamp() if profile.last_used else float("-inf")
@@ -856,8 +780,6 @@ class ProfilesTable(QWidget):
         self._fill_size(item, profile.ident, sizes)
 
     def _fill_state(self, item: QTreeWidgetItem, profile: Profile) -> None:
-        """The tick box, the State cell and the row's colour: its state, or where it stands in
-        a delete run."""
         ident, result = profile.ident, self._results.get(profile.ident)
         careful = result is None and ident in self._ticked and self._tickable(ident)
         item.setData(USER, CAREFUL_ROLE, careful)
@@ -868,7 +790,7 @@ class ProfilesTable(QWidget):
             item.setToolTip(STATE, _("Ticked: it's deleted once you click Delete and confirm"))
         elif result is None:
             item.setText(STATE, rows.state_name(profile.state))
-            ready = profile.state is State.READY  # plain words: no colour says "fine" here
+            ready = profile.state is State.READY
             item.setIcon(STATE, QIcon() if ready else dot_icon(rows.state_color(profile.state), 10))
             item.setData(STATE, SORT_ROLE, rows.STATE_ORDER.index(profile.state))
             item.setToolTip(STATE, rows.state_why(profile, self._root))
@@ -886,7 +808,7 @@ class ProfilesTable(QWidget):
             item.setCheckState(TICK, Qt.CheckState.Checked if on else Qt.CheckState.Unchecked)
             item.setData(TICK, SORT_ROLE, 0 if on else 1)
         else:
-            item.setData(TICK, Qt.ItemDataRole.CheckStateRole, None)  # no box at all
+            item.setData(TICK, Qt.ItemDataRole.CheckStateRole, None)
             item.setData(TICK, SORT_ROLE, 2)
         item.setFlags(flags)
         greyed = not profile.ready or result in (Result.DELETED, Result.QUEUED)
@@ -926,19 +848,14 @@ class ProfilesTable(QWidget):
             item.setData(SIZE, SORT_ROLE, size)
 
 
-# ---- a profile's details ----
-
-
 @dataclass(frozen=True)
 class Shown:
-    """What Details shows of one row."""
-
     profile: Profile
-    root: str  # the PC's Users folder
-    size: int | None  # bytes, once counted
+    root: str
+    size: int | None
     counting: bool = False
-    result: Result | None = None  # where it stands in a delete run
-    done: Deleted | None = None  # how its delete ended
+    result: Result | None = None
+    done: Deleted | None = None
 
 
 class ProfileDetails(DetailsPanel):
@@ -970,8 +887,7 @@ class ProfileDetails(DetailsPanel):
         top.setSpacing(4)
         if result is not None or profile.state is not State.READY:
             top.addWidget(dot)
-        else:  # no dot, as the table: the name starts where the line under it does
-            # Its padding and the label's own edge would start it 4 px further in.
+        else:
             name.setStyleSheet("QLabel#copyValue { padding-left: 0px; margin-left: -4px; }")
         top.addWidget(name, 1)
         layout.addLayout(top)
@@ -1025,7 +941,6 @@ class ProfileDetails(DetailsPanel):
             layout.addWidget(self.muted(_(rows.KIND_WHY[profile.kind])))
 
     def _pairs(self, layout: QVBoxLayout, pairs: Sequence[tuple[str, QLabel]]) -> None:
-        """A label on the left, its value on the same line, every value at the same x."""
         grid = QGridLayout()
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(4)
@@ -1036,19 +951,13 @@ class ProfileDetails(DetailsPanel):
             name.setObjectName("hint")
             name.setContentsMargins(0, 2, 0, 2)
             if value.objectName() == "hint":
-                value.setContentsMargins(7, 2, 4, 2)  # as a copyable value's padding
+                value.setContentsMargins(7, 2, 4, 2)
             grid.addWidget(name, index, 0, Qt.AlignmentFlag.AlignTop)
             grid.addWidget(value, index, 1, Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(grid)
 
 
-# ---- deleting ----
-
-
 class DeleteDialog(Question):
-    """The question before profiles are deleted: which, that it's final, and a word to type. Cancel
-    is the default until the word is there; then the amber button lights and Enter deletes."""
-
     def __init__(
         self, parent: QWidget | None, host: str, profiles: Sequence[Profile], sizes: dict[str, int]
     ) -> None:
@@ -1112,7 +1021,7 @@ class DeleteDialog(Question):
         self.action.setEnabled(typed)
         self.action.setDefault(typed)
         self.cancel.setDefault(not typed)
-        if typed:  # it looks in focus once lit: it really is, so Enter isn't Cancel
+        if typed:
             self.action.setFocus()
 
     def accept(self) -> None:

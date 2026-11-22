@@ -29,14 +29,14 @@ def test_the_rail_runs_down_the_left_edge_beside_the_tool_s_toolbar(
     window.show()
     QApplication.processEvents()
     rail, toolbar = window.rail, window.hosts.toolbar
-    assert rail.x() == 0 and rail.height() > toolbar.height()  # from the menu bar down
-    assert toolbar.mapTo(window, toolbar.rect().topLeft()).x() == rail.width()  # beside it
+    assert rail.x() == 0 and rail.height() > toolbar.height()
+    assert toolbar.mapTo(window, toolbar.rect().topLeft()).x() == rail.width()
     assert rail.buttons["hosts"].isChecked() and rail.buttons["hosts"].toolTip() == "Hosts (Ctrl+1)"
-    rail.buttons["hosts"].click()  # the tool shown, clicked again, stays picked
+    rail.buttons["hosts"].click()
     assert rail.buttons["hosts"].isChecked()
     opened: list[object] = []
     monkeypatch.setattr(window, "open_settings", lambda page=None: opened.append(page))
-    rail.settings_button.click()  # the gear at the bottom opens Settings
+    rail.settings_button.click()
     assert opened == [None]
 
 
@@ -48,8 +48,6 @@ class _NotesSettings(SettingsGroup):
 
 
 class _Notes(Tool):
-    """A made-up second tool: the shell builds everything from the tools it's given."""
-
     TOOL_ID, ICON = "notes", "report-analytics"
 
     def __init__(self, shell: Shell) -> None:
@@ -90,34 +88,34 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     assert list(win.rail.buttons) == ["hosts", "notes"]
     assert win.rail.buttons["notes"].toolTip() == "Notes (Ctrl+2)"
     view = win._view_menu  # pyright: ignore[reportPrivateUsage]
-    texts = [a.text().split("\t")[0] for a in view.actions() if a.text()]  # no shortcut
-    assert texts[:4] == ["Hom&e", "&Hosts", "&Notes", "&Groups pane"]  # then Hosts' panels
+    texts = [a.text().split("\t")[0] for a in view.actions() if a.text()]
+    assert texts[:4] == ["Hom&e", "&Hosts", "&Notes", "&Groups pane"]
     tool_keys = [a for a in win.actions() if a.shortcut().toString() == "Ctrl+2"]
-    tool_keys[0].trigger()  # Ctrl+2
+    tool_keys[0].trigger()
     assert win.rail.buttons["notes"].isChecked() and not win.hosts.isVisible()
     assert notes.isVisible() and notes.toolbar.isVisible() and not win.hosts.toolbar.isVisible()
-    assert [a.text() for a in view.actions() if a.text()][3] == "&Lines"  # its panels now
+    assert [a.text() for a in view.actions() if a.text()][3] == "&Lines"
     assert notes.status_label.isVisible() and not win.hosts.status_label.isVisible()
     assert notes.busy.isVisible()
     stop = win.hosts.status_widgets()[1]
-    stop.show()  # a Refresh started in Hosts: its Stop stays out of Notes' status bar
+    stop.show()
     assert not stop.isVisible()
     win.show_tool("hosts")
     assert stop.isVisible() and not notes.busy.isVisible()
     stop.hide()
     win.show_tool("notes")
     assert win.windowTitle().startswith("Desk notes — CapyPanel")
-    dialog = win.settings_dialog()  # the app's page, then each tool's group
+    dialog = win.settings_dialog()
     pages = dialog.page_list
     rows = [pages.item(i).text().strip() for i in range(pages.count())]  # type: ignore[union-attr]
-    assert rows[3:] == [  # after General and Keyboard shortcuts
+    assert rows[3:] == [
         "Hosts", "General", "Connecting", "Credentials", "Notes", "General"
     ]  # a row per page  # fmt: skip
     dialog.show_page("notes")
     assert dialog.current_page() == "notes"
     win.close()
     prefs = settings.load_settings(paths.settings_file)
-    prefs[settings.START_KEY] = settings.START_LAST  # Open on startup: the last used tool
+    prefs[settings.START_KEY] = settings.START_LAST
     again = CapyWindow(paths, prefs, tools=(HostsTool, _Notes))
     assert again.shown_tool() is again.tools["notes"]
     assert set(settings.load_settings(paths.settings_file)["tools"]) == {"hosts", "notes"}

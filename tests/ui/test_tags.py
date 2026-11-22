@@ -1,5 +1,3 @@
-"""The tag field: chips made with Enter or commas, removed with × or Backspace."""
-
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
@@ -39,7 +37,7 @@ def test_backspace_on_an_empty_box_reopens_the_last_chip_for_editing(field: TagE
     field.add_text("a, floor-4")
     QTest.keyClick(field.input, Qt.Key.Key_Backspace)
     assert [c.text for c in field._chips] == ["a"] and field.input.text() == "floor-4"
-    QTest.keyClick(field.input, Qt.Key.Key_Backspace)  # now just a letter
+    QTest.keyClick(field.input, Qt.Key.Key_Backspace)
     _type(field, "3")
     _enter(field)
     assert field.tags() == ("a", "floor-3")
@@ -55,7 +53,7 @@ def test_the_x_button_removes_its_chip(field: TagEdit) -> None:
 def test_text_still_being_typed_is_kept(field: TagEdit) -> None:
     field.add_text("a")
     _type(field, "half-typed")
-    assert field.tags() == ("a", "half-typed")  # e.g. the user clicks OK without pressing Enter
+    assert field.tags() == ("a", "half-typed")
 
 
 def test_enter_makes_a_chip_but_on_an_empty_box_presses_ok(qapp: QApplication) -> None:
@@ -68,9 +66,9 @@ def test_enter_makes_a_chip_but_on_an_empty_box_presses_ok(qapp: QApplication) -
     dialog.accepted.connect(lambda: accepted.append(True))
     QTest.keyClicks(dialog.tags.input, "kiosk")
     QTest.keyClick(dialog.tags.input, Qt.Key.Key_Return)
-    assert dialog.values().tags == ("kiosk",) and not accepted  # made a chip, didn't close
+    assert dialog.values().tags == ("kiosk",) and not accepted
     QTest.keyClick(dialog.tags.input, Qt.Key.Key_Return)
-    assert accepted  # empty box: Enter confirms the dialog as usual
+    assert accepted
     assert dialog.buttons.button(QDialogButtonBox.StandardButton.Ok) is not None
 
 

@@ -1,5 +1,3 @@
-"""Help from where you are: F1, the ? and warnings' links open the right part of the docs."""
-
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -34,7 +32,6 @@ def paths(tmp_path: Path) -> settings.Paths:
 
 @pytest.fixture
 def opened(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Every address help opens, instead of a browser."""
     urls: list[str] = []
     monkeypatch.setattr(about, "open_url", urls.append)
     return urls
@@ -54,21 +51,21 @@ def test_a_place_opens_its_line_and_a_page_its_top_in_capypanel_s_language(
         help_links.url("settings-ssh-general") == f"{SITE}settings-and-files/#settings-ssh-general"
     )
     assert help_links.url("ssh/ssh/") == f"{SITE}ssh/ssh/"
-    i18n.set_language("pt_BR")  # the same id on the Portuguese page
+    i18n.set_language("pt_BR")
     assert help_links.url("settings-ssh-general") == (
         f"{SITE}pt-BR/settings-and-files/#settings-ssh-general"
     )
     with pytest.raises(KeyError):
-        help_links.url("settings-ssh")  # a typo fails here, never as a dead link
+        help_links.url("settings-ssh")
 
 
 def test_a_link_takes_the_text_colour_where_the_theme_s_own_hardly_shows() -> None:
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor("#202020"))
     palette.setColor(QPalette.ColorRole.WindowText, QColor("#f0f0f0"))
-    palette.setColor(QPalette.ColorRole.Link, QColor("#4c2a85"))  # a dark purple accent
+    palette.setColor(QPalette.ColorRole.Link, QColor("#4c2a85"))
     assert help_links.link_color(palette).name() == "#f0f0f0"
-    palette.setColor(QPalette.ColorRole.Link, QColor("#8ab4f8"))  # reads on the dark window
+    palette.setColor(QPalette.ColorRole.Link, QColor("#8ab4f8"))
     assert help_links.link_color(palette).name() == "#8ab4f8"
 
 
@@ -96,9 +93,9 @@ def test_in_every_shipped_theme_a_strip_s_link_reads_on_the_strip_drawn_behind_i
     for theme in themes.Registry().all():
         if theme.engine == "native":
             continue
-        themes.apply(theme)  # the SSH strip restyles itself; the Hosts tool restyles its strip
+        themes.apply(theme)
         hosts.restyle()
-        printers.restyle()  # as the Printers tool does on a theme switch
+        printers.restyle()
         for strip, label in strips:
             strip.resize(900, strip.heightForWidth(900))
             behind = strip.grab().toImage().pixelColor(strip.width() - 3, strip.height() // 2)
@@ -125,7 +122,7 @@ def test_a_warning_box_links_its_line_and_stays_open_when_it_s_clicked(
     assert label.textInteractionFlags() & Qt.TextInteractionFlag.LinksAccessibleByKeyboard
     label.linkActivated.emit(label.toolTip())
     assert opened == [f"{SITE}hosts/commands/#commands-the-commands-window"]
-    assert box.isVisible()  # read the line, then answer the box
+    assert box.isVisible()
     box.close()
 
 
@@ -144,7 +141,7 @@ def test_a_box_keeps_its_own_details_above_the_link(qapp: QApplication) -> None:
     box.setInformativeText("C:\\Lists\\a<b>.json")
     help_links.add_link(box, "host-lists-switch-make-and-share-lists")
     text = box.informativeText()
-    assert text.startswith("C:\\Lists\\a&lt;b&gt;.json<br><br><a href=")  # read as text, not tags
+    assert text.startswith("C:\\Lists\\a&lt;b&gt;.json<br><br><a href=")
 
 
 def test_the_question_mark_opens_its_window_s_part_by_click_and_by_f1(
@@ -160,7 +157,7 @@ def test_the_question_mark_opens_its_window_s_part_by_click_and_by_f1(
     window.activateWindow()
     QApplication.processEvents()
     button.click()
-    shown[0] = "settings-ssh-general"  # the page shown changed
+    shown[0] = "settings-ssh-general"
     QTest.keyClick(window, Qt.Key.Key_F1)
     QTest.qWait(250)  # a button's key clicks it a moment later, as a mouse click looks
     assert opened == [
@@ -181,17 +178,15 @@ def test_the_question_mark_s_ink_starts_at_the_text_edge_its_hover_box_in_the_ma
     column.addLayout(help_links.row(button, QWidget()))
     window.show()
     QApplication.processEvents()
-    assert button.x() < label.x()  # its hover box reaches into the margin
+    assert button.x() < label.x()
     assert _ink(window, button) == label.x()
-    window.resize(window.width() + 40, window.height() + 20)  # laid out again: it stays put
+    window.resize(window.width() + 40, window.height() + 20)
     QApplication.processEvents()
     assert _ink(window, button) == label.x()
     window.close()
 
 
 def _ink(window: QWidget, button: QWidget) -> int:
-    """Where the ?'s ink starts in `window`: the first column, from the left, where its rows
-    differ from the window's own colour."""
     image = window.grab().toImage()
     top = button.mapTo(window, QPoint(0, 0)).y()
     back = image.pixelColor(0, top + button.height() // 2)
@@ -214,7 +209,7 @@ def test_a_strip_s_link_shows_only_with_a_message_that_has_a_line(
     link.set_place("connecting-connect-to-a-host")
     assert not link.isHidden() and "What does this mean?" in link.text()
     link.linkActivated.emit("")
-    link.set_place("")  # a message that worked: no line
+    link.set_place("")
     assert link.isHidden()
     assert opened == [f"{SITE}hosts/connecting/#connecting-connect-to-a-host"]
 
@@ -241,7 +236,6 @@ def test_f1_and_the_rail_s_question_mark_open_the_part_for_what_s_shown(
     window.activateWindow()
     QApplication.processEvents()
     rail = window.rail
-    # Bottom left like every window's ?: above the gear, an action that takes no tile.
     assert rail.help_button.y() < rail.settings_button.y() and not rail.help_button.isCheckable()
     assert rail.help_button.toolTip() == "Help for this screen (F1)"
     assert rail.help_button.accessibleName() == "Help for this screen"
@@ -275,12 +269,12 @@ def test_f1_s_row_is_greyed_and_a_kept_key_never_takes_its_place(
     qapp: QApplication, paths: settings.Paths
 ) -> None:
     window = CapyWindow(paths, {"schema": 1, "shortcuts": {"app.help_screen": "Ctrl+H"}})
-    assert window.commands.help_screen.shortcut().toString() == "F1"  # a hand-edited file
+    assert window.commands.help_screen.shortcut().toString() == "F1"
     page = window.settings_dialog().shortcuts
     item = page.item_of("app.help_screen")
     assert item.text(KEY) == "F1" and item.flags() == Qt.ItemFlag.NoItemFlags
     assert item.data(0, FIXED_ROLE) and "can't be changed" in item.toolTip(KEY)
-    page.change(item)  # a double-click on it waits for no key
+    page.change(item)
     assert page.table.itemWidget(item, KEY) is None
     window.close()
 
@@ -314,21 +308,19 @@ def test_settings_question_mark_sits_under_the_pages_and_opens_the_page_shown(
     dialog.activateWindow()
     QApplication.processEvents()
     button, pinned = dialog.help_button, dialog.pinned_list
-    # On its own line under the page list (About is its last row), its ink at the search's left
-    # edge and its hover box in the margin, as in every window.
     top_left = button.mapTo(dialog, QPoint(0, 0))
     assert top_left.y() >= pinned.mapTo(dialog, QPoint(0, pinned.height())).y()
     search = dialog.search.mapTo(dialog, QPoint(0, 0)).x()
     assert top_left.x() < search and _ink(dialog, button) == search
-    button.click()  # General, as Settings opens
+    button.click()
     dialog.show_page("ssh")
     QTest.keyClick(dialog, Qt.Key.Key_F1)
     QTest.qWait(250)  # a button's key clicks it a moment later
-    dialog.search.setText("theme")  # the search's results
+    dialog.search.setText("theme")
     button.click()
     dialog.search.clear()
     dialog.show_page("about")
-    dialog.pages["about"].place = ""  # a page with no part of its own: the page's top
+    dialog.pages["about"].place = ""
     button.click()
     assert opened == [
         f"{SITE}settings-and-files/#settings-capypanel-general",
@@ -356,7 +348,7 @@ def test_f1_while_a_key_is_awaited_is_that_key_refused_not_help(
     assert isinstance(catcher, KeyCatcher)
     QTest.keyClick(catcher, Qt.Key.Key_F1)
     QTest.qWait(250)
-    assert catcher.property("refused") is True  # "Kept for CapyPanel itself: F1 is for help…"
+    assert catcher.property("refused") is True
     assert opened == []
     dialog.close()
     window.close()

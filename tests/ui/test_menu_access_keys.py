@@ -1,5 +1,3 @@
-"""No host or group menu gives one access key to two items, in either language."""
-
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -22,19 +20,19 @@ from capypanel.ui.profiles_tool import tool as profiles_module
 from capypanel.ui.profiles_tool import work
 from capypanel.ui.profiles_tool.tool import ProfilesTool
 
-KEY = re.compile(r"&([^&])")  # the letter after a lone "&"; "&&" writes an "&"
+KEY = re.compile(r"&([^&])")
 
 
 @pytest.fixture
 def window(
     qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[CapyWindow]:
-    monkeypatch.setattr(work, "start", lambda *_args, **_kwargs: None)  # no PC is ever read
+    monkeypatch.setattr(work, "start", lambda *_args, **_kwargs: None)
     (tmp_path / settings.PORTABLE_MARKER).touch()
     office, group = HostList().add_group("Office")
     for name, address in (("DESK-01", "192.0.2.11"), ("DESK-02", "192.0.2.12")):
         office, _host = office.add_host(name, group.id, address=address)
-    office, racks = office.add_group("Racks")  # SSH shows the same list: its servers are in it
+    office, racks = office.add_group("Racks")
     for name, address in (("core-sw-01", "192.0.2.40"), ("nas-01", "192.0.2.41")):
         office, host = office.add_host(name, racks.id, address=address)
         office = office.update_host(with_info(host, SshInfo(login="admin")))
@@ -58,8 +56,6 @@ def window(
 
 
 def _repeats(menu: QMenu, where: str) -> dict[str, dict[str, list[str]]]:
-    """Each access key two or more items share, in the menu and in each menu inside it (filled
-    as it opens), with their words."""
     items: dict[str, list[str]] = {}
     found: dict[str, dict[str, list[str]]] = {}
     for action in menu.actions():
@@ -80,8 +76,6 @@ def _repeats(menu: QMenu, where: str) -> dict[str, dict[str, list[str]]]:
 def _list_menus(
     tool: ListWorkspace, name: str, found: dict[str, dict[str, list[str]]]
 ) -> dict[str, QMenu]:
-    """Each is checked as soon as it's filled, into `found`: the menus share one Refresh action,
-    whose words the next menu changes ("Re&fresh printer", then "Re&fresh 2 printers")."""
     doc = tool.document
     assert doc is not None
     ids = [h.id for h in doc.hosts.hosts]
@@ -106,7 +100,7 @@ def _group_menus(win: CapyWindow, monkeypatch: pytest.MonkeyPatch) -> dict[str, 
     ):
         assert isinstance(tool, ListWorkspace) and tool.document is not None
         group = tool.document.hosts.groups[0].id
-        monkeypatch.setattr(tool.nav, "group_at", lambda _where, g=group: g)  # the one clicked
+        monkeypatch.setattr(tool.nav, "group_at", lambda _where, g=group: g)
         tool._group_menu(QPoint(0, 0))  # noqa: SLF001
         made[f"{name}'s group menu"] = shown[-1]
     return made

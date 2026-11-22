@@ -1,5 +1,3 @@
-"""Asking a VNC server which login types it offers, without logging in."""
-
 import re
 import socket
 import struct
@@ -8,11 +6,10 @@ _VERSION = re.compile(rb"^RFB (\d{3})\.(\d{3})\n$")
 
 
 class ProbeError(OSError):
-    """The server couldn't be reached or didn't answer like a VNC server."""
+    pass
 
 
 def security_types(address: str, port: int, timeout: float = 3.0) -> tuple[int, ...]:
-    """The login types the server offers, in its order. Raises ProbeError."""
     try:
         with socket.create_connection((address, port), timeout=timeout) as sock:
             sock.settimeout(timeout)
@@ -24,7 +21,7 @@ def security_types(address: str, port: int, timeout: float = 3.0) -> tuple[int, 
             if (major, minor) >= (3, 7):
                 sock.sendall(b"RFB 003.008\n" if (major, minor) >= (3, 8) else b"RFB 003.007\n")
                 count = _read(sock, 1)[0]
-                if count == 0:  # turned away before offering anything (e.g. too many failures)
+                if count == 0:
                     raise ProbeError(f"the server refused: {_reason(sock)}")
                 return tuple(_read(sock, count))
             sock.sendall(b"RFB 003.003\n")  # 3.3: the server picks a single type itself
@@ -39,7 +36,6 @@ def security_types(address: str, port: int, timeout: float = 3.0) -> tuple[int, 
 
 
 def _reason(sock: socket.socket) -> str:
-    """The server's explanation after a refusal, cut to a sane length; "" if it gave none."""
     try:
         (size,) = struct.unpack(">I", _read(sock, 4))
         return _read(sock, min(size, 1024)).decode("utf-8", "replace").strip()

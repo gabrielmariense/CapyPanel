@@ -1,5 +1,3 @@
-"""WMI over COM and over PowerShell, on this PC: the same answers; nothing reaches another PC."""
-
 import secrets
 import subprocess
 from collections.abc import Callable, Iterator
@@ -26,7 +24,6 @@ def no_reach_check(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 def _both(read: Callable[[], Any]) -> tuple[Any, Any]:
-    """`read` done straight over WMI, then through PowerShell."""
     inventory.transport = inventory.DIRECT
     direct = read()
     inventory.transport = inventory.POWERSHELL
@@ -35,8 +32,6 @@ def _both(read: Callable[[], Any]) -> tuple[Any, Any]:
 
 
 def test_a_dword_reads_as_the_unsigned_number_it_is() -> None:
-    # COM hands a DWORD of 2**31 or more over as a negative number; a profile's sign-in time
-    # is two DWORDs, and its low half is such a number about half the time.
     def answered(value: int | None) -> Any:
         return SimpleNamespace(reg=lambda *_args: SimpleNamespace(uValue=value))
 
@@ -73,8 +68,7 @@ def test_this_pcs_profiles_are_the_same_both_ways() -> None:
     direct, shell = _both(lambda: user_profiles.scan("localhost", opened=_here))
 
     def lasting(scanned: Scan) -> set[tuple[Any, ...]]:
-        """What can't change between two reads a moment apart: not the times (a sign-in, a
-        file written), nor the account CI's real delete test makes and removes meanwhile."""
+        """Without what changes between two reads: times, and the account CI's delete test makes."""
         return {
             (p.sid, p.key, p.user, p.known, p.path, p.kind, p.state)
             for p in scanned.profiles
@@ -117,12 +111,12 @@ def test_auto_falls_back_to_powershell_only_when_wmi_cant_be_used_here(
     monkeypatch.setattr(wmi, "read", unusable)
     assert inventory.run_cim(inventory._FACTS, "DESK-01", None) == {"ok": 1}
     assert shell == ["DESK-01"]
-    inventory.transport = inventory.DIRECT  # only WMI: no fallback
+    inventory.transport = inventory.DIRECT
     with pytest.raises(RemoteError):
         inventory.run_cim(inventory._FACTS, "DESK-01", None)
 
     def refused(*_args: Any) -> Any:
-        raise RemoteError(Reason.REJECTED, 5)  # the other PC said no: PowerShell won't help
+        raise RemoteError(Reason.REJECTED, 5)
 
     monkeypatch.setattr(wmi, "read", refused)
     inventory.transport = inventory.AUTO
@@ -142,7 +136,7 @@ def test_powershell_only_and_a_script_with_no_twin_never_go_straight(
     inventory.transport = inventory.POWERSHELL
     inventory.run_cim(inventory._FACTS, "DESK-01", None)
     inventory.transport = inventory.AUTO
-    inventory.run_cim("Send 1", "DESK-01", None)  # a script with no twin
+    inventory.run_cim("Send 1", "DESK-01", None)
     assert shell == [inventory._FACTS[:6], "Send 1"]
 
 
@@ -155,7 +149,7 @@ def test_powershell_that_windows_wont_start_says_so(monkeypatch: pytest.MonkeyPa
     with pytest.raises(inventory.PowerShellBlocked) as caught:
         inventory.run_cim(inventory._FACTS, "DESK-01", None)
     assert "an antivirus may have blocked it" in str(caught.value)
-    assert isinstance(caught.value, OSError)  # never taken for the other PC's answer
+    assert isinstance(caught.value, OSError)
 
 
 def test_com_errors_read_as_the_other_ways_errors() -> None:
@@ -173,7 +167,7 @@ def test_com_errors_read_as_the_other_ways_errors() -> None:
 
 
 class _PartlyBroken:
-    """A PC whose WMI lacks some classes, as a damaged repository answers: "not found"."""
+    """A damaged WMI repository answers "not found" for some classes."""
 
     host = "DESK-01"
 
@@ -212,14 +206,13 @@ def test_facts_show_what_could_be_read_when_a_class_is_missing(
     assert (facts.windows, facts.release, facts.build) == ("Windows 11 Pro", "25H2", "26200.9168")
     assert (facts.model, facts.memory, facts.serial, facts.bios) == ("Desk 3000", 8 * 2**30, "", "")
     assert facts.unread == {"serial": not_found, "bios": not_found}
-    # The log names the part and the code as it's looked up.
     assert "PC facts on DESK-01: Win32_BIOS couldn't be read" in caplog.text
     assert "0x80041002" in caplog.text and access.code_text(5) == "5"
 
     every = ("Win32_BIOS", "Win32_ComputerSystem", "Win32_OperatingSystem", "registry")
-    with pytest.raises(RemoteError) as caught:  # nothing at all: the read itself failed
+    with pytest.raises(RemoteError) as caught:
         _facts_from(monkeypatch, _PartlyBroken(every, not_found))
     assert caught.value.code == 0x80041002
-    with pytest.raises(RemoteError) as caught:  # no access is never "one row missing"
+    with pytest.raises(RemoteError) as caught:
         _facts_from(monkeypatch, _PartlyBroken(("Win32_BIOS",), RemoteError(Reason.NOT_ADMIN)))
     assert caught.value.reason is Reason.NOT_ADMIN

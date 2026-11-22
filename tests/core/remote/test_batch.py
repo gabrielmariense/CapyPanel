@@ -35,7 +35,6 @@ def test_a_failure_is_reported_and_the_rest_still_run() -> None:
 
 
 def test_unproven_items_go_one_by_one_and_a_halt_skips_the_rest() -> None:
-    # Like a typed password: the first host rejects it, so no other host ever sees it.
     tried: list[int] = []
 
     def work(n: int) -> str:
@@ -51,8 +50,6 @@ def test_unproven_items_go_one_by_one_and_a_halt_skips_the_rest() -> None:
 
 
 def test_once_proven_a_refusal_is_that_item_s_and_the_rest_still_run() -> None:
-    # A password one host accepted is right: a host refusing it later (a broken trust with the
-    # domain) is reported like any failure, and every other host is still read.
     reported: list[tuple[int, str | None]] = []
     lock = threading.Lock()
 
@@ -88,7 +85,7 @@ def test_once_proven_the_rest_run_together() -> None:
     Batch(
         range(12), work, lambda item, *_a: order.append(item), proves=lambda r, _e: r == "ok"
     ).run()
-    assert order[:3] == [0, 1, 2]  # one by one until host 2 accepted the account
+    assert order[:3] == [0, 1, 2]
     assert most > 1 and sorted(order) == list(range(12))
 
 

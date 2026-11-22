@@ -8,7 +8,6 @@ from capypanel.core.tools import rfb
 
 
 def _fake(*chunks: bytes) -> tuple[int, list[bytes], threading.Thread]:
-    """A fake VNC server for one connection on localhost; returns its port and what it got."""
     received: list[bytes] = []
     listener = socket.socket()
     listener.bind(("127.0.0.1", 0))
@@ -21,9 +20,9 @@ def _fake(*chunks: bytes) -> tuple[int, list[bytes], threading.Thread]:
             for index, chunk in enumerate(chunks):
                 conn.sendall(chunk)
                 if index == 0 and len(chunks) > 1:
-                    received.append(conn.recv(12))  # the client's version
+                    received.append(conn.recv(12))
             with contextlib.suppress(OSError):
-                received.append(conn.recv(64))  # anything more: b"" when the client hangs up
+                received.append(conn.recv(64))
         listener.close()
 
     thread = threading.Thread(target=serve, daemon=True)

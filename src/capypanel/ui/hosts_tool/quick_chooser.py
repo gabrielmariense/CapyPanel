@@ -1,5 +1,3 @@
-"""Choosing the quick commands: one table in the buttons' order, where a tick moves no row."""
-
 from collections.abc import Mapping, Sequence
 
 from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QRect, Qt, Signal
@@ -27,14 +25,12 @@ from capypanel.ui.notes import hint
 from capypanel.ui.tables import grid_table, with_buttons
 from capypanel.ui.themes import engine as themes
 
-ID = Qt.ItemDataRole.UserRole  # a command row's id; headings have none
-SHORTCUT = Qt.ItemDataRole.UserRole + 1  # its shortcut, drawn in grey after the name
+ID = Qt.ItemDataRole.UserRole
+SHORTCUT = Qt.ItemDataRole.UserRole + 1
 ICON = 16
 
 
 class _Name(QStyledItemDelegate):
-    """The command's name, then its shortcut in grey."""
-
     def paint(
         self,
         painter: QPainter,
@@ -67,11 +63,10 @@ class _Name(QStyledItemDelegate):
 
 
 class QuickChooser(QWidget):
-    HELP_PLACE = "commands-choose-your-quick-commands"  # Customize's ?, on this tab
-    changed = Signal(list)  # the picked commands' ids, in order
+    HELP_PLACE = "commands-choose-your-quick-commands"
+    changed = Signal(list)
 
     def __init__(self, picked: Sequence[str], shortcuts: Mapping[str, str]) -> None:
-        """`shortcuts`: each command's keys as text ("Ctrl+E"), by command id."""
         super().__init__()
         self._picked: list[str] = list(quick_from(list(picked)))
         self._shortcuts = dict(shortcuts)
@@ -126,7 +121,7 @@ class QuickChooser(QWidget):
 
     def _heading(self, text: str) -> None:
         row = QTreeWidgetItem([text.upper(), ""])
-        row.setFlags(Qt.ItemFlag.ItemIsEnabled)  # can't be picked or ticked
+        row.setFlags(Qt.ItemFlag.ItemIsEnabled)
         font = QFont(self.table.font())
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 0.88)
@@ -144,7 +139,7 @@ class QuickChooser(QWidget):
         text = self.palette().color(QPalette.ColorRole.Text)
         color = QColor(themes.status_color("attention")) if command.risky else text
         row.setIcon(0, tabler_icon(command.icon, color, ICON))
-        if command.risky:  # amber here as everywhere
+        if command.risky:
             row.setForeground(0, color)
         row.setToolTip(0, _(command.description))
         self.table.addTopLevelItem(row)
@@ -158,7 +153,7 @@ class QuickChooser(QWidget):
             wanted.add(command_id)
         else:
             wanted.discard(command_id)
-        self._picked = list(quick_from(list(wanted)))  # the one order; no row moves
+        self._picked = list(quick_from(list(wanted)))
         self.changed.emit(self.picked())
         self._update()
 
@@ -178,7 +173,7 @@ class QuickChooser(QWidget):
     def _update(self) -> None:
         self.restore.setEnabled(self._picked != list(QUICK))
         ticked, total = len(self._picked), len(CAN_BE_QUICK)
-        rows = -(-ticked // COLUMNS)  # rows of four on the panel, rounded up
+        rows = -(-ticked // COLUMNS)
         text = _("{n} of {total} ticked").format(n=ticked, total=total)
         if rows:
             text += " · " + ngettext(

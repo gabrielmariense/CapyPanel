@@ -39,11 +39,11 @@ def _pick(win: CapyWindow) -> str:
 def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: CapyWindow) -> None:
     hosts = window.hosts
     host_id = _pick(window)
-    assert hosts.details.profile_button.value_text() == "Offices"  # from its group
+    assert hosts.details.profile_button.value_text() == "Offices"
     menu = hosts.details.profile_menu
-    menu.aboutToShow.emit()  # what opening it by the arrow does
+    menu.aboutToShow.emit()
     texts = [a.text() for a in menu.actions() if not a.isSeparator()]
-    assert texts[0] == "From group “Offices”: Offices"  # follow the group, checked
+    assert texts[0] == "From group “Offices”: Offices"
     assert menu.actions()[0].isChecked() and "Pis" in texts
     [pis] = [a for a in menu.actions() if a.text() == "Pis"]
     pis.trigger()
@@ -64,7 +64,7 @@ def test_the_arrow_ends_with_connection_profiles_which_opens_settings(
     host_id = _pick(window)
     opened: list[str | None] = []
     monkeypatch.setattr(window, "open_settings", lambda page=None: opened.append(page))
-    monkeypatch.setattr(hosts, "_writable", lambda: None)  # a list it can't write
+    monkeypatch.setattr(hosts, "_writable", lambda: None)
     menu = hosts.details.profile_menu
     menu.aboutToShow.emit()
     *profiles, line, last = menu.actions()

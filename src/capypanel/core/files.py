@@ -1,5 +1,3 @@
-"""The app's files written whole, never half, and shared folders others read but can't change."""
-
 import json
 import logging
 import os
@@ -29,7 +27,7 @@ def write_json(path: Path, data: Any) -> None:
 
 def can_create_files(folder: Path) -> bool:
     while not folder.exists() and folder.parent != folder:
-        folder = folder.parent  # the folder is made on the first save
+        folder = folder.parent
     try:
         with tempfile.NamedTemporaryFile(dir=folder, prefix=".capypanel-", suffix=".tmp"):
             pass
@@ -39,8 +37,7 @@ def can_create_files(folder: Path) -> bool:
 
 
 def make_shared_folder(folder: Path) -> None:
-    """Creates the folder, readable by everyone on the PC but changed only by its creator and
-    administrators; ProgramData would otherwise let any user add files. Raises OSError."""
+    """Writable only by its creator and administrators: ProgramData would let any user add files."""
     folder.mkdir(parents=True, exist_ok=True)
     try:
         winsec.make_shared(folder, winsec.current_user_sid())

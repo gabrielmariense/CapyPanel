@@ -1,5 +1,3 @@
-"""The commands every list tool has; a tool's own actions extend these with more fields."""
-
 from dataclasses import dataclass
 
 from PySide6.QtGui import QAction

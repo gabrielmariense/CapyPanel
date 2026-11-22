@@ -1,5 +1,3 @@
-"""Which account signs in to which PC: set in Settings, the login window or Details, and used."""
-
 import sys
 import time
 from collections.abc import Callable, Iterator
@@ -105,23 +103,23 @@ def test_each_pc_gets_its_own_account_and_details_says_which(
                       "Clinic › Front desk"), ADMIN, remember=False)  # fmt: skip
     other = Account("EXAMPLE\\desk2", "x")
     accounts.use(Link(other.user, Scope.PC, "192.0.2.12", name="DESK-02"), other, remember=False)
-    assert _account_used(window, _host(window, "DESK-01")) == [ADMIN]  # its group's
-    assert _account_used(window, _host(window, "DESK-02")) == [other]  # its own wins
+    assert _account_used(window, _host(window, "DESK-01")) == [ADMIN]
+    assert _account_used(window, _host(window, "DESK-02")) == [other]
     assert _account_used(window, _host(window, "DESK-03")) == [None]  # the Windows account
-    typed = HostTarget("@192.0.2.12", "192.0.2.12", "192.0.2.12")  # the Commands window's
+    typed = HostTarget("@192.0.2.12", "192.0.2.12", "192.0.2.12")
     assert _account_used(window, typed) == [other]
 
     details = window.hosts.details
     window.hosts.table.select_ids([_host(window, "DESK-01").key])
     account = details.account_button
-    assert account.value_text() == ADMIN.user and account.marks == ()  # the group's: no mark
-    assert "Clinic › Front desk" in account.toolTip()  # where it comes from, in the tooltip
+    assert account.value_text() == ADMIN.user and account.marks == ()
+    assert "Clinic › Front desk" in account.toolTip()
     labels = [w.text() for w in details.findChildren(QLabel)]
     assert "Connect with" in labels and "Commands run as" in labels
     assert "from Accounts" not in labels
     window.hosts.table.select_ids([_host(window, "DESK-02").key])
     assert details.account_button.value_text() == other.user
-    assert details.account_button.marks == ("pin",)  # its own row: only this PC
+    assert details.account_button.marks == ("pin",)
     assert details.account_button.toolTip().startswith("Only this PC")
     window.hosts.table.select_ids([_host(window, "DESK-03").key])
     assert details.account_button.value_text() == accounts_ui.windows_account()
@@ -133,13 +131,13 @@ def test_a_password_not_typed_yet_is_asked_once_and_never_for_a_read_on_its_own(
     window.hosts.accounts.use(Link(ADMIN.user, Scope.TAG, "vpn", _list(window)), None,
                               remember=False)  # fmt: skip
     target = _host(window, "DESK-02")
-    _settle(window)  # the scripts folder, read as CapyPanel opens
-    window.hosts.runner.read_facts(target)  # on its own, as when a host stays selected
-    assert not window.hosts.runner.busy()  # nothing asked, nothing read
+    _settle(window)
+    window.hosts.runner.read_facts(target)
+    assert not window.hosts.runner.busy()
 
     asked: list[check_ui.AccountDialog] = []
     _answer(monkeypatch, lambda d: False, asked)
-    assert _account_used(window, target) == []  # cancelled: nothing ran
+    assert _account_used(window, target) == []
     assert asked[-1].user.isReadOnly() and asked[-1].user.text() == ADMIN.user
 
     def type_it(dialog: check_ui.AccountDialog) -> bool:
@@ -148,9 +146,9 @@ def test_a_password_not_typed_yet_is_asked_once_and_never_for_a_read_on_its_own(
 
     _answer(monkeypatch, type_it, asked)
     assert _account_used(window, target) == [ADMIN]
-    assert _account_used(window, _host(window, "DESK-03")) == [ADMIN]  # the same tag
-    assert len(asked) == 2  # asked once, then known
-    assert credstore.read(credential_name(ADMIN.user)) is None  # not remembered
+    assert _account_used(window, _host(window, "DESK-03")) == [ADMIN]
+    assert len(asked) == 2
+    assert credstore.read(credential_name(ADMIN.user)) is None
 
 
 def test_try_another_account_offers_the_pcs_and_keeps_the_choice(
@@ -162,7 +160,7 @@ def test_try_another_account_offers_the_pcs_and_keeps_the_choice(
         offered.extend(dialog.use_for.itemText(i) for i in range(dialog.use_for.count()))
         dialog.user.setText(ADMIN.user)
         dialog.password.setText(ADMIN.password)
-        dialog.use_for.setCurrentIndex(1)  # every PC in its group
+        dialog.use_for.setCurrentIndex(1)
         dialog.remember.setChecked(True)
         return True
 
@@ -178,7 +176,7 @@ def test_try_another_account_offers_the_pcs_and_keeps_the_choice(
     assert (link.scope, link.user, link.name) == (Scope.GROUP, ADMIN.user, "Clinic › Front desk")
     assert credstore.read(credential_name(ADMIN.user)) == (ADMIN.user, ADMIN.password)
     assert _account_used(window, _host(window, "DESK-01")) == [ADMIN]
-    assert window.hosts.prefs["accounts"][0]["scope"] == "group"  # kept for the next start
+    assert window.hosts.prefs["accounts"][0]["scope"] == "group"
 
 
 def test_a_rejected_account_stops_only_the_pcs_that_use_it(
@@ -202,8 +200,8 @@ def test_a_rejected_account_stops_only_the_pcs_that_use_it(
     window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _settle(window)
     tried = dict(seen)
-    assert tried["192.0.2.13"] is None  # the Windows account's PC still read
-    assert sum(account == ADMIN for _a, account in seen) == 1  # one rejection, then stopped
+    assert tried["192.0.2.13"] is None
+    assert sum(account == ADMIN for _a, account in seen) == 1
 
 
 def _section(win: CapyWindow) -> AccountsSection:
@@ -233,7 +231,7 @@ def test_the_settings_table_adds_edits_and_removes_accounts(
     assert _rows(section) == [[ADMIN.user, "Group Clinic › Front desk", "Asked when needed"]]
 
     def edit_to_pc(dialog: LinkDialog) -> int:
-        assert dialog.scope() is Scope.GROUP  # shows the row as it is
+        assert dialog.scope() is Scope.GROUP
         dialog.kind.setCurrentIndex(dialog.kind.findData(Scope.PC))
         dialog.address.setText("192.0.2.13")
         dialog.password.setText("pw")
@@ -249,14 +247,14 @@ def test_the_settings_table_adds_edits_and_removes_accounts(
     section.table.setCurrentItem(section.table.topLevelItem(0))  # type: ignore[arg-type]
     section.remove_button.click()
     assert _rows(section) == [] and window.hosts.accounts.links == []
-    assert credstore.read(credential_name(ADMIN.user)) is None  # its password went too
+    assert credstore.read(credential_name(ADMIN.user)) is None
 
 
 def test_a_group_or_tag_needs_the_list_it_belongs_to(window: CapyWindow) -> None:
     dialog = LinkDialog(None, "Add", window.hosts.accounts, None)
     ok = dialog.buttons.button(dialog.buttons.StandardButton.Ok)
     dialog.user.setText(ADMIN.user)
-    assert ok.isEnabled()  # Every PC needs nothing more
+    assert ok.isEnabled()
     dialog.kind.setCurrentIndex(dialog.kind.findData(Scope.TAG))
     assert not ok.isEnabled()
     dialog.tag.setCurrentText("VPN")
@@ -267,7 +265,7 @@ def test_a_group_or_tag_needs_the_list_it_belongs_to(window: CapyWindow) -> None
 def test_every_pc_keeps_the_pc_group_or_tag_field_in_place_greyed(
     qapp: QApplication, window: CapyWindow
 ) -> None:
-    fitter = ScreenFit(qapp)  # the app's own dialog fitting, as in the real app
+    fitter = ScreenFit(qapp)
     qapp.installEventFilter(fitter)
     dialog = LinkDialog(None, "Add", window.hosts.accounts, None)
     dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
@@ -276,9 +274,9 @@ def test_every_pc_keeps_the_pc_group_or_tag_field_in_place_greyed(
         QApplication.processEvents()
         assert dialog.value.isVisible() and not dialog.every_pc.isEnabled()
         assert dialog.every_pc.toolTip() == "Nothing to name: it's used on every PC"
-        dialog.resize(dialog.width(), dialog.height() + 60)  # spare height, as some themes give
+        dialog.resize(dialog.width(), dialog.height() + 60)
         QApplication.processEvents()
-        assert dialog.value.height() == dialog.user.height()  # as tall as the fields above
+        assert dialog.value.height() == dialog.user.height()
         opened = (dialog.size(), dialog.value.geometry())
         for scope in (Scope.PC, Scope.GROUP, Scope.TAG, Scope.ALL):
             dialog.kind.setCurrentIndex(dialog.kind.findData(scope))
@@ -314,13 +312,13 @@ def test_connect_with_shows_the_login_kept_for_the_profile(window: CapyWindow) -
     hosts = window.hosts
     hosts.table.select_ids([_host(window, "DESK-01").key])
     profile = hosts.details.profile_button.value_text()
-    assert hosts.details.profile_button.marks == ()  # nothing typed for it yet
+    assert hosts.details.profile_button.marks == ()
     profile_id = hosts.connector.catalogs.profiles.default_id()
     hosts.connector.credentials.remember(profile_id, Credential("EXAMPLE\\helpdesk", "x"))
     hosts.table.select_ids([_host(window, "DESK-03").key])
     hosts.table.select_ids([_host(window, "DESK-01").key])
     button = hosts.details.profile_button
-    assert button.value_text() == profile and button.marks == ("key",)  # a login is kept
+    assert button.value_text() == profile and button.marks == ("key",)
     assert button.toolTip().startswith("Signs in as EXAMPLE\\helpdesk")
 
 
@@ -348,15 +346,15 @@ def test_details_arrow_picks_the_account_for_this_pc(
     assert texts[-1] == "&Another account…"
     assert next(a for a in menu.actions() if a.text() == texts[0]).isChecked()
 
-    _choose(menu, "Your Windows account")  # this PC stays on mine, despite its group
+    _choose(menu, "Your Windows account")
     target = _host(window, "DESK-01")
     assert _account_used(window, target) == [None]
-    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]  # the group's others
+    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]
     assert hosts.details.account_button.value_text() == accounts_ui.windows_account()
-    assert hosts.details.account_button.marks == ("pin",)  # this PC overrides its group
+    assert hosts.details.account_button.marks == ("pin",)
 
     menu.aboutToShow.emit()
-    _choose(menu, "Follow Accounts")  # its own row goes; the group's applies again
+    _choose(menu, "Follow Accounts")
     assert accounts.own(target) is None
     assert _account_used(window, target) == [ADMIN]
 
@@ -386,7 +384,7 @@ def test_right_click_sets_several_pcs_or_a_group(window: CapyWindow) -> None:
     _choose(menu, "Your Windows account")
     assert _account_used(window, _host(window, "DESK-01")) == [None]
     assert _account_used(window, _host(window, "DESK-03")) == [None]
-    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]  # not picked
+    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]
 
     group = next(g for g in doc.hosts.groups if g.name == "Front desk")
     menu = QMenu()
@@ -408,6 +406,6 @@ def test_an_account_changed_after_settings_closed_touches_no_page_that_is_gone(
         shiboken6.delete(window.settings_dialog())
     window.hosts.accounts.changed.emit()
     assert errors == []
-    section = _section(window)  # an open Settings still follows
+    section = _section(window)
     window.hosts.accounts.changed.emit()
     assert errors == [] and _rows(section) == []

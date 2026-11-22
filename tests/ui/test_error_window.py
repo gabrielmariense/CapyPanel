@@ -1,5 +1,3 @@
-"""The window for errors nothing caught: one however many, a repeat counted, not shown again."""
-
 from collections.abc import Iterator
 
 import pytest
@@ -25,7 +23,7 @@ def test_errors_that_follow_each_other_share_one_window() -> None:
     assert window.isVisible() and window.isModal()
     assert window.message.text() == "Something went wrong. The details were saved to the app log."
     assert window.details.toPlainText() == FIRST
-    assert error_window.show(FIRST + "\n") is window  # the same again: counted, not repeated
+    assert error_window.show(FIRST + "\n") is window
     assert error_window.show(OTHER) is window
     assert window.message.text() == (
         "Something went wrong 3 times. The details were saved to the app log."
@@ -37,7 +35,7 @@ def test_the_details_show_at_once_in_a_box_big_enough_to_read() -> None:
     window = error_window.show(FIRST)
     assert not window.details.isHidden() and window.details.isReadOnly()
     assert window.width() >= 800 and window.height() >= 500
-    assert window.details.height() >= 350  # enough lines to read a traceback
+    assert window.details.height() >= 350
     assert window.isSizeGripEnabled()
 
 

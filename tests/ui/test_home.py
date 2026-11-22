@@ -39,21 +39,21 @@ def home(qapp: QApplication, paths: settings.Paths) -> Iterator[CapyWindow]:
 def test_the_window_opens_on_home_with_a_tile_per_tool(home: CapyWindow) -> None:
     assert home.shown_tool() is None and home.home.isVisible()
     assert home.rail.home_button.isChecked() and home.rail.home_button.toolTip() == "Home (Ctrl+0)"
-    assert not home.hosts.toolbar.isVisible()  # Home has no toolbar
+    assert not home.hosts.toolbar.isVisible()
     assert not any(t.status_label.isVisible() for t in home.tools.values())
     assert home.windowTitle().startswith("CapyPanel ")
     tiles = home.home.tiles
     assert [t.tool.tool_id for t in tiles] == ["hosts", "printers", "profiles", "ssh"]
     assert [t.keys.text() for t in tiles] == ["Ctrl+1", "Ctrl+2", "Ctrl+3", "Ctrl+4"]
     assert tiles[0].name.text() == "Hosts"
-    assert tiles[0].y() == tiles[1].y()  # side by side while they fit
+    assert tiles[0].y() == tiles[1].y()
     QTest.mouseClick(tiles[1], Qt.MouseButton.LeftButton, pos=QPoint(20, 20))
     assert home.shown_tool() is home.tools["printers"]
     assert home.prefs[settings.TOOL_KEY] == "printers"
     [ctrl_0] = [a for a in home.actions() if a.shortcut().toString() == "Ctrl+0"]
     ctrl_0.trigger()
     assert home.shown_tool() is None and home.home.isVisible()
-    assert home.prefs[settings.TOOL_KEY] == "printers"  # Home isn't a tool to reopen
+    assert home.prefs[settings.TOOL_KEY] == "printers"
     home.show_tool("hosts")
     assert not home.rail.home_button.isChecked()
     home.rail.home_button.click()
@@ -77,19 +77,19 @@ def test_tiles_wrap_into_rows_when_they_don_t_fit(qapp: QApplication) -> None:
     page.resize(500, 700)
     page.show()
     QApplication.processEvents()
-    assert page.tiles[1].y() > page.tiles[0].y()  # one under the other
-    assert abs(page.tiles[0].x() - page.tiles[1].x()) <= 1  # both centred
+    assert page.tiles[1].y() > page.tiles[0].y()
+    assert abs(page.tiles[0].x() - page.tiles[1].x()) <= 1
     page.close()
 
 
 @pytest.mark.parametrize(
     ("prefs", "shown"),
     [
-        ({}, None),  # Home by default
+        ({}, None),
         ({"start": "last", "tool": "printers"}, "printers"),
-        ({"start": "last"}, None),  # no tool shown yet
+        ({"start": "last"}, None),
         ({"start": "printers"}, "printers"),
-        ({"start": "gone"}, None),  # a tool CapyPanel no longer has
+        ({"start": "gone"}, None),
     ],
 )
 def test_open_on_startup_picks_what_the_window_shows(
@@ -102,7 +102,7 @@ def test_open_on_startup_picks_what_the_window_shows(
 
 def test_settings_general_sets_open_on_startup(home: CapyWindow) -> None:
     dialog = home.settings_dialog()
-    assert dialog.current_page() == "general"  # Settings opens on it
+    assert dialog.current_page() == "general"
     page = dialog.general
     choices = [page.start.itemText(i) for i in range(page.start.count())]
     assert choices == [
@@ -113,10 +113,9 @@ def test_settings_general_sets_open_on_startup(home: CapyWindow) -> None:
 
 
 def test_the_catalog_matches_the_tools_and_the_start_up_imports_none() -> None:
-    for info in CATALOG:  # what the catalog says matches the tool itself
+    for info in CATALOG:
         kind = info.load()
         assert (info.tool_id, info.icon) == (kind.TOOL_ID, kind.ICON)  # type: ignore[attr-defined]
-    # The start-up, the window and the catalog import no tool by themselves.
     code = (
         "import sys; import capypanel.ui.app; "
         "loaded = [m for m in sys.modules if m.startswith(('capypanel.ui.hosts_tool', "

@@ -1,4 +1,4 @@
-"""Every command that acts on one host, defined once; none installs or runs a program on the PC."""
+"""No command installs or runs a program on the PC."""
 
 from dataclasses import dataclass
 from enum import StrEnum
@@ -7,18 +7,18 @@ from capypanel.core.i18n import N_
 
 
 class Need(StrEnum):
-    READ = "read"  # only reads: status, users, facts
-    OPEN_HERE = "open-here"  # opens a tool on this PC, pointed at the PC (Explorer, a console)
-    ASK_WINDOWS = "ask-windows"  # asks Windows on the PC through its own remote calls
+    READ = "read"
+    OPEN_HERE = "open-here"
+    ASK_WINDOWS = "ask-windows"
 
 
-class Group(StrEnum):  # in the order the menus and the Commands window show them
+class Group(StrEnum):
     CHECK = "check"
     FOLDERS = "folders"
     ADMIN = "admin"
     USERS = "users"
     PRINTERS = "printers"
-    POWER = "power"  # last: it disturbs whoever is at the PC
+    POWER = "power"
 
 
 GROUP_NAMES = {
@@ -35,15 +35,13 @@ GROUP_NAMES = {
 class HostCommand:
     id: str
     group: Group
-    name: str  # English; shown through _(). Ends with "…" when a window or question comes first.
-    description: str  # one line, for the manual connection window and tooltips
-    icon: str  # a Tabler icon's name
+    name: str
+    description: str
+    icon: str
     need: Need
-    risky: bool = False  # disturbs whoever uses the PC: shown in amber, always asks first
+    risky: bool = False
     needs_user: bool = False
-    # Acts on one signed-in person: offered on that person (Details, Users ▾), not in the lists.
     per_person: bool = False
-    # Set apart from the ones above it: a line in menus, a small gap in the Commands window.
     apart: bool = False
 
 
@@ -69,7 +67,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
         "programs", Group.CHECK, N_("Installed programs"),
         N_("The programs installed for every user of the PC."), "apps", Need.READ,
-        apart=True,  # a long table, not part of Quick check
+        apart=True,
     ),
     HostCommand(
         "c-share", Group.FOLDERS, N_("C$ share"),
@@ -148,34 +146,28 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
 )  # fmt: skip
 
-# Quick commands: one click away on top of Details and in a host's right-click menu. Each
-# admin picks theirs; these four are what a fresh install starts with.
 QUICK = ("c-share", "user-folder", "computer-management", "message")
-# What can be picked, in the Commands window's order: a quick command shows something, opens
-# something or fixes a service; it never cuts a person off and never deletes their files.
+# Quick commands never cut a person off or delete their files.
 CAN_BE_QUICK = (
     "status", "users", "facts", "programs", "c-share", "user-folder", "startup", "path",
     "computer-management", "event-viewer", "services", "message", "drives", "printers",
     "spooler",
 )  # fmt: skip
-MENU_QUICK = 4  # the right-click menu shows this many: the first ticked, in that order
+MENU_QUICK = 4
 
 
 def quick_from(kept: object) -> tuple[str, ...]:
-    """The quick commands kept in an admin's settings, in the Commands window's order, without any
-    that can't be one; the starting four when nothing was ever chosen (none chosen is a choice)."""
+    """None ever chosen: the starting four; an empty choice stays empty."""
     if not isinstance(kept, list):
         return QUICK
     return tuple(command_id for command_id in CAN_BE_QUICK if command_id in kept)
 
 
 def command(command_id: str) -> HostCommand:
-    """Raises KeyError for an unknown id."""
     return _BY_ID[command_id]
 
 
 def in_group(group: Group) -> list[HostCommand]:
-    """The group's commands as menus and lists show them: without the per-person ones."""
     return [c for c in COMMANDS if c.group is group and not c.per_person]
 
 

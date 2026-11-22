@@ -1,5 +1,3 @@
-"""Hosts, groups and the list that holds them. Records are immutable: edits return a new list."""
-
 import re
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -10,12 +8,11 @@ from capypanel.core.i18n import _
 
 
 class HostListRuleError(ValueError):
-    """An edit that would break a rule of the list (e.g. a host in a group that doesn't exist)."""
+    pass
 
 
 MAX_ADDRESS = 253  # the longest DNS name
-NO_GROUP = ""  # a host's group when it has none: shown under "No group", above the groups
-# A computer name or IP address: letters, digits, "-" and "_", in parts joined by dots.
+NO_GROUP = ""
 _HOSTNAME = re.compile(r"^[A-Za-z0-9_]([A-Za-z0-9_-]{0,62})(\.[A-Za-z0-9_]([A-Za-z0-9_-]{0,62}))*$")
 
 
@@ -27,8 +24,8 @@ def is_hostname(text: str) -> bool:
 class Group:
     id: str
     name: str
-    parent: str | None = None  # None = top level
-    profile: str = ""  # connection profile id for the hosts inside; "" = from the parent
+    parent: str | None = None
+    profile: str = ""
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys this version doesn't know
 
 
@@ -40,24 +37,21 @@ class Host:
     address: str = ""
     tags: tuple[str, ...] = ()
     notes: str = ""
-    profile: str = ""  # connection profile id; "" = the group's
+    profile: str = ""
     extra: Mapping[str, Any] = field(default_factory=dict)
 
     @property
     def target(self) -> str:
-        """What to connect to: the address, or the name when no address was typed."""
         return self.address or self.name
 
     @property
     def connect_address(self) -> str:
-        """The address, or the name when it's a valid computer name; "" when neither works."""
         if self.address:
             return self.address
         return self.name if is_hostname(self.name) else ""
 
 
 def clean_tags(tags: Iterable[str]) -> tuple[str, ...]:
-    """Trimmed, no blanks, no duplicates, typed order kept."""
     seen: dict[str, None] = {}
     for tag in tags:
         tag = tag.strip()
@@ -98,8 +92,6 @@ class HostList:
     def profile_of(
         self, host: Host, exists: Callable[[str], bool] = lambda _id: True
     ) -> tuple[str, Group | None]:
-        """The host's profile id and the group it comes from (None: its own), skipping those
-        that don't `exist`; ("", None) when nothing around the host sets one that exists."""
         if host.profile and exists(host.profile):
             return host.profile, None
         return self.group_profile(host.group, exists)
@@ -107,7 +99,6 @@ class HostList:
     def group_profile(
         self, group_id: str | None, exists: Callable[[str], bool] = lambda _id: True
     ) -> tuple[str, Group | None]:
-        """The profile a group gives its hosts: its own, else the nearest parent's."""
         seen: set[str] = set()
         group = self.group(group_id) if group_id else None
         while group is not None and group.id not in seen:
@@ -118,7 +109,6 @@ class HostList:
         return "", None
 
     def all_tags(self) -> dict[str, int]:
-        """Every tag in use, with how many hosts carry it."""
         counts: dict[str, int] = {}
         for host in self.hosts:
             for tag in host.tags:
@@ -150,13 +140,11 @@ class HostList:
         return replace(self, groups=groups)
 
     def set_hosts_profile(self, host_ids: Iterable[str], profile: str) -> "HostList":
-        """Sets several hosts at once; "" makes them follow their group again."""
         wanted = set(host_ids)
         hosts = tuple(replace(h, profile=profile) if h.id in wanted else h for h in self.hosts)
         return replace(self, hosts=hosts)
 
     def tag_hosts(self, host_ids: Iterable[str], tag: str, on: bool) -> "HostList":
-        """Adds the tag to every one of the hosts that lacks it (at the end), or removes it."""
         wanted, tag = set(host_ids), tag.strip()
         if not tag:
             return self
@@ -170,8 +158,6 @@ class HostList:
         return replace(self, hosts=tuple(tagged(h) for h in self.hosts))
 
     def arrange_groups(self, order: Sequence[tuple[str, str | None]]) -> "HostList":
-        """Every group's new parent, in the new order (siblings show in this order). Used by
-        drag and drop, Manage groups and Sort A–Z. A group can't end up inside itself."""
         if sorted(gid for gid, _p in order) != sorted(g.id for g in self.groups):
             raise HostListRuleError(_("The groups changed meanwhile; try again."))
         parents = dict(order)
@@ -187,8 +173,6 @@ class HostList:
         return replace(self, groups=groups)
 
     def move_group(self, group_id: str, parent: str | None) -> "HostList":
-        """Puts the group, with everything inside it, into `parent` (None: the top level),
-        after the groups already there."""
         group = self.group(group_id)
         if group is None:
             raise HostListRuleError(_("That group doesn't exist."))
@@ -202,7 +186,6 @@ class HostList:
         return replace(self, groups=(*others, replace(group, parent=parent)))
 
     def move_hosts(self, host_ids: Iterable[str], group_id: str) -> "HostList":
-        """Into the group, or out of every group (NO_GROUP)."""
         self._require_group_or_none(group_id)
         wanted = set(host_ids)
         hosts = tuple(replace(h, group=group_id) if h.id in wanted else h for h in self.hosts)
@@ -211,13 +194,12 @@ class HostList:
     def remove_group(
         self, group_id: str, *, keep_contents: bool = False, into: str | None = None
     ) -> "HostList":
-        """Removes the group. keep_contents moves its groups and hosts `into` that group (None: up a
-        level; NO_GROUP: the top level, with no group); otherwise they go too."""
+        """`into`: None moves the contents up a level, NO_GROUP to the top."""
         self._require_group(group_id)
         if keep_contents:
             group = self.group(group_id)
             target = into if into is not None else (group.parent if group else None)
-            target = target or None  # NO_GROUP: the top level
+            target = target or None
             if target is not None:
                 self._require_group(target)
                 if target in self.subtree(group_id):
@@ -249,7 +231,6 @@ class HostList:
         notes: str = "",
         profile: str = "",
     ) -> tuple["HostList", Host]:
-        """group: its id, or NO_GROUP."""
         self._require_group_or_none(group)
         host = Host(
             id=self.new_id("h"),
@@ -263,7 +244,6 @@ class HostList:
         return replace(self, hosts=(*self.hosts, host)), host
 
     def update_host(self, host: Host) -> "HostList":
-        """Replaces the host with the same ID; typed fields are cleaned the same way as on add."""
         if self.host(host.id) is None:
             raise HostListRuleError(_("That host is no longer in the list."))
         self._require_group_or_none(host.group)

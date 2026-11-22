@@ -1,5 +1,3 @@
-"""Finding a tool's program on this PC, from the path the user set to PATH; never downloaded."""
-
 import os
 import shutil
 import winreg
@@ -21,14 +19,14 @@ def find_executable(tool: ToolDefinition) -> Path | None:
 def candidates(tool: ToolDefinition) -> Iterator[Path]:
     if tool.executable:
         yield Path(os.path.expandvars(tool.executable))
-        return  # a path the user chose is final: no silent fallback to another copy
+        return
     d = tool.detect
     if d.exe:
         for folder in installed_folders(d.installed_as):
             yield folder / d.exe
     for path in d.paths:
         expanded = os.path.expandvars(path)
-        if "%" not in expanded:  # a variable this PC doesn't have, e.g. %ProgramFiles(x86)%
+        if "%" not in expanded:
             yield Path(expanded)
     if d.exe:
         # Windows can make which() look in the current folder first: a relative answer.
@@ -38,8 +36,6 @@ def candidates(tool: ToolDefinition) -> Iterator[Path]:
 
 
 def installed_folders(names: tuple[str, ...]) -> Iterator[Path]:
-    """Install folders of programs whose name in "Installed apps" starts with one of `names`.
-    Finds tools installed anywhere, e.g. C:\\Programas instead of C:\\Program Files."""
     wanted = tuple(n.casefold() for n in names)
     if not wanted:
         return
@@ -49,8 +45,7 @@ def installed_folders(names: tuple[str, ...]) -> Iterator[Path]:
         if location:
             yield Path(location)
         elif uninstaller:
-            # No install location recorded: the uninstaller usually sits in the install folder.
-            # A command like "MsiExec.exe /X{…}" names no folder: it would mean the current one.
+            # "MsiExec.exe /X{…}" names no folder: it would mean the current one.
             command = uninstaller.strip()
             folder = Path(command.split('"')[1] if command.startswith('"') else command).parent
             if folder.is_absolute():

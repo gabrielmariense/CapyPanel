@@ -39,14 +39,14 @@ def test_a_closed_window_is_freed_unless_the_theme_changed_while_it_was_open(
 
     class Switching(QDialog):
         def exec(self) -> int:  # type: ignore[override]
-            themes.apply(themes.DEFAULT_THEME)  # e.g. Settings > Theme
+            themes.apply(themes.DEFAULT_THEME)
             return 0
 
     quick, switching = Quick(), Switching()
     run_modal(quick)
     run_modal(switching)
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-    assert not shiboken6.isValid(quick)  # freed: theme switches no longer restyle it
+    assert not shiboken6.isValid(quick)
     assert shiboken6.isValid(switching)  # kept: deleting a restyled window can crash Qt
 
 
@@ -58,7 +58,7 @@ def _main_button(box: QDialogButtonBox) -> QPushButton:
 
 def test_a_window_ends_in_what_it_does_not_in_ok(qapp: QApplication) -> None:
     plain = QDialog()
-    assert _main_button(ok_cancel(plain)).text() == "OK"  # no verb given: Qt's own
+    assert _main_button(ok_cancel(plain)).text() == "OK"
     box = ok_cancel(plain, "Save")
     assert _main_button(box).text() == "Save"
     _main_button(box).click()
@@ -71,7 +71,6 @@ def test_a_window_ends_in_what_it_does_not_in_ok(qapp: QApplication) -> None:
     assert _main_button(groups.box).text() == "Save"
     groups.show()
     qapp.processEvents()
-    # As every list screen: the buttons in a row under the list, not a column beside it.
     row = (groups.up_button, groups.down_button, groups.move_button, groups.sort_button)
     assert len({b.y() for b in row}) == 1 and row[0].y() >= groups.tree.geometry().bottom()
     assert [b.x() for b in row] == sorted(b.x() for b in row)
@@ -84,11 +83,11 @@ def test_only_a_window_s_main_action_is_the_filled_button(
 ) -> None:
     close = QPushButton("Close")
     quiet_default(close)
-    assert close.isDefault() and close.objectName() == "quietDefault"  # Enter still presses it
+    assert close.isDefault() and close.objectName() == "quietDefault"
     sheet = themes.stylesheet(themes.Registry().find("capypanel-dark"))
     filled = sheet.split("QPushButton:default {")[1].split("}")[0]
     quiet = sheet.split("QPushButton#quietDefault:default {")[1].split("}")[0]
-    assert "#ffffff" in filled and "#ffffff" not in quiet  # plain text on a plain button
+    assert "#ffffff" in filled and "#ffffff" not in quiet
     seen: list[QMessageBox] = []
 
     def answer(box: QMessageBox) -> int:
@@ -96,10 +95,9 @@ def test_only_a_window_s_main_action_is_the_filled_button(
         return 0
 
     monkeypatch.setattr(QMessageBox, "exec", answer)
-    parent = QDialog()  # kept: the box lives as long as its parent
+    parent = QDialog()
     assert not hosts_ui.confirm(parent, "Remove hosts", "Remove “DESK-01”?", "Remove")
     default = seen[0].defaultButton()
-    # A question's Cancel is where Enter goes, and it isn't drawn as the main action.
     assert default is not None and default.objectName() == "quietDefault"
 
 
@@ -108,19 +106,17 @@ def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
     scaled = QSize(1093, 575)  # the same laptop at 125 %
     report = QDialog()
     report.resize(780, 620)
-    assert not fit_screen(report, laptop) and report.size() == QSize(780, 620)  # it fits
+    assert not fit_screen(report, laptop) and report.size() == QSize(780, 620)
     settings = QDialog()
     settings.resize(960, 700)
-    # With its title bar, 700 px is a little more than that laptop has: it takes what there is.
     assert fit_screen(settings, laptop) and settings.size() == QSize(960, 728 - FRAME.height())
-    assert fit_screen(settings, scaled)  # shorter still at 125 %: its pages scroll
+    assert fit_screen(settings, scaled)
     assert settings.size() == QSize(960, 575 - FRAME.height())
     box = QDialog()
-    box.setFixedSize(1120, 620)  # one of a fixed size (a question box) stays fixed, at what fits
+    box.setFixedSize(1120, 620)
     assert fit_screen(box, scaled)
     assert box.size() == QSize(1093 - FRAME.width(), 575 - FRAME.height())
     assert box.minimumSize() == box.maximumSize() == box.size()
-    # Installed on the application, it fits every window as it shows; menus and tips are left.
     fitter = ScreenFit(qapp)
     qapp.installEventFilter(fitter)
     try:
@@ -158,18 +154,18 @@ def test_a_dialog_grows_to_its_wrapped_text_as_it_shows_and_as_its_rows_change(
 
     alone, _note, _extra = window()
     alone.show()
-    assert not room(alone)  # what Qt does by itself
+    assert not room(alone)
     alone.close()
     fitter = ScreenFit(qapp)
     qapp.installEventFilter(fitter)
     try:
         dialog, note, extra = window()
         dialog.show()
-        assert room(dialog)  # as it shows
+        assert room(dialog)
         extra.show()
-        assert room(dialog)  # a row that appears
+        assert room(dialog)
         note.setText(note.text() * 2)
-        assert room(dialog)  # a longer text
+        assert room(dialog)
         dialog.close()
     finally:
         qapp.removeEventFilter(fitter)
@@ -177,8 +173,7 @@ def test_a_dialog_grows_to_its_wrapped_text_as_it_shows_and_as_its_rows_change(
 
 def test_a_window_s_kept_size_is_read_with_care() -> None:
     default = (1120, 620)
-    assert kept_size(None, default) == default  # the first time
-    assert kept_size([900, 700], default) == (900, 700)  # as the person left it
-    # The settings file can be edited by hand: anything that isn't a size is skipped.
+    assert kept_size(None, default) == default
+    assert kept_size([900, 700], default) == (900, 700)
     for odd in ([900], [900, "700"], [900, 7.5], [True, 700], [5, 700], [900, 10**6], "900x700"):
         assert kept_size(odd, default) == default, odd

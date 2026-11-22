@@ -1,4 +1,4 @@
-"""The SSH tool's Settings; Refresh by itself is off until picked, as fail2ban may ban it."""
+"""Refresh by itself stays off until picked: fail2ban may ban it."""
 
 from typing import TYPE_CHECKING
 
@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 def auto_line() -> str:
-    """Under Refresh status by itself: what it checks, and the one way it can hurt."""
     return _("Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode "
              "may count each check as a failed login and block this PC.")  # fmt: skip
 

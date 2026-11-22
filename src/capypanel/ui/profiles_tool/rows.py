@@ -1,5 +1,3 @@
-"""What Profile cleanup says about a profile, no window involved: its state, and why it can go."""
-
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -48,7 +46,7 @@ STATE_NAMES = {
     State.OUTSIDE: N_("Outside Users"),
     State.REVIEW: N_("Review"),
 }
-_STATE_COLORS = {  # each state in one of the theme's status colours
+_STATE_COLORS = {
     State.READY: "online",
     State.IN_USE: "working",
     State.PROTECTED: "offline",
@@ -56,7 +54,7 @@ _STATE_COLORS = {  # each state in one of the theme's status colours
     State.REVIEW: "attention",
 }
 STATE_ORDER = (State.READY, State.REVIEW, State.IN_USE, State.OUTSIDE, State.PROTECTED)
-MONTHS = (0, 1, 3, 6, 12)  # "Unused for": any time, then at least this many months
+MONTHS = (0, 1, 3, 6, 12)
 
 
 def state_color(state: State) -> str:
@@ -64,13 +62,12 @@ def state_color(state: State) -> str:
 
 
 def state_name(state: State) -> str:
-    if state is State.READY:  # its own entry: Portuguese says "Pode excluir"
+    if state is State.READY:
         return pgettext("profile", "Can be deleted")
     return _(STATE_NAMES[state])
 
 
 def state_why(profile: Profile, root: str) -> str:
-    """Why a row is in its state, in a sentence."""
     if profile.state is State.OUTSIDE:
         return _(
             "It's outside the Users folder. CapyPanel only deletes profiles inside {folder}."
@@ -92,7 +89,6 @@ def state_why(profile: Profile, root: str) -> str:
 
 
 def user_text(profile: Profile) -> str:
-    """The account's name; one Windows no longer knows says so beside the folder's name."""
     return profile.user if profile.known else _("{name}  (unknown)").format(name=profile.user)
 
 
@@ -107,21 +103,17 @@ def months_text(months: int) -> str:
 @dataclass(frozen=True)
 class Filters:
     hide_own: bool = True  # Windows' own (Public, Default…): about half the rows, never deletable
-    leftovers: bool = False  # only entries without a folder and folders without an entry
+    leftovers: bool = False
     months: int = 0  # only rows not used for this long; 0: any
 
 
 def used(profile: Profile) -> datetime | None:
-    """When a row was last used, for "Unused for": the last sign-in or sign-out Windows wrote
-    down, or the folder's own date when it has none (a folder without an entry never has)."""
     return profile.last_used or profile.modified
 
 
 def visible(
     profiles: Iterable[Profile], filters: Filters, now: datetime | None = None
 ) -> list[Profile]:
-    """The rows the filters leave. With "Unused for", a row with no date at all is left out:
-    nothing says it's older than the cut."""
     cut = _months_before(now or datetime.now(UTC), filters.months) if filters.months else None
     shown = []
     for profile in profiles:
@@ -145,7 +137,6 @@ def _months_before(now: datetime, months: int) -> datetime:
 
 
 def date_text(when: datetime | None) -> str:
-    """A day as the table shows it, in this PC's time: 10/11/2026 (11/10/2026 in English)."""
     if when is None:
         return ""
     local = checks.local(when)
@@ -155,7 +146,6 @@ def date_text(when: datetime | None) -> str:
 
 
 def size_text(size: int) -> str:
-    """ "3.4 GB" from a tenth of a gigabyte up, megabytes under it."""
     locale = QLocale(i18n.language())
     if size >= GB // 10:
         value = size / GB
@@ -164,8 +154,6 @@ def size_text(size: int) -> str:
 
 
 def status_text(scanned: Scan, name: str, ticked: Sequence[Profile], sizes: dict[str, int]) -> str:
-    """ "DESK-03 · 15 profiles · 9 can be deleted · 3 ticked · 12.4 GB": the size is the ticked
-    rows', once counted."""
     total = len(scanned.profiles)
     ready = sum(p.ready for p in scanned.profiles)
     parts = [
@@ -186,20 +174,18 @@ def shown_text(shown: int, total: int) -> str:
 
 
 def shown_short(shown: int, total: int) -> str:
-    """The same, where "shown" doesn't fit: "12 of 15"."""
     return _("{n} of {total}").format(n=shown, total=total)
 
 
 @dataclass(frozen=True)
 class Failure:
-    title: str  # "LAB-02 didn't answer"
-    lines: Sequence[str]  # what it means, then that nothing was read
-    status: str  # the status bar: "LAB-02 · didn't answer"
-    another_account: bool  # offer "Try another account…"
+    title: str
+    lines: Sequence[str]
+    status: str
+    another_account: bool
 
 
 def failure(error: BaseException, name: str, address: str, account: str) -> Failure:
-    """What a failed scan says in the middle of the page."""
     nothing = _("Nothing was read.")
     if isinstance(error, PowerShellBlocked):
         return Failure(
@@ -254,8 +240,6 @@ def failure(error: BaseException, name: str, address: str, account: str) -> Fail
 
 
 class Result(StrEnum):
-    """Where a ticked row is in a delete run."""
-
     QUEUED = "queued"
     DELETING = "deleting"
     DELETED = "deleted"
@@ -270,7 +254,7 @@ RESULT_NAMES = {
     Result.SKIPPED: N_("Skipped"),
     Result.FAILED: N_("Failed"),
 }
-_RESULT_ICONS = {  # an icon and its colour: one of the theme's status colours
+_RESULT_ICONS = {
     Result.QUEUED: ("clock", "offline"),
     Result.DELETING: ("refresh", "working"),
     Result.DELETED: ("circle-check", "online"),
@@ -286,7 +270,6 @@ _RESULTS = {
 
 
 def result_icon(result: Result) -> tuple[str, str]:
-    """How a delete stands, as an icon's name and its colour in the current theme."""
     icon, color = _RESULT_ICONS[result]
     return icon, themes.status_color(color)
 
@@ -296,17 +279,14 @@ def result_of(done: Deleted) -> Result:
 
 
 def confirm_word() -> str:
-    """What the Delete window asks to be typed: DELETE (EXCLUIR in Portuguese)."""
     return pgettext("the word typed to confirm", "DELETE")
 
 
 def confirms(typed: str) -> bool:
-    """Whether the word was typed: any case, spaces around it ignored."""
     return typed.strip().casefold() == confirm_word().casefold()
 
 
 def ended_text(done: Deleted, size: int | None) -> str:
-    """How one delete ended, as the log's line says after the name: "deleted, 6.2 GB"."""
     if done.outcome is Outcome.DELETED:
         return _("deleted, {size}").format(size=size_text(size)) if size else _("deleted")
     why = {
@@ -320,14 +300,13 @@ def ended_text(done: Deleted, size: int | None) -> str:
     }.get(done.why, "") if done.why is not None else ""  # fmt: skip
     word = _("skipped") if done.outcome is Outcome.SKIPPED else _("failed")
     if done.outcome is Outcome.FAILED and done.detail:
-        if done.why is Why.ERROR:  # Windows' own words say more than ours
+        if done.why is Why.ERROR:
             return f"{word}, {done.detail}"
         return f"{word}, {why} ({done.detail})"
     return f"{word}, {why}" if why else word
 
 
 def result_why(done: Deleted) -> str:
-    """Details' sentence for a row that was in a delete run."""
     if done.outcome is Outcome.DELETED:
         return {
             Kind.ENTRY: _("Deleted: the leftover in the registry."),
@@ -347,7 +326,6 @@ def result_why(done: Deleted) -> str:
 
 
 def counts_text(results: Iterable[Result]) -> str:
-    """ "1 deleted, 1 skipped, 1 failed": only the ones that happened."""
     found = list(results)
     deleted, skipped = found.count(Result.DELETED), found.count(Result.SKIPPED)
     failed = found.count(Result.FAILED)

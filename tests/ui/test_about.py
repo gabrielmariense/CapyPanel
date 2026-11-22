@@ -36,7 +36,7 @@ def test_the_help_menu_has_the_website_a_problem_report_and_about(
     menus = [m for a in window.menuBar().actions() if isinstance(m := a.menu(), QMenu)]
     help_menu = menus[-1]
     assert help_menu.title() == "&Help"
-    texts = [label(a) for a in help_menu.actions() if a.text()]  # F1's room left out
+    texts = [label(a) for a in help_menu.actions() if a.text()]
     assert texts == [
         "&Guide to this screen", "&Show all the guides again", "&Help for this screen",
         "&Documentation", "&Report a problem", "Check for &updates…", "&About CapyPanel",
@@ -47,14 +47,14 @@ def test_the_help_menu_has_the_website_a_problem_report_and_about(
     window.commands.report_problem.trigger()
     assert opened[0] == "https://gabrielmariense.github.io/CapyPanel/"
     assert opened[1].startswith("https://github.com/gabrielmariense/CapyPanel/issues/new?body=")
-    assert f"CapyPanel {BUILD}" in unquote(opened[1])  # the version, ready in the report
+    assert f"CapyPanel {BUILD}" in unquote(opened[1])
 
 
 def test_the_website_opens_in_the_app_s_language(qapp: QApplication) -> None:
     language.apply("pt_BR")
     try:
         assert about.docs_url().endswith("/CapyPanel/pt-BR/")
-        assert about.source_url().endswith("/README.pt-BR.md")  # GitHub shows the English one
+        assert about.source_url().endswith("/README.pt-BR.md")
     finally:
         language.apply(i18n.DEFAULT_LANGUAGE)
 
@@ -67,38 +67,36 @@ def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication)
     assert page.version.text() == __version__ and page.version.copy_text() == BUILD
     assert '© 2026 Gabriel "GMErebos" Mariense' in texts
     assert COMPONENTS[0].notice == '© 2026 Gabriel "GMErebos" Mariense'
-    notice = next(t for t in texts if "with no warranty" in t)  # the GPL's notices
+    notice = next(t for t in texts if "with no warranty" in t)
     assert "GPL-3.0" in notice and 'href="#licenses"' in notice
-    assert any(t.endswith("portable mode") for t in texts)  # only what applies
+    assert any(t.endswith("portable mode") for t in texts)
     assert not any(b.isDefault() or b.autoDefault() for b in page.findChildren(QPushButton))
 
 
 def test_licenses_list_each_part_with_a_link_to_its_shipped_text(qapp: QApplication) -> None:
     page = AboutPage(Path("."), portable=False)
     rows = [page.licenses.topLevelItem(i) for i in range(page.licenses.topLevelItemCount())]
-    assert [r.text(0) for r in rows if r] == [c.name for c in COMPONENTS]  # CapyPanel first
+    assert [r.text(0) for r in rows if r] == [c.name for c in COMPONENTS]
     for part in COMPONENTS:
-        assert (LICENSES_DIR / part.file).is_file(), part.file  # shipped, readable offline
-    assert any("The Qt Company" in r.text(3) for r in rows if r)  # the copyright, as LGPL asks
+        assert (LICENSES_DIR / part.file).is_file(), part.file
+    assert any("The Qt Company" in r.text(3) for r in rows if r)
     qt = rows[1]
     assert qt is not None
     page.licenses.setCurrentItem(qt)
-    page.read_button.click()  # read in the app, not in Notepad
+    page.read_button.click()
     assert page.reader.isVisible() and page.reader.windowTitle() == "Qt · LGPL-3.0"
     assert "GNU LESSER GENERAL PUBLIC LICENSE" in page.reader.text.toPlainText()
     page.reader.close()
 
 
 def test_every_library_cryptography_brings_has_a_license_row() -> None:
-    # What ships with CapyPanel through cryptography (cffi, and pycparser through cffi),
-    # pywin32, which reads other PCs over WMI, and truststore, which checks GitHub's certificate.
     names, todo = set(), ["cryptography", "pywin32", "truststore"]
     while todo:
         dist = metadata.distribution(todo.pop())
         names.add(dist.metadata["Name"].casefold())
         for line in dist.requires or []:
             if "extra ==" in line:
-                continue  # an extra: not installed with us
+                continue
             requirement = Requirement(line)
             if requirement.marker is None or requirement.marker.evaluate():
                 todo.append(requirement.name)
@@ -108,17 +106,17 @@ def test_every_library_cryptography_brings_has_a_license_row() -> None:
 def test_every_library_carried_in_vendor_has_a_license_row_with_its_version() -> None:
     rows = {(c.name.casefold(), c.version) for c in COMPONENTS}
     carried = [p for p in VENDOR_DIR.iterdir() if p.is_dir() and p.name != "__pycache__"]
-    assert {p.name for p in carried} >= {"pyte", "conpty"}  # code, and the console engine
+    assert {p.name for p in carried} >= {"pyte", "conpty"}
     for folder in carried:
         changes = (folder / "CHANGES-CAPYPANEL.txt").read_text(encoding="utf-8")
         release = re.search(rf"^{re.escape(folder.name)} (\S+) \(", changes, re.MULTILINE)
         assert release, folder.name
         assert (folder.name, release[1]) in rows, folder.name
-        assert (folder / "LICENSE").is_file(), folder.name  # its own text ships beside it
+        assert (folder / "LICENSE").is_file(), folder.name
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:
-    body = unquote(about.report_url(portable=False).split("?body=", 1)[1])  # not the URL
+    body = unquote(about.report_url(portable=False).split("?body=", 1)[1])
     assert "Theme: " in body and "Language: en" in body and "· source" in body
     assert getpass.getuser() not in body and platform.node() not in body
 

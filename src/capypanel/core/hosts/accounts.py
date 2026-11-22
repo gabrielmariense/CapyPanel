@@ -1,5 +1,3 @@
-"""Which account signs in to which PCs: links in the person's settings, never the shared list."""
-
 import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -15,21 +13,19 @@ class Scope(StrEnum):
 
 
 MAX_TEXT = 256
-_ORDER = (Scope.PC, Scope.GROUP, Scope.TAG, Scope.ALL)  # most specific first
+_ORDER = (Scope.PC, Scope.GROUP, Scope.TAG, Scope.ALL)
 
 
-WINDOWS = (
-    ""  # a link's user: the Windows account CapyPanel runs as, kept even if a group has another
-)
+WINDOWS = ""  # the Windows account CapyPanel runs as
 
 
 @dataclass(frozen=True)
 class Link:
-    user: str  # "EXAMPLE\admin", or WINDOWS
+    user: str
     scope: Scope
-    value: str = ""  # PC: its address; GROUP: the group's id; TAG: the tag; ALL: ""
-    list: str = ""  # GROUP and TAG: the host list file they belong to
-    name: str = ""  # PC: the host's name; GROUP: its path, both as they were when linked
+    value: str = ""
+    list: str = ""
+    name: str = ""
 
     def same_place(self, other: "Link") -> bool:
         return (self.scope, _fold(self.value), _same_file(self.list)) == (
@@ -39,8 +35,8 @@ class Link:
 @dataclass(frozen=True)
 class Place:
     address: str
-    list: str = ""  # the host list file; "" for an address typed on the spot
-    groups: tuple[str, ...] = ()  # its group's id, then each parent's
+    list: str = ""
+    groups: tuple[str, ...] = ()
     tags: tuple[str, ...] = ()
 
 
@@ -69,23 +65,20 @@ def matches(link: Link, place: Place) -> bool:
 
 
 def pick(links: Iterable[Link], place: Place) -> Link | None:
-    """The link that signs in to the PC at `place`, or None for the Windows account."""
     found = [link for link in links if matches(link, place)]
 
     def rank(link: Link) -> tuple[int, int]:
         depth = place.groups.index(link.value) if link.scope is Scope.GROUP else 0
-        return _ORDER.index(link.scope), depth  # the nearest group first
+        return _ORDER.index(link.scope), depth
 
     return min(found, key=rank) if found else None
 
 
 def with_link(links: Sequence[Link], new: Link) -> list[Link]:
-    """`new` added, replacing a link for the same PCs."""
     return [*(link for link in links if not link.same_place(new)), new]
 
 
 def users(links: Iterable[Link]) -> list[str]:
-    """Each typed account the links use, once, in their order (not the Windows account)."""
     seen: dict[str, str] = {}
     for link in links:
         if link.user != WINDOWS:
@@ -98,12 +91,10 @@ def uses(links: Iterable[Link], user: str) -> list[Link]:
 
 
 def credential_name(user: str) -> str:
-    """Its password's name in Credential Manager (after CapyPanel/)."""
     return "account/" + _fold(user)
 
 
 def load(saved: Any) -> list[Link]:
-    """The links from the settings file; anything malformed is skipped."""
     links = []
     for entry in saved if isinstance(saved, list) else []:
         if not isinstance(entry, Mapping):
@@ -115,7 +106,7 @@ def load(saved: Any) -> list[Link]:
             scope = Scope(texts["scope"])
         except ValueError:
             continue
-        user = texts["user"].strip()  # none: the Windows account
+        user = texts["user"].strip()
         if scope is not Scope.ALL and not texts["value"].strip():
             continue
         if scope in (Scope.GROUP, Scope.TAG) and not texts["list"]:

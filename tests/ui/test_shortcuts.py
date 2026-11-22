@@ -1,5 +1,3 @@
-"""Keyboard shortcuts: the defaults, a person's changes, and the keys no command may take."""
-
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -57,7 +55,6 @@ def _press(
 
 
 def _answer(monkeypatch: pytest.MonkeyPatch, give: bool) -> list[str]:
-    """The "give it to … instead?" question, answered; its words are kept."""
     asked: list[str] = []
 
     def run(box: QMessageBox) -> int:
@@ -76,43 +73,37 @@ def _answer(monkeypatch: pytest.MonkeyPatch, give: bool) -> list[str]:
 def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: CapyWindow) -> None:
     keys = window.keys
     ids = [row.id for row in keys.rows]
-    assert ids[:2] == ["app.settings", "app.exit"]  # the window's own come first
+    assert ids[:2] == ["app.settings", "app.exit"]
     assert keys.key(keys.row("app.settings")) == "Ctrl+,"
     assert keys.key(keys.row("go.home")) == "Ctrl+0"
     assert keys.key(keys.row("go.hosts")) == "Ctrl+1"
     assert keys.key(keys.row("command.c-share")) == "Ctrl+E"
-    assert keys.key(keys.row("command.services")) == ""  # most have none, for you to fill
-    for never in ("restart", "shut-down", "cancel-restart", "spooler"):  # disturb the PC's user
+    assert keys.key(keys.row("command.services")) == ""
+    for never in ("restart", "shut-down", "cancel-restart", "spooler"):
         assert f"command.{never}" not in ids
     hosts_edit, printers_edit = keys.row("hosts.edit"), keys.row("printers.edit")
-    # Each tool's own row, even for a command both have.
     assert hosts_edit.places == ["hosts"] and printers_edit.places == ["printers"]
     assert keys.key(hosts_edit) == keys.key(printers_edit) == "F2"
     assert keys.row("hosts.add_host").places == ["hosts"]
     assert keys.row("printers.add_printer").places == ["printers"]
     page = _page(window)
-    assert page.table.columnCount() == 2  # Command and Key: the place is the heading
+    assert page.table.columnCount() == 2
     item = page.item_of("hosts.edit")
     assert [item.text(c) for c in range(2)] == ["Edit…", "F2"]
-    assert page.item_of("hosts.copy_address").text(0) == "Copy address"  # not a bare "Address"
-    # Connect's key works only in the host list, whatever key it is, and the page says so.
+    assert page.item_of("hosts.copy_address").text(0) == "Copy address"
     connect = page.item_of("hosts.connect_host")
     cell = page.table.itemWidget(connect, KEY)
     assert connect.text(KEY) == "" and cell is not None
     assert [w.text() for w in cell.findChildren(QLabel)] == ["Enter", "(in the list)"]
-    assert page.item_of("hosts.add_host").text(KEY) == "Ctrl+N"  # the others: just the key
+    assert page.item_of("hosts.add_host").text(KEY) == "Ctrl+N"
     assert page.table.itemWidget(page.item_of("hosts.add_host"), KEY) is None
-    # No card and no fixed height: the list fills the page, which never scrolls.
     assert page.section.heading.isHidden() and page.section.inner.objectName() == ""
     assert page.table.maximumHeight() == 16777215
-    # Each tool's row runs that tool's own action, so it has its own word ("Atualizar todas"
-    # in Printers, "Atualizar todos" in Hosts).
     hosts_refresh, printers_refresh = (
         keys.row("hosts.refresh_shown"),
         keys.row("printers.refresh_shown"),
     )
     assert hosts_refresh.actions[0] is not printers_refresh.actions[0]
-    # The key column fits the waiting field's "Press the new key…" in full.
     page.change(page.item_of("command.services"))
     catcher = page.table.itemWidget(page.item_of("command.services"), KEY)
     assert isinstance(catcher, KeyCatcher)
@@ -127,7 +118,6 @@ RESERVED_LINE = (
 
 
 def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]]:
-    """Each heading row with the command rows under it."""
     table = page.table
     found: list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]] = []
     for i in range(table.topLevelItemCount()):
@@ -135,8 +125,8 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
         assert item is not None
         command = item.data(0, shortcuts_page.ROW_ROLE)
         if item.data(0, shortcuts_page.FIXED_ROLE) and not command:
-            continue  # the SSH terminal's own keys: never a command, never a heading
-        if command:  # F1's row too, greyed but a command
+            continue
+        if command:
             found[-1][1].append(item)
         else:
             found.append((item, []))
@@ -144,14 +134,14 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
 
 
 def test_no_waiting_field_is_left_in_the_list_when_the_page_opens(window: CapyWindow) -> None:
-    page = _page(window)  # no events run between building the page and this check
+    page = _page(window)
     assert page.table.viewport().findChildren(KeyCatcher) == []
 
 
 def test_every_command_has_its_place_in_the_order_you_meet_it(window: CapyWindow) -> None:
     ids = {row.id for row in window.keys.rows}
-    assert ids == set(shortcuts_page.ORDER)  # a new command needs its place in ORDER
-    assert len(shortcuts_page.ORDER) == len(ids)  # and only one
+    assert ids == set(shortcuts_page.ORDER)
+    assert len(shortcuts_page.ORDER) == len(ids)
 
 
 def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWindow) -> None:
@@ -162,24 +152,21 @@ def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWind
     ]  # fmt: skip
     shown: list[str] = []
     for heading, rows in headings:
-        assert heading.flags() == Qt.ItemFlag.NoItemFlags  # can't be picked
+        assert heading.flags() == Qt.ItemFlag.NoItemFlags
         shown += [row.data(0, shortcuts_page.ROW_ROLE) for row in rows]
-    assert shown == list(shortcuts_page.ORDER)  # as you meet them on screen, never A–Z
+    assert shown == list(shortcuts_page.ORDER)
     file_rows = [row.data(0, shortcuts_page.ROW_ROLE) for row in headings[0][1]]
-    assert file_rows == ["app.settings", "app.exit"]  # the File menu's order
-    # Every heading but the first has empty space above it.
+    assert file_rows == ["app.settings", "app.exit"]
     first, second = headings[0][0], headings[1][0]
     assert second.sizeHint(0).height() == first.sizeHint(0).height() + shortcuts_page.HEADING_GAP
     # A double-click on a heading waits for nothing (Qt's tree activates even a disabled row).
     page.table.itemActivated.emit(first, 0)
     assert page.table.itemWidget(first, KEY) is None
     assert not any(isinstance(page.table.itemWidget(i, KEY), KeyCatcher) for i in page._items())
-    # The arrow keys go past a heading.
     last_of_file = headings[0][1][-1]
     page.table.setCurrentItem(last_of_file)
     QTest.keyClick(page.table, Qt.Key.Key_Down)
     assert page.table.currentItem() is headings[1][1][0]
-    # One line on top, as body text a point up; the reserved keys under the buttons.
     assert page.about.text() == "Double-click a command and press its new key."
     assert page.about.objectName() == "lead" and page.problem.objectName() == "hint"
     assert page.about.font().pointSizeF() == page.table.font().pointSizeF() + 1
@@ -202,7 +189,7 @@ def test_the_ssh_terminal_s_own_keys_follow_the_ssh_tool_greyed_and_say_where_th
         "Inside a terminal, every key goes to the server except the ones below and the keys "
         "that change tools or open Settings."
     )
-    assert page.terminal_words.wordWrap()  # never "…"
+    assert page.terminal_words.wordWrap()
     rows = [i for i in items[start + 2 :] if i is not None]
     assert [(i.text(0), i.text(1)) for i in rows] == [
         ("Copy", "Ctrl+Shift+C"),
@@ -215,10 +202,9 @@ def test_the_ssh_terminal_s_own_keys_follow_the_ssh_tool_greyed_and_say_where_th
         ("Close tab", "Ctrl+Shift+W"),
     ]
     for item in [line, *rows]:
-        assert item.flags() == Qt.ItemFlag.NoItemFlags  # greyed: nobody changes them
+        assert item.flags() == Qt.ItemFlag.NoItemFlags
     assert {i.toolTip(0) for i in rows} == {"The terminal's own keys can't be changed."}
     assert all(i not in page._items() for i in rows)  # pyright: ignore[reportPrivateUsage]
-    # A double-click waits for no key there.
     table.itemActivated.emit(rows[0], 0)
     assert table.itemWidget(rows[0], KEY) is None
 
@@ -243,8 +229,8 @@ def test_the_terminal_s_line_is_as_tall_as_its_words_at_the_list_s_width(
         QApplication.processEvents()
         heights.append(line.sizeHint(0).height())
         words = page.terminal_words.heightForWidth(page.table.viewport().width())
-        assert line.sizeHint(0).height() >= words  # all of it shows
-    assert heights[1] > heights[0]  # narrower: more lines
+        assert line.sizeHint(0).height() >= words
+    assert heights[1] > heights[0]
     dialog.close()
 
 
@@ -268,15 +254,15 @@ def test_a_new_key_is_kept_and_works_at_once_in_its_own_tool_only(window: CapyWi
     assert page.item_of("hosts.edit").text(KEY) == "Ctrl+K"
     row = window.keys.row("hosts.edit")
     assert [a.shortcut() for a in row.actions] == [QKeySequence("Ctrl+K")]
-    assert window.keys.key(window.keys.row("printers.edit")) == "F2"  # the other tool's stays
+    assert window.keys.key(window.keys.row("printers.edit")) == "F2"
     assert page.item_of("printers.edit").text(KEY) == "F2"
-    assert window.prefs["shortcuts"] == {"hosts.edit": "Ctrl+K"}  # only what differs
+    assert window.prefs["shortcuts"] == {"hosts.edit": "Ctrl+K"}
     page.table.setCurrentItem(page.item_of("hosts.edit"))
     assert page.restore.isEnabled() and page.clear.isEnabled()
     page.restore.click()
     assert window.prefs["shortcuts"] == {} and row.actions[0].shortcut() == QKeySequence("F2")
     assert not page.restore.isEnabled()
-    page.clear.click()  # no key at all
+    page.clear.click()
     assert window.prefs["shortcuts"] == {"hosts.edit": ""} and row.actions[0].shortcut().isEmpty()
     assert page.item_of("hosts.edit").text(KEY) == ""
 
@@ -288,7 +274,7 @@ def test_a_key_kept_for_both_tools_before_goes_to_each(
     win = CapyWindow(paths, prefs)
     try:
         keys = win.keys
-        for tool in ("hosts", "printers", "ssh"):  # every list tool, SSH too
+        for tool in ("hosts", "printers", "ssh"):
             assert keys.key(keys.row(f"{tool}.edit")) == "Ctrl+K", tool
             assert keys.key(keys.row(f"{tool}.remove")) == "", tool
         assert prefs["shortcuts"] == {
@@ -323,14 +309,13 @@ def test_a_tip_that_names_a_key_shows_the_key_set_here_at_once(window: CapyWindo
     assert refresh.toolTip().endswith(" ticked on a right-click (F6)")
     keys.set(keys.row("app.settings"), "F9")
     assert rail.settings_button.toolTip() == "Settings (F9)"
-    keys.set(keys.row("go.home"), "")  # no key: just the words
+    keys.set(keys.row("go.home"), "")
     assert rail.home_button.toolTip() == "Home"
     keys.restore(keys.row("go.home"))
     assert rail.home_button.toolTip() == "Home (Ctrl+0)"
 
 
 def _ink_rows(widget: QWidget, ink: QColor, inside: QRect) -> list[int]:
-    """The rows inside `inside` where `widget` shows something close to `ink`."""
     image = widget.grab().toImage()
 
     def near(x: int, y: int) -> bool:
@@ -347,12 +332,12 @@ def _ink_rows(widget: QWidget, ink: QColor, inside: QRect) -> list[int]:
     [
         (QRect(1, 1, 238, 14), QRect(0, -8, 7, 9)),  # Segoe UI 9 pt in the list's field
         (QRect(1, 1, 238, 15), QRect(0, -8, 7, 9)),
-        (QRect(2, 3, 238, 22), QRect(0, -10, 9, 11)),  # a bigger font in a taller field
+        (QRect(2, 3, 238, 22), QRect(0, -10, 9, 11)),
     ],
 )
 def test_the_waiting_field_s_capitals_sit_in_its_middle(inside: QRect, caps: QRect) -> None:
     baseline = shortcuts_page.caps_baseline(inside, caps)
-    top, bottom = baseline + caps.top(), baseline + caps.top() + caps.height() - 1  # its rows
+    top, bottom = baseline + caps.top(), baseline + caps.top() + caps.height() - 1
     over, under = top - inside.top(), inside.bottom() - bottom
     assert abs(over - under) <= 1, (over, under)
 
@@ -363,17 +348,17 @@ def test_the_waiting_field_draws_its_words_inside_its_edges(window: CapyWindow) 
     dialog.show()
     QApplication.processEvents()
     page = dialog.shortcuts
-    _press(page, "command.services", Qt.Key.Key_F1)  # refused: red words, a red edge
+    _press(page, "command.services", Qt.Key.Key_F1)
     catcher = page.table.itemWidget(page.item_of("command.services"), KEY)
     assert isinstance(catcher, KeyCatcher)
     frame = QStyleOptionFrame()
     catcher.initStyleOption(frame)
     inside = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
     ink = catcher.palette().color(QPalette.ColorRole.PlaceholderText)
-    assert _ink_rows(catcher, ink, inside)  # drawn, in the refusal's red
+    assert _ink_rows(catcher, ink, inside)
     room, metrics = catcher.words_rect().width(), catcher.fontMetrics()
     for words in (shortcuts_page.waiting_text(), shortcuts_page.refused_text()):
-        assert metrics.horizontalAdvance(words) <= room, words  # in full, never cut
+        assert metrics.horizontalAdvance(words) <= room, words
     dialog.close()
 
 
@@ -388,12 +373,12 @@ def test_a_refused_key_s_words_stay_where_they_waited(qapp: QApplication) -> Non
     QApplication.processEvents()
     waiting = catcher.words_rect()
     catcher.refuse()
-    catcher.refuse()  # a second refused key: still the room it had while waiting
+    catcher.refuse()
     QApplication.processEvents()
     frame = QStyleOptionFrame()
     catcher.initStyleOption(frame)
     red = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
-    assert red.left() < waiting.left() - shortcuts_page.LINE_EDIT_MARGIN  # the red style's own
+    assert red.left() < waiting.left() - shortcuts_page.LINE_EDIT_MARGIN
     assert catcher.words_rect() == waiting
     catcher.close()
 
@@ -407,7 +392,7 @@ def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) 
     page = dialog.shortcuts
     table, view = page.table, page.table.viewport()
     whole = [i for i in page._items() if view.rect().contains(table.visualItemRect(i))]  # pyright: ignore[reportPrivateUsage]
-    last = whole[-1]  # the last row showing whole, with more under it
+    last = whole[-1]
     height = view.height()
     page.change(last)
     catcher = table.itemWidget(last, KEY)
@@ -417,7 +402,7 @@ def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) 
     QApplication.processEvents()
     assert view.height() < height
     assert view.rect().contains(table.visualItemRect(last))
-    assert table.itemWidget(last, KEY) is catcher  # still waiting, in its row
+    assert table.itemWidget(last, KEY) is catcher
     dialog.close()
 
 
@@ -433,7 +418,7 @@ def test_printers_tips_and_guide_show_the_key_set_here(window: CapyWindow) -> No
     assert bar.refresh_button.toolTip().endswith(" every printer shown (F6)")
     assert refresh_words(a.refresh_shown).endswith(" until you press it or F6.")
     web = next(r for r in keys.rows if a.open_web_page in r.actions)
-    keys.set(web, "")  # no key: just the words
+    keys.set(web, "")
     assert bar.web_button.toolTip() == "Open the selected printers' web pages"
     keys.set(next(r for r in keys.rows if a.refresh_shown in r.actions), "")
     assert refresh_words(a.refresh_shown).endswith(" until you press it.")
@@ -449,7 +434,7 @@ def test_a_key_another_command_runs_moves_only_when_you_say_so(
     _press(page, "command.services", Qt.Key.Key_E, Qt.KeyboardModifier.ControlModifier)
     assert asked == ["Ctrl+E is already the key for C$ share. Give it to Services instead? "
                      "C$ share is left with no key."]  # fmt: skip
-    assert window.keys.key(window.keys.row("command.c-share")) == "Ctrl+E"  # unchanged
+    assert window.keys.key(window.keys.row("command.c-share")) == "Ctrl+E"
     assert window.keys.key(window.keys.row("command.services")) == ""
     _answer(monkeypatch, give=True)
     _press(page, "command.services", Qt.Key.Key_E, Qt.KeyboardModifier.ControlModifier)
@@ -461,18 +446,18 @@ def test_a_key_another_command_runs_moves_only_when_you_say_so(
 def test_a_tool_s_key_meets_the_window_s_but_not_another_tool_s(window: CapyWindow) -> None:
     keys = window.keys
     add_host, add_printer = keys.row("hosts.add_host"), keys.row("printers.add_printer")
-    assert keys.key(add_host) == keys.key(add_printer) == "Ctrl+N"  # each in its own tool
+    assert keys.key(add_host) == keys.key(add_printer) == "Ctrl+N"
     assert keys.clash(add_host, "Ctrl+N") is None
-    assert keys.clash(add_host, "Ctrl+,") is keys.row("app.settings")  # works everywhere
+    assert keys.clash(add_host, "Ctrl+,") is keys.row("app.settings")
     assert keys.clash(keys.row("app.settings"), "Ctrl+N") is not None
 
 
 def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) -> None:
     page = _page(window)
     for key, mods in (
-        (Qt.Key.Key_F1, Qt.KeyboardModifier.NoModifier),  # help's
-        (Qt.Key.Key_F, Qt.KeyboardModifier.ControlModifier),  # search
-        (Qt.Key.Key_A, Qt.KeyboardModifier.ShiftModifier),  # typed in a name
+        (Qt.Key.Key_F1, Qt.KeyboardModifier.NoModifier),
+        (Qt.Key.Key_F, Qt.KeyboardModifier.ControlModifier),
+        (Qt.Key.Key_A, Qt.KeyboardModifier.ShiftModifier),
     ):
         _press(page, "command.services", key, mods)
         assert not page.problem.isHidden() and page.problem.text()
@@ -481,26 +466,22 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
         page.problem.text()
         == "Shift+A is for typing in names and searches: use it with Ctrl or Alt."
     )
-    # A refused key is an error where you're looking: the field stays, red, saying so, and the
-    # reason shows under the list in red with its icon.
     services = page.item_of("command.services")
     catcher = page.table.itemWidget(services, KEY)
     assert isinstance(catcher, KeyCatcher) and catcher.property("refused") is True
     assert catcher.placeholderText() == "Key not allowed"
     assert page.problem.objectName() == "refusal" and not page.problem_icon.isHidden()
-    QTest.keyClick(catcher, Qt.Key.Key_F6)  # the next key, in the same field, just works
+    QTest.keyClick(catcher, Qt.Key.Key_F6)
     assert window.keys.key(window.keys.row("command.services")) == "F6"
     assert page.table.itemWidget(services, KEY) is None
     assert page.problem.text() == RESERVED_LINE
     assert page.problem.objectName() == "hint" and page.problem_icon.isHidden()
     _press(page, "command.services", Qt.Key.Key_F1)
-    _press(page, "command.services", Qt.Key.Key_Escape)  # Esc leaves it as it was
+    _press(page, "command.services", Qt.Key.Key_Escape)
     assert page.table.itemWidget(services, KEY) is None
     assert window.keys.key(window.keys.row("command.services")) == "F6"
-    assert page.problem.objectName() == "hint"  # the refusal leaves with its field
+    assert page.problem.objectName() == "hint"
     assert shortcuts.refused("Ctrl+Shift+S") == "" and shortcuts.refused("F6") == ""
-    # Typed text past ASCII too: Ç and é are keys of their own on a Brazilian keyboard, and ´
-    # (a dead key) starts an accented letter.
     for key, mods in (
         (Qt.Key.Key_Ccedilla, Qt.KeyboardModifier.NoModifier),
         (Qt.Key.Key_Ccedilla, Qt.KeyboardModifier.ShiftModifier),
@@ -510,4 +491,4 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
         typed = shortcuts.portable(QKeySequence(QKeyCombination(mods, key)))
         assert "is for typing" in shortcuts.refused(typed), typed
     ctrl_c_cedilla = QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Ccedilla)
-    assert shortcuts.refused(shortcuts.portable(QKeySequence(ctrl_c_cedilla))) == ""  # a shortcut
+    assert shortcuts.refused(shortcuts.portable(QKeySequence(ctrl_c_cedilla))) == ""

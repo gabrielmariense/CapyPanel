@@ -1,5 +1,3 @@
-"""Connecting: the password prompt, manual connection, and the right tool for each host."""
-
 import logging
 import time
 from collections.abc import Callable
@@ -35,16 +33,16 @@ from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
 log = logging.getLogger(__name__)
-MANY_CONNECTIONS = 5  # more than this at once asks first
-MAX_TEXT = 256  # longest user name or password accepted, unless the tool allows less
+MANY_CONNECTIONS = 5
+MAX_TEXT = 256
 DEFAULT_PORT = 5900
 
 
 @dataclass(frozen=True)
 class Request:
-    label: str  # how the host is named in messages
+    label: str
     target: Target
-    profile: str = ""  # "" = the default profile
+    profile: str = ""
 
 
 @dataclass(frozen=True)
@@ -77,7 +75,6 @@ class CredentialDialog(QDialog):
         if self.wants_user:
             form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        # As every login window: you decide here whether Windows keeps it (unticked by default).
         self.remember = QCheckBox(_("&Remember it on this computer"))
         self.remember.setToolTip(
             _("Windows keeps it in Credential Manager for your Windows account. Otherwise "
@@ -115,7 +112,6 @@ class CredentialDialog(QDialog):
 
 
 def ask_for_program(parent: QWidget, tool: ToolDefinition) -> str:
-    """The .exe the user picks for a tool; "" if they cancel."""
     name, _filter = QFileDialog.getOpenFileName(
         parent,
         _("Where is {tool}?").format(tool=tool.name),
@@ -126,8 +122,6 @@ def ask_for_program(parent: QWidget, tool: ToolDefinition) -> str:
 
 
 class Connector:
-    """Starts the right tool for each host's connection profile, asking for what's missing."""
-
     def __init__(
         self,
         parent: QWidget,
@@ -137,7 +131,7 @@ class Connector:
         self._parent = parent
         self.catalogs = catalogs
         self.credentials = credentials
-        self.open_settings: Callable[[], None] | None = None  # Settings › Hosts › Connecting
+        self.open_settings: Callable[[], None] | None = None
         # Each server's login types, asked once per run: UltraVNC up to 1.6.1 counts every
         # asking as a failed login, and turns this PC away after six.
         self._offered: dict[tuple[str, int], tuple[int, ...]] = {}
@@ -146,14 +140,12 @@ class Connector:
         return self.catalogs.profiles.default_id()
 
     def label(self, profile_id: str) -> str:
-        """The profile's name; for an id this PC doesn't have, the id and a note saying so."""
         profile = self.catalogs.profiles.find(profile_id or self.default_profile())
         if profile is None:
             return _("{profile} (not available on this PC)").format(profile=profile_id)
         return profile.name
 
     def choices(self) -> list[tuple[str, str]]:
-        """(id, name) of every profile whose tool CapyPanel knows, by name."""
         return [
             (p.id, p.name)
             for p in self.catalogs.profiles.all()
@@ -161,7 +153,6 @@ class Connector:
         ]
 
     def inherited_label(self, profile_id: str, source: Group | None) -> str:
-        """What "follow the group" means right now, e.g. "From group “Pis”: RealVNC …"."""
         if source is not None:
             return _("From group “{group}”: {profile}").format(
                 group=source.name, profile=self.label(profile_id)
@@ -169,7 +160,6 @@ class Connector:
         return _("Default: {profile}").format(profile=self.label(self.default_profile()))
 
     def resolve(self, profile_id: str) -> Ready:
-        """The profile and its tool, or ProfileError saying why it can't be used here."""
         profile_id = profile_id or self.default_profile()
         if not profile_id:
             raise ProfileError(
@@ -192,8 +182,6 @@ class Connector:
         return Ready(profile, tool.item)
 
     def connect(self, requests: list[Request], parent: QWidget | None = None) -> int:
-        """How many connections started. `parent`: the window that asked, when it's one of its own
-        (Manual connection): questions show over it, so it stays in front once they close."""
         owner = parent or self._parent
         if len(requests) > MANY_CONNECTIONS and not self._confirm_many(len(requests), owner):
             return 0
@@ -270,8 +258,8 @@ class Connector:
     def _only_account_servers(
         self, ready: Ready, requests: list[Request], owner: QWidget
     ) -> list[Request]:
-        """Drops the hosts whose server offers no user-and-password login (e.g. it only wants a
-        VNC password, which would get the first 8 characters through a login cracked offline)."""
+        """Drops servers with no user and password login: a VNC-only one takes 8 characters,
+        crackable offline."""
         tool, profile = ready.tool, ready.profile
 
         def offers_account(request: Request) -> bool:
@@ -286,7 +274,7 @@ class Connector:
                     log.info(
                         "Login check for %s: couldn't ask (%s); opening anyway", request.label, e
                     )
-                    return True  # can't tell: the viewer will say what's wrong
+                    return True
                 self._offered[server] = offered
                 how = f"asked in {(time.perf_counter() - began) * 1000:.0f} ms"
             else:
@@ -357,9 +345,9 @@ class Connector:
         if not name:
             return None
         try:
-            self.catalogs.tools.set_paths({tool.id: name})  # for everyone on this PC
+            self.catalogs.tools.set_paths({tool.id: name})
         except OSError as e:
-            log.warning("Couldn't save the path of %s: %s", tool.id, e)  # still used this time
+            log.warning("Couldn't save the path of %s: %s", tool.id, e)
         return Path(name)
 
     def _confirm_many(self, count: int, owner: QWidget) -> bool:
@@ -373,12 +361,9 @@ class Connector:
         return answer == QMessageBox.StandardButton.Yes
 
     def _error(self, message: str, owner: QWidget, *, place: str) -> None:
-        """A warning box, with its line in the docs for "What does this mean?"."""
         help_links.warning(owner, "CapyPanel", message, place=place)
 
     def _profile_place(self, profile_id: str) -> str:
-        """The docs' line for a profile that can't be used: one this PC lacks, or how profiles
-        are set up (there are none, or one doesn't fit its tool)."""
         wanted = profile_id or self.default_profile()
         profile = self.catalogs.profiles.find(wanted) if wanted else None
         if wanted and (profile is None or self.catalogs.tools.find(profile.tool) is None):

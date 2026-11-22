@@ -1,5 +1,3 @@
-"""Hosts' result strip: where its icon sits, and the docs' link on a failure they explain."""
-
 import pytest
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QColor, QFont
@@ -22,14 +20,12 @@ LONG = (
 def _strip(qapp: QApplication, text: str, width: int) -> ResultStrip:
     strip = ResultStrip()
     strip.show_outcome(Outcome(text, error=RuntimeError("denied"), retry=lambda: None))
-    strip.resize(width, strip.heightForWidth(width))  # as the Hosts column sizes it
+    strip.resize(width, strip.heightForWidth(width))
     qapp.processEvents()
     return strip
 
 
 def _first_line_middle(strip: ResultStrip) -> float:
-    """Where QLabel paints the text's first line, in the strip: the text is a block centred in
-    the label (AlignVCenter), its lines lineSpacing apart."""
     label = strip._text  # noqa: SLF001
     rect = label.contentsRect()
     block = label.heightForWidth(rect.width())
@@ -38,7 +34,6 @@ def _first_line_middle(strip: ResultStrip) -> float:
 
 
 def _icon_middle(strip: ResultStrip) -> float:
-    """The middle of the icon as drawn: the rows holding its red, read from a grab."""
     icon = strip._icon  # noqa: SLF001
     red = QColor(themes.status_color("stopped"))
     image = strip.grab().toImage()
@@ -58,10 +53,10 @@ def _near(a: QColor, b: QColor) -> bool:
 
 
 def test_one_line_beside_the_button_brings_the_icon_down_with_it(qapp: QApplication) -> None:
-    strip = _strip(qapp, SHORT, 1600)  # one line in any font the earlier tests leave
+    strip = _strip(qapp, SHORT, 1600)
     line = strip._text.fontMetrics().lineSpacing()  # noqa: SLF001
     assert strip._text.heightForWidth(strip._text.width()) == line  # noqa: SLF001  one line
-    assert strip.retry_button.height() > line  # so the line sits lower than the strip's top
+    assert strip.retry_button.height() > line
     assert _icon_middle(strip) == pytest.approx(_first_line_middle(strip), abs=1)
 
 
@@ -76,7 +71,7 @@ def test_a_bigger_font_keeps_the_icon_on_the_line(qapp: QApplication) -> None:
     strip = _strip(qapp, SHORT, 900)
     font = QFont(strip.font())
     font.setPointSizeF(font.pointSizeF() * 2)
-    strip.setFont(font)  # as a theme with its own font does, through the app's font
+    strip.setFont(font)
     strip.resize(900, strip.heightForWidth(900))
     qapp.processEvents()
     assert _icon_middle(strip) == pytest.approx(_first_line_middle(strip), abs=1)
@@ -108,6 +103,4 @@ def test_each_reason_links_a_line_the_docs_have_or_nothing() -> None:
     ]
     for error, place in linked:
         assert reason_place(error) == place and place in help_links.PLACES
-    # No line explains the rest (a Refresh still running, a reason Windows wrote): no link that
-    # promises one.
     assert reason_place(RuntimeError("busy")) == "" and reason_place(OSError("odd")) == ""

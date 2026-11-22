@@ -1,5 +1,3 @@
-"""Where host lists live (default, personal, shared) and the recent-lists menu."""
-
 import logging
 import os
 from dataclasses import dataclass
@@ -13,27 +11,27 @@ from capypanel.core.i18n import _
 
 log = logging.getLogger(__name__)
 
-RECENT_KEY = "recent_lists"  # most recent first; the first is reopened at start
-LISTS_KEY = "host_lists"  # the lists the user added, besides the default and personal ones
-HIDDEN_KEY = "hidden_lists"  # lists in a lists folder the user took out of their lists
-START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
+RECENT_KEY = "recent_lists"
+LISTS_KEY = "host_lists"
+HIDDEN_KEY = "hidden_lists"
+START_KEY = "start_list"
 START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
-VIEWS_KEY = "list_views"  # per list file: what it shows first, and where it was left
+VIEWS_KEY = "list_views"
 SHOW_ALL, SHOW_LAST, SHOW_GROUP = "all", "last", "group"
 
 
 class ListKind(StrEnum):
-    DEFAULT = "default"  # shared by everyone on the PC; editable where Windows allows
-    PERSONAL = "personal"  # the user's own, in their private CapyPanel folder
-    SHARED = "shared"  # any other file the user picked, e.g. on a network share
+    DEFAULT = "default"
+    PERSONAL = "personal"
+    SHARED = "shared"
 
 
 class Access(StrEnum):
     MISSING = "missing"
     READ_ONLY = "read-only"
     READ_WRITE = "read-write"
-    UNTRUSTED = "untrusted"  # a shared file another standard user made: not used
+    UNTRUSTED = "untrusted"
 
 
 def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
@@ -45,8 +43,7 @@ def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
 
 
 def list_access(path: Path, *, shared: bool = False) -> Access:
-    """What the user can do with a list file. Windows permissions decide, for every kind of
-    list. A `shared` one (the default list) must also be made by an administrator or this user."""
+    """A shared list must also be made by an administrator or this user."""
     if not path.is_file():
         return Access.MISSING
     if shared and not winsec.made_by_trusted(path):
@@ -57,7 +54,6 @@ def list_access(path: Path, *, shared: bool = False) -> Access:
 
 
 def startup_order(prefs: dict[str, Any], *, default: Path, personal: Path) -> list[Path]:
-    """Lists to try at start, best first. The personal list is last: it's created if missing."""
     choice = prefs.get(START_KEY, START_LAST)
     if choice == START_DEFAULT:
         first: Path | None = default
@@ -76,8 +72,6 @@ def startup_order(prefs: dict[str, Any], *, default: Path, personal: Path) -> li
 
 
 def found_lists(shared_dir: Path, user_dir: Path) -> list[Path]:
-    """The lists saved in the shared and the user's lists folders, which show up with no adding.
-    A shared one another standard user made is left out, as the default list would be."""
     found: list[Path] = []
     for folder, shared in ((shared_dir, True), (user_dir, False)):
         files = sorted(folder.glob("*.json"), key=lambda p: p.stem.casefold())
@@ -92,8 +86,6 @@ def found_lists(shared_dir: Path, user_dir: Path) -> list[Path]:
 def available_lists(
     prefs: dict[str, Any], *, default: Path, personal: Path, found: list[Path]
 ) -> list[Path]:
-    """Every list this user can pick: the default and personal ones, those in the lists
-    folders, then the ones added from elsewhere."""
     lists: list[Path] = []
     for path in (default, personal, *found, *added_lists(prefs)):
         if not any(same_path(path, p) for p in lists):
@@ -102,8 +94,6 @@ def available_lists(
 
 
 def list_names(paths: list[Path], *, default: Path, personal: Path) -> list[str]:
-    """How lists are named everywhere: "Default", "Personal", any other by its file name.
-    Two files with the same name get their folder's name too."""
     stems = [p.stem.casefold() for p in paths]
     names = []
     for path in paths:
@@ -127,7 +117,6 @@ def recent_lists(prefs: dict[str, Any]) -> list[Path]:
 
 
 def remember_list(prefs: dict[str, Any], path: Path) -> None:
-    """Puts `path` first in the recent lists (the first one is reopened at start)."""
     others = [p for p in recent_lists(prefs) if not same_path(p, path)]
     prefs[RECENT_KEY] = [str(path), *map(str, others)][:RECENT_LIMIT]
 
@@ -135,15 +124,14 @@ def remember_list(prefs: dict[str, Any], path: Path) -> None:
 def added_lists(prefs: dict[str, Any]) -> list[Path]:
     value = prefs.get(LISTS_KEY)
     if value is None:
-        value = prefs.get(RECENT_KEY)  # older settings: the recent lists were the added ones
+        value = prefs.get(RECENT_KEY)
     if not isinstance(value, list):
         return []
     return [Path(p) for p in value if isinstance(p, str) and p]
 
 
 def set_added_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
-    """The lists the user keeps. One taken out is forgotten from the recent ones too, or the
-    last one used would reopen at the next start and come back."""
+    """A removed list leaves the recent ones too, or it would reopen at the next start."""
     unique: list[Path] = []
     for path in paths:
         if not any(same_path(path, p) for p in unique):
@@ -162,8 +150,6 @@ def hidden_lists(prefs: dict[str, Any]) -> list[Path]:
 
 
 def set_hidden_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
-    """Lists in a lists folder taken out of this user's lists; their files stay. Like a list
-    taken out of the added ones, each is forgotten from the recent ones too."""
     for path in paths:
         forget_list(prefs, path)
     prefs[HIDDEN_KEY] = [str(p) for p in paths]
@@ -180,11 +166,9 @@ def forget_list(prefs: dict[str, Any], path: Path) -> None:
 
 @dataclass(frozen=True)
 class ListView:
-    """What a list shows when it's opened: All hosts, where it was left, or a chosen group."""
-
     show: str = SHOW_ALL
-    group: str = ""  # with SHOW_GROUP: the group's id ("" = No group)
-    last: tuple[str, str] = ("all", "")  # where it was left: the filter's kind and value
+    group: str = ""
+    last: tuple[str, str] = ("all", "")
 
 
 def list_view(prefs: dict[str, Any], path: Path) -> ListView:
@@ -213,5 +197,4 @@ def _view_key(path: Path) -> str:
 
 
 def same_path(a: Path, b: Path) -> bool:
-    """Whether two paths point to the same file (Windows paths ignore case)."""
     return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(b))

@@ -1,5 +1,3 @@
-"""The SSH host Details panel: status, Connect, Refresh, Connection, Tags and Notes."""
-
 from dataclasses import dataclass
 
 from PySide6.QtCore import QPoint, Qt, Signal
@@ -22,26 +20,25 @@ from capypanel.ui.themes import engine as themes
 @dataclass(frozen=True)
 class SshDetails:
     host: Host
-    group: str  # its full path
+    group: str
     checked: Checked | None = None
-    reachable: bool = True  # it has an address, or a name ssh.exe can take
-    hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
-    login: str = ""  # the name it logs in with: its own, or its group's
-    login_group: str = ""  # the group that name comes from; "" when it's the host's own
+    reachable: bool = True
+    hidden: frozenset[str] = frozenset()
+    login: str = ""
+    login_group: str = ""
 
 
 def button_words() -> dict[str, str]:
-    """The buttons' short words (nine letters at most), as on Hosts' Details buttons."""
     return {"connect": pgettext("button", "Connect"), "refresh": pgettext("button", "Refresh")}
 
 
 class SshDetailsPanel(DetailsPanel):
-    connect_clicked = Signal()  # Connect: this host
-    refresh_clicked = Signal()  # Refresh: this host's status
+    connect_clicked = Signal()
+    refresh_clicked = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.login_menu = QMenu(self)  # Log in as's choices, filled by the tool as it opens
+        self.login_menu = QMenu(self)
         self.login_button: ValuePicker | None = None
 
     def show_host(
@@ -106,7 +103,6 @@ class SshDetailsPanel(DetailsPanel):
         return self.grid_minimum(self._button_width())
 
     def _heading(self, layout: QVBoxLayout, shown: SshDetails) -> None:
-        """Like Hosts' and Printers': a status dot by the name, then "status · checked 14:32"."""
         row = QHBoxLayout()
         row.setSpacing(4)
         name = self.value("name", shown.host.name)
@@ -120,7 +116,7 @@ class SshDetailsPanel(DetailsPanel):
         dot = QLabel()
         color = themes.status_color(cell.color or "offline")
         dot.setPixmap(dot_icon(color, size).pixmap(size, size))
-        dot.setFixedHeight(line + 4)  # centred on the name's first line, even when it wraps
+        dot.setFixedHeight(line + 4)
         dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(dot, 0, Qt.AlignmentFlag.AlignTop)
         row.addWidget(name, 1)
@@ -137,7 +133,6 @@ class SshDetailsPanel(DetailsPanel):
 
     @staticmethod
     def _grid(layout: QVBoxLayout) -> QGridLayout:
-        """Hosts' label-and-value grid: a label on the left, its value on the same line."""
         grid = QGridLayout()
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(6)
@@ -146,21 +141,18 @@ class SshDetailsPanel(DetailsPanel):
         return grid
 
     def _row(self, grid: QGridLayout, key: str, label: str, value: str) -> QWidget:
-        """One label and its value (a dash when there's none), on the grid's next line."""
         return self._place(grid, label, self.value(key, value) if value else self.muted("—"))
 
     @staticmethod
     def _place(grid: QGridLayout, label: str, shown: QWidget) -> QWidget:
         row = grid.rowCount() if grid.count() else 0
-        name = QLabel(label)  # never wraps: the column is as wide as its widest label
+        name = QLabel(label)
         name.setObjectName("hint")
         grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(shown, row, 1, Qt.AlignmentFlag.AlignVCenter)
         return shown
 
     def _login_picker(self, shown: SshDetails) -> ValuePicker:
-        """The name it logs in with, and where that comes from in the tooltip; a pin when it's
-        the host's own, as Hosts pins an account only this PC uses."""
         own = bool(info_of(shown.host).login)
         tip = _("Only this host") if own else empty_text(shown.login, shown.login_group)
         picker = ValuePicker(shown.login or "—", ("pin",) if own else (), tip)
@@ -169,6 +161,5 @@ class SshDetailsPanel(DetailsPanel):
 
     @staticmethod
     def _open_menu(menu: QMenu, picker: QWidget) -> None:
-        """Under the value, from its left edge, like a dropdown's list (as in Hosts)."""
-        menu.aboutToShow.emit()  # filled first
+        menu.aboutToShow.emit()
         menu.popup(picker.mapToGlobal(QPoint(0, picker.height())))

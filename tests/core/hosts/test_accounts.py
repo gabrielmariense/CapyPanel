@@ -27,7 +27,7 @@ def test_a_pc_beats_its_group_which_beats_a_tag_which_beats_every_pc() -> None:
     pc = Link("EXAMPLE\\pc", Scope.PC, "DESK-02.example.test")
     assert pick([every, tag, group, pc], PLACE) == pc
     assert pick([every, tag, group], PLACE) == group
-    assert pick([every, tag], PLACE) == tag  # tags match whatever their case
+    assert pick([every, tag], PLACE) == tag
     assert pick([every], PLACE) == every
 
 
@@ -41,7 +41,7 @@ def test_groups_and_tags_only_count_in_their_own_list() -> None:
     group = Link("EXAMPLE\\g", Scope.GROUP, "front", OTHER)
     tag = Link("EXAMPLE\\t", Scope.TAG, "VPN", OTHER)
     assert pick([group, tag], PLACE) is None
-    typed = Place("desk-02.example.test")  # an address typed in the Commands window
+    typed = Place("desk-02.example.test")
     assert pick([Link("EXAMPLE\\g", Scope.GROUP, "front", LIST)], typed) is None
     assert pick([Link("EXAMPLE\\p", Scope.PC, "desk-02.example.test")], typed) is not None
 
@@ -76,8 +76,8 @@ def test_settings_round_trip_and_bad_entries_skipped() -> None:
         "nope",
         {"user": "x", "scope": "all", "value": 3},
         {"user": "x", "scope": "planet"},
-        {"user": "x", "scope": "pc"},  # which PC?
-        {"user": "x", "scope": "tag", "value": "VPN"},  # which list?
+        {"user": "x", "scope": "pc"},
+        {"user": "x", "scope": "tag", "value": "VPN"},
         {"user": 3, "scope": "all"},
     ]
     assert load(bad) == []
@@ -89,6 +89,6 @@ def test_a_row_with_no_user_is_the_windows_account() -> None:
 
     pc = Link(WINDOWS, Scope.PC, "desk-02.example.test")
     group = Link("EXAMPLE\\g", Scope.GROUP, "front", LIST)
-    assert pick([group, pc], PLACE) == pc  # kept on Windows' even though its group has another
+    assert pick([group, pc], PLACE) == pc
     assert load(dump([pc])) == [pc]
-    assert users([pc, group]) == ["EXAMPLE\\g"]  # no password to keep for it
+    assert users([pc, group]) == ["EXAMPLE\\g"]

@@ -1,5 +1,3 @@
-"""The Commands window; every call to another PC is replaced: nothing reaches the network."""
-
 import time
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -47,7 +45,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
     seen: list[tuple[Any, ...]] = []
     monkeypatch.setattr(access, "check_reachable", lambda host: seen.append(("reach", host)))
     monkeypatch.setattr(places, "open_folder", lambda path: seen.append(("folder", path)))
-    monkeypatch.setattr(places, "require_folder", lambda path: None)  # no file sharing here
+    monkeypatch.setattr(places, "require_folder", lambda path: None)
     return seen
 
 
@@ -65,7 +63,7 @@ def _open(win: CapyWindow, name: str | None) -> CommandsWindow:
 
 
 def _settle(win: CapyWindow) -> None:
-    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
         QApplication.processEvents()
         if not win.hosts.runner.busy():
@@ -82,7 +80,7 @@ def _key(widget: Any, key: Qt.Key, text: str = "") -> None:
 def test_a_port_after_the_address_is_the_connection_s_port() -> None:
     assert split_address("PC-01") == Target("PC-01")
     assert split_address(" 192.0.2.7:5901 ") == Target("192.0.2.7", 5901)
-    assert split_address("fe80::1") == Target("fe80::1")  # IPv6 keeps its colons
+    assert split_address("fe80::1") == Target("fe80::1")
 
 
 def test_from_a_selected_host_it_names_the_host_and_greys_add_to_host_list(
@@ -91,7 +89,7 @@ def test_from_a_selected_host_it_names_the_host_and_greys_add_to_host_list(
     commands = _open(window, "DESK-02")
     assert commands.windowTitle() == "Commands · DESK-02"
     assert commands.address.currentText() == "DESK-02 · 192.0.2.12"
-    add = commands.add_button  # already in the list: it keeps its place, greyed, saying where
+    add = commands.add_button
     assert not add.isHidden() and not add.isEnabled()
     assert add.toolTip() == "Already in the list, in “Front desks”"
 
@@ -100,9 +98,9 @@ def test_add_to_host_list_names_the_host_an_address_typed_already_reaches(
     window: CapyWindow,
 ) -> None:
     commands = _open(window, None)
-    commands.address.setEditText("192.0.2.11:5901")  # DESK-01's address, with a port
+    commands.address.setEditText("192.0.2.11:5901")
     target = commands.target()
-    assert target is not None and target.key == "@192.0.2.11"  # a manual connection
+    assert target is not None and target.key == "@192.0.2.11"
     assert not commands.add_button.isEnabled()
     assert commands.add_button.toolTip() == "“DESK-01” has this address, in “Front desks”"
 
@@ -123,18 +121,18 @@ def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
 ) -> None:
     commands = _open(window, "DESK-02")
     shown = [commands.address.itemText(i) for i in range(commands.address.count())]
-    assert shown[:2] == ["DESK-01 · 192.0.2.11", "DESK-02 · 192.0.2.12"]  # the panel's order
-    _key(commands.address, Qt.Key.Key_Up)  # host by host
+    assert shown[:2] == ["DESK-01 · 192.0.2.11", "DESK-02 · 192.0.2.12"]
+    _key(commands.address, Qt.Key.Key_Up)
     target = commands.target()
     assert target is not None and target.name == "DESK-01" and not target.key.startswith("@")
     assert commands.windowTitle() == "Commands · DESK-01"
-    commands.address.setEditText("desk-02")  # a list host's name, typed: that host
+    commands.address.setEditText("desk-02")
     target = commands.target()
     assert target is not None and target.address == "192.0.2.12"
     assert not target.key.startswith("@")
-    commands.address.setEditText("192.0.2.11")  # or its address
+    commands.address.setEditText("192.0.2.11")
     assert (target := commands.target()) is not None and target.name == "DESK-01"
-    commands.address.setEditText("192.0.2.99")  # not in the list: a manual connection
+    commands.address.setEditText("192.0.2.99")
     target = commands.target()
     assert target is not None and target.key == "@192.0.2.99"
     assert commands.windowTitle() == "Manual connection · 192.0.2.99"
@@ -148,13 +146,13 @@ def test_typed_addresses_come_under_a_recent_heading_the_arrows_skip(window: Cap
     assert shown == ["DESK-01 · 192.0.2.11", "DESK-02 · 192.0.2.12", "RECENT", "198.51.100.40"]
     heading = commands.address.model().index(2, 0)
     assert not commands.address.model().flags(heading) & Qt.ItemFlag.ItemIsEnabled
-    _key(commands.address, Qt.Key.Key_Down)  # from DESK-02, past the heading
+    _key(commands.address, Qt.Key.Key_Down)
     assert commands.address.currentText() == "198.51.100.40"
 
 
 def test_it_is_a_window_of_its_own_that_closes_when_capypanel_quits(window: CapyWindow) -> None:
     commands = _open(window, "DESK-02")
-    assert commands.parent() is None  # not owned: the main window can come in front of it
+    assert commands.parent() is None
     window.show()
     commands.show()
     window.close()
@@ -169,7 +167,7 @@ def test_the_picked_row_grows_and_the_arrows_move(window: CapyWindow) -> None:
     assert not second.run.isVisibleTo(commands)
     _key(commands.search, Qt.Key.Key_Down)
     assert commands.picked() is second.command
-    assert second.run.isDefault() and not first.run.isDefault()  # Enter runs the picked one
+    assert second.run.isDefault() and not first.run.isDefault()
 
 
 def test_typing_searches_by_name_and_description(window: CapyWindow) -> None:
@@ -179,7 +177,7 @@ def test_typing_searches_by_name_and_description(window: CapyWindow) -> None:
     assert shown == ["spooler"]
     assert commands.picked() is not None and commands.picked().id in shown  # type: ignore[union-attr]
     hidden = [commands.groups.item(i).isHidden() for i in range(commands.groups.count())]
-    assert hidden == [True, True, True, True, False, True]  # only Printers
+    assert hidden == [True, True, True, True, False, True]
 
 
 def test_a_command_set_apart_has_a_small_gap_above_it(window: CapyWindow) -> None:
@@ -191,7 +189,6 @@ def test_a_command_set_apart_has_a_small_gap_above_it(window: CapyWindow) -> Non
     def gap(above: str, below: str) -> int:
         return row[below].y() - (row[above].y() + row[above].height())
 
-    # Installed programs and Cancel the pending restart: where the menus draw a line.
     assert gap("facts", "programs") == gap("status", "users") + commands_module.APART
     assert gap("shut-down", "cancel-restart") == gap("restart", "shut-down") + commands_module.APART
     commands.close()
@@ -225,8 +222,8 @@ def test_run_opens_and_the_answer_stays_on_the_right(
     assert answer.text().startswith(outcome.text) and "What does this mean?" in answer.text()
     answer.linkActivated.emit("")
     assert no_browser[-1].endswith("hosts/commands/#command-access-denied")
-    commands.pick(row)  # back to C$: nothing failed there
-    assert _shown(commands).outcome is None  # opening shows in the status bar
+    commands.pick(row)
+    assert _shown(commands).outcome is None
 
 
 def _shown(commands: CommandsWindow) -> Shown:
@@ -257,7 +254,7 @@ def test_a_typed_address_can_be_added_to_the_list(
     commands = _open(window, None)
     assert commands.windowTitle() == "Manual connection"
     add = commands.add_button
-    assert not add.isHidden() and not add.isEnabled()  # nothing typed: greyed, never hidden
+    assert not add.isHidden() and not add.isEnabled()
     commands.address.setEditText("192.0.2.77")
     assert commands.windowTitle() == "Manual connection · 192.0.2.77"
     assert add.isEnabled() and add.toolTip() == "Adds this PC to the open host list"
@@ -268,7 +265,7 @@ def test_a_typed_address_can_be_added_to_the_list(
 
     monkeypatch.setattr(tool_module, "run_modal", accept)
     add.click()
-    assert not add.isEnabled()  # in the list now
+    assert not add.isEnabled()
     assert add.toolTip() == "Already in the list, with no group"
 
 
@@ -313,16 +310,16 @@ def test_one_persons_mapped_drives_name_them_in_the_heading_not_on_every_row(
     row.run.click()
     _settle(window)
     table = commands.results.findChildren(QTreeWidget)[0]
-    assert table.isColumnHidden(0) and not table.isColumnHidden(2)  # no Person column
+    assert table.isColumnHidden(0) and not table.isColumnHidden(2)
     headings = [w.text() for w in commands.results.findChildren(QLabel)
                 if w.objectName() == "detailsSection"]  # fmt: skip
     assert any(h.startswith("Mapped drives · ana · ") for h in headings)
     second = table.topLevelItem(1)
-    assert second is not None and second.toolTip(2) == long_path  # whole, when it's cut
-    assert table.textElideMode() == Qt.TextElideMode.ElideMiddle  # the share's end stays
+    assert second is not None and second.toolTip(2) == long_path
+    assert table.textElideMode() == Qt.TextElideMode.ElideMiddle
     rui = Person("rui", "EXAMPLE", (Drive("H:", r"\\FS01\Home\rui"),))
     monkeypatch.setattr(drives, "saved_drives", lambda *_a: [ana, rui])
-    row.run.click()  # two people: the column says whose each drive is
+    row.run.click()
     _settle(window)
     assert not commands.results.findChildren(QTreeWidget)[0].isColumnHidden(0)
 
@@ -355,7 +352,7 @@ def test_programs_right_click_opens_them_in_their_own_window(
     commands._list_menu("programs", 0, QPoint(0, 0))  # pyright: ignore[reportPrivateUsage]
     assert picked == ["&Copy row", "Copy &list", "&Export CSV…", "&Open in its own window…"]
     assert len(opened) == 1 and isinstance(opened[0], ProgramsDialog)
-    assert opened[0].table.topLevelItemCount() == 1  # the list read here, not read again
+    assert opened[0].table.topLevelItemCount() == 1
 
 
 def test_an_answer_after_the_window_closed_is_dropped(window: CapyWindow, calls: list[Any]) -> None:
@@ -363,23 +360,23 @@ def test_an_answer_after_the_window_closed_is_dropped(window: CapyWindow, calls:
     row = next(r for r in commands.rows if r.command.id == "c-share")
     commands.pick(row)
     row.run.click()
-    commands.close()  # deleted on close, while the command is still on its way
-    _settle(window)  # its answer comes back to nothing, quietly
+    commands.close()
+    _settle(window)
     assert ("folder", "\\\\192.0.2.12\\C$") in calls
 
 
 def test_the_window_can_be_made_any_size_and_reopens_as_it_was_left(window: CapyWindow) -> None:
     commands = _open(window, "DESK-01")
     QApplication.processEvents()
-    least = commands.minimumWidth()  # what its parts need; the test font is a wide one
+    least = commands.minimumWidth()
     opens = (max(commands_module.SIZE[0], least), commands_module.SIZE[1])
-    assert (commands.width(), commands.height()) == opens  # the first time
-    commands.resize(least, 400)  # as small as it goes: the results keep what they need
+    assert (commands.width(), commands.height()) == opens
+    commands.resize(least, 400)
     QApplication.processEvents()
     assert (commands.width(), commands.height()) == (least, 400)
     results, listed = commands.results.width(), commands.list.width()
     assert results >= commands_module.RESULTS_WIDTH
-    commands.resize(least + 800, 900)  # wider, the commands and the results both gain
+    commands.resize(least + 800, 900)
     QApplication.processEvents()
     assert commands.results.width() > results and commands.list.width() > listed
     commands.resize(least + 180, 800)
@@ -389,10 +386,10 @@ def test_the_window_can_be_made_any_size_and_reopens_as_it_was_left(window: Capy
     again = _open(window, "DESK-02")
     assert again is not commands and (again.width(), again.height()) == (least + 180, 800)
     again.resize(least + 200, 700)
-    again.reject()  # Esc keeps the size too
+    again.reject()
     assert window.hosts.prefs[commands_module.SIZE_KEY] == [least + 200, 700]
     QApplication.processEvents()
-    window.hosts.prefs[commands_module.SIZE_KEY] = "wide"  # a settings file edited by hand
+    window.hosts.prefs[commands_module.SIZE_KEY] = "wide"
     typed = _open(window, None)
     QApplication.processEvents()
     assert (typed.width(), typed.height()) == opens
@@ -406,7 +403,7 @@ def test_a_search_s_connect_to_opens_manual_connection_with_the_pc_typed(
     assert isinstance(commands, CommandsWindow)
     assert commands.windowTitle() == "Manual connection · 192.0.2.77" and not calls
     assert commands.address.currentText() == "192.0.2.77"
-    window.hosts.manual_connect_to("desk-02")  # open already: it turns to it, a host of the list
+    window.hosts.manual_connect_to("desk-02")
     target = commands.target()
     assert commands.address.currentText() == "desk-02"
     assert target is not None and target.name == "DESK-02"

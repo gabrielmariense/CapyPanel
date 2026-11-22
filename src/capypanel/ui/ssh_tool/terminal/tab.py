@@ -1,5 +1,3 @@
-"""A connection's tab: the terminal, and once it ends a strip with Reconnect and Close tab."""
-
 from collections.abc import Mapping, Sequence
 
 from PySide6.QtCore import Qt, Signal
@@ -15,13 +13,10 @@ from capypanel.ui.notes import escape
 from capypanel.ui.ssh_tool.terminal.view import DEFAULT_PT, TerminalView
 from capypanel.ui.themes import engine as themes
 
-HELP_PLACE = "ssh-when-a-connection-ends"  # after an error: what each ending means
+HELP_PLACE = "ssh-when-a-connection-ends"
 
 
 class EndedBar(QFrame):
-    """CapyPanel's message strip (#resultStrip) with the words, Reconnect (the default, Enter) and
-    Close tab, in the theme's colours, never the terminal's; at the tab's foot, words wrapping."""
-
     reconnect = Signal()
     close_tab = Signal()
 
@@ -30,8 +25,7 @@ class EndedBar(QFrame):
         self.setObjectName("resultStrip")
         self._icon = QLabel()
         self.label = QLabel()
-        self.label.setWordWrap(True)  # wraps, never "…"
-        # After an error, "What does this mean?" inside the words, as in Hosts' strip.
+        self.label.setWordWrap(True)
         self.label.setTextFormat(Qt.TextFormat.RichText)
         self.label.setOpenExternalLinks(False)
         self.label.setTextInteractionFlags(help_links.LINK_KEYS)
@@ -39,8 +33,6 @@ class EndedBar(QFrame):
         self.reconnect_button = QPushButton()
         self.reconnect_button.setDefault(True)
         self.close_button = QPushButton()
-        # Hosts' strip's own block: the icon on the middle of the words' first line, so the
-        # two strips stay one design.
         self._lead = IconBesideText(self._icon, self.label)
         row = QHBoxLayout(self)
         row.setContentsMargins(spacing.CONTROLS, spacing.ICON, spacing.ICON, spacing.ICON)
@@ -51,16 +43,15 @@ class EndedBar(QFrame):
         self.close_button.clicked.connect(self.close_tab)
         themes.switches().switched.connect(self._restyle)
         self.error = False
-        self._end: tuple[str, int, bool] | None = None  # host, code, closed by CapyPanel
+        self._end: tuple[str, int, bool] | None = None
         self.retranslate()
         self.hide()
 
     def show_end(self, host: str, code: int, *, by_us: bool = False) -> None:
-        # The exit code after our own close varies (0xC000013A or 0), so a close CapyPanel
-        # asked for is known by `by_us`, never by the code.
+        # Our own close exits with 0xC000013A or 0, so `by_us` tells it, never the code.
         self.error = not by_us and is_error(code)
         self._end = (host, code, by_us)
-        self._restyle()  # its words too
+        self._restyle()
         self.show()
 
     def retranslate(self) -> None:
@@ -69,7 +60,6 @@ class EndedBar(QFrame):
         self._show_words()
 
     def words(self) -> str:
-        """What it says, without its link."""
         if self._end is None:
             return ""
         host, code, by_us = self._end
@@ -83,7 +73,6 @@ class EndedBar(QFrame):
         self.label.setToolTip(help_links.url(HELP_PLACE) if self.error else "")
 
     def colour(self) -> str:
-        """The strip's role colour, which the tab's mark takes too."""
         return themes.status_color("stopped" if self.error else "offline")
 
     def icon_name(self) -> str:
@@ -95,16 +84,13 @@ class EndedBar(QFrame):
         )
         self._lead.fit_icon()
         self.setProperty("failed", self.error)
-        self.setProperty("ended", not self.error)  # the theme's grey edge
+        self.setProperty("ended", not self.error)
         self.style().unpolish(self)
         self.style().polish(self)
-        self._show_words()  # its link in the theme's link colour
+        self._show_words()
 
 
 class TerminalTab(QWidget):
-    """The terminal and, once its connection ends, the strip at its foot. `changed`: the connection
-    started or ended, for the tab's mark; `close_asked`: the strip's Close tab was pressed."""
-
     changed = Signal()
     close_asked = Signal()
 
@@ -118,8 +104,6 @@ class TerminalTab(QWidget):
         layout.addWidget(self.view, 1)
         layout.addWidget(self.bar)
         self.view.ended.connect(self._ended)
-        # Whatever starts the connection again takes the strip away: Reconnect, and Enter on
-        # the ended tab, which the view handles itself.
         self.view.started.connect(self._started)
         self.bar.reconnect.connect(self.view.restart)
         self.bar.close_tab.connect(self.close_asked)

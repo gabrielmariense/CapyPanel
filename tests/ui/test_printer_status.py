@@ -1,5 +1,3 @@
-"""Refresh on printers, against a pretend printer on 127.0.0.1 with invented data."""
-
 import time
 from collections.abc import Iterator
 from dataclasses import replace
@@ -60,9 +58,6 @@ def _checked(**reading_args: object) -> Checked:
     return Checked(NOW, Reading(**reading_args))  # type: ignore[arg-type]
 
 
-# ---- the words and colours ----
-
-
 def test_status_says_what_is_wrong_most_first() -> None:
     never = status.status(None, 10)
     assert (never.text, never.quiet, never.nothing) == ("Not checked", True, True)
@@ -71,11 +66,9 @@ def test_status_says_what_is_wrong_most_first() -> None:
     assert status.status(Checked(NOW, error="bad"), 10).text == "Unreadable"
     idle = status.status(_checked(state=State.IDLE, device=Device.RUNNING), 10)
     assert (idle.text, idle.color) == ("Idle", green())
-    # Many printers call their state "other" while running fine.
     assert status.status(_checked(state=State.OTHER, device=Device.RUNNING), 10).text == "Ready"
     jam = status.status(_checked(problems=frozenset({Problem.JAMMED})), 10)
     assert (jam.text, jam.color) == ("Paper jam", red())
-    # The printer's own words can be long: they go in the tip (and Details), not the cell.
     said = _checked(problems=frozenset({Problem.JAMMED}), messages=("Jam in tray 2",))
     assert status.status(said, 10).text == "Paper jam"
     assert "Jam in tray 2" in status.status(said, 10).tip
@@ -88,9 +81,9 @@ def test_status_says_what_is_wrong_most_first() -> None:
     low = status.status(_checked(state=State.IDLE, supplies=(_supply("Cyan Toner", 8),)), 10)
     assert (low.text, low.color) == ("Toner low", amber())
     worn = _checked(state=State.IDLE, supplies=(_supply("MP Roller", 3, SupplyKind.OTHER),))
-    assert status.status(worn, 10).color == green()  # a worn roller isn't a warning here
+    assert status.status(worn, 10).color == green()
     waste = _supply("Waste Toner Box", 5, SupplyKind.WASTE, receptacle=True)
-    full = status.status(_checked(supplies=(waste,)), 10)  # the column: short; the rest: full
+    full = status.status(_checked(supplies=(waste,)), 10)
     assert (full.text, full.said()) == ("Waste nearly full", "Waste Toner Box nearly full")
     assert full.tip.startswith("Waste Toner Box nearly full\n")
 
@@ -101,7 +94,7 @@ def test_long_status_words_are_shortened_only_in_the_column() -> None:
     output = status.status(_checked(problems=frozenset({Problem.OUTPUT_FULL})), 10)
     assert (output.text, output.said(), output.color) == ("Output full", "Output tray full", red())
     jam = status.status(_checked(problems=frozenset({Problem.JAMMED})), 10)
-    assert jam.text == jam.said() == "Paper jam" and not jam.full  # short already
+    assert jam.text == jam.said() == "Paper jam" and not jam.full
 
 
 def test_toner_shows_the_lowest_toner_or_ink() -> None:
@@ -115,19 +108,17 @@ def test_toner_shows_the_lowest_toner_or_ink() -> None:
     assert "Black Cartridge: 64 %" in cell.tip
     assert not status.toner(colour, 5).warn
     mono = _checked(supplies=(_supply("Toner Cartridge 051", 83),))
-    assert status.toner(mono, 10).text == "Toner 83 %"  # no colour in its name
+    assert status.toner(mono, 10).text == "Toner 83 %"
     some = _checked(supplies=(_supply("Black Cartridge", None, some_left=True),))
     assert status.toner(some, 10).text == "Black: some left"
     silent = status.toner(_checked(supplies=(_supply("Black Cartridge", None),)), 10)
     assert silent.text == "Black: not reported"
     assert "This printer doesn't report a level for this supply." in silent.tip
-    assert status.toner(_checked(), 10).text == ""  # no toner reported
+    assert status.toner(_checked(), 10).text == ""
     assert status.toner(Checked(NOW, offline=True), 10).text == ""
 
 
 def _panes() -> list[tuple[str, str, str, dict[str, str]]]:
-    """Each built-in theme's pane and selected row, with its supply colours; the Windows themes
-    with Windows' default accent."""
     found = []
     for theme in themes.Registry().all():
         if theme.engine == "custom":
@@ -153,7 +144,6 @@ def test_supply_colours_read_in_every_built_in_theme(pane: tuple[str, str, str, 
     for back in (card, selection):
         got = themes.contrast_ratio(yellow, back)
         assert got >= themes.MARK_CONTRAST, f"{theme_id}: yellow is {got:.2f}:1 on {back}"
-    # Black stays apart from the drums and boxes' grey-blue, so a toner reads as a toner.
     assert c["ink_black"] != c["ink_other"]
 
 
@@ -164,9 +154,6 @@ def test_only_yellow_gets_an_edge(monkeypatch: pytest.MonkeyPatch) -> None:
     assert status.supply_edge(_supply("Yellow Toner", 40)) == "#8d7100"
     assert status.supply_edge(_supply("Cyan Toner", 40)) == "#0b7f91"
     assert status.supply_edge(_supply("Imaging Drum", 40, SupplyKind.DRUM)) == "#68768c"
-
-
-# ---- in the tool ----
 
 
 @pytest.fixture
@@ -202,7 +189,7 @@ COLOUR: Objects = {
 def printers(
     qapp: QApplication, tmp_path: Path, lab: Path, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[PrintersTool]:
-    from test_printers_tool import FakeShell  # the same pretend shell as the other tests
+    from test_printers_tool import FakeShell
 
     from capypanel.core import settings
 
@@ -234,22 +221,22 @@ def test_refresh_reads_each_printer_and_fills_status_toner_and_details(
     with running(COLOUR) as agent:
         monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
         printers.commands.refresh_shown.trigger()
-        assert not printers.commands.refresh_shown.isEnabled()  # one Refresh at a time
-        assert printers.working()  # an update waits for it
+        assert not printers.commands.refresh_shown.isEnabled()
+        assert printers.working()
         _wait(printers)
     assert not printers.working()
     table = printers.table
     lab = _row(printers, "3F-LAB-01")
-    assert lab.text(table.STATUS) == "Toner low"  # cyan at 8 %
+    assert lab.text(table.STATUS) == "Toner low"
     assert lab.text(table.TONER) == "Cyan 8 % · low"
     assert _row(printers, "NO-ANSWER").text(table.STATUS) == "Offline"
     assert printers.commands.refresh_shown.isEnabled()
     assert printers._shell.messages[-1] == "Checked 2 printers."  # type: ignore[attr-defined]
 
-    table.select_ids([lab.data(0, ROLE_ID)])  # its Details
+    table.select_ids([lab.data(0, ROLE_ID)])
     labels = [w.text() for w in printers.details.findChildren(QLabel)]
     assert "Supplies" in labels and "Cyan Cartridge" in labels and "8 % · Low" in labels
-    assert "21,877" in labels or "21.877" in labels  # in the language's own digits
+    assert "21,877" in labels or "21.877" in labels
     [says] = [
         w for w in printers.details.findChildren(QLabel) if w.objectName() == "printerSays_serial"
     ]
@@ -260,7 +247,7 @@ def test_use_this_copies_the_printer_s_value_into_the_list(printers: PrintersToo
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
     printers.use_value(lab.id, "serial", "sample0099")
     after = printers.document.hosts.host(lab.id)  # type: ignore[union-attr]
-    assert after is not None and info_of(after).serial == "SAMPLE0099"  # capitals, as typed ones
+    assert after is not None and info_of(after).serial == "SAMPLE0099"
 
 
 def test_the_printers_guide_points_at_the_real_controls(
@@ -276,11 +263,11 @@ def test_the_printers_guide_points_at_the_real_controls(
     ]  # fmt: skip
     steps = list(guide.steps())
     assert [s.title for s in steps] == titles
-    assert not any(s.click for s in steps)  # no step asks for a click
+    assert not any(s.click for s in steps)
     assert steps[1].target() is printers.nav.tags
     assert steps[2].target() is printers.toolbar.inventory_button
-    assert steps[3].target() is None and steps[3].near() is printers.table  # the sample's row
-    assert steps[3].keep_clear() is printers.details  # it talks about Details: never on it
+    assert steps[3].target() is None and steps[3].near() is printers.table
+    assert steps[3].keep_clear() is printers.details
     assert steps[4].target() is printers.toolbar.refresh_button
     for step, page in zip(steps[7:], ("printer_warnings", "printer_connecting"), strict=True):
         assert step.action is not None
@@ -289,7 +276,7 @@ def test_the_printers_guide_points_at_the_real_controls(
     printers.resize(1280, 720)
     printers.show()
     QApplication.processEvents()
-    box = steps[5].area()  # the Status and Toner columns, titles and cells
+    box = steps[5].area()
     table = printers.table
     assert box is not None
     assert box.width() == table.columnWidth(table.STATUS) + table.columnWidth(table.TONER)
@@ -297,8 +284,8 @@ def test_the_printers_guide_points_at_the_real_controls(
     box = steps[5].area()
     assert box is not None and box.width() == table.columnWidth(table.TONER)
     table.hideColumn(table.TONER)
-    assert steps[5].area() is None  # neither shows: the card sits beside the table instead
-    empty = tmp_path / "empty.json"  # an empty list gets the whole guide too
+    assert steps[5].area() is None
+    empty = tmp_path / "empty.json"
     listfile.save(empty, HostList(), expected=None, kind="printers")
     assert printers.open_list(empty)
     assert [s.title for s in guide.steps()] == titles
@@ -324,20 +311,17 @@ def test_a_theme_switch_redraws_printers_in_the_new_colours(
     row = printers.table._rows[lab.id]
     before = row.data(printers.table.TONER, Qt.ItemDataRole.ForegroundRole)
     assert before.name() == amber()
-    # Another theme's colours, without a real switch (that restyles every window alive).
     other = {**themes.status_colors(), "attention": "#123456"}
     monkeypatch.setattr(themes, "status_colors", lambda: other)
     printers.restyle()
     assert row.data(printers.table.TONER, Qt.ItemDataRole.ForegroundRole).name() == "#123456"
-    assert status.status(printers._checked[lab.id], 10).color == "#123456"  # "Toner low"
-    assert any(  # Details' low toner, drawn again in the new amber
-        "#123456" in label.styleSheet() for label in printers.details.findChildren(QLabel)
-    )
+    assert status.status(printers._checked[lab.id], 10).color == "#123456"
+    assert any("#123456" in label.styleSheet() for label in printers.details.findChildren(QLabel))
 
 
 def test_the_report_gets_everything_refresh_read(printers: PrintersTool) -> None:
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
-    assert printers._report_cells(lab.id) == ("",) * 6  # not checked yet
+    assert printers._report_cells(lab.id) == ("",) * 6
     printers._checked[lab.id] = _checked(
         state=State.IDLE,
         supplies=(
@@ -348,7 +332,6 @@ def test_the_report_gets_everything_refresh_read(printers: PrintersTool) -> None
         mac="02:00:5E:AA:BB:01",
         firmware="SAMPLE-FW 2.4.1",
     )
-    # Plain digits, so a spreadsheet reads the page count as a number; only toners' names.
     assert printers._report_cells(lab.id) == (
         "Idle", "Black 40 %", "Black Cartridge HP CF258A", "1604394", "02:00:5E:AA:BB:01",
         "SAMPLE-FW 2.4.1",
@@ -376,19 +359,18 @@ def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool)
     printers._checked[lab.id] = _checked(supplies=(black,))
     printers.table.show_cells(lab.id)
     row = printers.table._rows[lab.id]
-    assert row.data(printers.table.TONER, ROLE_SUPPLY) is None  # text, the default
+    assert row.data(printers.table.TONER, ROLE_SUPPLY) is None
     group = printers.settings_group()
     group.build()
     page = group.general
     page.toner_view.setCurrentIndex(page.toner_view.findData(BARS))
     assert printers.prefs[TONER_VIEW] == BARS
     assert row.data(printers.table.TONER, ROLE_SUPPLY) == black
-    assert row.text(printers.table.TONER) == "Black 15 %"  # still what Copy and the Report use
+    assert row.text(printers.table.TONER) == "Black 15 %"
     printers.table.resize(900, 300)
     printers.table.show()
     QApplication.processEvents()
-    assert not printers.table.grab().isNull()  # the bar draws without an error
-    # Fit columns to content leaves room for the bar and the widest %, beside each other.
+    assert not printers.table.grab().isNull()
     words = printers.table.fontMetrics().horizontalAdvance("100 %")
     assert printers.table.sizeHintForColumn(printers.table.TONER) >= BAR_WIDTH + words
     printers.table.hide()
@@ -397,7 +379,7 @@ def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool)
 def test_refresh_on_its_own_checks_every_printer_in_the_list(
     printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert printers.auto_refresh() == 0 and not printers._auto_timer.isActive()  # off by default
+    assert printers.auto_refresh() == 0 and not printers._auto_timer.isActive()
     group = printers.settings_group()
     group.build()
     every = group.general.auto_every
@@ -408,7 +390,7 @@ def test_refresh_on_its_own_checks_every_printer_in_the_list(
     monkeypatch.setattr(
         printers, "check_printers", lambda hosts, quiet: asked.append([h.name for h in hosts])
     )
-    printers.search.setText("NO-ANSWER")  # one printer shown; warnings still count them all
+    printers.search.setText("NO-ANSWER")
     printers._show_items()
     printers._auto_timer.timeout.emit()
     assert sorted(asked[0]) == ["3F-LAB-01", "NO-ANSWER"]
@@ -422,7 +404,7 @@ def test_settings_keeps_the_community_in_the_vault_only(
     group = printers.settings_group()
     group.build()
     page = group.general
-    assert page.version.currentData() == refresh.V2C  # the default
+    assert page.version.currentData() == refresh.V2C
     assert "public" in page.account_row.description.text()
 
     def answer(dialog: QDialog) -> QDialog.DialogCode:
@@ -469,7 +451,6 @@ def test_settings_keeps_the_v3_account_in_the_vault_only(
     assert "pass-1" not in str(printers.prefs)
 
     def keep(dialog: QDialog) -> QDialog.DialogCode:
-        # Kept passwords aren't shown; left empty, they stay as they were.
         assert isinstance(dialog, settings_module.V3AccountDialog)
         assert dialog.auth_password.text() == "" and dialog.privacy_password.text() == ""
         assert dialog.save_button.isEnabled()
@@ -483,7 +464,6 @@ def test_settings_keeps_the_v3_account_in_the_vault_only(
     assert account.auth_password == "auth-pass-1"
 
     def empty(dialog: QDialog) -> QDialog.DialogCode:
-        # An empty user name forgets the kept account, as an empty community string does.
         assert isinstance(dialog, settings_module.V3AccountDialog)
         dialog.user.clear()
         assert dialog.save_button.isEnabled()
@@ -495,7 +475,7 @@ def test_settings_keeps_the_v3_account_in_the_vault_only(
     assert refresh.v3_account() is None
     assert page.account_row.description.text() == "v3: not set. Use Change… to add the user."
     fresh = settings_module.V3AccountDialog(None, None)
-    assert not fresh.save_button.isEnabled()  # nothing kept: an empty user is only missing
+    assert not fresh.save_button.isEnabled()
     assert fresh.problem.text() == "Type the user name."
 
 
@@ -505,7 +485,7 @@ def test_refresh_over_v3_reads_the_printer_or_says_why_it_refused(
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
     printers.set_snmp_version(refresh.V3)
     printers.check_printers([lab])
-    assert printers._run is None  # no account yet: nothing is read
+    assert printers._run is None
     assert "SNMP v3 account" in printers._shell.messages[-1]  # type: ignore[attr-defined]
 
     account = usm.Account("sample", usm.Auth.SHA, "auth-pass-1", usm.Privacy.AES128, "priv-pass-1")
@@ -531,7 +511,7 @@ def test_refresh_on_its_own_notifies_what_is_new(
 ) -> None:
     sent: list[tuple[str, str]] = []
     printers.notify_requested.connect(lambda title, text: sent.append((title, text)))
-    assert printers.notify_reasons() == DEFAULT_REASONS  # offline, jam, no toner, low
+    assert printers.notify_reasons() == DEFAULT_REASONS
     with running(COLOUR) as agent:
         monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
         printers._auto_refresh()
@@ -539,13 +519,12 @@ def test_refresh_on_its_own_notifies_what_is_new(
         assert sent == [(
             "2 printers need attention", "3F-LAB-01: Cyan 8 %\nNO-ANSWER: Offline"
         )]  # fmt: skip
-        printers._auto_refresh()  # nothing new since the last one: no notification
+        printers._auto_refresh()
         _wait(printers)
         assert len(sent) == 1
         printers.check_printers(printers.document.hosts.hosts)  # type: ignore[union-attr]
-        _wait(printers)  # F5 doesn't notify: the window is in front of you
+        _wait(printers)
         assert len(sent) == 1
-        # Only Offline ticked for notifications; the count above the table keeps its own.
         printers.set_warnings(printers.warn_reasons(), frozenset({Reason.OFFLINE}))
         printers._checked.clear()
         printers._count_attention()
@@ -564,7 +543,7 @@ def test_the_old_notification_choice_carries_over_once(printers: PrintersTool) -
         assert printers.notify_reasons() == now
     printers.prefs[NOTIFY] = NOTIFY_OFF
     printers.set_warnings(DEFAULT_REASONS, frozenset({Reason.OFFLINE}))
-    assert NOTIFY not in printers.prefs  # carried over: the old choice goes
+    assert NOTIFY not in printers.prefs
     assert printers.prefs[settings_module.WARN_NOTIFY] == ["offline"]
     assert printers.notify_reasons() == {Reason.OFFLINE}
 
@@ -578,7 +557,7 @@ def test_the_warnings_table_ticks_what_warns(printers: PrintersTool) -> None:
     assert list(row) == ["Offline", "Out of paper", "Out of toner", "Paper jam", "Stopped",
                          "Supply low"]  # fmt: skip
     assert table.here() == table.notify() == DEFAULT_REASONS
-    assert not table.restore.isEnabled()  # the defaults are what's ticked
+    assert not table.restore.isEnabled()
     assert table.table.verticalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     assert row["Stopped"].toolTip(0) == "Stopped without saying why."
 
@@ -586,9 +565,9 @@ def test_the_warnings_table_ticks_what_warns(printers: PrintersTool) -> None:
     printers._checked[lab.id] = Checked(NOW, offline=True)
     printers._count_attention()
     assert printers.attention() == {lab.id: Reason.OFFLINE}
-    row["Offline"].setCheckState(1, Qt.CheckState.Unchecked)  # In CapyPanel
+    row["Offline"].setCheckState(1, Qt.CheckState.Unchecked)
     assert printers.warn_reasons() == DEFAULT_REASONS - {Reason.OFFLINE}
-    assert printers.notify_reasons() == DEFAULT_REASONS  # its own column
+    assert printers.notify_reasons() == DEFAULT_REASONS
     assert printers.attention() == {} and printers.attention_strip.isHidden()
     assert table.restore.isEnabled()
     table.restore.click()
@@ -596,7 +575,6 @@ def test_the_warnings_table_ticks_what_warns(printers: PrintersTool) -> None:
     assert printers.attention() == {lab.id: Reason.OFFLINE}
     assert not table.restore.isEnabled()
 
-    # A click anywhere on a tick's cell ticks it: the box sits in the middle.
     table.resize(700, 500)
     table.show()
     QApplication.processEvents()

@@ -18,7 +18,6 @@ ULTRAVNC = (
     "DSMPlugin=SecureVNCPlugin64.dsm\r\nquality=8\r\n"
 )
 
-# Stands in for UltraVNC: records the arguments and the -config file's content as it starts.
 RECORDER = """
 import json, sys
 args = sys.argv[2:]
@@ -32,7 +31,7 @@ open(sys.argv[1], "w", encoding="utf-8").write(json.dumps({"args": args, "config
 
 def test_only_the_host_is_emptied_and_the_rest_kept_exactly_as_saved() -> None:
     cleaned = viewer_settings.clean(ULTRAVNC.encode("cp1252"), CLEAR).decode("cp1252")
-    assert cleaned == ULTRAVNC.replace("host=10.0.0.9", "host=")  # port, plugin and all stay
+    assert cleaned == ULTRAVNC.replace("host=10.0.0.9", "host=")
 
 
 def test_any_code_page_and_utf16_survive_unchanged() -> None:
@@ -94,7 +93,6 @@ def test_the_viewer_gets_a_cleaned_copy_never_the_shared_file(tmp_path: Path) ->
     assert received["args"] == ["-config", config, "pc1::5900", "-password", "pw"]
     assert Path(config) != shared and Path(config).suffix == ".vnc"
     assert received["config"] == ULTRAVNC.replace("host=10.0.0.9", "host=")
-    assert shared.read_bytes() == ULTRAVNC.encode("cp1252")  # the shared file is untouched
-    # Without a settings file the group is left out: the viewer uses its own defaults.
+    assert shared.read_bytes() == ULTRAVNC.encode("cp1252")
     launch(tool, Path(sys.executable), Target("pc1"), Credential("", "pw")).wait(30)
     assert json.loads(out.read_text(encoding="utf-8"))["args"] == ["pc1::5900", "-password", "pw"]

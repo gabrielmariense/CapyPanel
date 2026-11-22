@@ -1,5 +1,3 @@
-"""The separate SSH window: the exe, run with FLAG, runs ssh.exe and writes no settings or log."""
-
 import ctypes
 import subprocess
 import time
@@ -13,32 +11,29 @@ from capypanel.core.i18n import _
 from capypanel.core.ssh.ending import error_line, is_error
 
 FLAG = "--ssh-holder"
-ATTACH = "--attach"  # a probe's: the console it's given, so nothing shows on screen
+ATTACH = "--attach"
 LANGUAGE, HOST = "--lang=", "--host="
 
 # The holder's own exit codes. After ssh.exe's end, and after the key, it's always 0: Windows
 # Terminal closes a tab whose program ends with 0, and keeps one open that ends otherwise.
 DONE, NOT_STARTED_BY_CAPYPANEL, NO_CONSOLE = 0, 2, 3
-# Seconds after the words show in which a key doesn't close the window: a quick second Enter at
-# the host key question would close it before "Host key verification failed." was read.
+# A quick second Enter at the host key question would close the window before its answer is read.
 KEY_GRACE = 1.0
 
 
 @dataclass(frozen=True)
 class Request:
-    argv: list[str]  # the program and its arguments: ssh.exe's, or a probe's stand-in
-    host: str  # the name the words use
+    argv: list[str]
+    host: str
     language: str
     attach: bool = False
 
 
 def args_for(argv: Sequence[str], host: str, language: str) -> list[str]:
-    """What follows CapyPanel's own exe to start a holder for `argv`."""
     return [FLAG, LANGUAGE + language, HOST + host, "--", *argv]
 
 
 def parse(args: Sequence[str]) -> Request | None:
-    """The arguments after FLAG; None for anything CapyPanel wouldn't have written."""
     host, language, attach = "", i18n.DEFAULT_LANGUAGE, False
     rest = list(args)
     while rest and rest[0] != "--":
@@ -51,15 +46,13 @@ def parse(args: Sequence[str]) -> Request | None:
             host = arg.removeprefix(HOST)
         else:
             return None
-    if len(rest) < 2:  # "--" and at least the program
+    if len(rest) < 2:
         return None
     argv = rest[1:]
     return Request(argv=argv, host=host or argv[-1], language=language, attach=attach)
 
 
 class Console(Protocol):
-    """What the holder needs from Windows. The tests give it a pretend one."""
-
     def open(self, *, attach: bool) -> bool: ...
     def set_title(self, title: str) -> None: ...
     def let_ctrl_c_through(self) -> None: ...
@@ -69,15 +62,14 @@ class Console(Protocol):
 
 
 def run(args: Sequence[str], console: Console | None = None) -> int:
-    """The holder, from FLAG's arguments to its exit code."""
     request = parse(args)
     if request is None:
         return NOT_STARTED_BY_CAPYPANEL
     i18n.set_language(request.language)
     console = console if console is not None else WindowsConsole()
     if not console.open(attach=request.attach):
-        return NO_CONSOLE  # nowhere to show anything
-    console.set_title(request.argv[0])  # as ssh.exe's own window was titled
+        return NO_CONSOLE
+    console.set_title(request.argv[0])
     console.let_ctrl_c_through()
     try:
         code = console.run(request.argv)
@@ -91,7 +83,6 @@ def run(args: Sequence[str], console: Console | None = None) -> int:
 
 
 def _say_and_wait(console: Console, line: str) -> None:
-    """`line` under what ssh.exe printed, then waits for a key."""
     console.write(f"\r\n{line}\r\n{_('Press any key to close this window.')}\r\n")
     console.wait_for_key(KEY_GRACE)
 
@@ -112,8 +103,6 @@ _JOB_EXTENDED_LIMIT_INFORMATION = 9
 _INFINITE = 0xFFFFFFFF
 _ENABLE_PROCESSED_INPUT = 0x1
 _KEY_EVENT = 0x1
-# Keys that make no character: pressing them (Alt+Tab to another window, for one) never closes
-# the window.
 _NOT_A_KEY_PRESS = frozenset({
     0x10, 0x11, 0x12, 0x14, 0x5B, 0x5C, 0x90, 0x91, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5,
 })  # fmt: skip
@@ -271,8 +260,6 @@ def _failed() -> OSError:
 
 
 class WindowsConsole:
-    """The holder's console, ssh.exe in it, and the key at the end."""
-
     def __init__(self) -> None:
         self._in: int | None = None
         self._out: int | None = None
@@ -285,7 +272,7 @@ class WindowsConsole:
             if not attached and ctypes.get_last_error() != _ALREADY_ATTACHED:
                 return False
         else:
-            _k32.FreeConsole()  # whatever console it was started with: from source, a parent's
+            _k32.FreeConsole()
             if not _k32.AllocConsole():
                 return False
         self._in, self._out = self._open_file("CONIN$"), self._open_file("CONOUT$")
@@ -293,7 +280,6 @@ class WindowsConsole:
 
     @staticmethod
     def _open_file(name: str) -> int | None:
-        """The console's input or screen, as a handle ssh.exe may inherit (and no other)."""
         inherit = _SecurityAttributes(ctypes.sizeof(_SecurityAttributes), None, True)
         handle = _k32.CreateFileW(
             name,
@@ -310,13 +296,12 @@ class WindowsConsole:
         _k32.SetConsoleTitleW(title)
 
     def let_ctrl_c_through(self) -> None:
-        _k32.SetConsoleCtrlHandler(None, False)  # an "ignore Ctrl+C" it was started with
+        _k32.SetConsoleCtrlHandler(None, False)
         handler = _HandlerRoutine(lambda _event: True)
         self._handler = handler
         _k32.SetConsoleCtrlHandler(ctypes.cast(handler, ctypes.c_void_p), True)
 
     def run(self, argv: Sequence[str]) -> int:
-        """`argv` in this console, suspended until it's in the job; its exit code."""
         handles = (wt.HANDLE * 2)(self._in, self._out)
         size = ctypes.c_size_t()
         _k32.InitializeProcThreadAttributeList(None, 1, 0, ctypes.byref(size))
@@ -347,7 +332,7 @@ class WindowsConsole:
         try:
             self._into_job(process.hProcess)
         except OSError:
-            _k32.TerminateProcess(process.hProcess, 1)  # still suspended: it never ran
+            _k32.TerminateProcess(process.hProcess, 1)
             _k32.CloseHandle(process.hThread)
             _k32.CloseHandle(process.hProcess)
             raise
@@ -380,8 +365,6 @@ class WindowsConsole:
         _k32.WriteConsoleW(self._out, buffer, len(buffer) - 1, ctypes.byref(written), None)
 
     def wait_for_key(self, grace: float) -> None:
-        """Until a key is pressed `grace` seconds on (earlier ones are dropped). Shift, Ctrl, Alt,
-        Windows and the lock keys alone don't count; Ctrl+C counts as a key here."""
         time.sleep(grace)
         _k32.FlushConsoleInputBuffer(self._in)
         mode = wt.DWORD()

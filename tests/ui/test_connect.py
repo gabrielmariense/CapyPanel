@@ -33,7 +33,6 @@ Launch = tuple[str, str, int | None, Credential | None, tuple[str, ...]]
 
 @pytest.fixture
 def launched(monkeypatch: pytest.MonkeyPatch) -> list[Launch]:
-    """Records launches instead of starting programs; every viewer counts as installed."""
     calls: list[Launch] = []
 
     def fake_launch(
@@ -44,7 +43,7 @@ def launched(monkeypatch: pytest.MonkeyPatch) -> list[Launch]:
 
     monkeypatch.setattr(connect_ui, "launch", fake_launch)
     monkeypatch.setattr(connect_ui.detect, "find_executable", lambda tool: Path("viewer.exe"))
-    # Every server asks for an account unless a test says otherwise; nothing touches the network.
+    # Nothing touches the network: every server asks for an account unless a test says otherwise.
     monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (17, 117, 113))
     return calls
 
@@ -98,7 +97,7 @@ def _answer_with(
         asked.append(dialog.windowTitle())
         dialog.user.setText(user)
         dialog.password.setText(password)
-        return 1  # Accepted
+        return 1
 
     monkeypatch.setattr(CredentialDialog, "exec", answer)
 
@@ -112,15 +111,15 @@ def test_each_profile_asks_once_and_keeps_its_own_password(
     window.hosts.connect_selected()
     _select(window, "PC-B")
     window.hosts.connect_selected()
-    assert len(asked) == 1  # same profile: remembered for the rest of the session
+    assert len(asked) == 1
     _answer_with(monkeypatch, "pi", "pi-pass", asked)
     _select(window, "PI-1")
     window.hosts.connect_selected()
-    assert len(asked) == 2  # another profile asks for its own
+    assert len(asked) == 2
     domain, pi = Credential("ana", "domain-pass"), Credential("pi", "pi-pass")
     assert launched == [
         ("ultravnc", "10.0.0.1", None, domain, ("securevnc",)),
-        ("ultravnc", "PC-B", None, domain, ("securevnc",)),  # a computer name is its address
+        ("ultravnc", "PC-B", None, domain, ("securevnc",)),
         ("realvnc", "10.0.1.1", None, pi, ()),
     ]
     for kept in window.hosts.kept_logins():
@@ -155,7 +154,7 @@ def test_a_host_without_a_usable_address_is_not_sent_to_the_viewer(
     window.hosts.connector.credentials.remember("pis", Credential("pi", "y"))
     _select(window, "Ward 2A - Desk", "PI-1")
     window.hosts.connect_selected()
-    assert [call[1] for call in launched] == ["10.0.1.1"]  # the other one still opens
+    assert [call[1] for call in launched] == ["10.0.1.1"]
     text, place = help_boxes[-1]
     assert "skipped" in text and place == "connect-name-not-address"
 
@@ -202,7 +201,7 @@ def test_many_hosts_at_once_are_confirmed_first(
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.No)
     requests = [Request(f"PC-{n}", connect_ui.Target(f"PC-{n}")) for n in range(6)]
     assert window.hosts.connector.connect(requests) == 0 and launched == []
-    assert window.hosts.connector.connect(requests[:5]) == 5  # up to five: no question
+    assert window.hosts.connector.connect(requests[:5]) == 5
 
 
 def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: CapyWindow) -> None:
@@ -215,10 +214,10 @@ def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: CapyW
     password_only.password.setText("x")
     assert ok.isEnabled()
     account = CredentialDialog(None, connector.resolve("pis"), "PI-1", on_command_line=False)
-    assert account.help_button.place() == "connecting-connect-to-a-host"  # its ? and F1
+    assert account.help_button.place() == "connecting-connect-to-a-host"
     ok = account.buttons.button(QDialogButtonBox.StandardButton.Ok)
     account.password.setText("x")
-    assert not ok.isEnabled()  # the user is needed too
+    assert not ok.isEnabled()
     account.user.setText("pi")
     assert ok.isEnabled() and account.credential() == Credential("pi", "x")
 
@@ -229,11 +228,11 @@ def test_the_host_dialog_offers_following_the_group_or_a_profile(window: CapyWin
     host = next(h for h in doc.hosts.hosts if h.name == "PI-1")
     picker = window.hosts._profile_picker(doc.hosts)  # pyright: ignore[reportPrivateUsage]
     dialog = HostDialog(None, doc.hosts, host, profiles=picker)
-    assert dialog.profile.currentData() == ""  # follows its group
+    assert dialog.profile.currentData() == ""
     assert dialog.profile.itemText(0) == "From group “Pis”: Pis"
     offices = dialog.group.findText("Offices")
     dialog.group.setCurrentIndex(offices)
-    assert "SecureVNC" in dialog.profile.itemText(0)  # follows the newly chosen group
+    assert "SecureVNC" in dialog.profile.itemText(0)
     dialog.profile.setCurrentIndex(dialog.profile.findData("pis-password"))
     assert dialog.values().profile == "pis-password"
 
@@ -247,7 +246,7 @@ def _set_profile(window: CapyWindow, name: str, profile: str) -> None:
 
 def test_details_show_the_profile_s_name(window: CapyWindow) -> None:
     _select(window, "PI-1")
-    assert window.hosts.details.profile_button.value_text() == "Pis"  # the group's, named plainly
+    assert window.hosts.details.profile_button.value_text() == "Pis"
 
 
 def test_manual_connection_uses_the_chosen_profile(
@@ -257,11 +256,9 @@ def test_manual_connection_uses_the_chosen_profile(
     monkeypatch.setattr(
         window.hosts.connector, "connect", lambda requests, parent=None: asked.append(requests)
     )
-    window.hosts.commands.manual_connect.trigger()  # Ctrl+M: the Commands window, typed
+    window.hosts.commands.manual_connect.trigger()
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow)
-    # Nothing typed yet: Connect still shows as the main button, waiting, and a click only goes
-    # to Host (greyed, it was missed).
     button = commands.connect_button
     assert button.objectName() == "primary" and button.isEnabled()
     assert button.property("waiting") is True
@@ -287,17 +284,14 @@ def test_manual_connection_s_questions_show_over_it_so_it_stays_in_front(
     commands.address.setEditText("10.9.9.9")
     commands.profile.setCurrentIndex(commands.profile.findData("ultravnc"))
     owners: list[object] = []
-    # A server that only wants a VNC password: the warning that the password wasn't sent.
     monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (2,))
     monkeypatch.setattr(dialogs, "run_modal", lambda box: owners.append(box.parentWidget()) or 0)
     commands.connect_button.click()
-    # One that takes an account: the password prompt.
     monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (113,))
     monkeypatch.setattr(
         CredentialDialog, "exec", lambda dialog: owners.append(dialog.parentWidget()) or 0
     )
     commands.connect_button.click()
-    # A viewer this PC doesn't have: where is it?
     monkeypatch.setattr(connect_ui.detect, "find_executable", lambda tool: None)
     monkeypatch.setattr(QMessageBox, "exec", lambda box: owners.append(box.parentWidget()) or 0)
     commands.connect_button.click()
@@ -314,13 +308,11 @@ def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
     assert isinstance(commands, CommandsWindow)
     commands.profiles_button.click()
     assert opened == ["connections"]
-    # A square button beside Profile, its name in the tooltip; Add waits in the footer.
     button = commands.profiles_button
     assert button.text() == "" and button.toolTip() == "Connection profiles…"
     assert button.width() == button.height() == commands.profile.sizeHint().height()
-    assert commands.connect_button.height() == button.height()  # one line, one height
-    assert not commands.add_button.isEnabled()  # nothing typed yet
-    # Tab: Host, Profile, the profiles button, Connect.
+    assert commands.connect_button.height() == button.height()
+    assert not commands.add_button.isEnabled()
     order = [commands.address, commands.profile, button, commands.connect_button]
     seen: list[object] = []
     widget = commands.address.nextInFocusChain()
@@ -334,17 +326,17 @@ def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
     monkeypatch.setattr(
         window.hosts.connector, "choices", lambda: [*before, ("new-one", "New one")]
     )
-    window.hosts.profiles_changed()  # what Settings' Connections page sends
+    window.hosts.profiles_changed()
     assert commands.profile.findData("new-one") >= 0
-    assert commands.profile.currentData() == "pis-password"  # still the one picked
+    assert commands.profile.currentData() == "pis-password"
     monkeypatch.setattr(window.hosts.connector, "choices", lambda: [("new-one", "New one")])
-    window.hosts.profiles_changed()  # the picked one deleted: the first left
+    window.hosts.profiles_changed()
     assert commands.profile.currentData() == "new-one"
 
 
 def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: CapyWindow) -> None:
     _select(window, "PC-A", "PC-B")
-    window.hosts.commands.copy_address.trigger()  # Ctrl+Shift+C
+    window.hosts.commands.copy_address.trigger()
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["10.0.0.1", "PC-B"]
     window.hosts.table.setColumnHidden(HostTable.COLUMNS.index("tags"), True)
     menu = QMenu()
@@ -352,8 +344,8 @@ def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: CapyWindo
     copy = menu.actions()[0].menu()
     assert isinstance(copy, QMenu)
     items = [label(a) for a in copy.actions()]
-    assert items == ["Name", "&Address", "Status", "User"]  # Tags is hidden: not offered
-    assert copy.actions()[1] is window.hosts.commands.copy_address  # its shortcut shows
+    assert items == ["Name", "&Address", "Status", "User"]
+    assert copy.actions()[1] is window.hosts.commands.copy_address
     copy.actions()[0].trigger()
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["PC-A", "PC-B"]
 
@@ -365,7 +357,6 @@ def test_connect_commands_follow_the_selection(window: CapyWindow) -> None:
     assert a.manual_connect.isEnabled()
     _select(window, "PC-A")
     assert a.connect_host.isEnabled() and a.copy_address.isEnabled()
-    # Enter connects only from the host table, never while typing somewhere else.
     assert a.connect_host.shortcutContext() == Qt.ShortcutContext.WidgetWithChildrenShortcut
     assert a.connect_host in window.hosts.table.actions()
 
@@ -389,7 +380,7 @@ def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
     _select(window, "PC-A", "PC-B")
     window.hosts.connect_selected()
     assert sorted(probed) == [("10.0.0.1", 5900), ("PC-B", 5900)]
-    assert [call[1] for call in launched] == ["PC-B"]  # only the one that asks for an account
+    assert [call[1] for call in launched] == ["PC-B"]
     text, place = help_boxes[0]
     assert "PC-A" in text and "user and password" in text
     assert place == "connect-login-check-skipped"
@@ -397,7 +388,7 @@ def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
     launched.clear()
     asked.clear()
     window.hosts.connect_selected()
-    assert launched == [] and asked == []  # refused before even asking for a password
+    assert launched == [] and asked == []
 
 
 def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
@@ -410,7 +401,7 @@ def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
     window.hosts.connector.credentials.remember("offices", Credential("ana", "x"))
     _select(window, "PC-A")
     window.hosts.connect_selected()
-    assert [call[1] for call in launched] == ["10.0.0.1"]  # the viewer reports what's wrong
+    assert [call[1] for call in launched] == ["10.0.0.1"]
 
 
 def test_each_server_is_asked_its_login_types_once_per_run(
@@ -432,7 +423,7 @@ def test_each_server_is_asked_its_login_types_once_per_run(
         _select(window, "PC-A", "PC-B")
         window.hosts.connect_selected()
     assert sorted(probed) == ["10.0.0.1", "PC-B", "PC-B"]
-    assert len(launched) == 6  # every time, both
+    assert len(launched) == 6
 
 
 def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
@@ -476,7 +467,6 @@ def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: Ca
 
 
 def test_profile_rows_never_overlap(window: CapyWindow) -> None:
-    # Rows placed before the theme's padding arrives would overlap once it does.
     window.show()
     for theme in ("paper", "capypanel-dark"):
         window.set_theme(theme)
@@ -563,7 +553,6 @@ def test_remote_desktop_opens_without_asking_for_a_password(
 
 
 def _menu_on(monkeypatch: pytest.MonkeyPatch, show: Any) -> list[str]:
-    """The texts of the menu `show` opens, without opening it."""
     seen: list[str] = []
 
     class Recorded(QMenu):
@@ -593,7 +582,7 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     groups = window.hosts.nav.groups
     offices = next(i for i in _items(groups) if i.text(0).startswith("Offices"))
     pis = next(i for i in _items(groups) if i.text(0).startswith("Pis"))
-    groups.setCurrentItem(pis)  # picked earlier
+    groups.setCurrentItem(pis)
     empty = groups.viewport().rect().bottomLeft() + QPoint(5, -5)
     assert _menu_on(monkeypatch, lambda: window.hosts._group_menu(empty)) == [
         "Add &group…", "&Manage groups…", "&Sort groups A–Z"
@@ -601,7 +590,7 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     texts = _menu_on(
         monkeypatch, lambda: window.hosts._group_menu(groups.visualItemRect(offices).center())
     )
-    assert "&Edit…" in texts  # the group under the mouse, which is now picked
+    assert "&Edit…" in texts
     assert window.hosts.nav.selected_group_id() == offices.data(0, Qt.ItemDataRole.UserRole + 1)
     table_empty = window.hosts.table.viewport().rect().bottomLeft() + QPoint(5, -5)
     assert _menu_on(monkeypatch, lambda: window.hosts._item_menu(table_empty)) == [
@@ -611,10 +600,10 @@ def test_right_click_acts_on_what_is_under_the_mouse(
 
 
 def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: CapyWindow) -> None:
-    _select(window)  # nothing selected
+    _select(window)
     button = window.hosts.toolbar.connect_button
-    assert button.isEnabled()  # its menu has Manual connection, which needs no host
-    assert button.popupMode() == QToolButton.ToolButtonPopupMode.InstantPopup  # like the others
+    assert button.isEnabled()
+    assert button.popupMode() == QToolButton.ToolButtonPopupMode.InstantPopup
     window.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
     first = window.hosts.toolbar.connect_menu.actions()[0]
     assert first is window.hosts.commands.connect_host and not first.isEnabled()
@@ -622,11 +611,11 @@ def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: CapyWind
 
 def test_hosts_lists_each_typed_password_and_forgets_one(window: CapyWindow) -> None:
     hosts = window.hosts
-    assert hosts.kept_logins() == []  # nothing typed yet
+    assert hosts.kept_logins() == []
     names = dict(hosts.connector.choices())
     credentials = hosts.connector.credentials
     credentials.remember("offices", Credential("ana", "x"))
-    credentials.remember("pis", Credential("", "y"))  # a VNC password, no user
+    credentials.remember("pis", Credential("", "y"))
     hosts.accounts.use(Link("EXAMPLE\\user", Scope.ALL), Account("EXAMPLE\\user", "z"),
                        remember=False)  # fmt: skip
     kept = {login.used_for: login for login in hosts.kept_logins()}
@@ -636,7 +625,7 @@ def test_hosts_lists_each_typed_password_and_forgets_one(window: CapyWindow) -> 
     assert list(kept) == [names["offices"], names["pis"], "Every PC"]
     assert kept["Every PC"].tool == "Hosts › Accounts"
     kept[names["pis"]].forget()
-    assert "pis" not in credentials and "offices" in credentials  # only that one
+    assert "pis" not in credentials and "offices" in credentials
     kept["Every PC"].forget()
     assert hosts.accounts.known("EXAMPLE\\user") is None
-    assert hosts.accounts.links == [Link("EXAMPLE\\user", Scope.ALL)]  # asked again when needed
+    assert hosts.accounts.links == [Link("EXAMPLE\\user", Scope.ALL)]

@@ -18,7 +18,7 @@ def test_a_shared_list_made_by_another_user_is_untrusted(
     assert locations.list_access(path, shared=True) is Access.READ_WRITE
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
     assert locations.list_access(path, shared=True) is Access.UNTRUSTED
-    assert locations.list_access(path) is Access.READ_WRITE  # a list the user picked
+    assert locations.list_access(path) is Access.READ_WRITE
 
 
 def test_list_kind(tmp_path: Path) -> None:
@@ -78,13 +78,13 @@ def test_startup_order_tries_the_choice_then_default_then_personal() -> None:
     def order(prefs: dict[str, Any]) -> list[Path]:
         return locations.startup_order(prefs, default=default, personal=personal)
 
-    assert order({}) == [default, personal]  # first start: nothing used yet
+    assert order({}) == [default, personal]
     last = {"recent_lists": [str(shared)]}
     assert order(last) == [shared, default, personal]
     assert order({**last, "start_list": "personal"}) == [personal, default]
     assert order({**last, "start_list": "default"}) == [default, personal]
     assert order({"start_list": str(shared)}) == [shared, default, personal]
-    assert order({"start_list": 42}) == [default, personal]  # a broken value means "last used"
+    assert order({"start_list": 42}) == [default, personal]
 
 
 def test_a_list_taken_out_is_forgotten_and_does_not_reopen() -> None:
@@ -92,8 +92,8 @@ def test_a_list_taken_out_is_forgotten_and_does_not_reopen() -> None:
     prefs: dict[str, Any] = {}
     locations.set_added_lists(prefs, [a, b])
     locations.remember_list(prefs, b)
-    locations.remember_list(prefs, a)  # a was open last: it would reopen at start
-    locations.set_added_lists(prefs, [b])  # taken out in File > Host lists
+    locations.remember_list(prefs, a)
+    locations.set_added_lists(prefs, [b])
     assert locations.recent_lists(prefs) == [b]
     assert locations.added_lists(prefs) == [b]
 
@@ -110,12 +110,12 @@ def test_lists_in_the_lists_folders_show_up_by_themselves(
     planted.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path != planted)
     found = locations.found_lists(shared, mine)
-    assert [p.name for p in found] == ["branch.json", "Wards.json", "my-lab.json"]  # no planted
+    assert [p.name for p in found] == ["branch.json", "Wards.json", "my-lab.json"]
     default, personal = tmp_path / "hosts.json", tmp_path / "me" / "hosts.json"
     added = tmp_path / "share" / "branch.json"
     prefs: dict[str, Any] = {locations.LISTS_KEY: [str(added), str(found[0])]}
     lists = locations.available_lists(prefs, default=default, personal=personal, found=found)
-    assert lists == [default, personal, *found, added]  # each once
+    assert lists == [default, personal, *found, added]
     names = locations.list_names(lists, default=default, personal=personal)
     assert names == [
         "Default", "Personal", "branch (lists)", "Wards", "my-lab", "branch (share)"

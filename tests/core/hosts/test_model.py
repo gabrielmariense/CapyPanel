@@ -91,7 +91,7 @@ def test_a_tag_is_given_to_or_taken_from_several_hosts_at_once() -> None:
     tagged = hl.tag_hosts([a.id, b.id], "kiosk", True)
     assert [h.tags for h in tagged.hosts[-3:]] == [("kiosk", "floor-3"), ("kiosk",), ("kiosk",)]
     untagged = tagged.tag_hosts([a.id, b.id], "kiosk", False)
-    assert [h.tags for h in untagged.hosts[-3:]] == [("floor-3",), (), ("kiosk",)]  # C kept it
+    assert [h.tags for h in untagged.hosts[-3:]] == [("floor-3",), (), ("kiosk",)]
     assert hl.tag_hosts([a.id], "  ", True) is hl
 
 
@@ -102,16 +102,16 @@ def test_clean_tags_keeps_typed_order() -> None:
 def test_a_host_follows_the_nearest_group_with_a_profile() -> None:
     hl, hq, finance = _office()
     hl, pc = hl.add_host("PC1", finance)
-    assert hl.profile_of(pc) == ("", None)  # nothing set anywhere: the app's default
+    assert hl.profile_of(pc) == ("", None)
     hl = hl.set_group_profile(hq, "ultravnc-account")
     profile, source = hl.profile_of(pc)
     assert profile == "ultravnc-account" and source is not None and source.id == hq
     hl = hl.set_group_profile(finance, "realvnc-account")
-    assert hl.profile_of(pc)[0] == "realvnc-account"  # the nearer group wins
+    assert hl.profile_of(pc)[0] == "realvnc-account"
     hl = hl.set_hosts_profile([pc.id], "ultravnc-password")
     pc = hl.host(pc.id)
     assert pc is not None and hl.profile_of(pc) == ("ultravnc-password", None)
-    hl = hl.set_hosts_profile([pc.id], "")  # back to following its group
+    hl = hl.set_hosts_profile([pc.id], "")
     assert hl.profile_of(hl.host(pc.id) or pc)[0] == "realvnc-account"
 
 
@@ -133,7 +133,7 @@ def test_a_profile_that_does_not_exist_is_skipped_for_the_group_s() -> None:
     exists = {"known"}.__contains__
     profile, source = hl.profile_of(pc, exists)
     assert profile == "known" and source is not None and source.id == hq
-    assert hl.profile_of(pc) == ("also-gone", None)  # without the check: the host's own
+    assert hl.profile_of(pc) == ("also-gone", None)
 
 
 def test_groups_can_be_reordered_and_nested_but_never_inside_themselves() -> None:
@@ -144,9 +144,9 @@ def test_groups_can_be_reordered_and_nested_but_never_inside_themselves() -> Non
     assert [g.id for g in moved.groups] == [b.id, a.id, c.id]
     assert moved.group(a.id).parent == b.id  # type: ignore[union-attr]
     with pytest.raises(HostListRuleError):
-        hl.arrange_groups([(a.id, c.id), (b.id, None), (c.id, a.id)])  # A inside its own child
+        hl.arrange_groups([(a.id, c.id), (b.id, None), (c.id, a.id)])
     with pytest.raises(HostListRuleError):
-        hl.arrange_groups([(a.id, None), (b.id, None)])  # a group went missing meanwhile
+        hl.arrange_groups([(a.id, None), (b.id, None)])
 
 
 def test_a_group_moves_with_everything_inside_it() -> None:
@@ -158,9 +158,9 @@ def test_a_group_moves_with_everything_inside_it() -> None:
     assert moved.host(host.id).group == finance  # type: ignore[union-attr]
     top = moved.move_group(finance, None)
     assert [g.name for g in top.children(None)] == ["Headquarters", "Branch", "Finance"]
-    assert hl.move_group(finance, hq) is hl  # already there: nothing changes
+    assert hl.move_group(finance, hq) is hl
     with pytest.raises(HostListRuleError):
-        hl.move_group(hq, finance)  # into its own subgroup
+        hl.move_group(hq, finance)
     with pytest.raises(HostListRuleError):
         hl.move_group(hq, hq)
     with pytest.raises(HostListRuleError):
@@ -200,9 +200,8 @@ def test_what_a_removed_group_holds_can_go_into_another_group() -> None:
     hl, pc = hl.add_host("FIN-1", finance)
     moved = hl.remove_group(hq, keep_contents=True, into=lab.id)
     assert moved.group(finance).parent == lab.id  # type: ignore[union-attr]
-    with pytest.raises(HostListRuleError):  # not into what's being removed
+    with pytest.raises(HostListRuleError):
         hl.remove_group(hq, keep_contents=True, into=finance)
-    # NO_GROUP: to the top level, even from inside another group; its hosts then have none.
     top = hl.remove_group(finance, keep_contents=True, into=NO_GROUP)
     assert top.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
     loose = hl.move_hosts([pc.id], NO_GROUP)

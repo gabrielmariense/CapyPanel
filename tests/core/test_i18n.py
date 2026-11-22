@@ -29,12 +29,12 @@ def test_a_first_start_follows_the_language_windows_is_shown_in() -> None:
     assert i18n.language_for(0x0816) == "pt_BR"  # Portuguese (Portugal): the closest we have
     assert i18n.language_for(0x0409) == "en"  # English (United States)
     assert i18n.language_for(0x0C0A) == "en"  # Spanish: no catalog, so English
-    assert i18n.windows_language() in i18n.LANGUAGES  # this PC's, whatever it is
+    assert i18n.windows_language() in i18n.LANGUAGES
 
 
 def test_a_saved_choice_wins_over_windows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(i18n, "windows_language", lambda: "pt_BR")
     saved = tmp_path / "settings.json"
-    assert settings.language_of(saved) == "pt_BR"  # nothing saved yet: Windows'
+    assert settings.language_of(saved) == "pt_BR"
     saved.write_text('{"language": "en"}', encoding="utf-8")
-    assert settings.language_of(saved) == "en"  # the person's choice
+    assert settings.language_of(saved) == "en"

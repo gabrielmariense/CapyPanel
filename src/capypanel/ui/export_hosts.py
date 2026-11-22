@@ -1,5 +1,3 @@
-"""The toolbar's Report: pick items and columns, then save a CSV or copy the rows for Excel."""
-
 import re
 import subprocess
 from collections.abc import Callable, Mapping, Sequence
@@ -52,8 +50,6 @@ from capypanel.ui.list_workspace.panels import sorted_by
 from capypanel.ui.notes import hint
 from capypanel.ui.tables import fit_menu
 
-# Each column, the group its checkbox is in, and its title (also the file's header row, which
-# Import hosts reads back in English or Portuguese).
 TITLES = {
     "name": N_("Name"),
     "address": N_("Address"),
@@ -68,38 +64,33 @@ SECTIONS = (
     (N_("Tags and notes"), ("tags", "notes")),
     (N_("Last check"), ("status", "users")),
 )
-CHECKED = ("status", "users")  # from the last Refresh, kept in memory only
-SAYS_NOT_CHECKED = frozenset({"status"})  # empty in the file, "Not checked" in the preview
-FOR_IMPORT = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
+CHECKED = ("status", "users")
+SAYS_NOT_CHECKED = frozenset({"status"})
+FOR_IMPORT = ("name", "address", "group", "tags", "notes")
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
-WIDEST = 240  # px: the preview's widest column
-TICK_HEIGHT, TICK_SPACING = 22, 2  # px: one tick per line, the same height in every box
+WIDEST = 240
+TICK_HEIGHT, TICK_SPACING = 22, 2
 
 
 @dataclass(frozen=True)
 class Source:
-    """Hosts that can be exported: "Front desk (2 hosts)" in the dropdown, "Front desk" in the
-    message once exported."""
-
     label: str
     name: str
     hosts: tuple[Host, ...]
-    depth: int = 0  # a group's level: indented under its parent in the open list only
+    depth: int = 0
 
 
 class ExportDialog(QDialog):
-    # What this Report lists. SECTIONS are boxes of ticks, one row each, one under the other;
-    # with CHECKED, the last box holds the checks from Refresh, with Refresh at its row's end.
     TITLES: Mapping[str, str] = TITLES
     SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = SECTIONS
     CHECKED: tuple[str, ...] = CHECKED
     SAYS_NOT_CHECKED: frozenset[str] = SAYS_NOT_CHECKED
     FOR_IMPORT: tuple[str, ...] = FOR_IMPORT
-    HELP_PLACE = "host-lists-export-hosts-to-a-spreadsheet"  # its ? and F1
-    PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY  # its own choices
+    HELP_PLACE = "host-lists-export-hosts-to-a-spreadsheet"
+    PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY
     ITEMS_LABEL = N_("&Hosts:")
-    PRESET_NAME = N_("For Import")  # the built-in preset, with the FOR_IMPORT columns
+    PRESET_NAME = N_("For Import")
 
     def __init__(
         self,
@@ -117,8 +108,6 @@ class ExportDialog(QDialog):
         progress: Callable[[], tuple[int, int] | None],
         checked_at: Callable[[str], Sequence[datetime | None]] | None = None,
     ) -> None:
-        """results: an item's texts for the CHECKED columns, "" when not checked; checked_at: when
-        each was read. refresh(items, *wanted) and stop run Refresh; progress: (done, total)."""
         super().__init__(parent)
         self.setWindowTitle(_("Report"))
         self._hosts = host_list
@@ -129,17 +118,17 @@ class ExportDialog(QDialog):
             results, refresh, stop, progress
         )  # fmt: skip
         self._checked_at = checked_at
-        self.outcome = ""  # for the status bar: what was exported or copied
+        self.outcome = ""
 
         self.source = QComboBox()
         self.source.setItemDelegate(_Indented(self.source))
-        self.source.setMaxVisibleItems(15)  # a long list of groups scrolls
+        self.source.setMaxVisibleItems(15)
         for source in self._sources:
             self.source.addItem(source.label)
             self.source.setItemData(self.source.count() - 1, source.depth, DEPTH)
-        self.source.setCurrentIndex(current)  # what the window shows now
+        self.source.setCurrentIndex(current)
         self.preset = QComboBox()
-        self.preset.setPlaceholderText(_("Custom"))  # ticks that match no preset
+        self.preset.setPlaceholderText(_("Custom"))
         self.save_preset = QPushButton(_("&Save as preset…"))
         self.delete_preset = QPushButton(_("&Delete"))
         presets = QHBoxLayout()
@@ -152,8 +141,6 @@ class ExportDialog(QDialog):
         preset_label.setBuddy(self.preset)
         top.addRow(preset_label, presets)
 
-        # Three boxes side by side, of equal size, one tick per line at a fixed height so the ticks
-        # line up across them; too narrow for three, the checks' box goes under, full width.
         self.boxes: dict[str, QCheckBox] = {}
         self._section_boxes: list[QFrame] = []
         self.checks_box: QLabel | None = None
@@ -163,12 +150,10 @@ class ExportDialog(QDialog):
         self.unchecked = hint()
         self.checking = hint()
         color = self.palette().color(QPalette.ColorRole.Text)
-        # Refresh is a plain button at the foot of Last check, saying how many it reads; Stop
-        # takes its place while a check runs. Export stays the window's one main button.
         self.refresh_button = _plain_button("refresh", color)
         self.stop_button = _plain_button("x", color)
         self.stop_button.setText(" " + _("Stop"))
-        self.stop_button.hide()  # only while a check runs
+        self.stop_button.hide()
         for index, (title, keys) in enumerate(self.SECTIONS):
             frame = QFrame()
             frame.setObjectName("reportBox")
@@ -179,7 +164,7 @@ class ExportDialog(QDialog):
             inside.setSpacing(TICK_SPACING)
             name = QLabel(_(title))
             name.setObjectName("rowName")
-            name.setProperty("heading", True)  # a box's title: a section's heading
+            name.setProperty("heading", True)
             both = QLabel(f'<a href="all">{escape(_("All"))}</a> · '
                           f'<a href="none">{escape(_("None"))}</a>')  # fmt: skip
             both.setObjectName("hint")
@@ -195,7 +180,7 @@ class ExportDialog(QDialog):
                 self.checks_title = _(title)
                 head.addWidget(self.checks_time)
             inside.addLayout(head)
-            inside.addWidget(both)  # under the title, small: the boxes stay narrow enough
+            inside.addWidget(both)
             for key in keys:
                 box = QCheckBox(_(self.TITLES[key]))
                 box.setFixedHeight(TICK_HEIGHT)
@@ -205,15 +190,15 @@ class ExportDialog(QDialog):
                 for widget in (self.note, self.unchecked, self.checking):
                     inside.addWidget(widget)
             inside.addStretch(1)
-            if checks:  # at the box's foot, lined up with the other boxes' ends: it never jumps
+            if checks:
                 buttons = QHBoxLayout()
                 buttons.setContentsMargins(0, spacing.ICON, 0, 0)
                 buttons.addWidget(self.refresh_button)
                 buttons.addWidget(self.stop_button)
-                buttons.addStretch(1)  # its own width, as every other button
+                buttons.addStretch(1)
                 inside.addLayout(buttons)
             self._section_boxes.append(frame)
-        if self.checks_box is None:  # nothing to check: no Refresh here
+        if self.checks_box is None:
             parts = (self.unchecked, self.refresh_button, self.stop_button, self.checking,
                      self.checks_time, self.note)  # fmt: skip
             for widget in parts:
@@ -231,23 +216,19 @@ class ExportDialog(QDialog):
         self.preview.setObjectName("grid")
         self.preview.setRootIsDecorated(False)
         self.preview.setUniformRowHeights(True)
-        self.preview.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # keeps a path's both ends
+        self.preview.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         fit_menu(self.preview)
-        # A click on a column's title sorts the rows by it, A–Z then Z–A, as in the main table;
-        # until then they're in the main table's order. Copy and Export use the same order.
-        self._sort: tuple[str, bool] | None = None  # (column key, Z–A)
+        self._sort: tuple[str, bool] | None = None
         self.preview.header().setSectionsClickable(True)
         self.preview.header().sectionClicked.connect(self._sort_by)
         preview_title = QLabel(_("Preview"))
         preview_title.setObjectName("detailsSection")
 
-        # No default button, as in Settings: Enter never saves by surprise.
         self.buttons = QDialogButtonBox()
         role = QDialogButtonBox.ButtonRole
         self.export_button = self.buttons.addButton(_("&Export…"), role.ActionRole)
         self.copy_button = self.buttons.addButton(_("&Copy"), role.ActionRole)
         self.copy_button.setToolTip(_("Copies every row, to paste into Excel"))
-        # Close: nothing to cancel, every choice here is kept as soon as it's made.
         self.buttons.addButton(QDialogButtonBox.StandardButton.Close)
         self.buttons.rejected.connect(self.reject)
         self._no_default_buttons()
@@ -282,8 +263,6 @@ class ExportDialog(QDialog):
             button.setDefault(False)
 
     def _place_sections(self, side_by_side: bool) -> None:
-        """The boxes in one row; or, with checks and too little room, the checks box under the
-        others at full width."""
         if side_by_side == self._side_by_side:
             return
         self._side_by_side = side_by_side
@@ -312,7 +291,6 @@ class ExportDialog(QDialog):
         self._place_sections(self._fits_side_by_side())
 
     def _tick_section(self, keys: Sequence[str], on: bool) -> None:
-        """A box's All or None: its ticks at once, then one update."""
         for key in keys:
             box = self.boxes[key]
             box.blockSignals(True)
@@ -322,14 +300,11 @@ class ExportDialog(QDialog):
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
-        self._no_default_buttons()  # a dialog makes one default as it shows
+        self._no_default_buttons()
 
-    # ---- what a tool's Report changes ----
-
-    NOTE_UNDER = "users"  # the tick checks_note is about: shown while it's ticked
+    NOTE_UNDER = "users"
 
     def fields(self, host: Host, between_tags: str) -> dict[str, str]:
-        """An item's own values, by column key (the checks' come from `results`)."""
         return host_fields(self._hosts, host, between_tags)
 
     def checks_note(self) -> str:
@@ -351,7 +326,6 @@ class ExportDialog(QDialog):
         )
 
     def refresh_text(self, n: int) -> str:
-        """The button's words: one verb, then how many it reads (the right-click's words)."""
         if n == 1:
             return _("Refresh host")
         if not n:
@@ -376,8 +350,6 @@ class ExportDialog(QDialog):
             "Report saved: {n} host from {source}.", "Report saved: {n} hosts from {source}.", n
         ).format(n=n, source=source)
 
-    # ---- what's picked ----
-
     def columns(self) -> list[str]:
         return [key for key, box in self.boxes.items() if box.isChecked()]
 
@@ -385,8 +357,6 @@ class ExportDialog(QDialog):
         return self._sources[self.source.currentIndex()].hosts
 
     def rows(self, between_tags: str = ";", *, on_screen: bool = False) -> list[list[str]]:
-        """The picked items' cells in the preview's order. A Status not read yet is empty in a file
-        or copy, "Not checked" `on_screen` (the preview) as in the main table; it sorts last."""
         columns = self.columns()
         rows = []
         for host in self.hosts():
@@ -407,7 +377,6 @@ class ExportDialog(QDialog):
         return [cells for _host, cells in rows]
 
     def _sort_by(self, index: int) -> None:
-        """A click on a column title: A–Z, or Z–A when it's already sorted A–Z by it."""
         columns = self.columns()
         if not 0 <= index < len(columns):
             return
@@ -426,11 +395,8 @@ class ExportDialog(QDialog):
             box.blockSignals(False)
 
     def _known(self, columns: object) -> list[str]:
-        """Saved columns, in the window's order, without ones this version doesn't have."""
         wanted = columns if isinstance(columns, list) else []
         return [key for key in self.TITLES if key in wanted]
-
-    # ---- presets: the built-in one ("For Import"), then the user's own ----
 
     def _presets(self) -> dict[str, list[str]]:
         saved = self._prefs.get(self.PRESETS_KEY)
@@ -452,13 +418,12 @@ class ExportDialog(QDialog):
         self._ticks_changed()
 
     def _match_preset(self) -> None:
-        """Shows the preset the ticks match, or "Custom"."""
         columns = self.columns()
         found = next(
             (i for i in range(self.preset.count()) if self.preset.itemData(i) == columns), -1
         )
         self.preset.setCurrentIndex(found)
-        self.delete_preset.setEnabled(found > 0)  # the built-in one stays
+        self.delete_preset.setEnabled(found > 0)
 
     def _save_as_preset(self) -> None:
         name, ok = QInputDialog.getText(self, _("Save as preset"), _("Preset name:"))
@@ -470,7 +435,6 @@ class ExportDialog(QDialog):
             help_links.warning(self, _("Save as preset"), text, place="hosts-preset-name-taken")
             return
         presets = self._presets()
-        # The same name, whatever its case: replacing it is asked first, Cancel the default.
         same = next((p for p in presets if p.casefold() == name.casefold()), None)
         if same is not None:
             question = _("A preset named “{name}” already exists. Replace it?").format(name=same)
@@ -494,15 +458,12 @@ class ExportDialog(QDialog):
         self._fill_presets()
         self._match_preset()
 
-    # ---- showing it ----
-
     def _ticks_changed(self) -> None:
         self._match_preset()
         self._update()
         self._remember()
 
     def _update(self) -> None:
-        """The preview, the "not checked" count and which buttons work."""
         self._fill_preview()
         hosts = self.hosts()
         running = self._progress()
@@ -539,8 +500,6 @@ class ExportDialog(QDialog):
         self.copy_button.setEnabled(can_export)
 
     def _title_time(self, hosts: Sequence[Host], at: Sequence[int]) -> None:
-        """Last check's time: the newest read of the ticked checks among these items (a date
-        too when it isn't today); none when none was read."""
         if self.checks_box is None:
             return
         times = (
@@ -562,39 +521,30 @@ class ExportDialog(QDialog):
             order = Qt.SortOrder.DescendingOrder if self._sort[1] else Qt.SortOrder.AscendingOrder
             header.setSortIndicator(columns.index(self._sort[0]), order)
         for row in self.rows(on_screen=True):
-            item = QTreeWidgetItem([" ".join(cell.split()) for cell in row])  # one line each
+            item = QTreeWidgetItem([" ".join(cell.split()) for cell in row])
             for column, cell in enumerate(row):
-                item.setToolTip(column, cell)  # in full, when the column cuts it
+                item.setToolTip(column, cell)
             self.preview.addTopLevelItem(item)
         for column in range(self.preview.columnCount()):
             self.preview.resizeColumnToContents(column)
-            # A long group path or note is cut in the middle, so the other columns stay in view.
             self.preview.setColumnWidth(column, min(self.preview.columnWidth(column), WIDEST))
 
     def checks_changed(self) -> None:
-        """The main window's Refresh moved on: new results, or it started or ended."""
         self._update()
-
-    # ---- Refresh, from here ----
 
     def _run_refresh(self) -> None:
         self._refresh(self.hosts(), *(self.boxes[key].isChecked() for key in self.CHECKED))
         self._update()
 
-    # ---- saving or copying ----
-
     def _remember(self) -> None:
-        """The columns, kept at once: closing never loses them. The hosts follow what the main
-        window shows each time."""
         self._prefs[self.LAST_KEY] = self.columns()
         self._save_prefs()
 
     def _copy(self) -> None:
-        text = write_csv(self.header(), self.rows(), "\t")  # tabs: Excel pastes them as columns
+        text = write_csv(self.header(), self.rows(), "\t")
         QGuiApplication.clipboard().setText(text)
         source = self._sources[self.source.currentIndex()]
         self.outcome = self.copied_text(len(source.hosts), source.name)
-        # The window stays open, to copy other hosts or save a file next.
         button = self.copy_button
         QToolTip.showText(button.mapToGlobal(QPoint(0, button.height())), self.outcome, button)
 
@@ -615,11 +565,11 @@ class ExportDialog(QDialog):
         if not name:
             return
         path = Path(name)
-        delimiter = list_separator()  # what this PC's Excel splits columns on
+        delimiter = list_separator()
         between_tags = "," if delimiter == ";" else ";"
         text = write_csv(self.header(), self.rows(between_tags), delimiter)
         try:
-            path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
+            path.write_text(text, encoding="utf-8-sig")
         except OSError as e:
             text = _("Couldn't save “{path}”: {error}\n\nIf the file is open in another "
                      "program, such as Excel, close it there and save again.")  # fmt: skip
@@ -634,26 +584,21 @@ class ExportDialog(QDialog):
 
 
 def exported_message(parent: QWidget | None, text: str, path: Path) -> None:
-    """ "Report saved: 2 hosts from Front desk.", with the file, and buttons to open it or its
-    folder."""
     box = QMessageBox(QMessageBox.Icon.Information, _("Report"), text, parent=parent)
     box.setInformativeText(str(path))
     for label in box.findChildren(QLabel, "qt_msgbox_informativelabel"):
-        label.setWordWrap(False)  # a path breaks badly: the box widens instead
+        label.setWordWrap(False)
     open_file = box.addButton(_("Open &file"), QMessageBox.ButtonRole.ActionRole)
     open_folder = box.addButton(_("Open f&older"), QMessageBox.ButtonRole.ActionRole)
-    box.setDefaultButton(box.addButton(QMessageBox.StandardButton.Close))  # Enter just closes
+    box.setDefaultButton(box.addButton(QMessageBox.StandardButton.Close))
     box.exec()
     if box.clickedButton() is open_file:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
     elif box.clickedButton() is open_folder:
-        # Explorer opens the folder with the file picked.
         subprocess.Popen(["explorer", f"/select,{path}"])  # noqa: S603, S607
 
 
 class _Indented(QStyledItemDelegate):
-    """The dropdown's open list: each group indented under the group it's in."""
-
     def initStyleOption(self, option: QStyleOptionViewItem, index: QModelIndex) -> None:  # type: ignore[override]
         super().initStyleOption(option, index)
         option.text = TREE_INDENT * int(index.data(DEPTH) or 0) + option.text  # type: ignore[attr-defined]
@@ -664,8 +609,7 @@ def _file_safe(name: str) -> str:
 
 
 def _plain_button(icon: str, color: QColor) -> QPushButton:
-    """Refresh or Stop at Last check's foot: a plain button with its icon and words."""
     button = QPushButton()
-    button.setAutoDefault(False)  # Enter never refreshes by surprise
+    button.setAutoDefault(False)
     button.setIcon(tabler_icon(icon, color, 16))
     return button

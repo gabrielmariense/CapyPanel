@@ -1,5 +1,3 @@
-"""Updates: what's newer, the download's checks and the swap; the network is a fake."""
-
 import contextlib
 import errno
 import hashlib
@@ -50,11 +48,11 @@ def test_a_release_is_offered_only_when_newer_and_complete() -> None:
     assert release is not None and release.version == "0.26.1" and release.zip_name == ZIP
     assert updates.is_newer(release, "0.26.0") and updates.is_newer(release, "0.25.9")
     assert not updates.is_newer(release, "0.26.1") and not updates.is_newer(release, "0.27.0")
-    assert updates.parse_version("0.100.2") == (0, 100, 2)  # numbers, not text: 100 > 26
+    assert updates.parse_version("0.100.2") == (0, 100, 2)
     assert updates.parse_version("0.27.0-rc1") is None and updates.parse_version("latest") is None
     assert updates.release_from(_release_json(draft=True)) is None
     assert updates.release_from(_release_json(prerelease=True)) is None
-    assert updates.release_from(_release_json(assets=[])) is None  # files still uploading
+    assert updates.release_from(_release_json(assets=[])) is None
     assert updates.release_from(_release_json(tag_name="nightly")) is None
 
 
@@ -81,10 +79,10 @@ def test_unpacking_takes_one_capypanel_folder_and_nothing_else(tmp_path: Path) -
     app = updates.unpack(good, tmp_path / "out")
     assert (app / "CapyPanel.exe").read_bytes() == b"exe" and (app / "_internal" / "x.dll").exists()
     for bad in (
-        {"CapyPanel/CapyPanel.exe": b"", "../evil.exe": b""},  # out of the folder
+        {"CapyPanel/CapyPanel.exe": b"", "../evil.exe": b""},
         {"CapyPanel/CapyPanel.exe": b"", "CapyPanel/../../evil.exe": b""},
-        {"CapyPanel/CapyPanel.exe": b"", "Other/thing.txt": b""},  # a second folder
-        {"CapyPanel/readme.txt": b""},  # no exe
+        {"CapyPanel/CapyPanel.exe": b"", "Other/thing.txt": b""},
+        {"CapyPanel/readme.txt": b""},
     ):
         with pytest.raises(UpdateError):
             updates.unpack(_zip(tmp_path / "bad.zip", bad), tmp_path / "bad")
@@ -120,13 +118,13 @@ def test_downloads_come_only_from_github_and_stop_when_asked(
     assert (tmp_path / "a.zip").read_bytes() == payload and seen[-1] == (len(payload), len(payload))
     with pytest.raises(UpdateError, match="Cancelled"):
         updates.download("https://github.com/a", tmp_path / "b.zip", cancelled=lambda: True)
-    assert not (tmp_path / "b.zip").exists()  # nothing half-written is left
+    assert not (tmp_path / "b.zip").exists()
     with pytest.raises(UpdateError, match="bigger"):
         updates.download("https://github.com/a", tmp_path / "c.zip", limit=100)
     landed["url"] = "https://example.invalid/file"  # a redirect off GitHub
     with pytest.raises(UpdateError, match="unexpected address"):
         updates.download("https://github.com/a", tmp_path / "d.zip")
-    landed["url"] = "http://objects.githubusercontent.com/file"  # a redirect off https
+    landed["url"] = "http://objects.githubusercontent.com/file"
     with pytest.raises(UpdateError, match="unexpected address"):
         updates.download("https://github.com/a", tmp_path / "e.zip")
     with pytest.raises(UpdateError, match="https"):
@@ -162,7 +160,7 @@ def test_the_swap_puts_the_new_version_in_and_keeps_a_portable_copy_s_data(
     ) == "mine"
     assert (place.app / PORTABLE_MARKER).exists()
     assert (place.previous / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
-    updates.clean_up(place.app)  # the new version, once started
+    updates.clean_up(place.app)
     assert not place.previous.exists() and not place.staging.exists() and place.app.exists()
 
 
@@ -212,7 +210,7 @@ def test_the_helper_is_the_new_version_s_own_exe(tmp_path: Path) -> None:
     args = updates.helper_args(app, 77, "0.26.0", "0.26.1")
     root = updates.work_root(app.resolve())
     assert args[0] == str(root / "new" / "CapyPanel" / "CapyPanel.exe")
-    assert not root.is_relative_to(tmp_path)  # in app data, never beside CapyPanel's folder
+    assert not root.is_relative_to(tmp_path)
     assert args[1:] == ["--apply-update", str(app.resolve()), "77", "0.26.0", "0.26.1"]
 
 
@@ -230,7 +228,6 @@ def test_a_release_object_names_what_it_downloads() -> None:
 def test_a_file_that_won_t_move_halfway_puts_everything_back(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # An antivirus holding one file after the check: what already moved aside comes back.
     place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
     _portable(place.app)
     _app(place.new_app, "0.26.1")
@@ -238,7 +235,7 @@ def test_a_file_that_won_t_move_halfway_puts_everything_back(
 
     def stubborn(source: Any, target: Any) -> None:
         if Path(source) == place.app / "_internal" and Path(target).parent == place.previous:
-            raise PermissionError("in use")  # the exe went first: it comes back too
+            raise PermissionError("in use")
         real_rename(source, target)
 
     monkeypatch.setattr(updates.os, "rename", stubborn)
@@ -255,8 +252,7 @@ def _files(folder: Path) -> dict[str, bytes]:
 
 
 def _held_app(place: updates.Places) -> Path:
-    """The old version as a built one has it: a folder under _internal, and base_library.zip,
-    which a running CapyPanel.exe keeps open without delete sharing (Python's open() does too)."""
+    """As a built one has it: base_library.zip in _internal, held open while CapyPanel.exe runs."""
     _app(place.app, "0.28.1")
     (place.app / "_internal" / "PySide6" / "plugins").mkdir(parents=True)
     (place.app / "_internal" / "PySide6" / "plugins" / "qgif.dll").write_bytes(b"0.28.1")
@@ -269,8 +265,7 @@ def _held_app(place: updates.Places) -> Path:
 def test_a_file_held_open_in_the_old_version_stops_the_swap_and_nothing_is_lost(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A separate SSH window, a CapyPanel in another Windows session or an antivirus mid-scan
-    # holds _internal\base_library.zip: Windows won't rename _internal.
+    # Anything holding _internal\base_library.zip (an SSH window, an antivirus) stops its rename.
     place = updates.places(tmp_path / "CapyPanel")
     held = _held_app(place)
     before = _files(place.app)
@@ -292,8 +287,7 @@ def test_a_name_the_check_left_never_stops_the_next_update(tmp_path: Path) -> No
 
 
 def _on_another_drive(monkeypatch: pytest.MonkeyPatch, place: updates.Places) -> None:
-    """CapyPanel's folder on D: and app data on C:: Windows refuses a rename between them
-    (WinError 17), so the swap copies."""
+    """Windows refuses a rename across drives (WinError 17): the swap copies."""
     real_rename = os.rename
 
     def rename(source: Any, target: Any) -> None:
@@ -306,7 +300,6 @@ def _on_another_drive(monkeypatch: pytest.MonkeyPatch, place: updates.Places) ->
 
 @contextlib.contextmanager
 def _held_after_the_check(monkeypatch: pytest.MonkeyPatch, held: Path) -> Iterator[None]:
-    """An antivirus opening `held` just after the check let _internal through."""
     real_check = updates._check
     with contextlib.ExitStack() as handles:
 
@@ -323,7 +316,7 @@ def test_on_another_drive_the_old_version_is_copied_out_and_the_new_one_goes_in(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     place = updates.places(tmp_path / "CapyPanel")
-    _held_app(place)  # nothing holds it this time
+    _held_app(place)
     old = _files(place.app)
     _on_another_drive(monkeypatch, place)
     updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
@@ -334,8 +327,6 @@ def test_on_another_drive_the_old_version_is_copied_out_and_the_new_one_goes_in(
 def test_on_another_drive_a_delete_stopped_partway_gives_back_what_it_took(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # The copy is made, the delete takes _internal's subfolders first and stops at the held file;
-    # what it took comes back from the copy, then the exe, and nothing is left in app data.
     place = updates.places(tmp_path / "CapyPanel")
     held = _held_app(place)
     before = _files(place.app)
@@ -352,8 +343,6 @@ def test_on_another_drive_a_delete_stopped_partway_gives_back_what_it_took(
 def test_the_old_version_s_only_whole_copy_is_never_deleted(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # As above, but what the delete took can't come back (a full disk, say): the copy in app
-    # data is then the only whole _internal, so it stays there and the log says where.
     place = updates.places(tmp_path / "CapyPanel")
     held = _held_app(place)
     internal = _files(place.app / "_internal")
@@ -372,8 +361,6 @@ def test_the_old_version_s_only_whole_copy_is_never_deleted(
 def test_an_old_item_never_comes_back_over_a_new_one_that_wouldn_t_go(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # The new version failed its self-test and its _internal won't go (held, say): the old
-    # _internal stays whole where it waited, never mixed into the new one nor deleted.
     place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
     _app(place.new_app, "0.29.0")
     real_discard = updates._discard
@@ -390,8 +377,6 @@ def test_an_old_item_never_comes_back_over_a_new_one_that_wouldn_t_go(
 def test_a_new_file_held_for_a_moment_still_lets_the_old_version_back(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # The new version failed its self-test while an antivirus scanned a file just copied in: taking
-    # the new _internal out is tried until it goes, then the old one comes back.
     place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
     _app(place.new_app, "0.29.0")
     before = _files(place.app)
@@ -450,16 +435,15 @@ def test_no_release_published_yet_means_nothing_new(monkeypatch: pytest.MonkeyPa
 
 
 def test_the_exe_s_own_jobs_start_without_the_splash(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv(updates.NO_SPLASH, "1")  # as in the helper, which shows none
+    monkeypatch.setenv(updates.NO_SPLASH, "1")
     assert updates._env(splash=False)[updates.NO_SPLASH] == "1"
-    assert updates.NO_SPLASH not in updates._env(splash=True)  # CapyPanel itself shows it
+    assert updates.NO_SPLASH not in updates._env(splash=True)
 
 
 def test_github_s_certificate_is_checked_by_windows_with_the_host_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Python's own check trusted only roots already stored ("unable to get local issuer
-    # certificate") and its strict mode refused chains Windows trusts, so Windows checks it.
+    # Python's own check refused chains Windows trusts ("unable to get local issuer certificate").
     contexts: list[ssl.SSLContext] = []
 
     def urlopen(request: Any, timeout: float, context: ssl.SSLContext) -> Any:
@@ -474,8 +458,7 @@ def test_github_s_certificate_is_checked_by_windows_with_the_host_name(
 
 
 def test_a_start_leaves_truststore_for_the_first_question_to_github() -> None:
-    # Importing it asks Windows (WMI) which system it runs on: about 50 ms of every start when
-    # it came with the module. Its own process, as at start: this one imported it long ago.
+    # Its own process: this one imported truststore long ago, which asks WMI at import (50 ms).
     code = "import sys, capypanel.ui.app; from capypanel.ui.tool_catalog import CATALOG; "
     code += "[info.load() for info in CATALOG]; print('truststore' in sys.modules)"
     done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
@@ -485,11 +468,11 @@ def test_a_start_leaves_truststore_for_the_first_question_to_github() -> None:
 
 def test_how_often_is_one_choice_for_the_whole_pc(tmp_path: Path) -> None:
     folder = tmp_path / "tools"
-    assert updates.check_of(folder) == updates.AT_START  # nothing chosen yet
+    assert updates.check_of(folder) == updates.AT_START
     updates.set_check(folder, updates.WEEKLY)
     assert updates.check_of(folder) == updates.WEEKLY
     (folder / updates.CHECK_FILE).write_text('{"check": "hourly"}', encoding="utf-8")
-    assert updates.check_of(folder) == updates.AT_START  # nothing it knows: the default
+    assert updates.check_of(folder) == updates.AT_START
     updates.set_check(folder, updates.AT_START)
     assert not (folder / updates.CHECK_FILE).exists()
     with pytest.raises(ValueError):
@@ -513,16 +496,15 @@ def test_the_notes_in_the_app_s_language() -> None:
         "- The title shows only the version.\n\n[Docs](https://example.org/)"
     )
     portuguese = updates.notes_in(notes, "Português (Brasil)")
-    assert portuguese.startswith("- O título") and portuguese.endswith("1. Baixe.")  # with ###
+    assert portuguese.startswith("- O título") and portuguese.endswith("1. Baixe.")
     assert "English" not in portuguese
-    assert updates.notes_in(notes, "Deutsch") == notes  # no such part: all of them
+    assert updates.notes_in(notes, "Deutsch") == notes
     assert updates.notes_in("- One line, no parts.", "English") == "- One line, no parts."
 
 
 def test_the_exe_goes_out_first_and_comes_in_last(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A start clicked mid-swap finds no exe rather than one with half its files.
     place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
     _app(place.new_app, "0.26.1")
     moved: list[str] = []
@@ -542,7 +524,7 @@ def test_the_exe_goes_out_first_and_comes_in_last(
     monkeypatch.setattr(
         updates.shutil, "copytree", lambda s, d: copied.append(Path(s).name) or real_copytree(s, d)
     )
-    updates.apply(place, 1, wait=lambda _p, _t: True, test=None)  # tested before the restart
+    updates.apply(place, 1, wait=lambda _p, _t: True, test=None)
     assert moved[0] == "CapyPanel.exe" and copied[-1] == "CapyPanel.exe"
     assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.1"
 
@@ -557,7 +539,7 @@ def test_the_helper_skips_a_self_test_already_passed_and_marks_its_work(
 
     def apply(_place: Any, _pid: int, *, test: Any) -> Path:
         seen["test"] = test
-        seen["applying"] = updates.applying(app)  # its own marker, its own process
+        seen["applying"] = updates.applying(app)
         seen["marker"] = (place.staging / updates.APPLYING).exists()
         return place.previous
 
@@ -565,7 +547,7 @@ def test_the_helper_skips_a_self_test_already_passed_and_marks_its_work(
     monkeypatch.setattr(updates, "start", lambda exe, *args: None)
     assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
     assert seen == {"test": updates.self_test, "applying": False, "marker": True}
-    assert not (place.staging / updates.APPLYING).exists()  # gone before the new start
+    assert not (place.staging / updates.APPLYING).exists()
     updates.mark_tested(place, "0.26.1")
     assert updates.was_tested(place, "0.26.1") and not updates.was_tested(place, "0.26.2")
     assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
@@ -577,15 +559,15 @@ def test_a_start_during_the_swap_sees_it_and_a_leftover_marker_never_counts(
 ) -> None:
     app = _app(tmp_path / "CapyPanel", "0.26.0")
     marker = updates.places(app).staging / updates.APPLYING
-    assert not updates.applying(app)  # no marker
+    assert not updates.applying(app)
     marker.parent.mkdir(parents=True)
-    marker.write_text(str(os.getppid()), encoding="utf-8")  # a process that's running
+    marker.write_text(str(os.getppid()), encoding="utf-8")
     assert updates.applying(app)
     old = time.time() - updates.APPLYING_FOR - 1
     os.utime(marker, (old, old))
-    assert not updates.applying(app)  # a helper that never cleaned up: never obeyed
+    assert not updates.applying(app)
     marker.write_text(str(0x7FFFFFF0), encoding="utf-8")
-    assert not updates.applying(app)  # no such process
+    assert not updates.applying(app)
     marker.write_text("not a number", encoding="utf-8")
     assert not updates.applying(app)
 
@@ -601,12 +583,12 @@ def test_after_a_good_update_nothing_is_left_in_or_beside_capypanel_s_folder(
     monkeypatch.setattr(updates, "start", lambda exe, *args: None)
     assert updates.run_helper(app, 1, "0.26.3", "0.26.4") == 0
     assert (app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.4"
-    assert not place.previous.exists()  # the old version goes as soon as the new one passed
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["CapyPanel"]  # nothing beside it
-    assert sorted(p.name for p in app.iterdir()) == ["CapyPanel.exe", "_internal"]  # nor in it
-    updates.clean_up(app)  # the new version's start: the unpacked download, which ran the helper
+    assert not place.previous.exists()
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["CapyPanel"]
+    assert sorted(p.name for p in app.iterdir()) == ["CapyPanel.exe", "_internal"]
+    updates.clean_up(app)
     assert not place.staging.exists()
-    assert not updates.work_root(app.resolve()).parent.exists()  # no empty folders left either
+    assert not updates.work_root(app.resolve()).parent.exists()
 
 
 def test_every_start_clears_what_an_update_left_here_and_beside_the_folder(
@@ -617,9 +599,9 @@ def test_every_start_clears_what_an_update_left_here_and_beside_the_folder(
     old_update, old_previous = tmp_path / "CapyPanel.update", tmp_path / "CapyPanel.previous"
     for folder in (place.staging, place.previous, old_update, old_previous):
         _app(folder / "CapyPanel", "x")
-    (tmp_path / "Other.update").mkdir()  # not ours: stays
+    (tmp_path / "Other.update").mkdir()
     marker = old_update / updates.APPLYING
-    marker.write_text(str(os.getppid()), encoding="utf-8")  # a swap under way: nothing goes
+    marker.write_text(str(os.getppid()), encoding="utf-8")
     updates.clean_up(app)
     assert old_update.exists() and place.previous.exists()
     marker.unlink()
@@ -647,7 +629,6 @@ def test_the_helper_works_from_where_an_older_updater_unpacked_it(
 def test_a_folder_still_in_use_is_tried_again_until_it_goes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # The helper runs from the download for a moment after starting the new version.
     app = _app(tmp_path / "CapyPanel", "0.26.4")
     staging = updates.places(app).staging
     _app(staging / "CapyPanel", "0.26.4")
@@ -667,7 +648,6 @@ def test_a_folder_still_in_use_is_tried_again_until_it_goes(
 def test_a_file_an_earlier_update_left_that_wont_go_never_stops_the_next_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A DLL in the old version's folder stays held ("Access denied"): the swap must not stop for it.
     app = _app(tmp_path / "CapyPanel", "0.26.4")
     place = updates.places(app)
     stuck = place.previous / "_internal" / "MSVCP140_1.dll"
@@ -687,10 +667,10 @@ def test_a_file_an_earlier_update_left_that_wont_go_never_stops_the_next_one(
     monkeypatch.setattr(updates, "start", lambda exe, *args: None)
     assert updates.run_helper(app, 1, "0.26.4", "0.27.0") == 0
     assert (app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.27.0"
-    assert stuck.exists()  # still held, so it stays for now
-    assert not (place.previous.parent / "previous-2").exists()  # the one it used is gone
+    assert stuck.exists()
+    assert not (place.previous.parent / "previous-2").exists()
     monkeypatch.setattr(updates.shutil, "rmtree", real_rmtree)
-    updates.clean_up(app)  # the next start, once nothing holds it
+    updates.clean_up(app)
     assert not place.previous.exists()
 
 

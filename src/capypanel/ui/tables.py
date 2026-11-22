@@ -1,5 +1,3 @@
-"""The one table design for lists in windows like Settings, its actions in buttons under it."""
-
 from collections.abc import Callable
 
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt
@@ -17,17 +15,15 @@ from PySide6.QtWidgets import (
 from capypanel.core.i18n import _
 from capypanel.ui.menus import popup
 
-MOST_ROWS = 6  # taller lists scroll
-FEWEST_ROWS = 3  # a short list still looks like a list
+MOST_ROWS = 6
+FEWEST_ROWS = 3
 WIDEST = 480  # px: only a paragraph (a license notice) is cut, its whole text in the tooltip
-_FITS = "fitWidths"  # property: each column's width for its text, set by fit_rows
-_MOST = "mostRows"  # property: the rows it shows before it scrolls, set by fit_rows
-_STRETCH = "stretchColumn"  # property: the column that takes the room left, set by fit_rows
+_FITS = "fitWidths"
+_MOST = "mostRows"
+_STRETCH = "stretchColumn"
 
 
 class _Refit(QObject):
-    """Fits the columns again when the table changes width: the last one takes the room left."""
-
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() in (QEvent.Type.Resize, QEvent.Type.Show):
             table = watched.parent() if not isinstance(watched, QTreeWidget) else watched
@@ -37,16 +33,14 @@ class _Refit(QObject):
 
 
 def grid_table(headers: list[str]) -> QTreeWidget:
-    """A table in the app's one style: row lines, resizable columns, one row picked at a time.
-    Every column shows its whole text; when they can't all fit, the table scrolls sideways."""
     table = QTreeWidget()
-    table.setObjectName("grid")  # the stylesheet draws the lines
+    table.setObjectName("grid")
     table.setRootIsDecorated(False)
     table.setHeaderLabels(headers)
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     header = table.header()
     header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-    header.setStretchLastSection(False)  # _fit_width gives the last column what's left
+    header.setStretchLastSection(False)
     table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     refit = _Refit(table)
     table.viewport().installEventFilter(refit)
@@ -55,9 +49,6 @@ def grid_table(headers: list[str]) -> QTreeWidget:
 
 
 def fit_menu(table: QTreeWidget) -> None:
-    """Right-click on the column titles > Fit columns to content, as in the host and printer
-    tables: every column back to its full text."""
-
     def show(point: QPoint) -> None:
         menu = QMenu(table)
         menu.addAction(_("&Fit columns to content"), lambda: fit_columns(table))
@@ -69,7 +60,7 @@ def fit_menu(table: QTreeWidget) -> None:
 
 
 def fit_columns(table: QTreeWidget) -> None:
-    if table.property(_FITS) is not None:  # a grid_table: fitted and stretched as at first
+    if table.property(_FITS) is not None:
         fit_rows(table)
         return
     for column in range(table.columnCount()):
@@ -84,8 +75,6 @@ def fit_rows(
     stretch: int = -1,
     least: dict[int, int] | None = None,
 ) -> None:
-    """As tall as its rows, FEWEST_ROWS to `most` (0: as its layout makes it); each column fits
-    its text, from `least` to WIDEST; `stretch` (the last) takes the rest. Call it once filled."""
     fits = []
     for column in range(table.columnCount()):
         table.resizeColumnToContents(column)
@@ -109,7 +98,7 @@ def _fit_width(table: QTreeWidget) -> None:
     room = table.viewport().width() - sum(w for c, w in enumerate(fits) if c != stretch)
     table.setColumnWidth(stretch, max(fits[stretch], room))
     most = table.property(_MOST)
-    if most == 0:  # it fills the height its layout gives it
+    if most == 0:
         return
     rows = min(
         max(table.topLevelItemCount(), FEWEST_ROWS), most if isinstance(most, int) else MOST_ROWS
@@ -118,8 +107,6 @@ def _fit_width(table: QTreeWidget) -> None:
     row = table.sizeHintForRow(0) if first is not None else -1
     if row <= 0:
         row = table.fontMetrics().height() + 16  # the stylesheet pads each row
-    # The header, exactly `rows` rows (a 7th never peeks in), the frame, and the sideways
-    # scroll bar when the columns are wider than the table.
     across = table.horizontalScrollBar().sizeHint().height() if room < fits[stretch] else 0
     height = table.header().sizeHint().height() + rows * row + 2 * table.frameWidth() + across
     if table.height() != height or table.minimumHeight() != height:
@@ -127,9 +114,6 @@ def _fit_width(table: QTreeWidget) -> None:
 
 
 def row_menu(table: QTreeWidget, fill: Callable[[QMenu], None]) -> None:
-    """A right-click on a row picks it and opens its menu, which `fill` builds. The menu key
-    opens it for the row picked."""
-
     def show(point: QPoint) -> None:
         item = table.itemAt(point) or table.currentItem()
         if item is None:
@@ -138,7 +122,7 @@ def row_menu(table: QTreeWidget, fill: Callable[[QMenu], None]) -> None:
         menu = QMenu(table)
         fill(menu)
         at = table.visualItemRect(item).bottomLeft() if table.itemAt(point) is None else point
-        popup(menu, table.viewport().mapToGlobal(at))  # freed once closed
+        popup(menu, table.viewport().mapToGlobal(at))
 
     table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     table.customContextMenuRequested.connect(show)
@@ -151,7 +135,6 @@ def add_action(menu: QMenu, text: str, run: Callable[[], object], enabled: bool 
 
 
 def with_buttons(table: QTreeWidget, buttons: list[QPushButton]) -> QWidget:
-    """The table at full width, its buttons in a row under it, from the left."""
     row = QHBoxLayout()
     row.setContentsMargins(0, 0, 0, 0)
     for button in buttons:

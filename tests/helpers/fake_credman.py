@@ -1,5 +1,3 @@
-"""Credential Manager in memory for the tests, so no test reads or writes the real one."""
-
 import ctypes
 from dataclasses import dataclass
 from typing import Any
@@ -20,12 +18,11 @@ class Entry:
 
 
 class FakeCredentialManager:
-    """One user's generic credentials. Target names match without regard to case, as in
-    Windows; a list's filter may end in "*"."""
+    """Target names match in any case, as in Windows; a filter may end in "*"."""
 
     def __init__(self) -> None:
-        self.entries: dict[str, Entry] = {}  # by target, folded
-        self._handed_out: dict[int, list[Any]] = {}  # what CredFree frees, by address
+        self.entries: dict[str, Entry] = {}
+        self._handed_out: dict[int, list[Any]] = {}
 
     def CredWriteW(self, credential: Any, flags: int) -> bool:
         written: credstore._Credential = credential._obj  # passed with ctypes.byref
@@ -73,7 +70,6 @@ class FakeCredentialManager:
         del self._handed_out[address]
 
     def unfreed(self) -> int:
-        """How many results credstore hasn't freed yet."""
         return len(self._handed_out)
 
     @staticmethod
@@ -95,6 +91,5 @@ class FakeCredentialManager:
         return credential, [credential, blob]
 
     def _hand_out(self, pointer: Any, target: Any, keep: list[Any]) -> None:
-        """Points the caller's pointer at `target`, kept alive until CredFree."""
         ctypes.c_void_p.from_buffer(pointer).value = ctypes.addressof(target)
         self._handed_out[ctypes.addressof(target)] = [target, *keep]

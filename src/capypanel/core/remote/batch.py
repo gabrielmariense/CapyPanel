@@ -1,16 +1,11 @@
-"""Running one check on many hosts, a few at a time and stoppable."""
-
 import threading
 from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 
-WORKERS = 8  # hosts read at the same time: quick for a group, light on the network
+WORKERS = 8
 
 
 class Batch[T, R]:
-    """`work(item)` for each item, then `report(item, result, error)`, on the worker threads.
-    `halts`: an outcome that skips the rest (with `proves`, only until one proves the account)."""
-
     def __init__(
         self,
         items: Sequence[T],
@@ -23,11 +18,10 @@ class Batch[T, R]:
     ) -> None:
         self._items = list(items)
         self._work, self._report, self._halts = work, report, halts
-        # None: nothing to prove, all in parallel from the start.
         self._proves = proves
         self._workers = workers
         self._stop = threading.Event()
-        self.halted = False  # stopped by `halts`, not by stop()
+        self.halted = False
 
     def stop(self) -> None:
         self._stop.set()
@@ -37,7 +31,6 @@ class Batch[T, R]:
         return self._stop.is_set()
 
     def run(self) -> None:
-        """Blocks until every item ran or the batch stopped."""
         pending = list(self._items)
         if self._proves is not None:
             # One by one until a host accepts the account: a mistyped password is then refused
@@ -48,7 +41,7 @@ class Batch[T, R]:
                     break
         if not pending or self._stop.is_set():
             return
-        halting = self._proves is None  # proven: a refusal is that host's, not the account's
+        halting = self._proves is None
         with ThreadPoolExecutor(self._workers) as pool:
             for item in pending:
                 pool.submit(self._guarded, item, halting)
@@ -61,7 +54,7 @@ class Batch[T, R]:
         try:
             result: R | None = self._work(item)
             error: Exception | None = None
-        except Exception as e:  # reported per host; one host's failure never ends the batch
+        except Exception as e:
             result, error = None, e
         if halting and self._halts(result, error):
             self.halted = True

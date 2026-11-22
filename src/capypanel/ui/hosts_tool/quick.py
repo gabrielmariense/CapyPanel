@@ -1,11 +1,9 @@
-"""The words on Details' command buttons: one short word, nine letters at most in any language."""
+"""One short word, nine letters at most in any language."""
 
 from capypanel.core.i18n import pgettext
 
 
 def fixed_labels() -> dict[str, str]:
-    """The fixed row, which every admin has: this PC's refresh, the Commands window, and the two
-    menus that act on people and on the PC's power."""
     return {
         "refresh": pgettext("button", "Refresh"),
         "commands": pgettext("button", "Commands"),
@@ -15,7 +13,6 @@ def fixed_labels() -> dict[str, str]:
 
 
 def short_labels() -> dict[str, str]:
-    """Each command that can be a quick command, by its id."""
     return {
         "status": pgettext("button", "Status"),
         "users": pgettext("button", "Logged on"),

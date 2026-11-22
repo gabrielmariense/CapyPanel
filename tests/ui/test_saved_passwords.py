@@ -22,7 +22,6 @@ from capypanel.ui.settings.connections import ProfilesSection
 
 @pytest.fixture
 def launched(monkeypatch: pytest.MonkeyPatch) -> list[Credential | None]:
-    """The credential each launch got; no program starts and nothing touches the network."""
     calls: list[Credential | None] = []
 
     def fake_launch(tool: Any, exe: Any, target: Any, credential: Any = None, *_a: Any) -> None:
@@ -50,7 +49,6 @@ def paths(tmp_path: Path) -> settings.Paths:
 
 
 def _open(qapp: QApplication, paths: settings.Paths, prefs: dict[str, Any]) -> CapyWindow:
-    """CapyPanel opening, with these settings."""
     path = paths.profiles_dir.parent.parent / "office.json"
     return CapyWindow(paths, {"schema": 1, "recent_lists": [str(path)], **prefs})
 
@@ -73,11 +71,11 @@ def _profiles(win: CapyWindow) -> ProfilesSection:
 def _type(monkeypatch: pytest.MonkeyPatch, asked: list[str], remember: bool = False) -> None:
     def answer(dialog: CredentialDialog) -> int:
         asked.append(dialog.windowTitle())
-        assert not dialog.remember.isChecked()  # unticked until you tick it
+        assert not dialog.remember.isChecked()
         dialog.user.setText("CORP\\ana")
         dialog.password.setText("x")
         dialog.remember.setChecked(remember)
-        return 1  # Accepted
+        return 1
 
     monkeypatch.setattr(CredentialDialog, "exec", answer)
 
@@ -86,12 +84,12 @@ def test_passwords_are_kept_in_memory_only_unless_remember_is_ticked(
     window: CapyWindow, launched: list[Credential | None], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     profiles = _profiles(window)
-    assert not hasattr(profiles, "passwords")  # no Kept in setting on this page
+    assert not hasattr(profiles, "passwords")
     asked: list[str] = []
     _type(monkeypatch, asked)
     _connect(window)
     assert launched == [Credential("CORP\\ana", "x")] and len(asked) == 1
-    assert credstore.names("") == []  # nothing left the memory
+    assert credstore.names("") == []
 
 
 def test_a_remembered_password_is_used_the_next_time_capypanel_opens(
@@ -115,7 +113,7 @@ def test_a_remembered_password_is_used_the_next_time_capypanel_opens(
     assert later.hosts.accounts.known("CORP\\admin") == admin
     kept = later.hosts.kept_logins()
     assert [(k.used_for, k.saved) for k in kept] == [("Offices", True), ("Every PC", True)]
-    for login in kept:  # saved ones can be forgotten too
+    for login in kept:
         login.forget()
     assert credstore.names("") == [] and later.hosts.accounts.known("CORP\\admin") is None
 
@@ -144,13 +142,12 @@ def test_typing_a_remembered_password_again_keeps_it_remembered(window: CapyWind
                        remember=again.remember.isChecked())  # fmt: skip
     assert credstore.read("account/corp\\admin") == (admin.user, "new")
 
-    # Another account typed there isn't remembered unless ticked; a tick set by hand stays.
     other = AccountDialog(None, "Why", admin.user, saved=True)
     other.user.setText("CORP\\helpdesk")
     assert not other.remember.isChecked()
     other.user.setText(admin.user)
     assert other.remember.isChecked()
-    other.remember.click()  # off, by hand
+    other.remember.click()
     other.password.setText("x")
     assert not other.remember.isChecked()
     temporary = Account("CORP\\temp", "t")

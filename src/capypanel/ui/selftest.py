@@ -1,5 +1,3 @@
-"""`--self-test <report>`: every bundled part loads, offscreen, touching no settings or network."""
-
 import shutil
 import sys
 import tempfile
@@ -7,10 +5,9 @@ import traceback
 from collections.abc import Callable
 from pathlib import Path
 
-PYTE_NOTICES = ("LICENSE", "AUTHORS", "CHANGES-CAPYPANEL.txt")  # its license asks for them
-# The console engine CapyPanel carries for Windows 10, its license and Microsoft's notices
+PYTE_NOTICES = ("LICENSE", "AUTHORS", "CHANGES-CAPYPANEL.txt")
 CONPTY_FILES = ("conpty.dll", "OpenConsole.exe", "LICENSE", "NOTICE.md", "CHANGES-CAPYPANEL.txt")
-TERMINAL_WORDS = "self-test ─┼█"  # ─┼█: CapyPanel draws those itself
+TERMINAL_WORDS = "self-test ─┼█"
 
 
 def _bundled_files() -> list[str]:
@@ -38,7 +35,6 @@ def _bundled_files() -> list[str]:
 
 
 def _compiled_libraries() -> list[str]:
-    """What comes as compiled code: imported and used once."""
     import hashlib
     import ssl
 
@@ -79,8 +75,7 @@ def _compiled_libraries() -> list[str]:
 
 
 def _qt_parts() -> list[str]:
-    """Qt's plugins and translations, which a build can leave out without any error: the Windows
-    look, the icons' image formats, and Qt's words (OK, Cancel) in CapyPanel's languages."""
+    """Qt's plugins and translations: a build can leave them out without any error."""
     from PySide6.QtCore import QLibraryInfo, QTranslator
     from PySide6.QtGui import QGuiApplication, QImageReader
     from PySide6.QtWidgets import QApplication, QStyleFactory
@@ -105,8 +100,6 @@ def _qt_parts() -> list[str]:
 
 
 def _whole_window(root: Path) -> list[str]:
-    """The window with every tool, in every theme and language, and every page of Settings
-    (About is one: it names the version of each library that came along)."""
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication
 
@@ -156,8 +149,7 @@ def _whole_window(root: Path) -> list[str]:
 
 
 def _terminal(root: Path) -> list[str]:
-    """The SSH terminal in a tab: Windows' pseudo console runs cmd.exe (never ssh.exe, which would
-    reach the network), our pyte keeps its output, and the tab draws it, the end strip too."""
+    """Runs cmd.exe on the pseudo console, never ssh.exe, which would reach the network."""
     import os
     import time
 
@@ -187,7 +179,7 @@ def _terminal(root: Path) -> list[str]:
                 raise RuntimeError("cmd.exe on the pseudo console never ended")
             app.processEvents()
             time.sleep(0.01)
-        rows = tab.view.term.screen_text()  # each row's text, without its trailing blanks
+        rows = tab.view.term.screen_text()
         if ended != [7] or TERMINAL_WORDS not in rows:
             shown = [row for row in rows if row]
             raise RuntimeError(f"cmd.exe ended with {ended}; the screen shows {shown}")
@@ -201,8 +193,6 @@ def _terminal(root: Path) -> list[str]:
 
 
 def _console_engine(root: Path) -> list[str]:
-    """The console engine the terminal starts on Windows 10 (vendor/conpty), checked on any
-    Windows: its files and notices are there, and cmd.exe runs on it, as in _terminal."""
     import os
     import time
 
@@ -250,7 +240,6 @@ def _console_engine(root: Path) -> list[str]:
 
 
 def run(report: Path) -> int:
-    """Every check, each one's outcome a line of `report`. 0: all of them worked."""
     from capypanel import BUILD
 
     root = Path(tempfile.mkdtemp(prefix="capypanel-self-test-"))

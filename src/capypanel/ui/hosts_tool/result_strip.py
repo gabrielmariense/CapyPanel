@@ -1,5 +1,3 @@
-"""A command's answer over the host table: green and closing, or red with the reason, staying."""
-
 from collections.abc import Callable
 
 from PySide6.QtCore import QEvent, Qt, QTimer
@@ -12,14 +10,11 @@ from capypanel.ui.hosts_tool.runner import Outcome, reason_place
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes import engine as themes
 
-WORKED_FOR = 8_000  # ms a green strip stays
+WORKED_FOR = 8_000  # ms
 ICON = 16
 
 
 class IconBesideText(QWidget):
-    """A strip's icon and text as one block, the icon on the middle of the text's first line. In
-    its row with AlignVCenter, a one-line text centres beside taller buttons, its icon with it."""
-
     def __init__(self, icon: QLabel, text: QLabel) -> None:
         super().__init__()
         self._icon, self._text = icon, text
@@ -31,12 +26,11 @@ class IconBesideText(QWidget):
         self.fit_icon()
 
     def fit_icon(self) -> None:
-        """The icon's box as tall as one line of the text, so the icon sits on its middle."""
         self._icon.setFixedHeight(max(ICON, self._text.fontMetrics().lineSpacing()))
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        if event.type() == QEvent.Type.FontChange:  # a theme with its own font
+        if event.type() == QEvent.Type.FontChange:
             self.fit_icon()
 
 
@@ -48,8 +42,6 @@ class ResultStrip(QFrame):
         self._text = QLabel()
         self._text.setTextFormat(Qt.TextFormat.RichText)
         self._text.setWordWrap(True)
-        # "What does this mean?" goes inside the message, so it reads straight after it and
-        # wraps with it, as in Printers' warnings strip.
         self._text.setOpenExternalLinks(False)
         self._text.setTextInteractionFlags(help_links.LINK_KEYS)
         self._text.linkActivated.connect(lambda _href: help_links.open_place(self._place))
@@ -71,7 +63,7 @@ class ResultStrip(QFrame):
         self._retry: Callable[[], None] | None = None
         self._failed = False
         self._words = ""
-        self._place = ""  # the docs' line that explains the failure, or ""
+        self._place = ""
         self.retranslate()
         self.hide()
 
@@ -81,11 +73,9 @@ class ResultStrip(QFrame):
         self._show_words()
 
     def text(self) -> str:
-        """What it says, without its link."""
         return self._words
 
     def help_place(self) -> str:
-        """Where its "What does this mean?" goes: "" when it has none."""
         return self._place
 
     def show_outcome(self, outcome: Outcome) -> None:
@@ -96,16 +86,15 @@ class ResultStrip(QFrame):
         self._retry = outcome.retry
         self.retry_button.setVisible(outcome.retry is not None)
         self.setProperty("failed", failed)
-        self.style().unpolish(self)  # the edge's colour follows the property
+        self.style().unpolish(self)
         self.style().polish(self)
         self.show()
         if failed:
-            self._timer.stop()  # stays until closed: there's something to read
+            self._timer.stop()
         else:
             self._timer.start(WORKED_FOR)
 
     def restyle(self) -> None:
-        """Its icons in the theme's colours: green when it worked, red when it didn't."""
         failed = self._failed
         color = themes.status_color("stopped" if failed else "online")
         self._icon.setPixmap(
@@ -116,7 +105,7 @@ class ResultStrip(QFrame):
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         self.close_button.setIcon(tabler_icon("x", muted, 14))
         self._lead.fit_icon()
-        self._show_words()  # its link in the theme's link colour
+        self._show_words()
 
     def _show_words(self) -> None:
         text, place = self._words, self._place

@@ -1,5 +1,3 @@
-"""The window's own commands, defined once for menus, right-click menus and shortcuts."""
-
 from dataclasses import dataclass, fields
 
 from PySide6.QtCore import QObject
@@ -11,7 +9,6 @@ from capypanel.core.i18n import _
 def make_actions[T](
     kind: type[T], parent: QObject | None, shortcuts: dict[str, str], checkable: set[str]
 ) -> T:
-    """One QAction per field of the dataclass `kind`, without text: retranslating fills it in."""
     made = {}
     for field in fields(kind):  # type: ignore[arg-type]
         action = QAction(parent)
@@ -43,7 +40,7 @@ SHORTCUTS = {
     "help_screen": "F1",
 }
 CHECKABLE = {"show_toolbar", "show_status_bar"}
-FIXED = {"help_screen"}  # F1 is help's: shown on the Keyboard shortcuts page, never changed
+FIXED = {"help_screen"}
 
 
 def create_actions(parent: QObject) -> ShellActions:

@@ -1,5 +1,3 @@
-"""The terminal's screen on our copy of pyte; nothing typed or printed is ever logged."""
-
 from __future__ import annotations
 
 import unicodedata
@@ -23,7 +21,7 @@ WIN32_INPUT = 9001  # private mode: keys as Windows key events
 
 
 class Style(NamedTuple):
-    fg: int | str = "default"  # a palette number, "#rrggbb" or "default"
+    fg: int | str = "default"
     bg: int | str = "default"
     bold: bool = False
     italics: bool = False
@@ -35,8 +33,7 @@ class Style(NamedTuple):
 DEFAULT_STYLE = Style()
 _DEFAULT_KEY = tuple(DEFAULT_STYLE)
 _styles: dict[tuple[Any, ...], Style] = {_DEFAULT_KEY: DEFAULT_STYLE}
-# Styles kept for lines to share. Full, it starts over: every cell in its own 24-bit colour
-# would otherwise grow it without end, and it outlives the tab.
+# Full, it starts over: 24-bit colour per cell would otherwise grow it without end.
 MAX_STYLES = 4096
 _KEY = itemgetter(1, 2, 3, 4, 5, 6, 7)  # a pyte Char's fg .. reverse, read in C
 _DATA = itemgetter(0)
@@ -45,7 +42,7 @@ _DATA = itemgetter(0)
 def _style(key: tuple[Any, ...]) -> Style:
     style = _styles.get(key)
     if style is None:
-        if len(_styles) >= MAX_STYLES:  # lines keep the styles they hold
+        if len(_styles) >= MAX_STYLES:
             _styles.clear()
             _styles[_DEFAULT_KEY] = DEFAULT_STYLE
         style = _styles[key] = Style(*key)
@@ -53,14 +50,10 @@ def _style(key: tuple[Any, ...]) -> Style:
 
 
 def cells_for(char: str) -> int:
-    """The cells Windows' console gives one code point: 2 for a wide one, else 1."""
     return 2 if wcwidth(char) == 2 else 1
 
 
 class PackedLine(NamedTuple):
-    """One scrollback line: its cells' text and style runs [(start, end, style)]. `cells` has a
-    character per cell ("\\0" after a wide one), or is a tuple when a cell holds more than one."""
-
     cells: str | tuple[str, ...]
     runs: tuple[tuple[int, int, Style], ...]
     wrapped_at: int = 0  # the cells it held when its line went on to the next row; 0: it ended
@@ -72,8 +65,7 @@ def _cells(line: Any, columns: int) -> list[Any]:
 
 
 def pack(line: Any, columns: int) -> PackedLine:
-    """Packs a pyte line. map, groupby and itemgetter keep the work per cell in C: building a
-    style per cell in Python was half the cost of a flood of output."""
+    """map, groupby and itemgetter keep the per-cell work in C: a flood of output depends on it."""
     chars = _cells(line, columns)
     keys = list(map(_KEY, chars))
     datas = list(map(_DATA, chars))
@@ -108,21 +100,18 @@ def unpack(packed: PackedLine, columns: int) -> tuple[list[str], list[Style]]:
 
 
 def _unpair_before(line: Any, x: int) -> None:
-    """A character about to go in cell x, the second half of a wide one: the first half becomes
-    a space, as Windows' console does. pyte leaves it."""
+    """Writing over a wide character's second half blanks its first, as Windows' console does."""
     if x and line[x].data == "":
         line[x - 1] = line[x - 1]._replace(data=" ")
 
 
 def _unpair_after(line: Any, x: int, columns: int) -> None:
-    """Cell x, right after what was just written, the second half of a wide character whose
-    first half was written over: it becomes a space, as in the console."""
     if x < columns and line[x].data == "":
         line[x] = line[x]._replace(data=" ")
 
 
 class _Row(StaticDefaultDict[int, Char]):
-    wrapped_at = 0  # the cells it held when its line went on to the next row; 0: it ends here
+    wrapped_at = 0
 
 
 class TermScreen(pyte.Screen):
@@ -137,21 +126,20 @@ class TermScreen(pyte.Screen):
         self.scrollback: deque[PackedLine] = deque(maxlen=scrollback)
         self.in_alt = False
         self.win32_input = False  # ESC[?9001h, kept apart from pyte's modes: ESC c can't drop it
-        # A regional indicator's cells (half a flag): 2 in Windows' own console, 1 in the
-        # engine CapyPanel carries for Windows 10. The terminal sets the console's own.
+        # A regional indicator takes 2 cells in Windows' own console, 1 in the carried engine.
         self.regional_indicator_cells = 2
         self._main_buffer: Any = None
         self._reply = reply or (lambda data: None)
         self.titles_seen = 0
         self.bells = 0
-        self.lines_scrolled = 0  # lines that went into the scrollback, ever
+        self.lines_scrolled = 0
         self._cell_cache: dict[Any, dict[str, Any]] = {}
-        self._wrapped_at = 0  # while autowrap moves on: the cells the row it leaves held
+        self._wrapped_at = 0
         super().__init__(columns, lines)
         self.buffer = defaultdict(lambda: _Row(self.default_char))
 
     def _row(self, y: int) -> _Row:
-        return cast(_Row, self.buffer[y])  # every row comes from the buffer's _Row factory
+        return cast(_Row, self.buffer[y])
 
     # What the server may not do: rename the tab, ring, or get answers beyond the standard ones.
 
@@ -173,12 +161,10 @@ class TermScreen(pyte.Screen):
 
     @property
     def app_cursor_keys(self) -> bool:
-        """The program's ESC[?1h, if the console passes it on: Up is then ESC O A."""
         return APP_CURSOR_KEYS in self.mode
 
     def draw(self, data: str) -> None:
-        """pyte's stops at the first zero-width character that isn't combining and drops the rest;
-        here control characters are skipped and the rest takes the console's cells."""
+        """pyte's drops everything after a zero-width character that isn't combining."""
         if not data.isprintable():
             data = "".join(ch for ch in data if unicodedata.category(ch) != "Cc")
             if not data:
@@ -209,7 +195,7 @@ class TermScreen(pyte.Screen):
                     line = self.buffer[cursor.y]
                 else:
                     cursor.x -= 1
-            if first:  # the run's cells are contiguous: only its two ends can split a pair
+            if first:
                 first = False
                 _unpair_before(line, cursor.x)
             cell = cache.get(ch)
@@ -221,8 +207,8 @@ class TermScreen(pyte.Screen):
         self.dirty.add(cursor.y)
 
     def _draw_cells(self, data: str) -> None:
-        """The console's widths: a cell at least each, so a combining accent, joiner or variation
-        selector gets its own, and a wide character that won't fit the row wraps whole."""
+        """As the console does: a combining mark or joiner gets a cell of its own, and a wide
+        character that won't fit wraps whole."""
         data = data.translate(self.g1_charset if self.charset else self.g0_charset)
         cursor, columns = self.cursor, self.columns
         autowrap = mo.DECAWM in self.mode
@@ -250,7 +236,6 @@ class TermScreen(pyte.Screen):
         self.dirty.add(cursor.y)
 
     def _wrap(self) -> None:
-        """The line goes on to the next row; the row it leaves is marked, so a copy joins them."""
         self._wrapped_at = self.cursor.x
         try:
             self.carriage_return()
@@ -354,11 +339,11 @@ class TermScreen(pyte.Screen):
 
     def erase_in_line(self, how: int = 0, *args: Any, **kwargs: Any) -> None:
         super().erase_in_line(how, *args, **kwargs)
-        if how in (0, 2):  # the row's end is gone, and with it the line going on below
+        if how in (0, 2):
             self._row(self.cursor.y).wrapped_at = 0
 
     def erase_in_display(self, how: int = 0, *args: Any, **kwargs: Any) -> None:
-        super().erase_in_display(how, *args, **kwargs)  # the cursor's row goes by erase_in_line
+        super().erase_in_display(how, *args, **kwargs)
         erased = {0: range(self.cursor.y + 1, self.lines), 1: range(self.cursor.y)}
         for y in erased.get(how, range(self.lines)):
             self._row(y).wrapped_at = 0
@@ -366,8 +351,7 @@ class TermScreen(pyte.Screen):
             self.scrollback.clear()
 
     def resize(self, lines: int | None = None, columns: int | None = None) -> None:
-        """Blank rows go from the bottom first; lines leave the top, into the scrollback, only as
-        far as the cursor needs. pyte's cuts the top, where a failed connection's message is."""
+        """Blank rows go from the bottom: pyte's cut the top, where an error message sits."""
         lines = lines or self.lines
         columns = columns or self.columns
         if lines == self.lines and columns == self.columns:
@@ -398,7 +382,6 @@ class TermScreen(pyte.Screen):
         self.scrollback.clear()
 
     def row(self, index: int) -> tuple[list[str], list[Style]]:
-        """Row `index` of scrollback plus screen (0 is the oldest scrollback line)."""
         sb = len(self.scrollback)
         if index < sb:
             return unpack(self.scrollback[index], self.columns)
@@ -421,15 +404,13 @@ class TermScreen(pyte.Screen):
         return ["".join(unpack(p, self.columns)[0]).rstrip() for p in self.scrollback]
 
     def wrapped_at(self, index: int) -> int:
-        """The cells row `index` held when its line went on to the next row; 0 if it ends there."""
         sb = len(self.scrollback)
         if index < sb:
             return self.scrollback[index].wrapped_at
         return self._row(index - sb).wrapped_at
 
     def text_between(self, start: tuple[int, int], end: tuple[int, int]) -> str:
-        """The text from cell `start` to cell `end` (row, column; both included): a wrapped line
-        whole, lines ended with CRLF without trailing blanks, as Windows' clipboard wants them."""
+        """A wrapped line comes whole; lines end with CRLF, as Windows' clipboard wants."""
         (r0, c0), (r1, c1) = sorted((start, end))
         out = []
         for r in range(r0, r1 + 1):
@@ -437,7 +418,7 @@ class TermScreen(pyte.Screen):
             a = c0 if r == r0 else 0
             b = c1 + 1 if r == r1 else self.columns
             wrapped_at = self.wrapped_at(r) if r < r1 else 0
-            if wrapped_at:  # its blanks are part of the line
+            if wrapped_at:
                 out.append("".join(chars[a:wrapped_at]))
             else:
                 out.append("".join(chars[a:b]).rstrip() + ("\r\n" if r < r1 else ""))
@@ -445,8 +426,7 @@ class TermScreen(pyte.Screen):
 
 
 class TermStream(pyte.ByteStream):
-    """pyte's ByteStream, but a sequence its screen can't take costs only that sequence. pyte
-    raised on a CSI with "?" most handlers refuse (vim's ESC[?4m), losing the rest of the read."""
+    """pyte raised on a CSI "?" most handlers refuse (vim's ESC[?4m), losing the read."""
 
     dropped = 0
 

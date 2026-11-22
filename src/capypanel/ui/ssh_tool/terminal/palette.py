@@ -1,5 +1,3 @@
-"""The terminal's colours, from the theme's roles, so a switch recolours the scrollback too."""
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cache
@@ -12,7 +10,7 @@ from capypanel.ui.themes import engine
 _CUBE = (0, 95, 135, 175, 215, 255)
 READS = 4.5  # WCAG AA for text
 SHOWS = 3.0  # WCAG AA for a graphic: the cursor
-LAST_RESORT = ("#000000", "#ffffff")  # one of them reads on any colour
+LAST_RESORT = ("#000000", "#ffffff")
 
 
 def _xterm_256(index: int) -> str:
@@ -30,7 +28,6 @@ def _rgb(value: str) -> tuple[int, int, int]:
 
 
 def mix(color: str, base: str, amount: float) -> str:
-    """`amount` of `color` laid over `base`, as the theme engine mixes."""
     a, b = _rgb(color), _rgb(base)
     r, g, bl = (round(b[i] + (a[i] - b[i]) * amount) for i in range(3))
     return f"#{r:02x}{g:02x}{bl:02x}"
@@ -53,23 +50,21 @@ def contrast(a: str, b: str) -> float:
 
 
 def _among_ours(value: int | str) -> bool:
-    """One of the 16 or a default: the colours the swap may judge."""
     return value == "default" or (isinstance(value, int) and value < 16)
 
 
 @dataclass(frozen=True)
 class TermPalette:
     name: str
-    background: str  # the card colour
-    foreground: str  # text
-    cursor: str  # the accent, or the text colour where the accent wouldn't show
+    background: str
+    foreground: str
+    cursor: str
     selection: str
-    ansi: tuple[str, ...]  # the 16 as text
-    back: tuple[str, ...]  # the 16 as backgrounds
-    swap_to: tuple[str, ...]  # what an unreadable cell's text may take
+    ansi: tuple[str, ...]
+    back: tuple[str, ...]
+    swap_to: tuple[str, ...]
 
     def color(self, value: int | str, *, foreground: bool, bold: bool = False) -> str:
-        """The colour a cell's fg or bg value draws in, as "#rrggbb"."""
         if value == "default":
             return self.foreground if foreground else self.background
         if isinstance(value, int):
@@ -85,8 +80,7 @@ class TermPalette:
     def cell_colors(
         self, fg: int | str, bg: int | str, *, bold: bool = False, reverse: bool = False
     ) -> tuple[str, str]:
-        """A cell's text and background colours, the text swapped when it wouldn't read: not for a
-        colour from the 256 table or 24-bit, which was picked on purpose."""
+        """Text swapped when unreadable; never a 256-table or 24-bit colour, picked on purpose."""
         f = self.color(fg, foreground=True, bold=bold)
         b = self.color(bg, foreground=False)
         if reverse:
@@ -100,8 +94,6 @@ class TermPalette:
 
 
 def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
-    """The palette from a theme's roles: bg, card, text, text2, text3, accent, sel, the status
-    colours (stopped, online, attention, working) and the inks (ink_magenta, ink_cyan)."""
     hues = [r[k] for k in ("stopped", "online", "attention", "working", "ink_magenta", "ink_cyan")]
     bright = [mix("#ffffff" if dark else "#000000", h, 0.25) for h in hues]
     if dark:
@@ -109,8 +101,10 @@ def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
         back = [
             r["bg"],
             *hues[:3],
-            mix(hues[3], r["card"], 0.40),  # blue: 40 % over the card, so text reads on it
-            mix(hues[4], r["card"], 0.40),  # magenta: 40 % over the card, so text reads on it
+            mix(
+                hues[3], r["card"], 0.40
+            ),  # blue and magenta: 40 % over the card, so text reads on them
+            mix(hues[4], r["card"], 0.40),
             hues[5],
             r["text2"],
             ansi[8],
@@ -142,8 +136,6 @@ def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
 
 
 def current() -> TermPalette:
-    """The app's theme now, from the engine's live values: a custom theme's own colours, or for a
-    Windows theme its dark or light, with this PC's accent and the status colours fitted to it."""
     theme = engine.current()
     if theme.engine == "custom":
         roles = {**theme.colors, "sel": theme.colors["sel_solid"]}

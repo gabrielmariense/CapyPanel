@@ -1,4 +1,4 @@
-"""Line, block and Powerline characters drawn by our code, so they join across cells in any font."""
+"""Drawn by our code, so they join across cells in any font."""
 
 import unicodedata
 from functools import cache
@@ -19,7 +19,6 @@ DIRS = {
 }
 DASHES = {"DOUBLE": 2, "TRIPLE": 3, "QUADRUPLE": 4}
 
-# Block elements, U+2580 to U+259F: rectangles in eighths of the cell (x0, y0, x1, y1), or a shade.
 BLOCKS: dict[int, tuple[tuple[int, int, int, int], ...] | float] = {
     0x2580: ((0, 0, 8, 4),), 0x2581: ((0, 7, 8, 8),), 0x2582: ((0, 6, 8, 8),),
     0x2583: ((0, 5, 8, 8),), 0x2584: ((0, 4, 8, 8),), 0x2585: ((0, 3, 8, 8),),
@@ -37,9 +36,9 @@ BLOCKS: dict[int, tuple[tuple[int, int, int, int], ...] | float] = {
 Arms = dict[str, int]  # each arm of a line character and its weight: 1 light, 2 heavy, 3 double
 Shape = (
     tuple[Literal["arms"], Arms]
-    | tuple[Literal["dash"], tuple[int, int, bool]]  # weight, dashes, horizontal
-    | tuple[Literal["arc"], tuple[str, str]]  # the two arms a rounded corner joins
-    | tuple[Literal["diagonal"], tuple[str, ...]]  # "/", "\\" or both
+    | tuple[Literal["dash"], tuple[int, int, bool]]
+    | tuple[Literal["arc"], tuple[str, str]]
+    | tuple[Literal["diagonal"], tuple[str, ...]]
 )
 
 
@@ -52,7 +51,6 @@ def is_builtin(ch: str) -> bool:
 
 @cache
 def box_shape(ch: str) -> Shape:
-    """What a box-drawing character (U+2500 to U+257F) is, from its Unicode name."""
     name = unicodedata.name(ch, "")
     assert name.startswith("BOX DRAWINGS "), name
     words = name.removeprefix("BOX DRAWINGS ").split()
@@ -69,7 +67,6 @@ def box_shape(ch: str) -> Shape:
     parts = " ".join(words).split(" AND ")
     weights = [next((WEIGHTS[w] for w in p.split() if w in WEIGHTS), 0) for p in parts]
     for i, part in enumerate(parts):
-        # A part with no weight takes the nearest one before it, else after it.
         weight = (
             weights[i]
             or next((x for x in reversed(weights[:i]) if x), 0)
@@ -82,35 +79,28 @@ def box_shape(ch: str) -> Shape:
 
 
 class Metrics:
-    """Line widths and the cell's centre for one cell size, on whole pixels."""
-
     def __init__(self, cw: int, ch: int) -> None:
         self.cw, self.ch = cw, ch
         self.light = max(1, round(ch / 16))
         self.heavy = self.light * 2
-        self.cx = (cw - self.light) // 2  # a light line's left edge; the same in every cell
+        self.cx = (cw - self.light) // 2
         self.cy = (ch - self.light) // 2
-        # A double line's strokes sit two line widths either side of a light line's (three widths
-        # apart); less in a narrow cell, both kept a line width clear of the cell's sides.
         self.double = max(
             self.light, min(2 * self.light, self.cx - self.light, cw - self.cx - 2 * self.light)
         )
 
     def line(self, w: int, horizontal: bool) -> tuple[int, int]:
-        """A light (1) or heavy (2) line across its arm: where it starts and how thick it is."""
         t = self.light if w == 1 else self.heavy
         mid = (self.cy if horizontal else self.cx) + self.light // 2
         return mid - t // 2, t
 
 
 def _arms(p: QPainter, x: int, y: int, m: Metrics, arms: Arms, color: QColor) -> None:
-    """Each arm runs from its edge of the cell to where it meets the others, measured on the
-    strokes' own edges, so corners, tees and crossings close with no missing pixel."""
     cw, ch, lw = m.cw, m.ch, m.light
     a = {k: arms.get(k, 0) for k in (L, R, U, D)}
     d = m.double
-    xs = {-1: m.cx - d, 1: m.cx + d}  # a double vertical's two strokes: their left edges
-    ys = {-1: m.cy - d, 1: m.cy + d}  # a double horizontal's two strokes: their top edges
+    xs = {-1: m.cx - d, 1: m.cx + d}
+    ys = {-1: m.cy - d, 1: m.cy + d}
     v_lines = [m.line(a[k], False) for k in (U, D) if a[k] in (1, 2)]
     h_lines = [m.line(a[k], True) for k in (L, R) if a[k] in (1, 2)]
     v_lo, v_hi = (min(s for s, _ in v_lines), max(s + t for s, t in v_lines)) if v_lines else (0, 0)
@@ -118,7 +108,7 @@ def _arms(p: QPainter, x: int, y: int, m: Metrics, arms: Arms, color: QColor) ->
     v_double, h_double = 3 in (a[U], a[D]), 3 in (a[L], a[R])
     for arm, w in arms.items():
         horizontal = arm in (L, R)
-        first = arm in (L, U)  # runs from the cell's left or top edge towards the centre
+        first = arm in (L, U)
         cross_lines = v_lines if horizontal else h_lines
         lo, hi = (v_lo, v_hi) if horizontal else (h_lo, h_hi)
         strokes = xs if horizontal else ys
@@ -126,19 +116,17 @@ def _arms(p: QPainter, x: int, y: int, m: Metrics, arms: Arms, color: QColor) ->
         if w in (1, 2):
             s, t = m.line(w, horizontal)
             cross_double = v_double if horizontal else h_double
-            # Where a line of this weight would cross the centre along the arm: the arm's own
-            # middle, for a straight line or a half of one.
             c0, ct = m.line(w, not horizontal)
             through = (a[U] == 3 and a[D] == 3) if horizontal else (a[L] == 3 and a[R] == 3)
-            if cross_double and other:  # straight through the double lines
+            if cross_double and other:
                 end = c0 + ct if first else c0
-            elif cross_double and through:  # a tee: to the near stroke
+            elif cross_double and through:
                 end = strokes[-1] + lw if first else strokes[1]
-            elif cross_double:  # a corner: across both strokes
+            elif cross_double:
                 end = strokes[1] + lw if first else strokes[-1]
-            elif cross_lines:  # meets light or heavy lines: to their far edge
+            elif cross_lines:
                 end = hi if first else lo
-            else:  # a straight line, or half of one
+            else:
                 end = c0 + ct if first else c0
             span = (0, end) if first else (end, cw if horizontal else ch)
             if horizontal:
@@ -146,17 +134,16 @@ def _arms(p: QPainter, x: int, y: int, m: Metrics, arms: Arms, color: QColor) ->
             else:
                 p.fillRect(QRect(x + s, y + span[0], t, span[1] - span[0]), color)
             continue
-        # A double arm: two light strokes, each ending where it meets the perpendicular arms.
         across = (U, D) if horizontal else (L, R)
         for side in (-1, 1):
             near, far = (across[0], across[1]) if side < 0 else (across[1], across[0])
-            if a[near] == 3:  # inner corner
+            if a[near] == 3:
                 end = strokes[-1] + lw if first else strokes[1]
-            elif a[far] == 3:  # outer corner
+            elif a[far] == 3:
                 end = strokes[1] + lw if first else strokes[-1]
-            elif cross_lines:  # meets a light or heavy line
+            elif cross_lines:
                 end = hi if first else lo
-            elif other == 3:  # straight through
+            elif other == 3:
                 end = (cw if horizontal else ch) if first else 0
             else:
                 end = strokes[1] + lw if first else strokes[-1]
@@ -184,8 +171,7 @@ def _dash(
 
 
 def _stroke(p: QPainter, x: int, y: int, m: Metrics, color: QColor) -> None:
-    """A smooth pen kept inside the cell at (x, y): a diagonal's flat end at a corner, or a curve
-    centred half a pixel off, would reach the next cell, and the cursor's redraw would cut it."""
+    """Kept inside the cell: a stroke reaching the next one is cut by the cursor's redraw."""
     p.setClipRect(QRectF(x, y, m.cw, m.ch))
     pen = QPen(color, m.light)
     pen.setCapStyle(Qt.PenCapStyle.FlatCap)
@@ -209,7 +195,7 @@ def _arc(p: QPainter, x: int, y: int, m: Metrics, dirs: tuple[str, str], color: 
     path = QPainterPath(ends[a])
     sx = r if R in dirs else -r
     sy = r if D in dirs else -r
-    corner_h = QPointF(cxm + sx, cym)  # where the horizontal arm turns
+    corner_h = QPointF(cxm + sx, cym)
     corner_v = QPointF(cxm, cym + sy)
     if a in (L, R):
         path.lineTo(corner_h)
@@ -237,7 +223,7 @@ def _diagonal(
 
 def _blocks(p: QPainter, x: int, y: int, m: Metrics, o: int, color: QColor) -> None:
     spec = BLOCKS[o]
-    if not isinstance(spec, tuple):  # a shade: the colour at that much over the background
+    if not isinstance(spec, tuple):
         shade = QColor(color)
         shade.setAlphaF(spec)
         p.fillRect(QRect(x, y, m.cw, m.ch), shade)
@@ -307,7 +293,6 @@ def _powerline(p: QPainter, x: int, y: int, m: Metrics, o: int, color: QColor) -
 
 
 def draw(p: QPainter, ch: str, x: int, y: int, m: Metrics, color: QColor) -> None:
-    """Draws one built-in character into the cell at (x, y), in the cell's text colour."""
     o = ord(ch)
     if 0x2580 <= o <= 0x259F:
         _blocks(p, x, y, m, o, color)

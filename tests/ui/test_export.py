@@ -37,10 +37,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 def _run(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch, use: Callable[[ExportDialog], None]
 ) -> None:
-    """Opens the toolbar's Report and does `use` with the window instead of a person."""
-
-    # The window runs inside Qt's call, which only prints an exception: keep it and raise it
-    # here, or a failed check would pass.
+    # Qt only prints an exception raised in its call: raised here, or a failed check passes.
     failed: list[BaseException] = []
     opened: list[bool] = []
 
@@ -74,7 +71,7 @@ def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
         seen.append(d.source.currentText())
         assert d.columns() == list(FOR_IMPORT) and d.preset.currentText() == "For Import"
         d.source.setCurrentIndex(0)
-        assert d.preview.topLevelItemCount() == 2  # every row, not a sample
+        assert d.preview.topLevelItemCount() == 2
         assert d.rows()[0] == ["HQ-01", "10.0.0.1", "Headquarters", "kiosk;2nd floor", ""]
 
     _run(window, monkeypatch, look)
@@ -96,7 +93,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
         assert d.preset.currentIndex() == -1 and d.preset.placeholderText() == "Custom"
         assert d.header() == ["Name", "Logged-on users"]
         assert d.unchecked.text() == "2 of these hosts weren't checked yet."
-        assert d.refresh_button.isEnabled()  # users ticked: they can be checked from here
+        assert d.refresh_button.isEnabled()
         d.save_preset.click()
         assert d.preset.currentText() == "Walk-round" and d.delete_preset.isEnabled()
 
@@ -104,11 +101,11 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
     assert window.hosts.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
 
     def again(d: ExportDialog) -> None:
-        assert d.columns() == ["name", "users"]  # the last choice
+        assert d.columns() == ["name", "users"]
         assert d.preset.currentText() == "Walk-round"
         d.boxes["users"].setChecked(False)
         d.boxes["status"].setChecked(False)
-        assert not d.refresh_button.isEnabled()  # nothing from the last check is ticked
+        assert not d.refresh_button.isEnabled()
         assert d.refresh_button.toolTip() == "Tick Status or Logged-on users to refresh them"
 
     _run(window, monkeypatch, again)
@@ -129,16 +126,15 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
 
     def refresh(d: ExportDialog) -> None:
         d.boxes["status"].setChecked(True)
-        # A plain button at the box's foot, saying how many it reads; not on the title line.
-        assert d.refresh_button.text().strip() == "Refresh host"  # one host: the menu's words
+        assert d.refresh_button.text().strip() == "Refresh host"
         assert d.refresh_button.toolTip() == "Reads what's ticked in this box again"
         assert d.refresh_tip(True) and d.refresh_text(31) == "Refresh 31 hosts"
         assert d.refresh_text(0) == "Refresh" and d.nothing_to_refresh() == "No hosts to refresh"
         assert d.left_out_text(2) == "2 with no address are left out"
         assert not d.stop_button.isVisibleTo(d)
         d.refresh_button.click()
-        assert asked == [(["LOOSE-1"], True, False)]  # only the ticked check, only these hosts
-        d._progress = lambda: (0, 1)  # as while the main window's Refresh runs
+        assert asked == [(["LOOSE-1"], True, False)]
+        d._progress = lambda: (0, 1)
         d.checks_changed()
         assert not d.export_button.isEnabled() and not d.copy_button.isEnabled()
         assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Refreshing 0 of 1…"
@@ -156,16 +152,16 @@ def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
         assert d.checks_box is not None
         d.boxes["status"].setChecked(True)
         d.boxes["users"].setChecked(False)
-        assert d.checks_box.text() == "Last check" and not d.checks_time.text()  # no time yet
+        assert d.checks_box.text() == "Last check" and not d.checks_time.text()
         assert not d.note.isVisibleTo(d)
         d.boxes["users"].setChecked(True)
         assert d.note.isVisibleTo(d) and d.note.text() == "People's names: keep the file private."
-        loose = d.hosts()[0]  # LOOSE-1, the only host without a group
+        loose = d.hosts()[0]
         when = datetime.now(UTC).replace(hour=10, minute=41)
         window.hosts._status_found[loose.id] = (Status.ONLINE, when, None)
         d.checks_changed()
         assert d.checks_box.text() == "Last check" and d.checks_time.text() == clock_text(when)
-        d.boxes["status"].setChecked(False)  # only users ticked, and they weren't read
+        d.boxes["status"].setChecked(False)
         assert not d.checks_time.text()
 
     _run(window, monkeypatch, look)
@@ -177,24 +173,24 @@ def test_each_box_has_all_and_none_and_last_check_moves_under_when_narrow(
     def look(d: ExportDialog) -> None:
         links = [label for label in d.findChildren(export_hosts.QLabel)
                  if 'href="all"' in label.text()]  # fmt: skip
-        assert len(links) == 3  # one per box
-        links[0].linkActivated.emit("none")  # Host: none
+        assert len(links) == 3
+        links[0].linkActivated.emit("none")
         assert not any(d.boxes[k].isChecked() for k in ("name", "address", "group"))
-        links[2].linkActivated.emit("all")  # Last check: all
+        links[2].linkActivated.emit("all")
         assert d.boxes["status"].isChecked() and d.boxes["users"].isChecked()
         grid = d._sections  # pyright: ignore[reportPrivateUsage]
         last = d._section_boxes[-1]  # pyright: ignore[reportPrivateUsage]
         d.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
-        d.show()  # a hidden window gets no resize events
+        d.show()
 
         def place() -> tuple[int, int]:
             row, column, _rows, _columns = grid.getItemPosition(grid.indexOf(last))  # type: ignore[misc]
             return row, column
 
         d.resize(2000, 600)
-        assert place() == (0, 2)  # side by side
+        assert place() == (0, 2)
         d.resize(200, 600)
-        assert place() == (1, 0)  # under the other two
+        assert place() == (1, 0)
 
     _run(window, monkeypatch, look)
 
@@ -215,11 +211,11 @@ def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
     def save(d: ExportDialog) -> None:
         for key, box in d.boxes.items():
             box.setChecked(key in ("name", "address"))
-        d.save_preset.click()  # Cancel: the old preset stays as it was
+        d.save_preset.click()
         assert asked == ["A preset named “Walk-round” already exists. Replace it?"]
         assert window.hosts.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
         answer["replace"] = True
-        d.save_preset.click()  # Replace: one preset, under the name just typed
+        d.save_preset.click()
         assert window.hosts.prefs["export_presets"] == {"walk-round": ["name", "address"]}
         assert d.preset.currentText() == "walk-round"
 
@@ -235,7 +231,7 @@ def test_export_saves_csv_that_imports_back_and_says_where(
     told: list[str] = []
     monkeypatch.setattr(export_hosts, "exported_message", lambda _p, text, _path: told.append(text))
     _run(window, monkeypatch, lambda d: d.export_button.click())
-    assert target.read_bytes().startswith(b"\xef\xbb\xbf")  # a BOM, for Excel's accents
+    assert target.read_bytes().startswith(b"\xef\xbb\xbf")
     rows = parse(read_text(target)).rows
     assert {r.name for r in rows} == {"HQ-01", "LOOSE-1"}
     hq = next(r for r in rows if r.name == "HQ-01")
@@ -249,7 +245,7 @@ def test_copy_puts_every_row_on_the_clipboard_for_excel(
 ) -> None:
     _run(window, monkeypatch, lambda d: d.copy_button.click())
     lines = QApplication.clipboard().text().splitlines()
-    assert lines[0] == "Name\tAddress\tGroup\tTags\tNotes"  # tabs: Excel splits them
+    assert lines[0] == "Name\tAddress\tGroup\tTags\tNotes"
     assert len(lines) == 3
     assert window.statusBar().currentMessage() == "Copied 2 hosts from All hosts."
 
@@ -259,26 +255,25 @@ def test_choices_are_kept_at_once_and_copy_keeps_the_window_open(
 ) -> None:
     def pick(d: ExportDialog) -> None:
         close = d.buttons.button(QDialogButtonBox.StandardButton.Close)
-        assert close is not None  # nothing to cancel: choices are kept as they're made
+        assert close is not None
         d.source.setCurrentIndex(d.source.findText("Headquarters (1 host)"))
         for key, box in d.boxes.items():
             box.setChecked(key == "name")
         d.copy_button.click()
-        assert d.result() != QDialog.DialogCode.Accepted  # still open after Copy
+        assert d.result() != QDialog.DialogCode.Accepted
 
     _run(window, monkeypatch, pick)
     seen: list[object] = []
 
-    def reopen(d: ExportDialog) -> None:  # closed without saving a file
+    def reopen(d: ExportDialog) -> None:
         seen.extend([d.source.currentText(), d.columns()])
 
     _run(window, monkeypatch, reopen)
-    assert seen == ["All hosts (2 hosts)", ["name"]]  # the hosts shown; the columns kept
+    assert seen == ["All hosts (2 hosts)", ["name"]]
 
 
 @pytest.fixture
 def rooms(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
-    """Rooms added out of order: Room 4 last, after Room 10."""
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, ward = HostList().add_group("Ward")
     for n, address in ((1, "10.0.0.9"), (3, "10.0.0.2"), (10, "10.0.0.5"), (4, "10.0.0.1")):
@@ -301,7 +296,7 @@ def test_report_lists_every_source_in_the_tables_order_not_the_order_added(
     seen: list[list[str]] = []
 
     def look(d: ExportDialog) -> None:
-        for i in range(d.source.count()):  # everything, the group, no group
+        for i in range(d.source.count()):
             d.source.setCurrentIndex(i)
             if d.hosts():
                 seen.append(_names(d))
@@ -310,7 +305,7 @@ def test_report_lists_every_source_in_the_tables_order_not_the_order_added(
     assert seen == [["Room 1", "Room 3", "Room 4", "Room 10"]] * 2
 
     seen.clear()
-    rooms.hosts.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)  # Address, Z–A
+    rooms.hosts.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)
     _run(rooms, monkeypatch, lambda d: seen.append(_names(d)))
     assert seen == [["Room 1", "Room 10", "Room 3", "Room 4"]]
 
@@ -322,10 +317,10 @@ def test_a_click_on_a_preview_title_sorts_and_copy_follows(
 
     def sort(d: ExportDialog) -> None:
         header = d.preview.header()
-        header.sectionClicked.emit(1)  # Address, A–Z
+        header.sectionClicked.emit(1)
         seen.append(_names(d))
         assert header.isSortIndicatorShown() and header.sortIndicatorSection() == 1
-        header.sectionClicked.emit(1)  # again: Z–A
+        header.sectionClicked.emit(1)
         seen.append(_names(d))
         assert header.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
         top = d.preview.topLevelItem(0)
@@ -350,9 +345,8 @@ def test_a_status_never_read_says_not_checked_in_the_preview_and_stays_empty_in_
             box.setChecked(key in ("name", "status", "users"))
         top = d.preview.topLevelItem(0)
         assert top is not None
-        # Status in words, as the main table; who's logged on stays empty until a check.
         assert [top.text(c) for c in range(3)] == ["Room 1", "Not checked", ""]
-        assert d.rows()[0] == ["Room 1", "", ""]  # what a file or a copy gets
+        assert d.rows()[0] == ["Room 1", "", ""]
         d.copy_button.click()
 
     _run(rooms, monkeypatch, look)

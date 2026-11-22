@@ -1,5 +1,3 @@
-"""First-run guides and Profile cleanup's first-use warning, each started by its test."""
-
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -41,7 +39,7 @@ def _settle() -> None:
 
 
 def test_nothing_shows_on_its_own_without_a_screen(window: CapyWindow) -> None:
-    assert not guides.on_screen(window)  # tests and screenshot scripts: no person to read it
+    assert not guides.on_screen(window)
     window.show_tool("hosts")
     _settle()
     assert window.guides.running == "" and window.guides.card.isHidden()
@@ -49,7 +47,7 @@ def test_nothing_shows_on_its_own_without_a_screen(window: CapyWindow) -> None:
 
 def test_someone_new_gets_every_guide_and_someone_upgrading_none_of_them() -> None:
     assert guides.seen_from({"schema": 1}) == []
-    upgrading = {"schema": 1, "window_geometry": "AAA"}  # CapyPanel ran here before
+    upgrading = {"schema": 1, "window_geometry": "AAA"}
     assert guides.seen_from(upgrading) == list(guides.FIRST_STEPS)
     assert upgrading["guides"] == list(guides.FIRST_STEPS)
     kept = {"guides": ["home"], "window_geometry": "AAA"}
@@ -65,7 +63,7 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     assert card.title.text() == "Welcome to CapyPanel" and not card.mascot.isHidden()
     assert card.dots.text() == "● ○ ○ ○" and card.back_button.isHidden()
     assert not runner.shade.isHidden() and runner.shade.geometry() == window.rect()
-    assert runner.shade.holes == []  # a welcome points at nothing: in the middle
+    assert runner.shade.holes == []
     middle = card.geometry().center() - window.rect().center()
     assert abs(middle.x()) <= 1 and abs(middle.y()) <= 1
     card.next_button.click()
@@ -74,22 +72,22 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     shown = [
         t for t, tile in zip(tiles, window.home.tiles, strict=True) if tile.isVisibleTo(window)
     ]
-    assert runner.shade.holes == shown  # every tile outlined, or none: never just one
+    assert runner.shade.holes == shown
     card.next_button.click()
     assert card.title.text() == "The sidebar"
     assert card.dots.text() == "○ ○ ● ○" and not card.back_button.isHidden()
     rail = QRect(window.rail.mapTo(window, QPoint(0, 0)), window.rail.size())
-    assert runner.shade.holes == [rail]  # the rail stays bright, outlined
-    assert not card.geometry().intersects(rail)  # and the card beside it, not over it
+    assert runner.shade.holes == [rail]
+    assert not card.geometry().intersects(rail)
     assert window.rect().contains(card.geometry())
     card.next_button.click()
     assert card.title.text() == "Help"
     help_title = window.menuBar().actionGeometry(window._help_menu.menuAction())
     assert runner.shade.holes == [
         QRect(window.menuBar().mapTo(window, help_title.topLeft()), help_title.size())
-    ]  # just "Help" on the menu bar
+    ]
     assert card.next_button.text() == "Done" and card.skip_button.isHidden()
-    assert "getting-started/" in card.text.text()  # the last card links to its docs page
+    assert "getting-started/" in card.text.text()
     card.next_button.click()
     assert runner.running == "" and card.isHidden() and runner.seen("home")
     assert window.prefs["guides"] == ["home"]
@@ -102,7 +100,7 @@ def test_skip_counts_as_seen_and_leaving_the_screen_doesn_t(window: CapyWindow) 
     assert runner.seen("hosts")
     window.prefs["guides"].clear()
     runner.show(window._home_guide())
-    window.show_tool("hosts")  # another screen: Home's guide goes, unseen
+    window.show_tool("hosts")
     assert runner.running == "" and not runner.seen("home")
 
 
@@ -123,15 +121,15 @@ def test_a_card_whose_control_is_hidden_shows_beside_its_panel(window: CapyWindo
 def test_a_card_always_fits_in_the_window() -> None:
     room = QRect(0, 0, 1000, 700)
     gap = guides.GAP + guides.OUTLINE
-    spot = QRect(10, 10, 50, 50)  # room on its right: the card goes there
+    spot = QRect(10, 10, 50, 50)
     assert guides._card_spot(spot, 300, 150, room) == QPoint(spot.right() + gap, 10)
-    edge = QRect(900, 10, 80, 40)  # no room on its right, nor under it: on its left
+    edge = QRect(900, 10, 80, 40)
     left = guides._card_spot(edge, 300, 150, room)
     assert left == QPoint(edge.left() - gap - 300, 10)
-    low = QRect(10, 600, 900, 50)  # wide and low: over it
+    low = QRect(10, 600, 900, 50)
     over = guides._card_spot(low, 300, 150, room)
     assert over == QPoint(10, low.top() - gap - 150)
-    huge = guides._card_spot(QRect(0, 0, 1000, 700), 300, 150, room)  # nowhere free
+    huge = guides._card_spot(QRect(0, 0, 1000, 700), 300, 150, room)
     assert room.contains(QRect(huge.x(), huge.y(), 300, 150))
 
 
@@ -169,7 +167,7 @@ def test_the_user_profiles_warning_needs_its_tick(qapp: QApplication) -> None:
 def test_user_profiles_asks_first_and_cancel_keeps_you_where_you_were(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(window_module, "on_screen", lambda _window: True)  # as for a person
+    monkeypatch.setattr(window_module, "on_screen", lambda _window: True)
     monkeypatch.setattr(guides, "on_screen", lambda _window: True)
     answers = iter([QDialog.DialogCode.Rejected, QDialog.DialogCode.Accepted])
     asked: list[bool] = []
@@ -181,13 +179,13 @@ def test_user_profiles_asks_first_and_cancel_keeps_you_where_you_were(
     monkeypatch.setattr(first_use, "run_modal", answer)
     profiles = window.tools["profiles"]
     window.show_tool("hosts")
-    window.show_tool("profiles")  # Cancel
+    window.show_tool("profiles")
     assert asked == [True] and window.shown_tool() is window.hosts
     assert profiles.first_use_pending()
-    window.show_tool("profiles")  # ticked and continued
+    window.show_tool("profiles")
     assert window.shown_tool() is profiles and not profiles.first_use_pending()
     window.show_tool("hosts")
-    window.show_tool("profiles")  # never again
+    window.show_tool("profiles")
     assert asked == [True, True]
 
 
@@ -195,7 +193,7 @@ def test_a_start_on_user_profiles_waits_for_its_warning(qapp: QApplication, tmp_
     (tmp_path / settings.PORTABLE_MARKER).touch()
     prefs = {"schema": 1, settings.START_KEY: "profiles"}
     win = CapyWindow(settings.resolve_paths(tmp_path), prefs)
-    assert win.shown_tool() is None  # Home: the warning comes when the person opens it
+    assert win.shown_tool() is None
     win.close()
 
 
@@ -209,11 +207,11 @@ def test_while_a_guide_runs_only_the_card_takes_clicks_and_keys(window: CapyWind
     _settle()
     bar = window.statusBar()
     middle = bar.mapTo(window, bar.rect().center())
-    assert window.childAt(middle) is runner.shade  # under the shade: no click reaches it
-    assert runner.eventFilter(window.hosts.table, _key())  # nor a key
-    assert not runner.eventFilter(runner.card.next_button, _key())  # the card's own do
+    assert window.childAt(middle) is runner.shade
+    assert runner.eventFilter(window.hosts.table, _key())
+    assert not runner.eventFilter(runner.card.next_button, _key())
     next_button = runner.card.next_button
-    assert window.childAt(next_button.mapTo(window, QPoint(5, 5))) is next_button  # on top
+    assert window.childAt(next_button.mapTo(window, QPoint(5, 5))) is next_button
     runner.card.skip_button.click()
     assert runner.shade.isHidden() and not runner.eventFilter(window.hosts.table, _key())
 
@@ -226,7 +224,7 @@ def test_a_step_that_asks_for_a_click_lets_its_control_take_it(window: CapyWindo
     window.guides.show(guide)
     _settle()
     centre = button.mapTo(window, button.rect().center())
-    assert window.childAt(centre) is button  # through the shade's hole
+    assert window.childAt(centre) is button
     assert not window.guides.eventFilter(button, _key())
     window.guides.stop()
     button.deleteLater()
@@ -238,15 +236,15 @@ def test_the_card_is_as_tall_as_its_wrapped_words(window: CapyWindow) -> None:
     _settle()
     card = window.guides.card
     text = card.text
-    assert text.height() >= text.heightForWidth(text.width())  # no line cut off
+    assert text.height() >= text.heightForWidth(text.width())
     assert card.geometry().contains(text.geometry().translated(card.pos()))
     window.guides.stop()
 
 
 def test_a_card_keeps_clear_of_the_panel_it_talks_about() -> None:
     room = QRect(0, 0, 1000, 700)
-    spot = QRect(200, 100, 300, 400)  # the table
-    details = QRect(520, 0, 480, 700)  # on its right: where the card would go first
+    spot = QRect(200, 100, 300, 400)
+    details = QRect(520, 0, 480, 700)
     point = guides._card_spot(spot, 300, 150, room, [spot, details])
     card = QRect(point.x(), point.y(), 300, 150)
     assert room.contains(card) and not card.intersects(details) and not card.intersects(spot)
@@ -254,14 +252,14 @@ def test_a_card_keeps_clear_of_the_panel_it_talks_about() -> None:
 
 def test_with_no_free_place_the_card_hides_the_least_it_can() -> None:
     room = QRect(0, 0, 1000, 700)
-    table = QRect(300, 80, 400, 600)  # what it points at
-    details = QRect(720, 0, 280, 700)  # a panel it must keep clear of
+    table = QRect(300, 80, 400, 600)
+    details = QRect(720, 0, 280, 700)
     point = guides._card_spot(table, 360, 150, room, [table, details])
     card = QRect(point.x(), point.y(), 360, 150)
     beside = QRect(table.right() + guides.GAP + guides.OUTLINE, table.top(), 360, 150)
     assert room.contains(card)
     assert guides._covered(card, [table, details]) < guides._covered(beside, [table, details])
-    assert not card.intersects(details)  # the narrow left side, over a corner of the table
+    assert not card.intersects(details)
 
 
 def test_the_hosts_guide_shows_a_sample_pc_that_is_never_saved_or_read(
@@ -279,16 +277,16 @@ def test_the_hosts_guide_shows_a_sample_pc_that_is_never_saved_or_read(
     assert hosts.sample_shown() and hosts.table.selected_ids() == [SAMPLE_ID]
     sample = hosts.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
     assert sample is not None and sample.address.startswith("192.0.2.") and sample.tags
-    assert hosts.nav.tags.topLevelItemCount() >= 1  # its tag, for the Tags card
+    assert hosts.nav.tags.topLevelItemCount() >= 1
     hosts.check_hosts([sample], status=True, users=False)
-    assert checked == []  # nothing is read from it
+    assert checked == []
     titles = []
     while not window.guides.card.isHidden():
         titles.append(window.guides.card.title.text())
         window.guides.card.next_button.click()
-    assert "Tags" in titles and titles[-1] == "View"  # every tool's guide ends on View
+    assert "Tags" in titles and titles[-1] == "View"
     assert not hosts.sample_shown() and hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
-    assert doc.path.read_bytes() == saved  # the file never had it
+    assert doc.path.read_bytes() == saved
 
 
 def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
@@ -309,19 +307,19 @@ def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
     assert printers.sample_shown() and printers.table.selected_ids() == [SAMPLE_ID]
     sample = printers.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
     assert sample is not None and sample.address.startswith("192.0.2.") and sample.tags
-    assert printers.nav.tags.topLevelItemCount() >= 1  # its tag, for the Tags card
+    assert printers.nav.tags.topLevelItemCount() >= 1
     samples = [h for h in printers.document.hosts.hosts if is_sample(h.id)]  # type: ignore[union-attr]
     words = [printers.table._rows[h.id].text(printers.table.STATUS) for h in samples]
-    assert words == ["Idle", "Toner low", "Paper jam", "Offline"]  # one per status, made up
+    assert words == ["Idle", "Toner low", "Paper jam", "Offline"]
     top = printers.table.topLevelItem(0)
-    assert top is not None and top.data(0, ROLE_ID) == SAMPLE_ID  # on top of the table
-    assert printers.sample_row(window) is not None  # for "Your printers" to outline
-    assert len(printers._attention) >= 3  # the rail's count and the strip show them
-    printers.check_printers(samples)  # Refresh, the button's or a row's
-    printers._auto_refresh()  # Refresh on its own waits until the guide ends
+    assert top is not None and top.data(0, ROLE_ID) == SAMPLE_ID
+    assert printers.sample_row(window) is not None
+    assert len(printers._attention) >= 3
+    printers.check_printers(samples)
+    printers._auto_refresh()
     printers.table.select_ids([h.id for h in samples])
-    printers.open_web_pages()  # Web page, a double-click, Enter
-    assert runs == [] and opened == []  # nothing ever reaches their addresses
+    printers.open_web_pages()
+    assert runs == [] and opened == []
     printers.table.select_ids([SAMPLE_ID])
     titles = []
     while not window.guides.card.isHidden():
@@ -330,13 +328,12 @@ def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
     assert titles[:2] == ["Your printer lists", "Tags"] and titles[-1] == "View"
     assert not printers.sample_shown()
     assert printers.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
-    assert not any(is_sample(k) for k in printers._checked)  # their made-up results go too
+    assert not any(is_sample(k) for k in printers._checked)
     assert not any(is_sample(k) for k in printers._attention)
-    assert doc.path.read_bytes() == saved  # the file never had it
+    assert doc.path.read_bytes() == saved
 
 
 def _cards(window: CapyWindow) -> list[tuple[str, str]]:
-    """Each card's title and words, Next after Next, to the guide's end."""
     card, seen = window.guides.card, []
     while not card.isHidden():
         seen.append((card.title.text(), card.text.text()))
@@ -361,7 +358,7 @@ def test_the_ssh_guide_shows_a_sample_server_that_is_never_connected_or_checked(
     assert ssh.sample_shown() and ssh.table.selected_ids() == [SAMPLE_ID]
     sample = ssh.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
     assert sample is not None and sample.address.startswith("192.0.2.")
-    ssh.connect_selected()  # the sample is the one picked
+    ssh.connect_selected()
     ssh.connect_selected(window=True)
     ssh.check_hosts([sample])
     assert no_ssh == [] and ssh.connections() == [] and checked == []
@@ -374,7 +371,7 @@ def test_the_ssh_guide_shows_a_sample_server_that_is_never_connected_or_checked(
         " The first time, ssh.exe asks whether you trust the server. Type yes, then press Enter."
     )
     assert not ssh.sample_shown() and ssh.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
-    assert doc.path.read_bytes() == saved  # the file never had it
+    assert doc.path.read_bytes() == saved
 
 
 def test_the_guide_card_s_buttons_follow_a_language_switch(window: CapyWindow) -> None:
@@ -417,29 +414,29 @@ def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
     window.commands.show_guide.trigger()
     _settle()
     assert window.guides.running == "profiles"
-    assert SAMPLE_ID in profiles.tabs.tab_keys()  # a tab to point at, never read from a PC
+    assert SAMPLE_ID in profiles.tabs.tab_keys()
     page = profiles._pages[SAMPLE_ID]
     assert page.scan is not None and len(page.scan.profiles) == 3
-    assert profiles.tabs.current() != SAMPLE_ID  # it starts on the Hosts tab
+    assert profiles.tabs.current() != SAMPLE_ID
     card = window.guides.card
-    assert card.title.text() == "Your lists"  # the lists before the hosts in them
+    assert card.title.text() == "Your lists"
     while card.title.text() != "The profiles":
         card.next_button.click()
-    assert profiles.tabs.current() == SAMPLE_ID  # then shows the sample's own tab, scanned
+    assert profiles.tabs.current() == SAMPLE_ID
     card.back_button.click()
-    assert profiles.tabs.current() != SAMPLE_ID  # and Back goes back to the Hosts tab
+    assert profiles.tabs.current() != SAMPLE_ID
     while card.title.text() != "A profile's details":
         card.next_button.click()
     picked = page.table.selected()
     box = page.table.info_box(picked.ident) if picked is not None else None
-    assert box is not None  # the picked row shows its (i), and only the (i) is outlined
+    assert box is not None
     viewport = page.table.tree.viewport()
     assert window.guides.shade.holes == [QRect(viewport.mapTo(window, box.topLeft()), box.size())]
     while card.title.text() != "Ticked to delete":
         card.next_button.click()
-    assert len(page.table.ticked()) == 2  # the two that can be deleted, as an example
+    assert len(page.table.ticked()) == 2
     card.back_button.click()
-    assert page.table.ticked() == []  # and untick again going back
+    assert page.table.ticked() == []
     window.guides.card.skip_button.click()
     assert SAMPLE_ID not in profiles.tabs.tab_keys() and SAMPLE_ID not in profiles._kept
     assert window.hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
@@ -450,20 +447,20 @@ def test_a_guide_shows_hidden_panels_and_puts_its_sample_on_top(window: CapyWind
     window.show_tool("hosts")
     tags = hosts._list_commands.show_tags
     if tags.isChecked():
-        tags.trigger()  # this person hid the Tags panel
+        tags.trigger()
     assert not hosts.nav.tags.isVisibleTo(window)
     window.commands.show_guide.trigger()
     _settle()
-    assert hosts.nav.tags.isVisibleTo(window)  # shown for the Tags card
+    assert hosts.nav.tags.isVisibleTo(window)
     top = hosts.table.topLevelItem(0)
-    assert top is not None and top.data(0, ROLE_ID) == SAMPLE_ID  # first, whatever the order
+    assert top is not None and top.data(0, ROLE_ID) == SAMPLE_ID
     card = window.guides.card
     while card.title.text() != "Details":
         card.next_button.click()
     row = hosts.sample_row(window)
-    assert row is not None and row in window.guides.shade.holes  # its row outlined too
+    assert row is not None and row in window.guides.shade.holes
     card.skip_button.click()
-    assert not tags.isChecked() and not hosts.nav.tags.isVisibleTo(window)  # hidden again
+    assert not tags.isChecked() and not hosts.nav.tags.isVisibleTo(window)
 
 
 def test_back_works_with_a_real_click_through_the_window(window: CapyWindow) -> None:
@@ -476,7 +473,7 @@ def test_back_works_with_a_real_click_through_the_window(window: CapyWindow) -> 
 
     def click(button: QPushButton) -> None:
         spot = button.mapTo(window, button.rect().center())
-        assert window.childAt(spot) is button  # nothing covers it
+        assert window.childAt(spot) is button
         QTest.mouseClick(window.windowHandle(), Qt.MouseButton.LeftButton, pos=spot)
         _settle()
 
@@ -504,13 +501,13 @@ def test_back_still_clicks_when_the_window_gets_the_focus_during_the_press(
     spot = card.back_button.mapTo(window, card.back_button.rect().center())
     handle = window.windowHandle()
     QTest.mousePress(handle, Qt.MouseButton.LeftButton, pos=spot)
-    # On a real screen, Windows gives the window itself the focus as it's clicked: that must
-    # not take the focus from the button being pressed, which would un-press it.
+    # On a real screen Windows focuses the clicked window: taking the focus from a pressed
+    # button would un-press it.
     QApplication.sendEvent(
         handle, QFocusEvent(QEvent.Type.FocusIn, Qt.FocusReason.MouseFocusReason)
     )
     _settle()
-    QTest.mouseRelease(handle, Qt.MouseButton.LeftButton, pos=spot)  # no move in between
+    QTest.mouseRelease(handle, Qt.MouseButton.LeftButton, pos=spot)
     _settle()
     assert card.title.text() == "Four tools"
     runner.stop()

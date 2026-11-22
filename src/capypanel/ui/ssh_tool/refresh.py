@@ -1,5 +1,3 @@
-"""Refresh on SSH hosts: their SSH port, connected and closed at once, sending nothing."""
-
 import threading
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -20,16 +18,13 @@ class Target:
 
 
 def check(target: Target) -> Checked:
-    """One host's SSH port. Never raises."""
     when = datetime.now()
     state, address = port_state(target.address, target.port)
     return Checked(when, state, address, target.port)
 
 
 class SshRun(QObject):
-    """One Refresh over some hosts."""
-
-    found = Signal(str, object)  # host id, Checked
+    found = Signal(str, object)
     finished = Signal()
 
     def __init__(self, targets: Sequence[Target]) -> None:
@@ -55,6 +50,6 @@ class SshRun(QObject):
             self.finished.emit()
 
     def _report(self, target: Target, found: Checked | None, error: Exception | None) -> None:
-        if found is None:  # a bug in the check: the host shows as not answering, the rest go on
+        if found is None:
             found = Checked(datetime.now(), PortState.NO_ANSWER, None, target.port)
         self.found.emit(target.host_id, found)
