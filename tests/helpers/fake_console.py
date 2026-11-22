@@ -36,7 +36,6 @@ class FakeConsole:
         self.closed = False
 
     def prints(self, data: bytes) -> None:
-        """The program prints `data`."""
         was_empty = not self._out
         self._out += data
         if was_empty:
