@@ -1,5 +1,3 @@
-"""A pretend SNMP printer on 127.0.0.1 for tests, over v2c or v3, refusing as a real one does."""
-
 import socket
 import threading
 import time

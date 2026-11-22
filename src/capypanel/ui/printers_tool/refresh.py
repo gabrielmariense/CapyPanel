@@ -1,5 +1,3 @@
-"""Refresh on printers: an SNMP read each on a background thread, and one Doc360 download."""
-
 import json
 import logging
 import threading

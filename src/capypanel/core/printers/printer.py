@@ -1,5 +1,3 @@
-"""A printer's details, under its host entry's "printer" key: a printer list is a host list."""
-
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any

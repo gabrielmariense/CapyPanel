@@ -1,5 +1,3 @@
-"""Tries Refresh's reading on one real printer, from a terminal."""
-
 import getpass
 import re
 import sys

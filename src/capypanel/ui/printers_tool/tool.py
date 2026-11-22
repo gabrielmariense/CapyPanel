@@ -1,5 +1,3 @@
-"""The Printers tool: printer lists, their web pages, and Refresh over SNMP."""
-
 import logging
 from collections.abc import Callable, Collection, Sequence
 from dataclasses import replace

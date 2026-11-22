@@ -1,5 +1,3 @@
-"""Page counters from Doc360 MPS: one login, the "latest counters" CSV export, a logout."""
-
 import contextlib
 import csv
 import io

@@ -1,5 +1,3 @@
-"""A printer's last Refresh in words and colours: one place, so table, Details and Report agree."""
-
 import html
 import re
 from collections.abc import Mapping

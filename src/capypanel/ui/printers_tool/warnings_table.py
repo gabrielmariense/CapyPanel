@@ -1,5 +1,3 @@
-"""Settings › Printers › Warnings and supplies: the Warnings table, one row per reason."""
-
 from PySide6.QtCore import (
     QAbstractItemModel,
     QEvent,

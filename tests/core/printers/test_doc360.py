@@ -1,5 +1,3 @@
-"""Doc360 MPS counters against a small fake portal on this PC, with invented data."""
-
 import logging
 import subprocess
 import sys

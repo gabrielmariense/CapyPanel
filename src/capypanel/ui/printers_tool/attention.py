@@ -1,5 +1,3 @@
-"""The strip above the printer table while printers need attention, with Show and Show all."""
-
 from collections import Counter
 from collections.abc import Iterable
 

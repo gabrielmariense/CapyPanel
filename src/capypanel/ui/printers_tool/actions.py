@@ -1,5 +1,3 @@
-"""The Printers tool's commands: the list workspace's, plus the printers' own."""
-
 from dataclasses import dataclass
 
 from PySide6.QtCore import QObject

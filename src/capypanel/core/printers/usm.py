@@ -1,5 +1,3 @@
-"""SNMP v3's user-based security (RFC 3414, 7860 and 3826): keys, signatures, encryption."""
-
 import hashlib
 import hmac
 import secrets

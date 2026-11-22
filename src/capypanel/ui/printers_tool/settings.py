@@ -1,5 +1,3 @@
-"""The Printers tool's part of Settings: General, Warnings and supplies, and Connecting."""
-
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING

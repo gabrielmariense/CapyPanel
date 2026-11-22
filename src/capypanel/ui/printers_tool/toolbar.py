@@ -1,5 +1,3 @@
-"""The Printers toolbar, slot for slot like Hosts'; Refresh is a plain button (one check)."""
-
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QMenu
 

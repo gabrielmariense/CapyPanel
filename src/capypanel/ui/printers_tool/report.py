@@ -1,5 +1,3 @@
-"""The Printers tool's Report: Hosts' window with the printers' columns and Last check."""
-
 from capypanel.core.hosts.bulk import host_fields
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import N_, _, ngettext

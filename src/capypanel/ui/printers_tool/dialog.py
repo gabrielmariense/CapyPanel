@@ -1,5 +1,3 @@
-"""Adding and editing a printer: the host dialog's fields plus the printer's own details."""
-
 from dataclasses import dataclass
 
 from PySide6.QtWidgets import (

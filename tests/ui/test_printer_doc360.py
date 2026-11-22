@@ -1,5 +1,3 @@
-"""Printers whose page counters come from Doc360 MPS, with Doc360 itself faked."""
-
 from dataclasses import replace
 from datetime import datetime
 

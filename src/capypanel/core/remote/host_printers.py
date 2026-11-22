@@ -1,5 +1,3 @@
-"""Another PC's installed printers, and clearing a queue, over the spooler's own remote call."""
-
 import ctypes
 from ctypes import wintypes
 from dataclasses import dataclass

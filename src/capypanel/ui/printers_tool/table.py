@@ -1,5 +1,3 @@
-"""The printer table; Status and Toner come from Refresh and stay in memory, not the file."""
-
 from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QEvent, QModelIndex, QPersistentModelIndex, QRectF, QSize, Qt

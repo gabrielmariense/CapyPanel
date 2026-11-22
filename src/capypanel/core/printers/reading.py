@@ -1,5 +1,3 @@
-"""What Refresh reads from a printer over SNMP: status, errors, supplies, pages, details."""
-
 import dataclasses
 import re
 from dataclasses import dataclass

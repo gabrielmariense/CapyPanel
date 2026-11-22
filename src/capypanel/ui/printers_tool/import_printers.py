@@ -1,5 +1,3 @@
-"""Import printers: Import hosts' window plus the printers' columns; nothing contacts a printer."""
-
 from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan

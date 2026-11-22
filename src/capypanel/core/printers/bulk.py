@@ -1,5 +1,3 @@
-"""Many printers at once: a Printers Report, Import hosts' formats or Windows' export."""
-
 import csv
 import io
 import re

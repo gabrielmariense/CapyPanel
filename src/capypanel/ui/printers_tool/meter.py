@@ -1,5 +1,3 @@
-"""A supply's level as a bar with its marks, one drawing for Details and the Toner column."""
-
 from collections.abc import Sequence
 
 from PySide6.QtCore import QRectF, Qt

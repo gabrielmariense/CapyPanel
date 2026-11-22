@@ -1,5 +1,3 @@
-"""The printer Details panel; what Refresh read shows beside the list's value, never over it."""
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from html import escape

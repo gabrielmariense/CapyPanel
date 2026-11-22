@@ -1,5 +1,3 @@
-"""The supply bars' marks: the low level's, always, plus the user's own, each with a colour."""
-
 import re
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass

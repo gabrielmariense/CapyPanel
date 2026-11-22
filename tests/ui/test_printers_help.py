@@ -1,5 +1,3 @@
-"""Printers' help: each window's ?, and "What does this mean?" on its warnings and errors."""
-
 from datetime import datetime
 from pathlib import Path
 
