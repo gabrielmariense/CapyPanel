@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 18:15-0300\n"
+"POT-Creation-Date: 2026-11-22 18:20-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1796,8 +1796,8 @@ msgstr "Firmware"
 
 #. i18n: ssh.exe asks in English whatever the language: say so in a
 #. translation.
-msgid "First connection to this server from this PC: ssh.exe asks whether you trust it. Type yes, not just y, then press Enter. The password doesn't show as you type it."
-msgstr "Primeira conexão a este servidor deste PC: o ssh.exe pergunta, em inglês, se você confia nele. Digite yes, não só y, e pressione Enter. A senha não aparece enquanto você digita."
+msgid "First connection to this server from this PC: ssh.exe asks whether you trust the server. Type yes, not just y, then press Enter. If it asks for a password, nothing shows as you type it."
+msgstr "Primeira conexão deste PC a este servidor: o ssh.exe pergunta, em inglês, se você confia no servidor. Digite yes, não só y, e pressione Enter. Se ele pedir a senha, nada aparece enquanto você digita."
 
 msgid "Folder"
 msgstr "Pasta"

@@ -29,9 +29,9 @@ HELP_PLACE = "ssh-when-a-connection-ends"
 
 def trust_words() -> str:
     # i18n: ssh.exe asks in English whatever the language: say so in a translation.
-    return _("First connection to this server from this PC: ssh.exe asks whether you trust it. "
-             "Type yes, not just y, then press Enter. The password doesn't show as you type "
-             "it.")  # fmt: skip
+    return _("First connection to this server from this PC: ssh.exe asks whether you trust the "
+             "server. Type yes, not just y, then press Enter. If it asks for a password, nothing "
+             "shows as you type it.")  # fmt: skip
 
 
 class TrustHint(QFrame):
