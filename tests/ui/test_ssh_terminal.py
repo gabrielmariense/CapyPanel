@@ -596,6 +596,24 @@ def test_an_answer_that_comes_after_the_connection_ended_shows_no_hint(
     assert not tab.hint.isVisible() and tab.bar.isVisible()
 
 
+def test_the_hint_s_icon_takes_the_accent_unless_it_wouldn_t_show_on_the_strip(
+    qapp: QApplication, default_theme_after: None
+) -> None:
+    light = themes.Registry().find("capypanel-light")
+    colors = light.colors
+    for accent, drawn in (
+        (colors["accent"], colors["accent"]),
+        (colors["sel_solid"], colors["text"]),
+    ):
+        themes.apply(replace(light, colors={**colors, "accent": accent}))
+        hint = tab_module.TrustHint()
+        image = hint._icon.pixmap().toImage()
+        pixels = (
+            image.pixelColor(x, y) for x in range(image.width()) for y in range(image.height())
+        )
+        assert max(pixels, key=QColor.alpha).name() == drawn
+
+
 BAD = b"\x1b[?5A"  # cursor up with "?": pyte's handler takes no such thing and raises
 
 

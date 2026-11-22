@@ -61,9 +61,14 @@ class TrustHint(QFrame):
         self.close_button.setToolTip(_("Close"))
 
     def _restyle(self) -> None:
-        text = self.palette().color(QPalette.ColorRole.WindowText)
-        self._icon.setPixmap(tabler_icon("info-circle", text, 16).pixmap(16, 16))
-        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        self.ensurePolished()
+        palette = self.palette()
+        accent = palette.color(QPalette.ColorRole.Accent)
+        ground = palette.color(self.backgroundRole())
+        shows = themes.contrast_ratio(accent.name(), ground.name()) >= themes.MARK_CONTRAST
+        mark = accent if shows else palette.color(QPalette.ColorRole.WindowText)
+        self._icon.setPixmap(tabler_icon("info-circle", mark, 16).pixmap(16, 16))
+        muted = palette.color(QPalette.ColorRole.PlaceholderText)
         self.close_button.setIcon(tabler_icon("x", muted, 14))
         self._lead.fit_icon()
 
