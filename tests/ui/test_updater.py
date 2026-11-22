@@ -263,23 +263,31 @@ def test_a_separate_window_opened_during_the_download_stops_the_hand_over(
     dialog.close()
 
 
+@pytest.mark.parametrize(
+    ("others", "text"),
+    [
+        (1, "Another CapyPanel from this folder is still running. It may be closing, or showing "
+            "a message behind this window. Close it, or wait until it's gone, then install the "
+            "update."),
+        (2, "2 other CapyPanels from this folder are still running. They may be closing, or "
+            "showing a message behind this window. Close them, or wait until they're gone, then "
+            "install the update."),
+    ],
+)  # fmt: skip
 def test_another_copy_from_the_folder_is_never_called_an_ssh_window(
-    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, others: int, text: str
 ) -> None:
     monkeypatch.setattr(updater_ui, "packaged", lambda: True)
     monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
     monkeypatch.setattr(updater_ui._Job, "start", lambda self: pytest.fail("it downloaded"))
-    monkeypatch.setattr(ssh_launch, "other_copies", lambda: ssh_launch.Copies(0, 1))
+    monkeypatch.setattr(ssh_launch, "other_copies", lambda: ssh_launch.Copies(0, others))
     said: list[str] = []
     monkeypatch.setattr(updater_ui, "run_modal", lambda box: said.append(box.text()) or 0)
     window.updater.offer = NEWER
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: pytest.fail("it quit"))  # fmt: skip
     dialog.install.click()
-    assert said == [
-        "Another CapyPanel from this folder is still running, maybe still closing or with a "
-        "message waiting behind this window. Close it, then install the update."
-    ]
+    assert said == [text]
     assert dialog.install.isEnabled() and dialog._job is None
     dialog.close()
 

@@ -631,11 +631,16 @@ class UpdateWindow(_Frame):
                 "install the update.",
                 n,
             ).format(n=n)
-        if copies.others:
-            return _(
-                "Another CapyPanel from this folder is still running, maybe still closing or with "
-                "a message waiting behind this window. Close it, then install the update."
-            )
+        if n := copies.others:
+            return ngettext(
+                "Another CapyPanel from this folder is still running. It may be closing, or "
+                "showing a message behind this window. Close it, or wait until it's gone, then "
+                "install the update.",
+                "{n} other CapyPanels from this folder are still running. They may be closing, or "
+                "showing a message behind this window. Close them, or wait until they're gone, "
+                "then install the update.",
+                n,
+            ).format(n=n)
         return ""
 
     def _say(self, text: str) -> None:

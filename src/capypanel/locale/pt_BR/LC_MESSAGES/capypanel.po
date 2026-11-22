@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 16:48-0300\n"
+"POT-Creation-Date: 2026-11-22 16:56-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -721,8 +721,11 @@ msgstr "Sempre aparecem: o nome da impressora e o status."
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse campo."
 
-msgid "Another CapyPanel from this folder is still running, maybe still closing or with a message waiting behind this window. Close it, then install the update."
-msgstr "Outro CapyPanel desta pasta ainda está aberto, talvez ainda fechando ou com uma mensagem esperando atrás desta janela. Feche-o e depois instale a atualização."
+#, python-brace-format
+msgid "Another CapyPanel from this folder is still running. It may be closing, or showing a message behind this window. Close it, or wait until it's gone, then install the update."
+msgid_plural "{n} other CapyPanels from this folder are still running. They may be closing, or showing a message behind this window. Close them, or wait until they're gone, then install the update."
+msgstr[0] "Outro CapyPanel desta pasta ainda está aberto. Ele pode estar fechando ou mostrando uma mensagem atrás desta janela. Feche-o, ou espere até ele sumir, e depois instale a atualização."
+msgstr[1] "{n} outros CapyPanel desta pasta ainda estão abertos. Eles podem estar fechando ou mostrando uma mensagem atrás desta janela. Feche-os, ou espere até eles sumirem, e depois instale a atualização."
 
 #, python-brace-format
 msgid "Answered a ping at {address}."
