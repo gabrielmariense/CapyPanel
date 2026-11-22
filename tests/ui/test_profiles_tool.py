@@ -473,7 +473,6 @@ def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
 
 
 def _hosts_menu(win: CapyWindow, *names: str) -> QMenu:
-    """Hosts' right-click menu on these hosts."""
     win.hosts.table.select_ids([_id(win, name) for name in names])
     menu = QMenu()
     win.hosts.fill_item_menu(menu, win.hosts.selected_items())

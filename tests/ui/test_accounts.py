@@ -82,7 +82,6 @@ def _settle(win: CapyWindow) -> None:
 
 
 def _account_used(win: CapyWindow, target: HostTarget) -> list[Account | None]:
-    """The account a host command for `target` gets."""
     seen: list[Account | None] = []
     win.hosts.runner.call(seen.append, lambda _v: None, lambda e: pytest.fail(str(e)), target)
     _settle(win)
@@ -120,7 +119,7 @@ def test_each_pc_gets_its_own_account_and_details_says_which(
     assert "Clinic › Front desk" in account.toolTip()  # where it comes from, in the tooltip
     labels = [w.text() for w in details.findChildren(QLabel)]
     assert "Connect with" in labels and "Commands run as" in labels
-    assert "from Accounts" not in labels  # no grey source on the line any more
+    assert "from Accounts" not in labels
     window.hosts.table.select_ids([_host(window, "DESK-02").key])
     assert details.account_button.value_text() == other.user
     assert details.account_button.marks == ("pin",)  # its own row: only this PC
@@ -195,7 +194,7 @@ def test_a_rejected_account_stops_only_the_pcs_that_use_it(
         return Found(Status.ONLINE, (DESK,))
 
     monkeypatch.setattr(checks, "run", run)
-    _answer(monkeypatch, lambda _d: False)  # the question after the Refresh: no
+    _answer(monkeypatch, lambda _d: False)
     window.hosts.accounts.use(Link(ADMIN.user, Scope.GROUP, _group_id(window, "Front desk"),
                                    _list(window)), ADMIN, remember=False)  # fmt: skip
     doc = window.hosts.document

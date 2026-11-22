@@ -231,7 +231,7 @@ def _fit_view(qapp: QApplication, table: HostTable, view: int) -> None:
 
 
 def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) -> None:
-    long = "a." * 150 + "example.internal"  # far wider than the old 260 px cap
+    long = "a." * 150 + "example.internal"  # far wider than the view: no cap cuts it
     table = _table(qapp, _hosts(("Reception 01", long)))
     assert table.columnWidth(table.ADDRESS) >= table.sizeHintForColumn(table.ADDRESS)
     # User is empty before a check: a starting width with room for one.
@@ -338,7 +338,7 @@ def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: CapyWindow, office
     window.hosts.open_list(office)
     tag = window.hosts.nav.tags.topLevelItem(0)
     assert tag is not None
-    window.hosts.nav.tags.setCurrentItem(tag)  # filtering by a tag
+    window.hosts.nav.tags.setCurrentItem(tag)
     window.hosts.commands.show_tags.setChecked(False)
     assert window.hosts.nav.tags.isHidden() and window.hosts.nav.picked_tags() == []
     window.close()
@@ -371,7 +371,7 @@ def test_the_view_menu_stays_open_while_ticking(window: CapyWindow) -> None:
 def test_right_click_menus_dont_pile_up(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A menu is made per click; each one used to stay until the app closed.
+    # A menu is made per click: each must go once closed, not stay until the app closes.
     class Shown(QMenu):
         def exec(self, *_args: object) -> None:  # type: ignore[override]
             return None

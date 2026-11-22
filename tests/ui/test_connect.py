@@ -476,7 +476,7 @@ def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: Ca
 
 
 def test_profile_rows_never_overlap(window: CapyWindow) -> None:
-    # Like the page list once did: rows kept positions from before the theme's padding arrived.
+    # Rows placed before the theme's padding arrives would overlap once it does.
     window.show()
     for theme in ("paper", "capypanel-dark"):
         window.set_theme(theme)

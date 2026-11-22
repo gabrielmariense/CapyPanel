@@ -85,7 +85,7 @@ def test_dragging_a_group_saves_the_new_place(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
-    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    assert listfile.load(doc.path).hosts == doc.hosts
 
 
 def test_sort_groups_a_to_z_asks_once_then_sorts_every_level(
@@ -111,7 +111,7 @@ def test_sort_groups_a_to_z_asks_once_then_sorts_every_level(
     doc = hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
-    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    assert listfile.load(doc.path).hosts == doc.hosts
     hosts.sort_groups_action.trigger()  # already A–Z: no question
     assert len(asked) == 2
 
@@ -291,7 +291,7 @@ def test_right_click_move_to_puts_the_group_inside_another(
     doc = window.hosts.document
     assert doc is not None
     assert doc.hosts.group(_id(window, "Lab")).parent == _id(window, "Zebra wing")  # type: ignore[union-attr]
-    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    assert listfile.load(doc.path).hosts == doc.hosts
     picked = window.hosts.nav.selected_group_id()
     assert picked == _id(window, "Lab")  # still picked, in its new place
     window.close()

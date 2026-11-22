@@ -241,7 +241,7 @@ def test_refresh_reads_each_printer_and_fills_status_toner_and_details(
     assert not printers.working()
     table = printers.table
     lab = _row(printers, "3F-LAB-01")
-    assert lab.text(table.STATUS) == "Toner low"  # cyan at 8 %, as the mockup shows
+    assert lab.text(table.STATUS) == "Toner low"  # cyan at 8 %
     assert lab.text(table.TONER) == "Cyan 8 % · low"
     assert _row(printers, "NO-ANSWER").text(table.STATUS) == "Offline"
     assert printers.commands.refresh_shown.isEnabled()

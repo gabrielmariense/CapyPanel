@@ -86,7 +86,7 @@ def test_passwords_are_kept_in_memory_only_unless_remember_is_ticked(
     window: CapyWindow, launched: list[Credential | None], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     profiles = _profiles(window)
-    assert not hasattr(profiles, "passwords")  # no Kept in setting any more
+    assert not hasattr(profiles, "passwords")  # no Kept in setting on this page
     asked: list[str] = []
     _type(monkeypatch, asked)
     _connect(window)

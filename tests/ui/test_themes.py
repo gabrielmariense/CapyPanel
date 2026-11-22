@@ -352,7 +352,7 @@ def test_picking_a_theme_applies_and_remembers_it(qapp: QApplication, tmp_path: 
 
 
 def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -> None:
-    # Windows drew a focus box around the clicked row, which looked broken on the selection tint.
+    # Windows draws a focus box around the clicked row, which looks broken on the selection tint.
     # A box edge shows up as a line where nearly the whole row is dark (in Windows light).
     (tmp_path / settings.PORTABLE_MARKER).touch()
     window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
@@ -385,7 +385,7 @@ def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) ->
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_dialog_buttons_never_cut_their_text(qapp: QApplication, theme: themes.Theme) -> None:
-    # A fixed minimum width in the stylesheet let message boxes squeeze long button labels.
+    # A fixed minimum width in the stylesheet would make message boxes squeeze long button labels.
     themes.apply(theme)
     box = QMessageBox(QMessageBox.Icon.Question, "Remove group", "What should happen to them?")
     buttons = [box.addButton(text, QMessageBox.ButtonRole.AcceptRole) for text in (
@@ -430,7 +430,7 @@ def test_menus_with_ticks_line_up_with_other_menus(qapp: QApplication) -> None:
     plain, ticks, mixed = QMenu(), QMenu(), QMenu()
     plain.addAction("Status bar")
     ticks.addAction("Status bar").setCheckable(True)
-    # Unmarked it was 18 px wider; Qt sizes it 4 px wider than it draws the text.
+    # Unmarked, it would be 18 px wider; Qt sizes it 4 px wider than it draws the text.
     assert ticks.sizeHint().width() - plain.sizeHint().width() == 4
     mixed.addMenu("Language")  # a submenu title beside a ticked item: marked too
     tick = mixed.addAction("Status bar")
@@ -441,7 +441,7 @@ def test_menus_with_ticks_line_up_with_other_menus(qapp: QApplication) -> None:
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme) -> None:
-    # Styling a spin box drops Fusion's arrows: the buttons were empty squares.
+    # Styling a spin box drops Fusion's arrows, which would leave empty squares for buttons.
     themes.apply(theme)
     box = QSpinBox()
     box.resize(120, 32)
@@ -460,7 +460,7 @@ def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme)
 
 
 def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
-    # Windows' "slide open" made a long dropdown list roll open in visible steps.
+    # Windows' "slide open" makes a long dropdown list roll open in visible steps.
     QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, True)  # as on a PC with it on
     for theme in themes.Registry().all():
         themes.apply(theme)
@@ -471,8 +471,7 @@ def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
 def test_a_switch_sets_the_theme_s_stylesheet_only_once(
     qapp: QApplication, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Each stylesheet set restyles every widget, the slow part of a switch: from a Windows
-    # theme it was set twice.
+    # Each stylesheet set restyles every widget: the slow part of a switch.
     sheets: list[str] = []
     set_sheet = QApplication.setStyleSheet
 
@@ -491,7 +490,6 @@ def test_a_switch_sets_the_theme_s_stylesheet_only_once(
 
 
 def test_home_tiles_take_the_new_theme_s_icon_colour(qapp: QApplication, tmp_path: Path) -> None:
-    # Switching between two custom themes left the tiles' icons in the previous theme's colour.
     (tmp_path / settings.PORTABLE_MARKER).touch()
     window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     window.set_theme("capypanel-dark")

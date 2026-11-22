@@ -100,7 +100,7 @@ def test_nothing_changes_until_add_is_clicked(
     doc = window.hosts.document
     assert doc is not None
     assert {h.name for h in doc.hosts.hosts} == {"HQ-01", "Reception 01", "Finance 01"}
-    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    assert listfile.load(doc.path).hosts == doc.hosts
     assert window.statusBar().currentMessage() == "Added 2 hosts."
 
 
@@ -149,7 +149,7 @@ def test_a_cell_being_edited_shows_its_whole_text(window: CapyWindow) -> None:
             dialog.table.editItem(item, NAME)
             editor = dialog.table.findChild(QLineEdit)
             assert editor is not None
-            # The field covers the cell, tall enough for its text (the text was cut off).
+            # The field covers the cell, tall enough for its text.
             assert editor.height() >= editor.minimumSizeHint().height(), theme
             assert editor.height() >= dialog.table.visualItemRect(item).height() - 2, theme
             dialog.close()

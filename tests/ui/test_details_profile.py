@@ -52,7 +52,7 @@ def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: Ca
     assert hosts.details.profile_button.value_text() == "Pis"
     menu.aboutToShow.emit()
     [follow] = [a for a in menu.actions() if a.text().startswith("From group")]
-    follow.trigger()  # back to following the group
+    follow.trigger()
     doc = hosts.document
     assert doc is not None and doc.hosts.host(host_id).profile == ""  # type: ignore[union-attr]
 

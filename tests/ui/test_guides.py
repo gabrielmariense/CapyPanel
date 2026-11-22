@@ -52,7 +52,7 @@ def test_someone_new_gets_every_guide_and_someone_upgrading_none_of_them() -> No
     assert guides.seen_from({"schema": 1}) == []
     upgrading = {"schema": 1, "window_geometry": "AAA"}  # CapyPanel ran here before
     assert guides.seen_from(upgrading) == list(guides.FIRST_STEPS)
-    assert upgrading["guides"] == list(guides.FIRST_STEPS)  # kept
+    assert upgrading["guides"] == list(guides.FIRST_STEPS)
     kept = {"guides": ["home"], "window_geometry": "AAA"}
     assert guides.seen_from(kept) == ["home"]
 

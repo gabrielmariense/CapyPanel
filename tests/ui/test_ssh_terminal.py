@@ -215,8 +215,8 @@ def view(qapp: QApplication, consoles: list[FakeConsole]) -> Iterator[TerminalVi
 
 
 def _asks_for_key_events(view: TerminalView, console: FakeConsole) -> None:
-    """The console asks for keys as key events, as Windows 11's does first thing (the trial's
-    probe of it, 18 Nov). Windows 10's never asks."""
+    """The console asks for keys as key events, as Windows 11's does first thing; Windows 10's
+    never asks."""
     console.prints(b"\x1b[?9001h\x1b[?1004h")
     _until(lambda: view.term.win32_input)
 

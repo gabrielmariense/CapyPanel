@@ -30,8 +30,8 @@ def qapp() -> Iterator[QApplication]:
 
 @pytest.fixture(autouse=True)
 def free_windows(qapp: QApplication) -> Iterator[None]:
-    """Windows a test leaves go after it, or every later theme switch restyles them all (the
-    suite took minutes). Not after a theme switch: deleting a restyled window can crash Qt."""
+    """Windows a test leaves go after it, or every later theme switch restyles them all: minutes
+    over the suite. Not after a theme switch: deleting a restyled window can crash Qt."""
     from capypanel.ui.themes import engine as themes
 
     before, generation = set(qapp.topLevelWidgets()), themes.generation()
@@ -120,5 +120,5 @@ def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Theme tests first. A theme switch restyles every window still alive, and closed windows
-    from earlier tests pile up, so the theme tests took minutes at the end of the run."""
+    from earlier tests pile up: at the end of the run, the theme tests would take minutes."""
     items.sort(key=lambda item: "test_themes.py" not in item.nodeid)  # keeps the rest in order
