@@ -1,7 +1,9 @@
+import logging
 import threading
 from collections.abc import Callable, Sequence
-from concurrent.futures import ThreadPoolExecutor
+from queue import Empty, SimpleQueue
 
+log = logging.getLogger(__name__)
 WORKERS = 8
 
 
@@ -42,13 +44,30 @@ class Batch[T, R]:
         if not pending or self._stop.is_set():
             return
         halting = self._proves is None
-        with ThreadPoolExecutor(self._workers) as pool:
-            for item in pending:
-                pool.submit(self._guarded, item, halting)
+        waiting: SimpleQueue[T] = SimpleQueue()
+        for item in pending:
+            waiting.put(item)
+        # Daemon threads, not a ThreadPoolExecutor: Python waits for an executor's threads at exit,
+        # which keeps a closed CapyPanel running until every host left answers or times out.
+        workers = [
+            threading.Thread(target=self._drain, args=(waiting, halting), name="batch", daemon=True)
+            for _ in range(min(self._workers, len(pending)))
+        ]
+        for worker in workers:
+            worker.start()
+        for worker in workers:
+            worker.join()
 
-    def _guarded(self, item: T, halting: bool) -> None:
-        if not self._stop.is_set():
-            self._one(item, halting=halting)
+    def _drain(self, waiting: SimpleQueue[T], halting: bool) -> None:
+        while not self._stop.is_set():
+            try:
+                item = waiting.get_nowait()
+            except Empty:
+                return
+            try:
+                self._one(item, halting=halting)
+            except Exception:
+                log.exception("Reporting a check failed")
 
     def _one(self, item: T, *, halting: bool) -> tuple[R | None, Exception | None]:
         try:
