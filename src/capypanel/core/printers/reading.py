@@ -108,7 +108,7 @@ class SupplyKind(StrEnum):
     TONER = "toner"
     INK = "ink"
     DRUM = "drum"
-    WASTE = "waste"  # a waste toner or ink box
+    WASTE = "waste"
     OTHER = "other"  # fuser, transfer unit, staples...
 
 
@@ -139,7 +139,7 @@ class Reading:
     problems: frozenset[Problem] = frozenset()
     messages: tuple[str, ...] = ()  # the printer's own words for what's wrong, e.g. "Paper jam"
     supplies: tuple[Supply, ...] = ()
-    pages: int | None = None  # the total page counter
+    pages: int | None = None
     brand: str = ""
     model: str = ""
     serial: str = ""

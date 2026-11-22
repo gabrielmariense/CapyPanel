@@ -275,7 +275,6 @@ def _random_id() -> int:
 
 
 def _refusal(bindings: list[Binding]) -> str:
-    """What a v3 Report says was wrong."""
     for binding in bindings:
         if binding.oid.startswith(_USM_STATS):
             return _REFUSALS.get(binding.oid[len(_USM_STATS) :].split(".")[0], "report")
@@ -501,7 +500,6 @@ def parse_v3(data: bytes) -> Header:
 
 
 def open_v3(header: Header, keys: usm.Keys) -> Answer:
-    """A v3 message's contents, decrypted if they were encrypted."""
     payload = header.payload
     if header.flags & _PRIVACY:
         tag, s, end = _read(payload, 0, len(payload))
