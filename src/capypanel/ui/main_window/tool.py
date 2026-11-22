@@ -23,9 +23,7 @@ class Shell(Protocol):
     paths: settings.Paths
     prefs: dict[str, Any]  # every saved setting; save_prefs() writes them
 
-    def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
-        """A tool's own section of the settings."""
-        ...
+    def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]: ...
 
     def save_prefs(self) -> None: ...
 
@@ -116,7 +114,6 @@ class Tool(QWidget):
         """At start, before any window: files the tool needs to exist (e.g. its starters)."""
 
     def tool_name(self) -> str:
-        """Its name on the rail: "Hosts"."""
         raise NotImplementedError
 
     def help_place(self) -> str:
@@ -144,7 +141,6 @@ class Tool(QWidget):
         return None
 
     def first_use_pending(self) -> bool:
-        """Whether first_use_warning still has something to say."""
         return False
 
     def first_use_warning(self, parent: QWidget) -> bool:
@@ -195,7 +191,7 @@ class Tool(QWidget):
         return True
 
     def retranslate(self) -> None:
-        """Every text the tool shows, in the current language."""
+        pass
 
     def restyle(self) -> None:
         """After a theme switch."""

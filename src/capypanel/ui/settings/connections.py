@@ -375,7 +375,7 @@ class ProfilesSection(SharedSection):
             self.delete_button,
             self.restore_button,
         ]
-        row_menu(self.list, self.fill_row_menu)  # Duplicate too
+        row_menu(self.list, self.fill_row_menu)
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         self.default.currentIndexChanged.connect(lambda _i: self._default_picked())
@@ -384,7 +384,7 @@ class ProfilesSection(SharedSection):
         self.profiles_skipped = skipped_note(self.store.problems)
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
-        self.manage_button = QPushButton(_("&Manage…"))  # opens Saved credentials
+        self.manage_button = QPushButton(_("&Manage…"))
         # Each login window has "Remember it on this computer": what was ticked is here. The
         # row's line says how many (Hosts' settings fill it in).
         self.manage_button.setToolTip(
@@ -581,7 +581,7 @@ class ToolsSection(SharedSection):
         for button, action in ((self.locate_button, "locate"), (self.download_button, "download")):
             button.clicked.connect(lambda _c=False, a=action: self._picked_tool_action(a))
         tool_buttons = [self.locate_button, self.download_button]
-        row_menu(self.tools, self.fill_row_menu)  # Use the automatic path too
+        row_menu(self.tools, self.fill_row_menu)
         tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
         self.for_everyone(self.can_edit_tools)  # with Read PC data with, under the table
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])

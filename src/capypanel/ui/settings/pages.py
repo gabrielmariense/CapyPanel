@@ -51,7 +51,7 @@ class Page(QWidget):
         self.place = place or self.HELP_PLACE
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.setSpacing(spacing.WINDOW)  # between sections
+        self.body.setSpacing(spacing.WINDOW)
 
 
 class _ScopeTag(QWidget):
@@ -422,14 +422,12 @@ class ListsGeneralPage(Page):
         self.body.addStretch(1)
 
     def add_section(self, section: Section) -> None:
-        """A tool's own section, after the ones before it."""
         self.body.insertWidget(self.body.count() - 1, section)
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
 
     def chosen(self) -> Path | None:
-        """The list picked in the table."""
         return self.view.selected()
 
     def added(self) -> list[Path]:

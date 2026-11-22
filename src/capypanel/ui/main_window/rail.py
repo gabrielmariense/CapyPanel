@@ -55,7 +55,6 @@ class ToolRail(QWidget):
         self.restyle()
 
     def add_tool(self, tool_id: str, icon: str) -> QToolButton:
-        """A tool's button, below the ones before it."""
         button = _button(checkable=True)
         self.buttons[tool_id] = button
         self._icons[tool_id] = icon
@@ -64,7 +63,7 @@ class ToolRail(QWidget):
         self._layout.insertWidget(len(self.buttons) + 1, button, 0, Qt.AlignmentFlag.AlignHCenter)
         button.clicked.connect(lambda: self.tool_picked.emit(tool_id))
         button.toggled.connect(lambda _on: self.restyle())
-        badge = QLabel(button)  # on the icon's top right corner, over the button
+        badge = QLabel(button)
         badge.setObjectName("railBadge")  # red, white number: the theme's stylesheet
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # the button's tip

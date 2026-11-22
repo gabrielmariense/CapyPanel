@@ -202,7 +202,6 @@ def generation() -> int:
 
 
 def apply(theme: Theme) -> None:
-    """Switches the whole app's look, live."""
     global _current, _applied_once, _native_font, _generation
     app = QApplication.instance()
     if not isinstance(app, QApplication):

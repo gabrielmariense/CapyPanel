@@ -200,7 +200,7 @@ class SettingsDialog(QDialog):
         self.help_button = help_links.HelpButton(self.help_place)
         side.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignLeft)
         columns.addLayout(side)
-        divider = QFrame()  # a thin line between the page list and the pages
+        divider = QFrame()
         divider.setObjectName("pagesDivider")
         divider.setFixedWidth(1)
         columns.addWidget(divider)
@@ -219,7 +219,6 @@ class SettingsDialog(QDialog):
         self.stack.addWidget(area)
 
     def group[G: SettingsGroup](self, kind: type[G]) -> G:
-        """A tool's group of pages, by its kind."""
         return next(g for g in self._groups if isinstance(g, kind))
 
     def credentials_changed(self) -> None:
@@ -289,8 +288,6 @@ class SettingsDialog(QDialog):
             button.setAutoDefault(False)
             button.setDefault(False)
 
-    # ---- picking ----
-
     def _row_picked(self, row: int) -> None:
         page_id = self._rows[row] if 0 <= row < len(self._rows) else None
         if page_id is None:
@@ -331,8 +328,6 @@ class SettingsDialog(QDialog):
         frame = 2 * self.pinned_list.frameWidth()
         self.pinned_list.setFixedHeight(rows + frame + 2)
 
-    # ---- search ----
-
     def _place_name(self, page_id: str) -> str:
         """Where a page is, as the search's results name it: "Hosts › Connecting", "About"."""
         page = self.pages[page_id]
@@ -351,7 +346,7 @@ class SettingsDialog(QDialog):
             self.show_page(page)
             return
         found: list[Section] = []
-        matched: set[str] = set()  # the pages with a match
+        matched: set[str] = set()
         layout = self._results.body
         for page_id, source in self.pages.items():
             sections = [s for s in _sections(source) if search.mentions(s, wanted)]
@@ -407,8 +402,6 @@ class SettingsDialog(QDialog):
             for row in range(pages.count()):
                 pages.setRowHidden(row, False)
 
-    # ---- which page ----
-
     def _shown_page(self) -> str:
         """The page shown, or the one shown before the search."""
         current = self.current_page()
@@ -429,7 +422,6 @@ class SettingsDialog(QDialog):
         return (shown.place if shown is not None else "") or "settings-and-files/"
 
     def row_of(self, page_id: str) -> int:
-        """The page's row in the page list."""
         return self._rows.index(page_id)
 
     def current_page(self) -> str:
@@ -445,7 +437,7 @@ class SettingsDialog(QDialog):
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
         if event.type() == QEvent.Type.PaletteChange and hasattr(self, "page_list"):
-            self._paint_labels()  # a theme switch
+            self._paint_labels()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)

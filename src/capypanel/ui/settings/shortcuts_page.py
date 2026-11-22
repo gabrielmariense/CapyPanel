@@ -247,7 +247,7 @@ class KeyCatcher(QLineEdit):
         elide = Qt.TextElideMode.ElideRight
         words = metrics.elidedText(self.placeholderText(), elide, room.width())
         baseline = caps_baseline(room, metrics.tightBoundingRect("H"))
-        painter.setClipRect(room.adjusted(-LINE_EDIT_MARGIN, 0, LINE_EDIT_MARGIN, 0))  # inside
+        painter.setClipRect(room.adjusted(-LINE_EDIT_MARGIN, 0, LINE_EDIT_MARGIN, 0))
         painter.setPen(self.palette().color(QPalette.ColorRole.PlaceholderText))
         painter.drawText(QPoint(room.left(), baseline), words)
 

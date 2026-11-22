@@ -42,7 +42,7 @@ class ToolBar(QToolBar):
         group = QWidget()
         row = QHBoxLayout(group)
         row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(6)  # between buttons
+        row.setSpacing(6)
         if self._groups:  # 10 px on each side of the line
             row.addSpacing(4)
             divider = QFrame()
@@ -56,10 +56,10 @@ class ToolBar(QToolBar):
         self._row.insertWidget(self._row.count() - 1, group)  # before the stretch
 
     def retranslate(self) -> None:
-        """The buttons' texts and tooltips."""
+        pass
 
     def restyle(self) -> None:
-        """Icons in the theme's colours."""
+        pass
 
     def align(self, left: int) -> None:
         """Lines the first button up with the panels: it starts at `left`, in this toolbar's

@@ -222,7 +222,6 @@ class MainWindow(QMainWindow):
         return [a for a in self._tool_actions.actions() if a is not self._home_action]
 
     def _tool_action(self, tool_id: str) -> QAction:
-        """View's action that shows the tool."""
         return next(a for a in self._tool_list_actions() if a.data() == tool_id)
 
     # ---- what tools ask of the shell ----
@@ -582,7 +581,7 @@ class MainWindow(QMainWindow):
     def _restyle(self) -> None:
         """After every theme switch, the one Windows starts under "follow system" too."""
         for tool in self.tools.values():
-            tool.restyle()  # icon colours, the font's size, the toolbar's padding
+            tool.restyle()
         self._tray_counts()  # the count on the tray's icon is in the theme's red
         self._paint_update_button()
 
@@ -647,7 +646,7 @@ class MainWindow(QMainWindow):
     def _view_step(self, tool: Tool) -> Step:
         bar = self.menuBar()
 
-        def view_title() -> QRect:  # "View" on the menu bar
+        def view_title() -> QRect:
             spot = bar.actionGeometry(self._view_menu.menuAction())
             return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
 
@@ -745,7 +744,6 @@ class MainWindow(QMainWindow):
             self.retranslate()
 
     def retranslate(self) -> None:
-        """Every text this window shows, in the current language."""
         self._retranslate_menus()
         self.home.retranslate()
         for tool in self.tools.values():

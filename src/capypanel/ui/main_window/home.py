@@ -29,8 +29,6 @@ ICON_SIZE = 24
 
 
 class ToolTile(QFrame):
-    """A tool on the Home page: its icon on a tint, its name, one line, its shortcut."""
-
     clicked = Signal()
 
     def __init__(self, tool: ToolInfo, shortcut: str) -> None:
