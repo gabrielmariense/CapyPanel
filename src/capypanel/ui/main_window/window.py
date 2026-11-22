@@ -644,11 +644,11 @@ class MainWindow(QMainWindow):
     def _portable_step(self) -> Step:
         folder = self.paths.root
         text = _("This copy keeps everything it saves (settings, lists, connection profiles and "
-                 "logs) in the userdata folder beside CapyPanel.exe. Passwords you save stay in "
-                 "Windows on this PC, so they don't travel with the folder. Lists and settings "
-                 "from another copy of CapyPanel aren't brought in: click the list's name on top "
-                 "of the Groups panel and use Open list…, or copy their files into the userdata "
-                 "folder.")  # fmt: skip
+                 "logs) in the userdata folder beside CapyPanel.exe. Saved passwords stay in "
+                 "Windows Credential Manager on this PC, so they don't travel with the folder. "
+                 "Lists and settings from another copy of CapyPanel aren't brought in. To open "
+                 "one of its lists here, pick Open list… under the list's name, on top of the "
+                 "Groups panel.")  # fmt: skip
         opens = (_("Open the userdata folder"), lambda: open_folder(folder))
         return Step(_("A portable copy"), text, lambda: None, action=opens)
 
