@@ -1,7 +1,5 @@
-"""The terminal's screen on our pyte, and what a server may not do to it."""
-
 import pytest
-from console_cells import CONSOLE_CELLS  # as Windows' own console counted them
+from console_cells import CONSOLE_CELLS
 
 from capypanel.core.ssh import screen as screen_module
 from capypanel.core.ssh.screen import (
@@ -25,7 +23,7 @@ def test_each_sample_takes_the_cells_the_console_gives_it(sample: str, cells: in
     screen, stream = screen_and_stream()
     stream.feed(("[" + sample + "]").encode())
     assert screen.cursor.x == cells + 2
-    assert screen.row_text(0).endswith("]")  # nothing after the sample was lost
+    assert screen.row_text(0).endswith("]")
 
 
 def test_half_a_flag_takes_the_cells_its_console_engine_gives_it() -> None:
@@ -40,14 +38,14 @@ def test_half_a_flag_takes_the_cells_its_console_engine_gives_it() -> None:
 def test_the_widths_are_wcwidths_from_pythons_own_tables() -> None:
     assert wcwidth("\x07") == -1
     assert wcwidth("\x9b") == -1
-    assert wcwidth("\u0301") == 0  # combining
-    assert wcwidth("\u3099") == 0  # combining, though East Asian Wide
-    assert wcwidth("\u200d") == 0  # a joiner
+    assert wcwidth("\u0301") == 0
+    assert wcwidth("\u3099") == 0
+    assert wcwidth("\u200d") == 0
     assert wcwidth("\u00ad") == 1  # the soft hyphen shows, as in wcwidth
-    assert wcwidth("\U0001f1e6") == 2  # a regional indicator
+    assert wcwidth("\U0001f1e6") == 2
     assert wcwidth("Ａ") == 2
     assert wcwidth("a") == 1
-    assert [cells_for(c) for c in "\u0301\u200d\x07"] == [1, 1, 1]  # never less than one
+    assert [cells_for(c) for c in "\u0301\u200d\x07"] == [1, 1, 1]
 
 
 def test_a_wide_character_that_no_longer_fits_goes_whole_to_the_next_row() -> None:
@@ -60,8 +58,8 @@ def test_a_wide_character_that_no_longer_fits_goes_whole_to_the_next_row() -> No
 def test_writing_over_half_of_a_wide_character_blanks_its_other_half() -> None:
     screen, stream = screen_and_stream()
     stream.feed("中文\r\n中文".encode())
-    stream.feed(b"\x1b[1;2HX")  # over the right half of the first
-    stream.feed(b"\x1b[2;3HY")  # over the left half of the second
+    stream.feed(b"\x1b[1;2HX")
+    stream.feed(b"\x1b[2;3HY")
     assert screen.row_text(0) == " X文"
     assert screen.row(1)[0][:4] == ["中", "", "Y", " "]
 
@@ -109,7 +107,7 @@ def test_titles_never_reach_anything_and_nothing_is_answered_beyond_the_standard
     assert screen.titles_seen == 3  # OSC 0 sets the title and the icon name, OSC 2 the title
     assert screen.bells == 1
     assert screen.row_text(0) == "text"
-    stream.feed(b"\x1b[c")  # device attributes: a standard reply
+    stream.feed(b"\x1b[c")
     assert len(replies) == 1
 
 
@@ -119,7 +117,7 @@ def test_the_alternate_screen_leaves_the_main_one_and_the_scrollback_as_they_wer
     assert screen.scrollback_text() == ["one"]
     stream.feed(b"\x1b[?1049h\x1b[2J\x1b[Hvim\r\n~\r\n~\r\n~\r\n~")
     assert screen.in_alt
-    assert screen.scrollback_text() == ["one"]  # nothing of vim's
+    assert screen.scrollback_text() == ["one"]
     stream.feed(b"\x1b[?1049l")
     assert not screen.in_alt
     assert screen.screen_text() == ["two", "three", "four"]
@@ -137,8 +135,6 @@ def test_the_scrollback_keeps_its_last_lines_only() -> None:
 def test_a_flood_of_colours_keeps_the_shared_styles_within_their_limit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Every cell in a 24-bit colour of its own: the styles lines share start over when full,
-    # instead of outliving the tab, and every cell keeps its own colour.
     monkeypatch.setattr(screen_module, "MAX_STYLES", 64)
     screen, stream = screen_and_stream(columns=10, lines=2, scrollback=100)
     for n in range(300):
@@ -186,7 +182,7 @@ def test_the_console_s_ask_for_key_events_outlasts_a_reset_from_the_server() -> 
     assert not screen.win32_input  # Windows 10's console never asks
     stream.feed(b"\x1b[?9001h\x1b[?1004h")  # Windows 11's, first thing
     assert screen.win32_input
-    stream.feed(b"\x1bc")  # the console still reads key events after the server's reset
+    stream.feed(b"\x1bc")
     assert screen.win32_input
     stream.feed(b"\x1b[?9001l")
     assert not screen.win32_input
@@ -238,10 +234,10 @@ def test_a_wide_character_that_wraps_whole_leaves_no_blank_in_the_copy() -> None
     ("then", "copied"),
     [
         (b"\x1b[1;5H\x1b[K", "abcd\r\nijkl"),  # erased from its 5th cell to its end
-        (b"\x1b[1;1H\x1b[2K", "\r\nijkl"),  # erased whole
-        (b"\x1b[2;1H\x1b[1J", "\r\n jkl"),  # the screen erased up to the next row's first cell
-        (b"\x1b[2J", "\r\n"),  # the screen erased
-        (b"\x1b[1;1Hshort\n", "shortefgh\r\nijkl"),  # written over, then left by a line feed
+        (b"\x1b[1;1H\x1b[2K", "\r\nijkl"),
+        (b"\x1b[2;1H\x1b[1J", "\r\n jkl"),
+        (b"\x1b[2J", "\r\n"),
+        (b"\x1b[1;1Hshort\n", "shortefgh\r\nijkl"),
     ],
 )
 def test_a_row_erased_to_its_end_or_left_by_a_line_feed_no_longer_joins_the_next(
@@ -254,8 +250,7 @@ def test_a_row_erased_to_its_end_or_left_by_a_line_feed_no_longer_joins_the_next
 
 
 def test_a_line_windows_own_engine_wraps_after_a_scroll_copies_as_one_line() -> None:
-    # Its bytes: the row's first part, a line feed that scrolls, then the row's last cell
-    # written again, so the terminal wraps by itself (tests/core/test_ssh_conpty.py).
+    # ConPTY's bytes for a wrapped row: its first part, a scrolling line feed, its last cell again.
     screen, stream = screen_and_stream(columns=10, lines=3)
     stream.feed(b"1\r\n2\r\nabcdefghij\r\n\x1b[2;10Hjklm")
     assert screen.text_between((2, 0), (3, 9)) == "abcdefghijklm"

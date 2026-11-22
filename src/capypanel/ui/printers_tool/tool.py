@@ -1,5 +1,3 @@
-"""The Printers tool: printer lists, their web pages, and Refresh over SNMP."""
-
 import logging
 from collections.abc import Callable, Collection, Sequence
 from dataclasses import replace
@@ -68,27 +66,23 @@ from capypanel.ui.printers_tool.toolbar import PrintersToolBar
 from capypanel.ui.shortcuts import KeyCommand
 
 log = logging.getLogger(__name__)
-WEB_PAGES_AT_ONCE = 10  # more selected open only the first ones: a browser tab each
+WEB_PAGES_AT_ONCE = 10
 
 
 def web_page(printer: Host) -> QUrl | None:
-    """The printer's web page on its address (or its name): https when the address starts with
-    https://, else http. None when that can't be one."""
     target = printer.address or printer.name
     scheme = "http"
     for typed in ("https", "http"):
         if target.lower().startswith(f"{typed}://"):
             scheme, target = typed, target[len(typed) + 3 :]
             break
-    if target.count(":") > 1 and not target.startswith("["):  # an IPv6 address
+    if target.count(":") > 1 and not target.startswith("["):
         target = f"[{target}]"
     url = QUrl(f"{scheme}://{target}")
     return url if url.isValid() and url.host() else None
 
 
 def refresh_words(refresh: QAction) -> str:
-    """The guide's words on Refresh all, with the key it has now: one changed in Settings ›
-    Keyboard shortcuts, or none."""
     keys = shortcut_text(refresh)
     if not keys:
         return _("Reads the status, toner and page count of every printer shown. Nothing is read "
@@ -100,20 +94,20 @@ def refresh_words(refresh: QAction) -> str:
 class PrintersTool(ListWorkspace):
     TOOL_ID = "printers"
     ICON = "printer"
-    HELP_PLACE = "printers/printers/"  # F1 and the rail's ?: the Printers page's top
-    checks_changed = Signal()  # a Refresh started, found something, or ended
+    HELP_PLACE = "printers/printers/"
+    checks_changed = Signal()
 
     def __init__(self, shell: Shell):
         self.commands = create_actions(None)  # owned by this widget once it exists
         self.table: PrinterTable = PrinterTable()
         self.details: PrinterDetailsPanel = PrinterDetailsPanel()
         self.toolbar: PrintersToolBar = PrintersToolBar(self.commands)
-        self._checked: dict[str, Checked] = {}  # each printer's last Refresh, in memory only
-        self._counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
+        self._checked: dict[str, Checked] = {}
+        self._counted: Counted | None = None
         self.attention_strip = AttentionStrip()
-        self._attention: dict[str, Reason] = {}  # the open list's printers that need it
-        self._only_attention = False  # the strip's Show: the table lists just those
-        self._before_auto: dict[str, Reason] | None = None  # while a Refresh on its own runs
+        self._attention: dict[str, Reason] = {}
+        self._only_attention = False
+        self._before_auto: dict[str, Reason] | None = None
         super().__init__(
             shell,
             commands=self.commands,
@@ -125,7 +119,7 @@ class PrintersTool(ListWorkspace):
             action.setParent(self)
         column = self.items_pane.layout()
         assert isinstance(column, QVBoxLayout)
-        column.insertWidget(1, self.attention_strip)  # right under the search box
+        column.insertWidget(1, self.attention_strip)
         self._run: PrinterRun | None = None
         self._progress = QLabel()
         self._stop_button = QToolButton()
@@ -133,7 +127,7 @@ class PrintersTool(ListWorkspace):
         self._stop_button.clicked.connect(self.stop_checks)
         for widget in (self._progress, self._stop_button):
             widget.hide()
-        self._auto_timer = QTimer(self)  # Settings: Refresh on its own, if switched on
+        self._auto_timer = QTimer(self)
         self._auto_timer.timeout.connect(self._auto_refresh)
         self._apply_auto_refresh()
         self.table.set_cells(self._cells)
@@ -145,14 +139,13 @@ class PrintersTool(ListWorkspace):
         self.open_first_list()
 
     def status_widgets(self) -> list[QWidget]:
-        """Shown on the right of the status bar: a Refresh's progress and Stop."""
         return [self._progress, self._stop_button]
 
     def _fill_inventory(self) -> None:
         a = self.commands
         inventory = self.toolbar.inventory_menu
         inventory.addActions([a.add_printer, a.add_group, a.manage_groups])
-        inventory.addAction(self.sort_groups_action)  # as in Hosts
+        inventory.addAction(self.sort_groups_action)
         inventory.addSeparator()
         inventory.addAction(a.import_printers)
 
@@ -171,15 +164,11 @@ class PrintersTool(ListWorkspace):
         self.table.addAction(a.open_web_page)
         a.open_web_page.triggered.connect(self.open_web_pages)
         a.copy_address.triggered.connect(self._copy_address)
-        # Details' buttons act on the one printer it shows: the one selected.
         self.details.refresh_clicked.connect(lambda: self.check_printers(self.selected_items()))
         self.details.web_clicked.connect(self.open_web_pages)
         self.attention_strip.show_clicked.connect(self._toggle_attention)
-        # Picking a group or a tag, or searching, means browsing again: every printer.
         self.nav.filter_changed.connect(self._leave_attention)
         self.search.textChanged.connect(self._leave_attention)
-
-    # ---- texts ----
 
     def tool_name(self) -> str:
         return _("Printers")
@@ -242,9 +231,7 @@ class PrintersTool(ListWorkspace):
         return _("No printers in this group have all the picked tags.")
 
     def search_fields(self) -> tuple[list[str], str]:
-        """Every column that shows, and the notes (which have no column)."""
         table = self.table
-        # Each a lower-case word in the list "Search name, address, brand, model, tags, notes".
         words = (
             (table.ADDRESS, _("address")),
             (table.STATUS, _("status")),
@@ -256,12 +243,10 @@ class PrintersTool(ListWorkspace):
         )
         fields = [_("name")]
         fields += [word for column, word in words if not table.isColumnHidden(column)]
-        fields.append(_("notes"))  # no column, so always searched
+        fields.append(_("notes"))
         return fields, _("Searches every printer in the list (Ctrl+F)")
 
     def key_commands(self) -> list[KeyCommand]:
-        """Its menus' commands; Refresh printer keeps its one-printer name on the Keyboard
-        shortcuts page, as the right-click menu counts the printers it'll refresh."""
         fixed = f"{self.TOOL_ID}.refresh_selected"
         return [
             replace(c, name=lambda: _("Re&fresh printer")) if c.id == fixed else c
@@ -275,11 +260,9 @@ class PrintersTool(ListWorkspace):
         super().retranslate()
 
     def guide(self) -> Guide:
-        """Its whole guide, every time, with a sample printer to point at; the window adds View
-        last. No step asks for a click."""
         bar, table = self.toolbar, self.table
 
-        def status_and_toner() -> QRect | None:  # both columns, titles and cells, as one box
+        def status_and_toner() -> QRect | None:
             header = table.header()
             shown = [c for c in (table.STATUS, table.TONER) if not header.isSectionHidden(c)]
             if not shown or not table.isVisible():
@@ -289,11 +272,11 @@ class PrintersTool(ListWorkspace):
             corner = header.mapTo(self.window(), QPoint(left, 0))
             return QRect(corner, QSize(right - left, header.height() + table.viewport().height()))
 
-        def rail_icon() -> QWidget | None:  # Printers on the rail, where its red count shows
+        def rail_icon() -> QWidget | None:
             rail = getattr(self.window(), "rail", None)
             return getattr(rail, "buttons", {}).get("printers")
 
-        def attention() -> list[QWidget]:  # the rail's count, and the strip while it shows
+        def attention() -> list[QWidget]:
             strip = self.attention_strip
             found = [w for w in (rail_icon(),) if w is not None]
             return found + ([strip] if strip.isVisibleTo(self) else [])
@@ -322,7 +305,7 @@ class PrintersTool(ListWorkspace):
                        "double-click opens its web page."),
                      lambda: None, lambda: table, keep_clear=lambda: self.details,
                      area=lambda: self.sample_row(self.window())),
-                Step(pgettext("printers", "Refresh all"),  # as the button says it
+                Step(pgettext("printers", "Refresh all"),
                      refresh_words(self.commands.refresh_shown), lambda: bar.refresh_button),
                 Step(_("Status and Toner"),
                      _("After a Refresh, the dot shows how each printer is: green is working, "
@@ -360,8 +343,6 @@ class PrintersTool(ListWorkspace):
         ]  # fmt: skip
 
     def show_sample(self) -> None:
-        """The samples with made-up results, so the dots, the toner and the warnings show
-        what a Refresh would: made here, never read from anything."""
         super().show_sample()
         if not self.sample_shown():
             return
@@ -393,14 +374,10 @@ class PrintersTool(ListWorkspace):
         self._count_attention()
 
     def restyle(self) -> None:
-        """After a theme switch: the dots, swatches, bars, Details and the strip were drawn in
-        the old theme's colours."""
         super().restyle()
         self.table.refill()
         self.attention_strip.restyle()
         self._selection_changed()
-
-    # ---- adding and editing printers ----
 
     def add_item_action(self) -> QAction:
         return self.commands.add_printer
@@ -409,7 +386,6 @@ class PrintersTool(ListWorkspace):
         doc = self._writable()
         if doc is None:
             return
-        # An empty list gets its first group; one with printers is never started over.
         base = doc.hosts if doc.hosts.groups or doc.hosts.hosts else starter_list()
         dialog = PrinterDialog(self, base, default_group=self.nav.selected_group_id())
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
@@ -431,12 +407,9 @@ class PrintersTool(ListWorkspace):
             self.table.select_ids([printer.id])
 
     def import_printers(self) -> None:
-        """Inventory > Import printers…: many printers at once; nothing is saved until Add, and
-        nothing is read from them until Refresh."""
         doc = self._writable()
         if doc is None:
             return
-        # Printers without a group of their own get none, unless a group is picked.
         dialog = ImportPrintersDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
         new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
         if new is not None and self._commit(new):
@@ -467,24 +440,19 @@ class PrintersTool(ListWorkspace):
             return
         self._commit(new)
 
-    # ---- settings ----
-
     def settings_group(self) -> PrintersSettings:
         return self.settings_pages
 
     def low_level(self) -> int:
-        """The low supply level from Settings, in %."""
         saved = self.prefs.get("low_level")
         ok = isinstance(saved, int) and not isinstance(saved, bool) and LOWEST <= saved <= HIGHEST
         return saved if ok else status.DEFAULT_LOW  # type: ignore[return-value]
 
     def _choice[T](self, key: str, allowed: Collection[T], default: T) -> T:
-        """A choice kept from Settings, or `default` when it's missing or not one of `allowed`."""
         saved = self.prefs.get(key)
         return saved if saved in allowed else default  # type: ignore[return-value]
 
     def _change(self, key: str, value: object, current: object) -> bool:
-        """Keeps a choice from Settings when it differs from `current`; True when it did."""
         if value == current:
             return False
         self.prefs[key] = value
@@ -492,29 +460,26 @@ class PrintersTool(ListWorkspace):
 
     def set_low_level(self, low: int) -> None:
         if self._change("low_level", low, self.low_level()):
-            self.table.marks = self.bar_marks()  # the low mark follows it
+            self.table.marks = self.bar_marks()
             self._show_all_cells()
             self._count_attention()
 
     def bar_marks(self) -> tuple[Mark, ...]:
-        """The supply bars' marks: the low level's, then any added in Settings."""
         return marks.load(self.prefs, self.low_level())
 
     def set_bar_marks(self, chosen: tuple[Mark, ...]) -> None:
         marks.save(self.prefs, chosen)
         self.table.marks = self.bar_marks()
         self.table.viewport().update()
-        self._selection_changed()  # Details' bars
+        self._selection_changed()
 
     def snmp_version(self) -> str:
-        """Settings' SNMP version: V2C (the default) or V3."""
         return self._choice(SNMP_VERSION, (V2C, V3), V2C)
 
     def set_snmp_version(self, version: str) -> None:
         self._change(SNMP_VERSION, version, self.snmp_version())
 
     def auto_refresh(self) -> int:
-        """Settings' Refresh on its own: minutes between two, 0 when it's off (the default)."""
         return self._choice(AUTO_REFRESH, AUTO_EVERY, 0)
 
     def set_auto_refresh(self, minutes: int) -> None:
@@ -525,7 +490,6 @@ class PrintersTool(ListWorkspace):
         return self.auto_refresh() > 0
 
     def warn_reasons(self) -> frozenset[Reason]:
-        """Settings' Warnings, In CapyPanel: the reasons the rail's count and the strip count."""
         return self._reasons(WARN_HERE, DEFAULT_REASONS)
 
     def notify_reasons(self) -> frozenset[Reason]:
@@ -541,13 +505,11 @@ class PrintersTool(ListWorkspace):
         return frozenset(reason for reason in Reason if reason.value in saved)
 
     def set_warnings(self, here: frozenset[Reason], notify: frozenset[Reason]) -> None:
-        """Keeps Settings' Warnings ticks; the count and the strip follow at once."""
-
         def kept(chosen: frozenset[Reason]) -> list[str]:
             return [reason.value for reason in Reason if reason in chosen]
 
         if self._change(WARN_NOTIFY, kept(notify), kept(self.notify_reasons())):
-            self.prefs.pop(NOTIFY, None)  # the old choice, now carried over
+            self.prefs.pop(NOTIFY, None)
         if self._change(WARN_HERE, kept(here), kept(self.warn_reasons())):
             self._count_attention()
 
@@ -558,11 +520,9 @@ class PrintersTool(ListWorkspace):
             self._auto_timer.stop()
 
     def _auto_refresh(self) -> None:
-        """Every printer in the open list, not only the ones shown: warnings count them all.
-        Skipped while a Refresh runs, and quietly when there's no SNMP v3 account yet."""
         doc = self._doc
         if self.sample_shown():
-            return  # a guide is open: its samples aren't news, and the next turn comes soon
+            return
         if self._run is None and doc is not None and doc.hosts.hosts:
             before = self._with_reasons(self.notify_reasons())
             self.check_printers(doc.hosts.hosts, quiet=True)
@@ -570,8 +530,6 @@ class PrintersTool(ListWorkspace):
                 self._before_auto = before
 
     def _notify_new(self, before: dict[str, Reason]) -> None:
-        """One notification for the printers with a reason ticked for it now that they didn't
-        have before (or another one)."""
         doc, low = self._doc, self.low_level()
         if doc is None:
             return
@@ -587,7 +545,6 @@ class PrintersTool(ListWorkspace):
             self.notify_requested.emit(attention_text(len(lines)), notice_text(lines))
 
     def toner_bars(self) -> bool:
-        """Settings' Toner column choice: a bar (True) or text, the default."""
         return self.prefs.get(TONER_VIEW) == BARS
 
     def set_toner_bars(self, bars: bool) -> None:
@@ -602,15 +559,10 @@ class PrintersTool(ListWorkspace):
         self._selection_changed()
 
     def prefs_applied(self) -> None:
-        """A choice made in Settings was kept: save it, and show the list's new name."""
         self._save_prefs()
         self._update_state()
 
-    # ---- Report ----
-
     def export_printers(self) -> None:
-        """The toolbar's Report: pick printers and columns, then save a CSV file or copy the
-        rows. Works on read-only lists too: it changes nothing."""
         doc = self._doc
         if doc is None or not doc.hosts.hosts:
             return
@@ -625,7 +577,6 @@ class PrintersTool(ListWorkspace):
             save_prefs=self._save_prefs,
             results=self._report_cells,
             checked_at=self._checked_at,
-            # Status, Toner and Total pages come from one read: any box ticked reads them all.
             refresh=lambda printers, *wanted: (
                 self.check_printers(printers) if any(wanted) else None
             ),
@@ -640,21 +591,17 @@ class PrintersTool(ListWorkspace):
         if dialog.outcome:
             self._shell.show_message(dialog.outcome, 10_000)
 
-    # ---- warnings: the rail's count and the strip ----
-
     def refresh(self) -> None:
         super().refresh()
-        self._count_attention()  # another list, or printers added or removed
+        self._count_attention()
 
     def attention_text(self, n: int) -> str:
         return attention_text(n)
 
     def attention(self) -> dict[str, Reason]:
-        """The open list's printers that need attention, by id, from their last Refresh."""
         return dict(self._attention)
 
     def _with_reasons(self, wanted: frozenset[Reason]) -> dict[str, Reason]:
-        """The open list's printers with one of the `wanted` reasons: the first one, by id."""
         doc, low = self._doc, self.low_level()
         found: dict[str, Reason] = {}
         for printer in doc.hosts.hosts if doc else ():
@@ -668,7 +615,7 @@ class PrintersTool(ListWorkspace):
         changed = found != self._attention
         self._attention = found
         if self._only_attention and not found:
-            self._only_attention = False  # nothing left to list: back to every printer
+            self._only_attention = False
             self._show_items()
         elif self._only_attention and changed:
             self._show_items()
@@ -677,8 +624,6 @@ class PrintersTool(ListWorkspace):
             self.badge_changed.emit(len(found))
 
     def show_attention(self) -> None:
-        """Only the printers that need attention, out of the whole list: no search, group or
-        tags left picked to hide some of them."""
         if not self._attention:
             return
         self._clear_search()
@@ -710,8 +655,6 @@ class PrintersTool(ListWorkspace):
         if not self._only_attention:
             return items
         return [p for p in items if p.id in self._attention]
-
-    # ---- web pages ----
 
     def activate_selected(self) -> None:
         self.open_web_pages()
@@ -747,11 +690,7 @@ class PrintersTool(ListWorkspace):
         if printers:
             QGuiApplication.clipboard().setText("\n".join(p.target for p in printers))
 
-    # ---- showing ----
-
     def matches(self, item: Host, needle: str) -> bool:
-        """The name and notes, plus every column that shows: only what can be seen. Status
-        ("Not checked" too) comes from the last Refresh, in memory only; Toner isn't searched."""
         if super().matches(item, needle):
             return True
         table = self.table
@@ -794,11 +733,9 @@ class PrintersTool(ListWorkspace):
         )
 
     def import_action(self) -> QAction | None:
-        return self.commands.import_printers  # an empty list offers it beside Add printer…
+        return self.commands.import_printers
 
     def status_extras(self, doc: OpenList) -> list[str]:
-        """How many printers answered the last Refresh, once any was checked: a refusal or an
-        unreadable answer still came from a printer that's on."""
         found = [self._checked[p.id] for p in doc.hosts.hosts if p.id in self._checked]
         if not found:
             return []
@@ -819,7 +756,6 @@ class PrintersTool(ListWorkspace):
         return _("Always shown: the printer's name and its status.")
 
     def _summary(self) -> str:
-        """With nothing selected, the Details panel counts the printers shown."""
         rows = (self.table.topLevelItem(i) for i in range(self.table.topLevelItemCount()))
         shown = sum(1 for row in rows if row is not None and row.data(0, ROLE_ID))
         if not shown:
@@ -831,24 +767,20 @@ class PrintersTool(ListWorkspace):
         a = self.commands
         a.add_printer.setEnabled(writable)
         a.import_printers.setEnabled(writable)
-        a.export_printers.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
+        a.export_printers.setEnabled(doc is not None and bool(doc.hosts.hosts))
         for action in (a.open_web_page, a.copy_address):
-            action.setEnabled(selected > 0)  # read-only lists can still open them
+            action.setEnabled(selected > 0)
         idle = self._run is None
-        a.refresh_shown.setEnabled(idle and bool(self.visible_items()))  # read-only lists too
+        a.refresh_shown.setEnabled(idle and bool(self.visible_items()))
         a.refresh_selected.setEnabled(idle and selected > 0)
 
-    # ---- right-click menus ----
-
     def copy_action(self, key: str) -> QAction | None:
-        return self.commands.copy_address if key == "address" else None  # keeps Ctrl+Shift+C
+        return self.commands.copy_address if key == "address" else None
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
-        """Use first, then copy, then managing the printers. Refresh says how many; Edit is
-        for one printer only."""
         a = self.commands
         menu.addAction(a.open_web_page)
-        menu.setDefaultAction(a.open_web_page)  # bold: what double-click and Enter do
+        menu.setDefaultAction(a.open_web_page)
         menu.addSeparator()
         one = len(items) == 1
         a.refresh_selected.setText(
@@ -864,8 +796,6 @@ class PrintersTool(ListWorkspace):
         menu.addAction(a.remove)
 
     def fill_group_menu(self, menu: QMenu, group: Group) -> None:
-        """Refresh group last, under a separator, as in Hosts: the group's printers, its
-        subgroups' too."""
         assert self._doc is not None
         printers = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
@@ -873,10 +803,7 @@ class PrintersTool(ListWorkspace):
         refresh.setEnabled(bool(printers) and self._run is None)
         refresh.triggered.connect(lambda: self.check_printers(printers))
 
-    # ---- Refresh: status, supplies and page counter ----
-
     def check_printers(self, printers: Sequence[Host], *, quiet: bool = False) -> None:
-        """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
         printers = [p for p in printers if not is_sample(p.id)]  # a guide's samples: never read
         if self._run is not None or not printers:
             return
@@ -904,14 +831,12 @@ class PrintersTool(ListWorkspace):
         run.start()
 
     def working(self) -> bool:
-        """A Refresh is running, the button's or the one on its own (both go through _run):
-        "Install and restart" waits for it."""
         return self._run is not None
 
     def stop_checks(self) -> None:
         if self._run is not None:
             self._run.stop()
-            self._stop_button.setEnabled(False)  # printers already being read still finish
+            self._stop_button.setEnabled(False)
 
     def _found(self, printer_id: str, checked: Checked) -> None:
         run = self._run
@@ -921,13 +846,12 @@ class PrintersTool(ListWorkspace):
         self._checked[printer_id] = checked
         self.table.show_cells(printer_id)
         self._count_attention()
-        if self.table.selected_ids() in ([printer_id], []):  # its details, or the summary
+        if self.table.selected_ids() in ([printer_id], []):
             self._selection_changed()
         self._show_progress()
         self.checks_changed.emit()
 
     def _set_doc360_account(self) -> None:
-        """Details' button under a missing or refused Doc360 login."""
         if change_doc360_account(self.details):
             self._shell.show_message(
                 _("Doc360 MPS account saved. Refresh fetches the page counts."), 10_000
@@ -937,7 +861,7 @@ class PrintersTool(ListWorkspace):
         if self._run is None:
             return
         self._counted = counted
-        self._selection_changed()  # Details shows the totals
+        self._selection_changed()
         self.checks_changed.emit()
 
     def _show_progress(self) -> None:
@@ -981,35 +905,32 @@ class PrintersTool(ListWorkspace):
         return status.status(checked, low), status.toner(checked, low)
 
     def _checked_at(self, printer_id: str) -> tuple[datetime | None, ...]:
-        """When each Last check column was read: one Refresh reads them all."""
         checked = self._checked.get(printer_id)
         return (checked.when if checked else None,) * len(PrintersReport.CHECKED)
 
     def _report_cells(self, printer_id: str) -> tuple[str, ...]:
-        """The Report's Last check columns, in PrintersReport.CHECKED's order."""
         state, toner = self._cells(printer_id)
         checked = self._checked.get(printer_id)
         reading = checked.reading if checked else None
-        pages = "" if reading is None or reading.pages is None else str(reading.pages)  # digits
+        pages = "" if reading is None or reading.pages is None else str(reading.pages)
         printer = self._doc.hosts.host(printer_id) if self._doc else None
         if printer and info_of(printer).counter_source == DOC360:
             total, error = status.doc360_pages(info_of(printer), reading, self._counted)
-            pages = _("Error") if error else "" if total is None else str(total)  # Details: why
+            pages = _("Error") if error else "" if total is None else str(total)
             if total is not None and (month := status.older_text(self._counted)):
                 pages = _("{pages} (from {month})").format(pages=pages, month=month)
         models = status.toner_models(reading) if reading else ""
         mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
-        said = "" if state.nothing else state.text  # the preview says "Not checked"; files don't
+        said = "" if state.nothing else state.text
         return said, toner.text, models, pages, mac, firmware
 
     def use_value(self, printer_id: str, key: str, value: str) -> None:
-        """Details' "Use this": the value the printer reports replaces the list's."""
         doc = self._writable()
         printer = doc.hosts.host(printer_id) if doc else None
         if doc is None or printer is None or key not in ("brand", "model", "serial"):
             return
         if key in ("brand", "serial"):
-            value = value.upper()  # as the printer dialog keeps them
+            value = value.upper()
         info = replace(info_of(printer), **{key: value})
         try:
             new = doc.hosts.update_host(with_info(printer, info))

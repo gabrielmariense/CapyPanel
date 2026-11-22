@@ -1,5 +1,3 @@
-"""The rail on the window's left edge: Home, an icon per tool, then help's ? and Settings."""
-
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QButtonGroup, QFrame, QLabel, QToolButton, QVBoxLayout, QWidget
@@ -8,37 +6,31 @@ from capypanel.ui.icons import tabler_icon
 
 RAIL_WIDTH = 52
 ICON_SIZE = 22
-BADGE = 16  # px: the count's height, and its narrowest width
+BADGE = 16
 
 
 class ToolRail(QWidget):
-    """Icons only, with tooltips the window sets. The tool shown, or Home, has a tinted square
-    behind its icon; a tool with items needing attention shows their count on it, in red."""
-
     home_requested = Signal()
     settings_requested = Signal()
-    tool_picked = Signal(str)  # a tool's id
+    tool_picked = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("toolRail")
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # the stylesheet paints it
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
         self.setFixedWidth(RAIL_WIDTH)
         self.buttons: dict[str, QToolButton] = {}
         self.badges: dict[str, QLabel] = {}
         self._icons: dict[str, str] = {}
-        # Home or one tool is always shown: clicking it again keeps it picked.
         self._tools = QButtonGroup(self)
         self._tools.setExclusive(True)
         self.home_button = _button(checkable=True)
         self._tools.addButton(self.home_button)
         self.home_button.clicked.connect(self.home_requested)
         self.home_button.toggled.connect(lambda _on: self.restyle())
-        line = QFrame()  # between Home and the tools
+        line = QFrame()
         line.setObjectName("toolDivider")
         line.setFixedSize(28, 1)
-        # Help for what's shown: an action like the gear, never a place, so it takes no tile. It
-        # sits where every other window has its ?, at the bottom left.
         self.help_button = _button(checkable=False)
         self.help_button.setObjectName("railHelp")
         self.settings_button = _button(checkable=False)
@@ -58,21 +50,19 @@ class ToolRail(QWidget):
         self.buttons[tool_id] = button
         self._icons[tool_id] = icon
         self._tools.addButton(button)
-        # After Home, its line and the tools before it.
         self._layout.insertWidget(len(self.buttons) + 1, button, 0, Qt.AlignmentFlag.AlignHCenter)
         button.clicked.connect(lambda: self.tool_picked.emit(tool_id))
         button.toggled.connect(lambda _on: self.restyle())
         badge = QLabel(button)
-        badge.setObjectName("railBadge")  # red, white number: the theme's stylesheet
+        badge.setObjectName("railBadge")
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # the button's tip
+        badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         badge.hide()
         self.badges[tool_id] = badge
         self.restyle()
         return button
 
     def set_badge(self, tool_id: str, count: int) -> None:
-        """A tool's count on its icon; 0 hides it. Past 99 it says "99+"."""
         badge = self.badges[tool_id]
         badge.setVisible(count > 0)
         if count > 0:
@@ -90,15 +80,12 @@ class ToolRail(QWidget):
         badge.move(button.width() - width, 0)
 
     def show_tool(self, tool_id: str | None) -> None:
-        """None: Home."""
         (self.home_button if tool_id is None else self.buttons[tool_id]).setChecked(True)
 
     def restyle(self) -> None:
-        """Icons in the theme's colours: the tool shown in the text colour, the rest dimmer."""
         palette = self.palette()
         text = palette.color(QPalette.ColorRole.Text)
         back = palette.color(QPalette.ColorRole.Window)
-        # Halfway to the background: SVG icons take no transparency.
         dim = QColor(
             (text.red() + back.red()) // 2,
             (text.green() + back.green()) // 2,
@@ -113,7 +100,7 @@ class ToolRail(QWidget):
         self.settings_button.setIcon(tabler_icon("settings", dim, ICON_SIZE))
         for tool_id, badge in self.badges.items():
             if not badge.isHidden():
-                self._place_badge(tool_id)  # a theme's font may change its width
+                self._place_badge(tool_id)
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)

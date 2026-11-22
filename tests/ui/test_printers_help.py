@@ -1,5 +1,3 @@
-"""Printers' help: each window's ?, and "What does this mean?" on its warnings and errors."""
-
 from datetime import datetime
 from pathlib import Path
 
@@ -30,7 +28,7 @@ ACCOUNT = Account("SAMPLE-PARTNER", "EXAMPLE\\user", "sample-password")
 
 def _place_of(window: QDialog) -> str:
     place = window.help_button.place()  # type: ignore[attr-defined]
-    help_links.url(place)  # a place not in the list raises here, never as a dead link
+    help_links.url(place)
     return place
 
 
@@ -57,7 +55,7 @@ def test_each_printers_window_opens_its_own_part(
 def test_the_tool_and_the_windows_it_shares_with_hosts_open_printers_parts(
     printers: PrintersTool,  # noqa: F811
 ) -> None:
-    assert printers.help_place() == "printers/printers/"  # the page's top: F1 and the rail's ?
+    assert printers.help_place() == "printers/printers/"
     import_part = "printers-import-many-printers-at-once"
     assert ImportPrintersDialog.HELP_PLACE == PrinterFormats.HELP_PLACE == import_part
     assert PrintersReport.HELP_PLACE == "printers-export-printers-to-a-spreadsheet"
@@ -80,7 +78,7 @@ def test_the_question_mark_comes_first_in_the_button_row(qapp: QApplication) -> 
         (Checked(WHEN, offline=True), "printer-offline"),
         (Checked(WHEN, refused="auth"), "printer-refused"),
         (Checked(WHEN, error="bad"), "printer-unreadable"),
-        (_checked(state=State.IDLE), ""),  # read: nothing to explain
+        (_checked(state=State.IDLE), ""),
     ],
 )
 def test_a_printer_that_didn_t_answer_links_its_line(checked: Checked | None, place: str) -> None:
@@ -117,7 +115,7 @@ def test_each_doc360_error_has_its_line(
         ("", {"sample0001": Counter(1, 1, 0)}, "doc360-serial-missing"),
         ("SAMPLE0002", {"sample0001": Counter(1, 1, 0)}, "doc360-serial-not-listed"),
         ("SAMPLE0001", {"sample0001": Counter(None, 1, 0)}, "doc360-no-total"),
-        ("SAMPLE0001", {"sample0001": Counter(7, 7, 0)}, ""),  # a total: no error
+        ("SAMPLE0001", {"sample0001": Counter(7, 7, 0)}, ""),
     ],
 )
 def test_each_reason_doc360_has_no_total_has_its_line(
@@ -139,13 +137,11 @@ def test_details_links_a_refused_printer_and_a_doc360_error(printers: PrintersTo
     printers._counted = Counted(WHEN, error="Doc360 MPS didn't answer.", place="doc360-no-answer")
     printers.table.select_ids([printer.id])
     assert _links(printers) == ["printer-refused", "doc360-no-answer"]
-    # The status link has a line of its own right under the status, which keeps its date
     [line] = [w for w in printers.details.findChildren(QLabel) if w.text().startswith("Refused ·")]
     link = next(w for w in printers.details.findChildren(HelpLink) if w._place == "printer-refused")
     holder = line.parentWidget()
     column = holder.layout() if holder is not None else None
     assert column is not None and column.indexOf(link) == column.indexOf(line) + 1
-    # Details is a card: each link's colour is tested against the card's, not the window's
     assert {link._on for link in printers.details.findChildren(HelpLink)} == {help_links.CARD}
 
 
@@ -168,7 +164,7 @@ def test_a_printer_that_was_read_gets_no_link(printers: PrintersTool) -> None:  
 def test_the_warnings_strip_links_the_warnings_part(qapp: QApplication) -> None:
     strip = attention.AttentionStrip()
     strip.show_found([Reason.OFFLINE], only_them=False)
-    text = strip._text.text()  # the link reads straight after the message, inside its text
+    text = strip._text.text()
     assert text.startswith("<b>1 printer</b> needs attention")
     assert "What does this mean?" in text and attention.HELP_PLACE in text
 

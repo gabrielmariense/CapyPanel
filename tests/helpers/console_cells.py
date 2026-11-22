@@ -1,32 +1,29 @@
-"""The cells Windows' console gives characters; run in a pseudo console, it measures them."""
-
 import ctypes
 import json
 import sys
 from ctypes import wintypes as wt
 
-# Each sample's cells as Windows' own console gave them (its cursor column, read with
-# GetConsoleScreenBufferInfo). The screen must place everything where the console does.
+# Cells as Windows' own console placed them: its cursor column, from GetConsoleScreenBufferInfo.
 CONSOLE_CELLS = [
     ("abc", 3),
-    ("ção", 3),  # pt-BR accents, precomposed
-    ("é", 2),  # e and a combining acute: a cell each
-    ("中文", 4),  # CJK
+    ("ção", 3),
+    ("é", 2),
+    ("中文", 4),
     ("한", 2),  # Hangul
-    ("Ａ", 2),  # fullwidth A
-    ("\U0001f44d", 2),  # thumbs up
+    ("Ａ", 2),
+    ("\U0001f44d", 2),
     ("❤️", 2),  # heart and VS16: a cell each
-    ("⚠", 1),  # warning sign
-    ("\U0001f1e7\U0001f1f7", 4),  # the Brazilian flag: two wide regional indicators
+    ("⚠", 1),
+    ("\U0001f1e7\U0001f1f7", 4),
     ("\U0001f469‍\U0001f4bb", 5),  # woman technologist: 2, the joiner 1, 2
-    ("─│", 2),  # box drawing
-    ("→", 1),  # arrow
+    ("─│", 2),
+    ("→", 1),
     ("⚠️", 2),  # warning and VS16
-    ("", 1),  # a Powerline separator (private use)
-    ("a​b", 3),  # a zero-width space takes a cell
+    ("", 1),
+    ("a​b", 3),
     ("\U0001fae8", 2),  # a Unicode 15 emoji
-    ("±", 1),  # plus-minus (ambiguous width)
-    ("❤", 1),  # heart alone
+    ("±", 1),
+    ("❤", 1),
 ]
 
 

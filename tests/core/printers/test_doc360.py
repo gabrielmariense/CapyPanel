@@ -1,5 +1,3 @@
-"""Doc360 MPS counters against a small fake portal on this PC, with invented data."""
-
 import logging
 import subprocess
 import sys
@@ -40,14 +38,12 @@ EXPORT_FORM = """<!doctype html><html><body>
 
 
 class Portal:
-    """What the fake portal answers, and what it was asked."""
-
     def __init__(self) -> None:
-        self.asked: list[tuple[str, str]] = []  # (method, path with query)
+        self.asked: list[tuple[str, str]] = []
         self.posted: dict[str, list[tuple[str, str]]] = {}
         self.counters = CSV
-        self.empty_months: set[tuple[str, str]] = set()  # (mes, ano) with no counters yet
-        self.exports: list[tuple[str, str]] = []  # (mes, ano) of each export asked for
+        self.empty_months: set[tuple[str, str]] = set()
+        self.exports: list[tuple[str, str]] = []
         self.login_page = LOGIN_FORM
         self.export_page = EXPORT_FORM
 
@@ -135,7 +131,7 @@ def test_reads_the_latest_counters_by_serial(portal: tuple[Portal, str]) -> None
     assert login["token"] == "t-1" and login["dispositivo"] == "desktop"
     export = state.posted["/docmps/acao.php"]
     assert ("botao", "csv_contadores") in export
-    assert state.exports == [("1", "2026")]  # this month's counters: the newest
+    assert state.exports == [("1", "2026")]
     assert [v for k, v in export if k == "clientes[]"] == ["7", "9"]
     assert ("secao", "fechamento") in export and ("modulo", "porperiodo") in export
 
@@ -157,7 +153,7 @@ def test_asks_only_for_its_own_pages_and_logs_out(portal: tuple[Portal, str]) ->
     assert state.asked == [
         ("GET", "/login/index.php"),
         ("POST", "/login/acao.php"),
-        ("GET", "/docmps/index.php"),  # where the login leads
+        ("GET", "/docmps/index.php"),
         ("GET", "/docmps/index.php?menu=fechamento&secao=fechamento&modulo=porperiodo"),
         ("POST", "/docmps/acao.php"),
         ("GET", "/docmps/index.php?secao=logoff"),
@@ -233,8 +229,6 @@ def test_parse_counters_without_its_columns() -> None:
 
 
 def test_a_start_leaves_the_network_and_cipher_code_for_their_first_use() -> None:
-    # Doc360's network code and SNMP v3's cipher load on first use, not at start; checked in
-    # a process of its own, since this one imported them long ago.
     code = "import sys, capypanel.ui.app; from capypanel.ui.tool_catalog import CATALOG; "
     code += "[info.load() for info in CATALOG]; "
     code += "print(sorted(m for m in ('urllib.request', 'http.cookiejar', 'cryptography') "

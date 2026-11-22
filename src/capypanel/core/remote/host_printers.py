@@ -1,5 +1,3 @@
-"""Another PC's installed printers, and clearing a queue, over the spooler's own remote call."""
-
 import ctypes
 from ctypes import wintypes
 from dataclasses import dataclass
@@ -10,7 +8,6 @@ _ENUM_LOCAL, _ENUM_NAME = 0x2, 0x8
 _ADMINISTER = 0x4
 _PURGE = 3  # PRINTER_CONTROL_PURGE: deletes every job in the queue
 _SHORT_BUFFER = 122  # ERROR_INSUFFICIENT_BUFFER
-# The spooler's status bits that mean someone should look, as Windows names them.
 _PROBLEMS = {
     0x2: "error", 0x8: "paper jam", 0x10: "out of paper", 0x40: "paper problem",
     0x80: "offline", 0x400: "output bin full", 0x40000: "out of toner", 0x80000: "toner low",
@@ -24,14 +21,13 @@ class HostPrinter:
     name: str
     driver: str
     port: str
-    shared_as: str  # the share name, or "" when not shared
-    jobs: int  # documents waiting in its queue
-    problems: tuple[str, ...]  # what the spooler reports, e.g. ("paper jam",); () when fine
+    shared_as: str
+    jobs: int
+    problems: tuple[str, ...]
 
 
 # Nothing is installed or run on the target. A user's own print-server printers don't show.
 def list_printers(host: str | None, account: Account | None = None) -> list[HostPrinter]:
-    """The printers installed on `host` (None: this PC), by name. Raises RemoteError."""
     if host is not None:
         check_reachable(host)
     with as_account(account):
@@ -39,7 +35,6 @@ def list_printers(host: str | None, account: Account | None = None) -> list[Host
 
 
 def clear_queue(host: str, printer: str, account: Account | None = None) -> None:
-    """Deletes every document waiting for `printer` on `host`. Raises RemoteError."""
     check_reachable(host)
     with as_account(account):
         handle = wintypes.HANDLE()

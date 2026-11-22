@@ -30,11 +30,11 @@ def _select(win: CapyWindow, *names: str) -> list[str]:
 
 
 def _tags_menu(win: CapyWindow) -> QMenu:
-    menu = QMenu(win)  # kept by the window, or its submenu goes with it
+    menu = QMenu(win)
     win.hosts.fill_item_menu(menu, win.hosts.selected_items())
     titles = [a.text() for a in menu.actions()]
     at = titles.index("&Move to")
-    tags = menu.actions()[at + 1].menu()  # right after Move to
+    tags = menu.actions()[at + 1].menu()
     assert isinstance(tags, QMenu) and tags.title() == "&Tags"
     return tags
 
@@ -54,12 +54,12 @@ def test_the_tags_submenu_ticks_shared_tags_and_counts_the_others(window: CapyWi
     ]  # fmt: skip
     assert tags.actions()[-2].isSeparator()
     [watch] = [a for a in tags.actions() if a.text().startswith("watch")]
-    watch.trigger()  # only some had it: now both do
+    watch.trigger()
     assert _tags(window, "PC-2") == ("kiosk", "watch")
     [kiosk] = [a for a in _tags_menu(window).actions() if a.text() == "kiosk"]
-    kiosk.trigger()  # both had it: taken from both
+    kiosk.trigger()
     assert _tags(window, "PC-1") == ("watch",) and _tags(window, "PC-2") == ("watch",)
-    assert _tags(window, "PC-3") == ("Lab",)  # not selected: untouched
+    assert _tags(window, "PC-3") == ("Lab",)
 
 
 def test_a_new_tag_goes_to_every_selected_item_in_the_list_s_spelling(
@@ -70,8 +70,8 @@ def test_a_new_tag_goes_to_every_selected_item_in_the_list_s_spelling(
     monkeypatch.setattr(QInputDialog, "getText", lambda *a, **k: next(typed))
     new = _tags_menu(window).actions()[-1]
     new.trigger()
-    assert _tags(window, "PC-2") == ("kiosk", "Lab")  # the list already spells it "Lab"
+    assert _tags(window, "PC-2") == ("kiosk", "Lab")
     _tags_menu(window).actions()[-1].trigger()
     assert _tags(window, "PC-1")[-1] == "2nd floor"
-    _tags_menu(window).actions()[-1].trigger()  # cancelled: nothing changes
+    _tags_menu(window).actions()[-1].trigger()
     assert _tags(window, "PC-1") == ("kiosk", "watch", "Lab", "2nd floor")

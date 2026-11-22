@@ -1,5 +1,3 @@
-"""Switching the app's language live: our gettext catalog plus Qt's own translations."""
-
 import logging
 
 from PySide6.QtCore import QCoreApplication, QEvent, QLibraryInfo, QTranslator
@@ -11,7 +9,6 @@ _qt_translator: QTranslator | None = None
 
 
 def apply(code: str) -> str:
-    """Switch the language and tell every window. Returns the code in use."""
     global _qt_translator
     code = i18n.set_language(code)
     app = QCoreApplication.instance()

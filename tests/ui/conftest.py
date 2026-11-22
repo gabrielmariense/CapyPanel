@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-# Run Qt without a screen, so UI tests work in CI.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 CMD = str(Path(os.environ.get("SYSTEMROOT") or r"C:\Windows") / "System32" / "cmd.exe")
 
@@ -17,8 +16,8 @@ def qapp() -> Iterator[QApplication]:
     app = QApplication.instance() or QApplication([])
     assert isinstance(app, QApplication)
     yield app
-    # Windows the tests left go while Qt is still up: freed by Python after the app, they can
-    # crash the process at exit. Pop-ups (a completer's list) belong to their widget: skipped.
+    # Left windows go while Qt is up: freed by Python after the app, they can crash the exit.
+    # Pop-ups (a completer's list) belong to their widget: skipped.
     popup = Qt.WindowType.Popup
     for widget in app.topLevelWidgets():
         if widget.windowFlags() & popup != popup:
@@ -30,8 +29,8 @@ def qapp() -> Iterator[QApplication]:
 
 @pytest.fixture(autouse=True)
 def free_windows(qapp: QApplication) -> Iterator[None]:
-    """Windows a test leaves go after it, or every later theme switch restyles them all: minutes
-    over the suite. Not after a theme switch: deleting a restyled window can crash Qt."""
+    """Else every later theme switch restyles them (minutes over the suite). Never after a
+    switch: deleting a restyled window can crash Qt."""
     from capypanel.ui.themes import engine as themes
 
     before, generation = set(qapp.topLevelWidgets()), themes.generation()
@@ -48,18 +47,16 @@ def free_windows(qapp: QApplication) -> Iterator[None]:
 
 @pytest.fixture
 def default_theme_after(qapp: QApplication) -> Iterator[None]:
-    """For a test that switches themes: the default one again after it."""
     from capypanel.ui.themes import engine as themes
 
     yield
-    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+    if themes.current() is not themes.DEFAULT_THEME:
         themes.apply(themes.DEFAULT_THEME)
 
 
 @pytest.fixture(autouse=True)
 def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A host shown in Details has its PC facts read after a moment: never in tests, which would
-    reach out to the made-up addresses on the real network. Tests of it call it themselves."""
+    """Never on their own in tests: they'd reach made-up addresses on the real network."""
     from capypanel.ui.hosts_tool.tool import HostsTool
 
     monkeypatch.setattr(HostsTool, "_read_shown_facts", lambda _self: None)
@@ -67,8 +64,7 @@ def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)
 def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Help and the other web links land here, never in the browser: an F1 pressed for something
-    else would open the real website. A test of a link reads this list or patches open_url."""
+    """Web links land here, never in the browser: a stray F1 would open the real website."""
     from capypanel.ui import about
 
     opened: list[str] = []
@@ -78,8 +74,7 @@ def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 @pytest.fixture(autouse=True)
 def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
-    """Warnings and errors with "What does this mean?" land here as (text, place), not waiting for
-    a click that never comes; a test wanting the box itself patches dialogs.run_modal over this."""
+    """Warnings land here as (text, place) instead of waiting for a click that never comes."""
     from message_boxes import help_place
     from PySide6.QtWidgets import QMessageBox
 
@@ -98,8 +93,7 @@ def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
 
 @pytest.fixture(autouse=True)
 def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
-    """The SSH tool never starts ssh.exe or knocks on a real port in tests: Connect lands here as
-    (address, SshInfo), and a tab runs Windows' own cmd.exe in ssh.exe's place, off the network."""
+    """ssh.exe never starts and no real port is knocked on: a tab runs cmd.exe, off the network."""
     from capypanel.core.remote.status import PortState
     from capypanel.core.ssh import launch
     from capypanel.ui.ssh_tool import refresh
@@ -111,7 +105,7 @@ def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
 
     def in_tab(address: str, info: object) -> list[str]:
         started.append((address, info))
-        return [CMD, "/d"]  # no AutoRun
+        return [CMD, "/d"]
 
     monkeypatch.setattr(launch, "tab_command", in_tab)
     monkeypatch.setattr(refresh, "port_state", lambda _host, _port: (PortState.NO_ANSWER, None))
@@ -119,6 +113,5 @@ def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Theme tests first. A theme switch restyles every window still alive, and closed windows
-    from earlier tests pile up: at the end of the run, the theme tests would take minutes."""
-    items.sort(key=lambda item: "test_themes.py" not in item.nodeid)  # keeps the rest in order
+    """Theme tests first: a switch restyles every window still alive, so late it took minutes."""
+    items.sort(key=lambda item: "test_themes.py" not in item.nodeid)

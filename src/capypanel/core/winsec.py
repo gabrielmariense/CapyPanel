@@ -1,4 +1,4 @@
-"""Windows accounts and folder permissions, from the real logon token, never the environment."""
+"""From the real logon token, never the environment, which any program can change."""
 
 import ctypes
 from collections.abc import Iterator
@@ -52,7 +52,6 @@ _advapi32.ConvertSidToStringSidW.argtypes = [_VOID, _P(wintypes.LPWSTR)]
 
 
 def account_name() -> str:
-    """The signed-in account as "user@DOMAIN" (or "user@PC" for a local account)."""
     size = wintypes.ULONG(256)
     buffer = ctypes.create_unicode_buffer(size.value)
     if not _secur32.GetUserNameExW(_NAME_SAM_COMPATIBLE, buffer, ctypes.byref(size)):
@@ -75,14 +74,12 @@ def current_user_sid() -> str:
             token, _TOKEN_USER, info, needed, ctypes.byref(needed)
         ):
             raise ctypes.WinError(ctypes.get_last_error())
-        # TOKEN_USER starts with a pointer to the user's SID.
         return _sid_string(ctypes.c_void_p.from_buffer(info).value)
     finally:
         _kernel32.CloseHandle(token)
 
 
 def owner_sid(path: Path) -> str | None:
-    """The owner of a file or folder, or None where the drive has no owners (FAT, some shares)."""
     owner = ctypes.c_void_p()
     descriptor = ctypes.c_void_p()
     status = _advapi32.GetNamedSecurityInfoW(
@@ -98,28 +95,23 @@ def owner_sid(path: Path) -> str | None:
 
 
 def made_by_trusted(path: Path) -> bool:
-    """Whether a shared file was made by an administrator, the system or this user. In
-    ProgramData any user can add files, so another user's file could lead CapyPanel elsewhere."""
+    """In ProgramData any user can add files: another user's file could lead CapyPanel elsewhere."""
     owner = owner_sid(path)
     trusted = (SYSTEM, ADMINISTRATORS, TRUSTED_INSTALLER, current_user_sid())
     return owner is None or owner in trusted
 
 
 def make_private(folder: Path, user_sid: str) -> None:
-    """Only this user, Administrators and the system can open the folder or anything in it.
-    Raises OSError where permissions can't be set (e.g. a FAT USB stick)."""
     _set_dacl(folder, f"(A;OICI;FA;;;{user_sid})")
 
 
 def make_shared(folder: Path, user_sid: str) -> None:
-    """Everyone can read the folder; only its creator, Administrators and the system can change
-    it. Without this, ProgramData lets any user add files to it. Raises OSError."""
+    """Without this, ProgramData lets any user add files to it."""
     _set_dacl(folder, f"(A;OICI;FA;;;{user_sid})(A;OICI;{_READ_EXECUTE};;;{USERS})")
 
 
 @contextmanager
 def security_descriptor(sddl: str) -> Iterator[ctypes.c_void_p]:
-    """Windows permissions written as SDDL text, as the structure the API takes; freed after."""
     descriptor = ctypes.c_void_p()
     if not _advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW(
         sddl, 1, ctypes.byref(descriptor), None

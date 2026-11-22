@@ -16,7 +16,7 @@ def _profile(pid: str, name: str) -> ConnectionProfile:
 def test_the_starters_show_until_the_folder_exists_then_become_files(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
     assert [p.name for p in store.all()] == ["RealVNC", "Remote Desktop", "UltraVNC"]
-    assert not (tmp_path / "profiles").exists()  # nothing written just by looking
+    assert not (tmp_path / "profiles").exists()
     store.save(_profile("clinics", "Clinics"))
     files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
     assert files == [
@@ -30,13 +30,13 @@ def test_at_start_the_shipped_profiles_are_placed_in_the_folder(tmp_path: Path) 
     files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
     assert files == ["_profiles.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"]
     store.delete("realvnc")
-    store.place_starters()  # only once: a profile deleted later stays deleted
+    store.place_starters()
     assert [p.name for p in store.all()] == ["Remote Desktop", "UltraVNC"]
 
 
 def test_the_ultravnc_starter_uses_the_securevnc_plugin(tmp_path: Path) -> None:
     ProfileStore(tmp_path / "profiles").place_starters()
-    ultravnc = ProfileStore(tmp_path / "profiles").find("ultravnc")  # read back from its file
+    ultravnc = ProfileStore(tmp_path / "profiles").find("ultravnc")
     assert ultravnc is not None and ultravnc.options == ("securevnc",)
 
 
@@ -45,29 +45,29 @@ def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> N
     for starter in ("realvnc", "remote-desktop", "ultravnc"):
         store.delete(starter)
     assert store.all() == [] and store.default_id() == ""
-    assert ProfileStore(tmp_path / "profiles").all() == []  # deleted for good, not shipped back
+    assert ProfileStore(tmp_path / "profiles").all() == []
     with pytest.raises(ProfileError):
         store.delete("ultravnc")
 
 
 def test_the_default_lives_in_the_profiles_folder(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
-    assert store.default_id() == "ultravnc"  # the starter default
+    assert store.default_id() == "ultravnc"
     store.save(_profile("clinics", "Clinics"))
     store.set_default("clinics")
     saved = json.loads((tmp_path / "profiles" / "_profiles.json").read_text(encoding="utf-8"))
     assert saved["default_profile"] == "clinics"
-    assert saved["starters_added"] == ["realvnc", "remote-desktop", "ultravnc"]  # one file
-    assert ProfileStore(tmp_path / "profiles").default_id() == "clinics"  # everyone on the PC
-    assert "_profiles" not in {p.id for p in store.all()}  # not mistaken for a profile
+    assert saved["starters_added"] == ["realvnc", "remote-desktop", "ultravnc"]
+    assert ProfileStore(tmp_path / "profiles").default_id() == "clinics"
+    assert "_profiles" not in {p.id for p in store.all()}
     store.delete("clinics")
-    assert store.default_id() == "ultravnc"  # deleting the default falls back
+    assert store.default_id() == "ultravnc"
 
 
 def test_ids_come_from_the_name_and_never_clash(tmp_path: Path) -> None:
     taken = {p.id for p in ProfileStore(tmp_path / "profiles").all()}
     assert make_id("Clínicas (SecureVNC)", taken) == "clinicas-securevnc"
-    assert make_id("UltraVNC", taken) == "ultravnc-2"  # the starter's id is taken
+    assert make_id("UltraVNC", taken) == "ultravnc-2"
     assert make_id("!!!", taken) == "profile"
 
 
@@ -81,9 +81,7 @@ def test_a_broken_file_is_reported_and_the_rest_still_load(tmp_path: Path) -> No
 
 
 def test_editing_follows_windows_permissions(tmp_path: Path) -> None:
-    # The folder is made on the first save.
     assert ProfileStore(tmp_path / "not" / "made" / "yet" / "profiles").can_edit()
-    # CI runs as Administrator, who can write almost anywhere: deny this account explicitly.
     locked = tmp_path / "locked"
     locked.mkdir()
     deny = f"*{winsec.current_user_sid()}:(OI)(CI)(W,AD)"
@@ -110,7 +108,7 @@ def test_files_another_user_made_are_ignored(
     again = ProfileStore(tmp_path / "profiles")
     assert "planted" not in {p.id for p in again.all()}
     assert [p for p, _reason in again.problems] == [store.folder / "planted.json"]
-    assert again.default_id() == "ultravnc"  # the planted default isn't followed either
+    assert again.default_id() == "ultravnc"
 
 
 def test_the_folder_is_read_only_for_other_users_once_made(tmp_path: Path) -> None:
@@ -132,12 +130,12 @@ def test_a_settings_file_is_kept_beside_its_profile_and_goes_with_it(
     path = store.folder / "clinics.vnc"
     assert store.settings_path(clinics) == path
     assert path.read_bytes() == b"[options]\r\nviewonly=1\r\n"
-    store.save(clinics)  # no new content: the file stays
+    store.save(clinics)
     assert path.exists()
     with monkeypatch.context() as m:
         m.setattr(winsec, "made_by_trusted", lambda p: p != path)
-        assert store.settings_path(clinics) is None  # another user's file isn't used
-    store.save(ConnectionProfile("clinics", "ultravnc", name="Clinics"))  # back to defaults
+        assert store.settings_path(clinics) is None
+    store.save(ConnectionProfile("clinics", "ultravnc", name="Clinics"))
     assert not path.exists()
     store.save(clinics, b"[options]\r\na=1\r\n")
     store.delete("clinics")
@@ -155,14 +153,14 @@ def test_a_new_tool_s_starter_joins_an_existing_folder_once(tmp_path: Path) -> N
     (folder / "ultravnc.json").write_bytes((starters / "ultravnc.json").read_bytes())
     store = ProfileStore(folder, starters)
     assert {p.id for p in store.all()} == {"ultravnc", "remote-desktop"}
-    assert (folder / "remote-desktop.json").is_file()  # written, so it can be edited
+    assert (folder / "remote-desktop.json").is_file()
     store.delete("remote-desktop")
     assert "remote-desktop" not in {p.id for p in ProfileStore(folder, starters).all()}
 
 
 def test_restoring_brings_back_only_the_deleted_built_in_profiles(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
-    assert store.missing_starters() == []  # no folder yet: the shipped ones are shown
+    assert store.missing_starters() == []
     store.place_starters()
     edited = store.find("ultravnc")
     assert edited is not None
@@ -173,4 +171,4 @@ def test_restoring_brings_back_only_the_deleted_built_in_profiles(tmp_path: Path
     restored = store.restore_starters()
     assert [p.id for p in restored] == ["realvnc", "remote-desktop"]
     assert [p.name for p in store.all()] == ["Kiosk VNC", "RealVNC", "Remote Desktop"]
-    assert store.missing_starters() == []  # the edited one never counted
+    assert store.missing_starters() == []

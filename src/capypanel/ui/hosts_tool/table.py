@@ -1,5 +1,3 @@
-"""The host table; Status and User come from Refresh, in memory only, never in the list file."""
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -14,32 +12,27 @@ from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
 from capypanel.ui.list_workspace.panels import ROLE_NOTHING, ItemTable
 
-ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
+ROLE_QUIET = Qt.ItemDataRole.UserRole + 2
 
 
 @dataclass(frozen=True)
 class Cells:
-    """What the Status and User columns show for one host: text, tooltip, icon, quiet.
-    `unchecked`: no status was read yet, so its cell says "Not checked" and sorts last."""
-
     status: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
     user: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
     unchecked: bool = False
 
 
 def not_checked() -> Cells:
-    """A host no Refresh has read yet: Status says so, greyed; User stays empty until a check."""
     tip = _("Not checked: use Refresh")
     return Cells((_("Not checked"), tip, None, True), ("", tip, None, True), unchecked=True)
 
 
 class HostTable(ItemTable):
     ADDRESS, STATUS, USER, TAGS = 1, 2, 3, 4
-    COLUMNS = ("computer", "address", "status", "user", "tags")  # saved by these keys
-    # What's searched and shown: notes are searched too, but have no column.
+    COLUMNS = ("computer", "address", "status", "user", "tags")
     SEARCHED = frozenset({0, USER, ADDRESS, STATUS, TAGS})
-    EMPTY = {USER: 24}  # empty until a check: room for what a check brings
-    ICONS = frozenset({STATUS})  # the coloured dot
+    EMPTY = {USER: 24}
+    ICONS = frozenset({STATUS})
 
     def __init__(self) -> None:
         self._cells: Mapping[str, Cells] = {}
@@ -52,7 +45,6 @@ class HostTable(ItemTable):
         return [item.name, item.address, "", "", ", ".join(item.tags)]
 
     def longest_texts(self, column: int) -> Sequence[str]:
-        """Status: every state it can say, so the first width cuts none of them."""
         if column != self.STATUS:
             return ()
         late = check_texts.clock_text(datetime.now().astimezone().replace(hour=22, minute=58))
@@ -72,7 +64,7 @@ class HostTable(ItemTable):
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
+        if event.type() == QEvent.Type.PaletteChange:
             for row in self._rows.values():
                 self._tint(row)
 
@@ -80,10 +72,9 @@ class HostTable(ItemTable):
         return list(self._rows)
 
     def show_cells(self, host_id: str, cells: Cells) -> None:
-        """New Refresh results for one host, without rebuilding the table."""
         row = self._rows.get(host_id)
         if row is not None:
-            self._fill(row, cells)  # columns keep their widths: a Refresh never resizes them
+            self._fill(row, cells)
 
     def _fill(self, row: QTreeWidgetItem, cells: Cells | None) -> None:
         cells = cells or not_checked()
@@ -99,7 +90,6 @@ class HostTable(ItemTable):
         self._tint(row)
 
     def _tint(self, row: QTreeWidgetItem) -> None:
-        """Errors and "not checked" read quieter than real results, in the current theme."""
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         for column in (self.STATUS, self.USER):
             quiet = bool(row.data(column, ROLE_QUIET))

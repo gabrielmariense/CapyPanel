@@ -1,5 +1,3 @@
-"""Help from where you are: F1, a window's ? and warnings' links open their part of the docs."""
-
 from collections.abc import Callable
 from html import escape
 
@@ -20,23 +18,20 @@ from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes.engine import contrast_ratio
 
-KEY = "F1"  # kept for help: no command can take it (shortcuts.RESERVED)
-READABLE = 4.5  # a link's least contrast with what's behind it, as for any text
-CARD = QPalette.ColorRole.Base  # behind a link on a card or in a message box
+KEY = "F1"
+READABLE = 4.5  # WCAG AA for text
+CARD = QPalette.ColorRole.Base
 LINK_KEYS = (
     Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.LinksAccessibleByKeyboard
 )
 
-# Each id (an <a id> in both languages' page source, never changed or reused once released) with
-# its page, after the docs' address. A window with no part of its own opens its page's top: TOPS.
+# Each id is an <a id> in both languages' pages: never changed or reused once released.
 PLACES: dict[str, str] = {
-    # Home's part of Getting started
     "start-run-capypanel": "getting-started/",
     "start-add-your-first-hosts": "getting-started/",
     "start-hide-parts-of-the-details-panel": "getting-started/",
     "start-get-help-or-report-a-problem": "getting-started/",
     "start-folder-other-user": "getting-started/",
-    # Settings: the page shown
     "settings-find-a-setting": "settings-and-files/",
     "settings-capypanel-general": "settings-and-files/",
     "settings-capypanel-keyboard-shortcuts": "settings-and-files/",
@@ -47,9 +42,7 @@ PLACES: dict[str, str] = {
     "settings-ssh-general": "settings-and-files/",
     "settings-about": "settings-and-files/",
     "settings-updates-not-saved": "settings-and-files/",
-    # Updates
     "download-update-capypanel": "download/",
-    # Hosts
     "host-lists-arrange-hosts-in-groups": "hosts/host-lists/",
     "host-lists-add-hosts-from-a-spreadsheet": "hosts/host-lists/",
     "host-lists-export-hosts-to-a-spreadsheet": "hosts/host-lists/",
@@ -69,7 +62,6 @@ PLACES: dict[str, str] = {
     "commands-fix-a-pcs-printing": "hosts/commands/",
     "commands-see-whats-installed-and-mapped": "hosts/commands/",
     "commands-the-commands-window": "hosts/commands/",
-    # Hosts: its messages
     "hosts-not-a-list": "hosts/host-lists/",
     "hosts-list-gone": "hosts/host-lists/",
     "hosts-list-file-error": "hosts/host-lists/",
@@ -89,7 +81,6 @@ PLACES: dict[str, str] = {
     "connect-couldnt-start": "hosts/connecting/",
     "connect-settings-file-unusable": "hosts/connecting/",
     "connect-settings-not-saved": "hosts/connecting/",
-    # Hosts: why a command failed (its strip, the Commands window's answer)
     "command-access-denied": "hosts/commands/",
     "command-no-folder": "hosts/commands/",
     "command-timed-out": "hosts/commands/",
@@ -97,10 +88,8 @@ PLACES: dict[str, str] = {
     "pc-unreachable": "hosts/checking/",
     "pc-account-rejected": "hosts/checking/",
     "pc-powershell-blocked": "hosts/checking/",
-    # Profile cleanup
     "profiles-see-which-profiles-can-be-deleted": "profiles/user-profiles/",
     "profiles-delete-profiles": "profiles/user-profiles/",
-    # Printers: its windows
     "printers-add-a-printer": "printers/printers/",
     "printers-import-many-printers-at-once": "printers/printers/",
     "printers-export-printers-to-a-spreadsheet": "printers/printers/",
@@ -109,7 +98,6 @@ PLACES: dict[str, str] = {
     "printers-checking-choose-which-problems-warn": "printers/checking/",
     "printers-checking-set-the-snmp-account": "printers/checking/",
     "printers-checking-get-page-counts-from-doc360-mps": "printers/checking/",
-    # Printers: its messages
     "printers-not-a-list": "printers/printers/",
     "printer-offline": "printers/checking/",
     "printer-refused": "printers/checking/",
@@ -124,7 +112,6 @@ PLACES: dict[str, str] = {
     "doc360-serial-not-listed": "printers/checking/",
     "doc360-serial-missing": "printers/checking/",
     "doc360-month-not-counted": "printers/checking/",
-    # SSH
     "ssh-add-a-host": "ssh/ssh/",
     "ssh-choose-the-name-to-log-in-as": "ssh/ssh/",
     "ssh-work-in-the-terminal": "ssh/ssh/",
@@ -141,9 +128,7 @@ TOPS = (
 
 
 def url(place: str) -> str:
-    """`place`'s address in the docs, in CapyPanel's language: an id from PLACES, or a page from
-    TOPS opened at its top."""
-    from capypanel.ui import about  # About's code loads when first needed, not at every start
+    from capypanel.ui import about
 
     if place in PLACES:
         return f"{about.docs_url()}{PLACES[place]}#{place}"
@@ -159,8 +144,6 @@ def open_place(place: str) -> None:
 
 
 def link_color(palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> QColor:
-    """The theme's link colour where it reads on what's behind it (`on`: the window or CARD; a
-    strip's palette has its tint as its window), else the text colour: links are underlined."""
     link = palette.color(QPalette.ColorRole.Link)
     if contrast_ratio(link.name(), palette.color(on).name()) >= READABLE:
         return link
@@ -170,25 +153,19 @@ def link_color(palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Wi
 def anchor(
     place: str, palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window
 ) -> str:
-    """ "What does this mean?" as rich text, coloured to read on `on` (link_color). A strip puts
-    it in its message's label, to read right after it and wrap with it; open_place opens it."""
     style = f"color: {link_color(palette, on).name()}; text-decoration: underline;"
     words = escape(_("What does this mean?"))
     return f'<a href="{escape(url(place))}" style="{style}">{words}</a>'
 
 
 def strip_anchor(place: str, strip: QWidget) -> str:
-    """anchor() for a strip's message, judged on the tint the theme draws behind it: once polished,
-    the strip's palette has that tint as its window, while its label keeps the window's colour."""
     strip.ensurePolished()
     return anchor(place, strip.palette())
 
 
 def add_link(box: QMessageBox, place: str) -> None:
-    """A warning's or error's "What does this mean?" under its text, and F1 for the same line. The
-    box stays open when it's clicked. Call it last: informative text set later replaces it."""
     before = box.informativeText()
-    link = anchor(place, box.palette(), CARD)  # a box is drawn on the card colour
+    link = anchor(place, box.palette(), CARD)
     if before:
         link = escape(before).replace("\n", "<br>") + "<br><br>" + link
     box.setInformativeText(link)
@@ -198,12 +175,11 @@ def add_link(box: QMessageBox, place: str) -> None:
         label.setOpenExternalLinks(False)
         label.setTextInteractionFlags(LINK_KEYS)
         label.linkActivated.connect(lambda _href: open_place(place))
-        label.setToolTip(url(place))  # read off it to open on another device, with no internet
+        label.setToolTip(url(place))
     key(box, lambda: place)
 
 
 def warning(parent: QWidget | None, title: str, text: str, *, place: str) -> None:
-    """A warning box with its line's link (QMessageBox.warning plus help)."""
     _show(QMessageBox.Icon.Warning, parent, title, text, place)
 
 
@@ -223,17 +199,12 @@ def _show(
 
 
 def key(window: QWidget, place: Callable[[], str]) -> QShortcut:
-    """F1 in `window`, for a window with no ? of its own: a message box (its line) or a
-    question (the part of the window that asked)."""
     shortcut = QShortcut(QKeySequence(KEY), window)
     shortcut.activated.connect(lambda: open_place(place()))
     return shortcut
 
 
 class HelpButton(QToolButton):
-    """The ? at a window's bottom left, first in its button row: help at `place()`'s part, and F1
-    while the window is in front: flat, icon only, never hidden or greyed. _InkOnEdge places it."""
-
     def __init__(self, place: Callable[[], str] | str, *, icon_size: int = 18) -> None:
         super().__init__()
         self._place = place if callable(place) else (lambda: place)
@@ -251,8 +222,7 @@ class HelpButton(QToolButton):
         return self._place()
 
     def ink_inset(self) -> int:
-        """Where the ?'s ink starts, from its left edge: the icon sits in the middle (rounded
-        down, as Qt places it), and the circle's ink starts 2 of the icon's 24 units in."""
+        """Centred, rounded down as Qt does; the circle's ink starts 2 of its 24 units in."""
         icon = self.iconSize().width()
         return (self.width() - icon) // 2 + icon // 12
 
@@ -279,9 +249,6 @@ class HelpButton(QToolButton):
 
 
 class _InkOnEdge(QWidgetItem):
-    """The ?'s place in its row, moved left by its ink's inset: the ink starts where the row does,
-    the hover box reaching into the margin, never past its parent's edge, which would cut it."""
-
     def setGeometry(self, rect: QRect) -> None:
         super().setGeometry(rect)
         button = self.widget()
@@ -291,8 +258,6 @@ class _InkOnEdge(QWidgetItem):
 
 
 def _seat(button: HelpButton) -> None:
-    """Its row's item swapped for _InkOnEdge, in the same place, with the same alignment and
-    stretch. In a layout other than a row or a column it stays as it is."""
     parent = button.parentWidget()
     layout = _holding(parent.layout() if parent is not None else None, button)
     if not isinstance(layout, QBoxLayout):
@@ -308,11 +273,10 @@ def _seat(button: HelpButton) -> None:
     layout.insertItem(index, item)
     layout.setStretch(index, stretch)
     if old.geometry().isValid():
-        item.setGeometry(old.geometry())  # moved now, before it's first drawn
+        item.setGeometry(old.geometry())
 
 
 def _holding(layout: QLayout | None, widget: QWidget) -> QLayout | None:
-    """`layout`, or the one inside it, that has `widget` as one of its items."""
     if layout is None or layout.indexOf(widget) >= 0:
         return layout
     for index in range(layout.count()):
@@ -324,7 +288,6 @@ def _holding(layout: QLayout | None, widget: QWidget) -> QLayout | None:
 
 
 def row(help_button: HelpButton, buttons: QWidget) -> QHBoxLayout:
-    """A window's button row: its ? first, on the left, then its buttons at the right."""
     line = QHBoxLayout()
     line.addWidget(help_button)
     line.addWidget(buttons, 1)
@@ -332,9 +295,6 @@ def row(help_button: HelpButton, buttons: QWidget) -> QHBoxLayout:
 
 
 class HelpLink(QLabel):
-    """ "What does this mean?" linking a message's line, for a strip: after the message, before its
-    buttons; Tab reaches it, Enter opens it; hidden with no place. `on`: what's behind it."""
-
     def __init__(self, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> None:
         super().__init__()
         self._place, self._on = "", on

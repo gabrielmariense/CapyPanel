@@ -27,7 +27,7 @@ def test_old_settings_and_personal_list_are_copied_once(tmp_path: Path) -> None:
     copied = migration.migrate(paths, env, documents)
 
     assert len(copied) == 2
-    assert old_settings.exists() and old_list.exists()  # copied, never moved
+    assert old_settings.exists() and old_list.exists()
     assert [g.name for g in listfile.load(paths.lists("hosts").personal).hosts.groups] == [
         "Old hosts"
     ]
@@ -35,7 +35,7 @@ def test_old_settings_and_personal_list_are_copied_once(tmp_path: Path) -> None:
     assert prefs["theme"] == "paper"
     assert prefs["recent_lists"] == [str(paths.lists("hosts").personal), str(shared)]
     assert prefs["start_list"] == "personal"
-    assert migration.migrate(paths, env, documents) == []  # nothing left to do
+    assert migration.migrate(paths, env, documents) == []
 
 
 def test_new_files_are_never_overwritten(tmp_path: Path) -> None:
@@ -70,7 +70,7 @@ def test_lists_from_before_0_19_are_copied_into_the_lists_folders(tmp_path: Path
         {"schema": 1, "recent_lists": [str(old_personal)], "start_list": str(old_default)},
     )
     copied = migration.migrate(paths, env, documents)
-    assert len(copied) == 2 and old_default.exists() and old_personal.exists()  # copies
+    assert len(copied) == 2 and old_default.exists() and old_personal.exists()
     assert [g.name for g in listfile.load(paths.lists("hosts").default).hosts.groups] == [
         "Shared hosts"
     ]
@@ -80,7 +80,7 @@ def test_lists_from_before_0_19_are_copied_into_the_lists_folders(tmp_path: Path
     prefs = settings.load_settings(paths.settings_file)
     assert prefs["recent_lists"] == [str(paths.lists("hosts").personal)]
     assert prefs["start_list"] == str(paths.lists("hosts").default)
-    assert migration.migrate(paths, env, documents) == []  # once
+    assert migration.migrate(paths, env, documents) == []
 
 
 def test_0_19_lists_are_copied_into_hosts_folders_and_its_settings_follow(tmp_path: Path) -> None:
@@ -97,13 +97,13 @@ def test_0_19_lists_are_copied_into_hosts_folders_and_its_settings_follow(tmp_pa
     settings.save_settings(paths.settings_file, top)
     copied = migration.migrate(paths, env, documents)
     hosts = paths.lists("hosts")
-    assert len(copied) == 3 and shared.exists() and mine.exists()  # copies, never moves
+    assert len(copied) == 3 and shared.exists() and mine.exists()
     assert listfile.load(hosts.shared_dir / "office.json").hosts.groups[0].name == "office"
     assert hosts.default.exists() and hosts.personal.exists()
     prefs = settings.load_settings(paths.settings_file)
     section = prefs["tools"]["hosts"]
     new_office = str(hosts.shared_dir / "office.json")
-    assert section["recent_lists"] == [new_office, str(elsewhere)]  # a list elsewhere stays
+    assert section["recent_lists"] == [new_office, str(elsewhere)]
     assert section["start_list"] == new_office and section["hidden_lists"] == [new_office]
-    assert prefs["recent_lists"] == top["recent_lists"]  # 0.19 still reads its own
-    assert migration.migrate(paths, env, documents) == []  # once: the folders exist now
+    assert prefs["recent_lists"] == top["recent_lists"]
+    assert migration.migrate(paths, env, documents) == []

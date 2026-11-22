@@ -1,5 +1,3 @@
-"""The printer Details panel; what Refresh read shows beside the list's value, never over it."""
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from html import escape
@@ -28,15 +26,15 @@ from capypanel.ui.printers_tool.status import Checked, Counted, amber, grey
 @dataclass(frozen=True)
 class PrinterDetails:
     printer: Host
-    group: str  # its full path
+    group: str
     checked: Checked | None = None
     low: int = status.DEFAULT_LOW
-    use: Callable[[str, str], None] | None = None  # "Use this": (field, value); None: read-only
-    counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
+    use: Callable[[str, str], None] | None = None
+    counted: Counted | None = None
     set_doc360: Callable[[], None] | None = None
-    marks: tuple[Mark, ...] = ()  # the bars' marks; () is just the low level's
+    marks: tuple[Mark, ...] = ()
     web: bool = True
-    hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
+    hidden: frozenset[str] = frozenset()
 
 
 def source_text(source: str) -> str:
@@ -44,7 +42,7 @@ def source_text(source: str) -> str:
         return "SNMP"
     if source == DOC360:
         return "Doc360 MPS"
-    return _("Unknown ({source})").format(source=source)  # kept as the file has it
+    return _("Unknown ({source})").format(source=source)
 
 
 class Meter(QWidget):
@@ -62,7 +60,6 @@ class Meter(QWidget):
 
 
 def button_words() -> dict[str, str]:
-    """The buttons' short words (nine letters at most), as on Hosts' Details buttons."""
     return {"refresh": pgettext("button", "Refresh"), "web": pgettext("button", "Web page")}
 
 
@@ -104,7 +101,7 @@ class PrinterDetailsPanel(DetailsPanel):
         if "supplies" not in hidden:
             self._supplies(layout, shown)
 
-        if "printer" not in hidden:  # brand and model are said here, once
+        if "printer" not in hidden:
             self.section(layout, _("Printer"))
             grid = self._grid(layout)
             for key, label, value, read in (
@@ -133,7 +130,6 @@ class PrinterDetailsPanel(DetailsPanel):
         self.hidden_line(layout, len(hidden))
 
     def _button_grid(self, shown: PrinterDetails) -> QWidget:
-        """Hosts' grid of worded buttons, with Printers' fixed row: Refresh, Web page."""
         widget = QWidget()
         column = QVBoxLayout(widget)
         column.setContentsMargins(0, 0, 0, 0)
@@ -155,8 +151,6 @@ class PrinterDetailsPanel(DetailsPanel):
         return self.grid_minimum(self._button_width())
 
     def _page_counters(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
-        """Total pages from the printer itself, or from Doc360 MPS with when it was fetched
-        (never the printer's own counter then: it isn't the source)."""
         self.section(layout, _("Page counters"))
         info, checked = info_of(shown.printer), shown.checked
         reading = checked.reading if checked else None
@@ -191,7 +185,6 @@ class PrinterDetailsPanel(DetailsPanel):
             layout.addWidget(_link("doc360-month-not-counted"))
 
     def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
-        """Under a missing or refused Doc360 login: its window, straight from here."""
         if shown.set_doc360 is None:
             return
         missing = shown.counted is not None and shown.counted.account == status.NO_ACCOUNT
@@ -206,7 +199,6 @@ class PrinterDetailsPanel(DetailsPanel):
         layout.addLayout(row)
 
     def _heading(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
-        """Like Hosts': a status dot by the name, then "status · checked 14:32"."""
         row = QHBoxLayout()
         row.setSpacing(4)
         name = self.value("name", shown.printer.name)
@@ -219,7 +211,7 @@ class PrinterDetailsPanel(DetailsPanel):
         size = round(line * 0.5)
         dot = QLabel()
         dot.setPixmap(dot_icon(cell.color or grey(), size).pixmap(size, size))
-        dot.setFixedHeight(line + 4)  # centred on the name's first line, even when it wraps
+        dot.setFixedHeight(line + 4)
         dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(dot, 0, Qt.AlignmentFlag.AlignTop)
         row.addWidget(name, 1)
@@ -233,12 +225,10 @@ class PrinterDetailsPanel(DetailsPanel):
         under = self.muted(words)
         under.setToolTip(status.plain_tip(cell.tip))
         layout.addWidget(under)
-        # Its docs line goes on a line of its own, so the status keeps its date beside it
-        # (the table's cell is a tooltip, which can't hold a link).
         if place := status.status_place(shown.checked):
             layout.addWidget(_link(place))
         reading = shown.checked.reading if shown.checked else None
-        for message in reading.messages if reading else ():  # the printer's own words, in full
+        for message in reading.messages if reading else ():
             said = QLabel(breakable(message))
             said.setTextFormat(Qt.TextFormat.PlainText)  # what a printer sends is never markup
             said.setWordWrap(True)
@@ -261,9 +251,9 @@ class PrinterDetailsPanel(DetailsPanel):
             top = QHBoxLayout()
             top.setSpacing(6)
             name = self.muted(supply.name)
-            name.setTextFormat(Qt.TextFormat.PlainText)  # the printer's own words
+            name.setTextFormat(Qt.TextFormat.PlainText)
             top.addWidget(name, 1)
-            if not status.reports_level(supply):  # an empty bar would only look like 0 %
+            if not status.reports_level(supply):
                 layout.addLayout(top)
                 layout.addWidget(self.muted(status.no_level_text()))
                 layout.addSpacing(2)
@@ -280,7 +270,6 @@ class PrinterDetailsPanel(DetailsPanel):
         layout.addWidget(self.muted(bar_marks.hint(marks)))
 
     def _printer_says(self, key: str, value: str, use: Callable[[str, str], None] | None) -> QLabel:
-        """What the printer reports instead of the list's value; "Use this" copies it over."""
         words = _("The printer says {value}").format(value=f"<b>{escape(value)}</b>")
         if use is not None:
             link = self.palette().color(QPalette.ColorRole.Link).name()
@@ -301,8 +290,6 @@ class PrinterDetailsPanel(DetailsPanel):
 
     @staticmethod
     def _grid(layout: QVBoxLayout) -> QGridLayout:
-        """Hosts' label-and-value grid: a label on the left, its value on the same line, every
-        value at the same x."""
         grid = QGridLayout()
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(6)
@@ -311,9 +298,8 @@ class PrinterDetailsPanel(DetailsPanel):
         return grid
 
     def _row(self, grid: QGridLayout, key: str, label: str, value: str) -> QWidget:
-        """One label and its value (a dash when there's none), on the grid's next line."""
         row = grid.rowCount() if grid.count() else 0
-        name = QLabel(label)  # never wraps: the column is as wide as its widest label
+        name = QLabel(label)
         name.setObjectName("hint")
         shown = self.value(key, value) if value else self.muted("—")
         grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -322,8 +308,6 @@ class PrinterDetailsPanel(DetailsPanel):
 
 
 def _link(place: str) -> HelpLink:
-    """ "What does this mean?" for a line Details shows; hidden with no place. Details is a card,
-    so the link's colour is tested against the card's, where light's blue reads."""
     link = HelpLink(on=help_links.CARD)
     link.set_place(place)
     return link

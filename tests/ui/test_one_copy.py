@@ -1,5 +1,3 @@
-"""One running copy per person: the lock, and a second start showing the first, in one process."""
-
 from pathlib import Path
 
 import pytest
@@ -13,13 +11,13 @@ def test_a_second_start_brings_the_running_copy_forward(qapp: QApplication, tmp_
     first, second = OneCopy(tmp_path), OneCopy(tmp_path)
     asked: list[bool] = []
     first.show_requested.connect(lambda: asked.append(True))
-    assert first.claim()  # the only copy
+    assert first.claim()
     assert (tmp_path / LOCK_NAME).exists()
-    assert not second.claim()  # the same settings folder is taken
-    assert second.ask_running() and asked == [True]  # the first one showed its window
-    assert second.ask_running() and asked == [True, True]  # every later start too
+    assert not second.claim()
+    assert second.ask_running() and asked == [True]
+    assert second.ask_running() and asked == [True, True]
     first.release()
-    assert second.claim()  # once the first has quit, the next start is the only copy
+    assert second.claim()
     second.release()
 
 
@@ -32,7 +30,7 @@ def test_a_copy_in_another_windows_session_can_t_be_shown_here(
     assert first.claim() and not second.claim()
     sessions = iter([7, 1])  # the start asks from session 7; the running copy is in session 1
     monkeypatch.setattr(one_copy, "_session", lambda: next(sessions))
-    assert not second.ask_running() and asked == []  # so the start says it, in a message
+    assert not second.ask_running() and asked == []
     text = already_running_text("ana@EXAMPLE")
     assert "ana@EXAMPLE" in text and "another Windows session" in text
     first.release()
@@ -42,7 +40,7 @@ def test_nobody_answering_is_not_a_window_shown(
     qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(one_copy, "WAIT", 150)
-    assert not OneCopy(tmp_path).ask_running()  # no copy is listening
+    assert not OneCopy(tmp_path).ask_running()
 
 
 def test_a_lock_that_can_t_be_told_apart_never_stops_the_start(
@@ -50,12 +48,9 @@ def test_a_lock_that_can_t_be_told_apart_never_stops_the_start(
 ) -> None:
     held = OneCopy(tmp_path)
     assert held.claim()
-    # The settings folder on a share, open on another PC: that copy can't be shown here, and
-    # this PC's copy still starts.
     monkeypatch.setattr(one_copy, "_this_pc", lambda: "OTHER-PC")
     assert OneCopy(tmp_path).claim()
     held.release()
-    # A folder that can't be written (it isn't there): the same.
     assert OneCopy(tmp_path / "missing").claim()
 
 

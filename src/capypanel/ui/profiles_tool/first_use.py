@@ -1,5 +1,3 @@
-"""Profile cleanup's first-use warning: Continue only once "I understand…" is ticked."""
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -18,7 +16,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes import engine as themes
 
-UNDERSTOOD_KEY = "warning_understood"  # in the tool's settings, once ticked and continued
+UNDERSTOOD_KEY = "warning_understood"
 
 
 class FirstUseWarning(QDialog):
@@ -32,7 +30,7 @@ class FirstUseWarning(QDialog):
         font = heading.font()
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.15)
-        heading.setFont(font)  # a warning, not a section: the sign beside it is the colour
+        heading.setFont(font)
         words = QLabel(
             _(
                 "On the PCs you pick, it deletes Windows user profiles: each person's folder "
@@ -41,7 +39,6 @@ class FirstUseWarning(QDialog):
             )
         )
         words.setWordWrap(True)
-        # A tick, not a countdown: a tick is read, a countdown only waited out.
         self.understood = QCheckBox(_("I understand it deletes user profiles on the PCs I pick"))
         self.go_on = QPushButton(_("&Continue"))
         self.go_on.setObjectName("risky")
@@ -76,5 +73,4 @@ class FirstUseWarning(QDialog):
 
 
 def ask(parent: QWidget | None) -> bool:
-    """The warning; True once its tick is ticked and Continue pressed."""
     return run_modal(FirstUseWarning(parent)) == QDialog.DialogCode.Accepted

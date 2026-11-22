@@ -1,5 +1,3 @@
-"""A host's PC facts and waiting restart, kept in memory only: the list file is shared."""
-
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -8,9 +6,6 @@ from capypanel.core.remote.inventory import DiskSpace, PcFacts
 
 @dataclass(frozen=True)
 class Facts:
-    """PC facts as far as they've been read: the quick part (free space, last restart) comes in
-    first, the rest over WMI a few seconds later. An error stands in for a part that failed."""
-
     when: datetime
     reading: bool = True
     space: DiskSpace | None = None
@@ -22,13 +17,10 @@ class Facts:
 
 @dataclass(frozen=True)
 class PendingPower:
-    """A restart or shutdown CapyPanel asked for, still waiting (`at` is in the future), or on
-    its way and watched until the PC answers again."""
-
     restart: bool
-    at: datetime  # when Windows does it
+    at: datetime
     asked: datetime
-    told: tuple[str, ...] = ()  # who was shown the message
-    went_down: bool = False  # the PC stopped answering since: it's restarting
-    name: str = ""  # the host's name when asked, for the notification
+    told: tuple[str, ...] = ()
+    went_down: bool = False
+    name: str = ""
     address: str = ""

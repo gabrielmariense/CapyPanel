@@ -1,5 +1,3 @@
-"""The SSH tool's connections as tabs, on a stand-in console (cmd.exe in the last test)."""
-
 import json
 import time
 from collections import deque
@@ -12,7 +10,7 @@ from fake_console import FakeConsole
 from PySide6.QtCore import QEvent, QPoint, Qt
 from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QWidget
-from test_printers_tool import FakeShell  # the same pretend shell as Printers' tests
+from test_printers_tool import FakeShell
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -42,13 +40,12 @@ def servers(tmp_path: Path) -> Path:
         hl = hl.update_host(with_info(host, SshInfo(login="admin")))
     hl, _web = hl.add_host("web-01", NO_GROUP, address="198.51.100.42")
     path = tmp_path / "servers.json"
-    listfile.save(path, hl, expected=None)  # a host list: SSH shows Hosts' lists
+    listfile.save(path, hl, expected=None)
     return path
 
 
 @pytest.fixture
 def consoles(monkeypatch: pytest.MonkeyPatch) -> list[FakeConsole]:
-    """Every pseudo console a tab starts, each a stand-in the test drives."""
     made: list[FakeConsole] = []
 
     def start(*args: Any, **kwargs: Any) -> FakeConsole:
@@ -60,11 +57,8 @@ def consoles(monkeypatch: pytest.MonkeyPatch) -> list[FakeConsole]:
 
 
 class Answers:
-    """Stands in for the SSH tool's run_modal: keeps each question's words and gives the answers
-    queued, Cancel once none is left."""
-
     def __init__(self) -> None:
-        self.asked: list[tuple[str, str, str]] = []  # title, question, action
+        self.asked: list[tuple[str, str, str]] = []
         self.queued: deque[bool] = deque()
 
     def __call__(self, dialog: QDialog) -> QDialog.DialogCode:
@@ -116,7 +110,7 @@ def _names(tool: SshTool) -> list[str]:
 
 
 def _until(test: Callable[[], bool], seconds: float = 10.0) -> None:
-    deadline = time.monotonic() + seconds  # a deadline, not a count: threads can be slow
+    deadline = time.monotonic() + seconds
     while not test():
         assert time.monotonic() < deadline, "timed out"
         QApplication.processEvents()
@@ -124,7 +118,6 @@ def _until(test: Callable[[], bool], seconds: float = 10.0) -> None:
 
 
 def _ended(tool: SshTool, console: FakeConsole, code: int) -> None:
-    """The program on `console` ends by itself, and its tab shows it."""
     console.ends(code)
     tab = next(t for t in tool.connections() if t.view.session is console)
     _until(lambda: tab.ended)
@@ -138,7 +131,7 @@ def test_each_connection_opens_in_front_in_a_tab_named_after_its_server(
     assert _names(ssh) == ["nas-01"] and ssh.tabs.current() == "connection-1"
     assert ssh.pages.currentWidget() is ssh.connections()[0]
     assert len(consoles) == 1 and consoles[0].running
-    _connect(ssh, "nas-01")  # the same server again: a tab of its own
+    _connect(ssh, "nas-01")
     assert _names(ssh) == ["nas-01", "nas-01 (2)"] and ssh.tabs.current() == "connection-2"
 
 
@@ -156,7 +149,7 @@ def test_a_number_a_closed_tab_freed_is_used_again(
     assert _names(ssh) == ["nas-01", "nas-01 (2)", "nas-01 (3)"]
     _ended(ssh, consoles[1], 0)
     assert ssh.close_tab("connection-2")
-    assert answers.asked == []  # an ended connection closes without asking
+    assert answers.asked == []
     _connect(ssh, "nas-01")
     assert _names(ssh) == ["nas-01", "nas-01 (3)", "nas-01 (2)"]
 
@@ -165,30 +158,30 @@ def test_closing_an_open_connection_asks_and_cancel_keeps_it(
     ssh: SshTool, consoles: list[FakeConsole], answers: Answers
 ) -> None:
     _connect(ssh, "nas-01")
-    assert not ssh.close_tab("connection-1")  # Cancel
+    assert not ssh.close_tab("connection-1")
     assert answers.asked == [("Close", "<b>Close the connection to nas-01?</b>", "&Close")]
     assert ssh.tabs.tab_keys() == ["connection-1"] and not consoles[0].closed
     answers.queued.append(True)
     assert ssh.close_tab("connection-1")
     assert ssh.tabs.tab_keys() == [] and consoles[0].closed
     assert ssh.tabs.current() == PINNED and ssh.pages.currentWidget() is ssh.inner
-    assert not ssh.close_tab(PINNED)  # the list's tab never closes
+    assert not ssh.close_tab(PINNED)
 
 
 def test_a_pick_on_the_left_brings_the_list_forward_over_a_connection(ssh: SshTool) -> None:
     _connect(ssh, "nas-01")
     doc = ssh.document
     assert doc is not None and ssh.tabs.current() == "connection-1"
-    ssh.nav.select_group(doc.hosts.groups[0].id)  # Racks, clicked or reached with the arrows
+    ssh.nav.select_group(doc.hosts.groups[0].id)
     assert ssh.tabs.current() == PINNED and ssh.pages.currentWidget() is ssh.inner
     picked = ssh.nav.groups.currentItem()
     assert picked is not None
     lists = ssh.list_picker.menu()
-    lists.aboutToShow.emit()  # filled as it opens
+    lists.aboutToShow.emit()
     find = QKeySequence(QKeySequence.StandardKey.Find)
     for again in (
-        lambda: ssh.nav.groups.itemClicked.emit(picked, 0),  # the group already picked
-        next(a for a in lists.actions() if a.isChecked()).trigger,  # the list open already
+        lambda: ssh.nav.groups.itemClicked.emit(picked, 0),
+        next(a for a in lists.actions() if a.isChecked()).trigger,
         next(s for s in ssh.findChildren(QShortcut) if s.key() == find).activated.emit,
     ):
         ssh.switch("connection-1")
@@ -204,15 +197,15 @@ def test_a_pick_on_the_left_brings_the_list_forward_over_a_connection(ssh: SshTo
             "Fechar 2 conexões abertas?",
             "O que ainda estiver rodando nelas nos servidores pode parar.",
         ),
-        ("Close?", "Anything still running in them on the servers may stop."),  # any font
+        ("Close?", "Anything still running in them on the servers may stop."),
     ],
 )
 def test_a_question_is_as_tall_as_its_words_at_its_own_width(
     qapp: QApplication, heading: str, text: str
 ) -> None:
-    themes.apply(themes.DEFAULT_THEME)  # the theme's fonts, as in the app
+    themes.apply(themes.DEFAULT_THEME)
     question = Question(None, "Close", heading, text, "&Close")
-    question.adjustSize()  # as showing it does
+    question.adjustSize()
     layout = question.layout()
     assert layout is not None and question.width() >= WIDE
     assert question.height() == layout.totalHeightForWidth(question.width())
@@ -241,7 +234,7 @@ def test_ctrl_shift_w_closes_the_tab_in_front_and_ctrl_tab_goes_round(
         assert shortcuts[keys_].context() == Qt.ShortcutContext.WidgetWithChildrenShortcut
     assert ssh.tabs.current() == "connection-2"
     shortcuts["Ctrl+Tab"].activated.emit()
-    assert ssh.tabs.current() == PINNED  # round to the list
+    assert ssh.tabs.current() == PINNED
     shortcuts["Ctrl+Tab"].activated.emit()
     assert ssh.tabs.current() == "connection-1"
     shortcuts["Ctrl+Shift+Tab"].activated.emit()
@@ -260,7 +253,7 @@ def test_quitting_with_connections_open_asks_once_and_closes_them(
     _connect(ssh, "core-sw-01", "nas-01", "web-01")
     _ended(ssh, consoles[2], 0)
     window = QWidget()
-    assert not ssh.quit_question(window)  # Cancel: CapyPanel stays open
+    assert not ssh.quit_question(window)
     assert answers.asked == [
         ("Quit CapyPanel", "<b>Quit CapyPanel with 2 connections open?</b>", "&Quit")
     ]
@@ -268,7 +261,7 @@ def test_quitting_with_connections_open_asks_once_and_closes_them(
     answers.queued.append(True)
     assert ssh.quit_question(window)
     assert all(console.closed for console in consoles)
-    assert ssh.quit_question(window) and len(answers.asked) == 2  # none open: no question
+    assert ssh.quit_question(window) and len(answers.asked) == 2
 
 
 def test_the_text_size_is_kept_for_every_tab_and_after_a_restart(
@@ -288,7 +281,7 @@ def test_the_text_size_is_kept_for_every_tab_and_after_a_restart(
     QApplication.sendEvent(first.view, bigger)
     assert first.view.point_size == second.view.point_size == size + 1
     assert ssh.prefs[POINTS] == size + 1
-    again = SshTool(shell)  # CapyPanel started again
+    again = SshTool(shell)
     try:
         assert again.open_list(servers)
         assert again.terminal_points() == size + 1
@@ -332,12 +325,12 @@ def test_the_tab_menu_reconnects_an_ended_one_and_closes_others_with_one_questio
         return [(menus.label(a), a.isEnabled()) for a in shown[-1].actions() if not a.isSeparator()]
 
     assert menu_of("connection-1") == [
-        ("Reconnect", False),  # it's open; no access keys, as in Profile cleanup's tab menu
+        ("Reconnect", False),
         ("Close", True),
         ("Close the others", True),
         ("Close the ended ones", True),
     ]
-    assert menu_of("connection-2")[0] == ("Reconnect", True)  # it has ended
+    assert menu_of("connection-2")[0] == ("Reconnect", True)
     shown[-1].actions()[0].trigger()
     assert len(consoles) == 4 and ssh.connections()[1].running
     assert ("Close the ended ones", False) in menu_of("connection-2")

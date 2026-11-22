@@ -1,10 +1,8 @@
-"""A stand-in for conpty.py's PseudoConsole, driven by the test; it runs nothing."""
-
 from collections.abc import Callable, Mapping, Sequence
 
 from capypanel.core.ssh.conpty import WINDOWS, Engine
 
-CTRL_C_EXIT = 0xC000013A  # what Windows gives a program its closed console ends
+CTRL_C_EXIT = 0xC000013A  # a program's exit code when its console is closed
 
 
 class FakeConsole:
@@ -23,7 +21,7 @@ class FakeConsole:
         engine: Engine | None = None,
     ) -> None:
         self.argv = list(argv)
-        self.engine = engine or WINDOWS  # named only: nothing of it runs
+        self.engine = engine or WINDOWS
         self.size = (cols, rows)
         self.env = env
         self._on_ready = on_ready
@@ -41,7 +39,6 @@ class FakeConsole:
             self._on_ready()
 
     def ends(self, code: int) -> None:
-        """The program ends by itself, with `code`."""
         self.exit_code = code
         self._on_exit(code)
 
@@ -75,7 +72,7 @@ class FakeConsole:
             return 0.0
         self.closed = True
         self._eof = True
-        self._on_ready()  # the output's end first...
+        self._on_ready()
         if self.exit_code is None:
-            self.ends(CTRL_C_EXIT)  # ...then the program, which the close ended
+            self.ends(CTRL_C_EXIT)
         return 0.0

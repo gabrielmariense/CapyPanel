@@ -1,5 +1,3 @@
-"""New list: its name, and whether it's shared on this PC, personal, or a file elsewhere."""
-
 import re
 from pathlib import Path
 
@@ -45,7 +43,6 @@ class NewListDialog(QDialog):
         self._kinds = QButtonGroup(self)
         for button in (self.shared, self.personal, self.elsewhere):
             self._kinds.addButton(button)
-        # Only people Windows lets write the shared folder can add a shared list.
         self.can_share = can_create_files(shared_dir)
         self.shared.setEnabled(self.can_share)
         (self.shared if self.can_share else self.personal).setChecked(True)
@@ -93,25 +90,21 @@ class NewListDialog(QDialog):
         return PERSONAL if self.personal.isChecked() else ELSEWHERE
 
     def _update(self) -> None:
-        """Somewhere else needs no name here: the file dialog asks for it."""
         named = bool(self.name.text().strip()) and not _NOT_IN_A_NAME.search(self.name.text())
         self.name.setEnabled(not self.elsewhere.isChecked())
         self.create_button.setEnabled(named or self.elsewhere.isChecked())
 
     def _create(self) -> None:
-        """Create: the window closes once there's a file to make; a cancelled question keeps it
-        open."""
         self.chosen = self.path()
         if self.chosen is not None:
             self.accept()
 
     def path(self) -> Path | None:
-        """Where the new list goes; None when a question was cancelled."""
         if self.kind() == ELSEWHERE:
             name, _filter = QFileDialog.getSaveFileName(
                 self, self.texts.new, str(self.user_dir), self.texts.file_filter
             )
-            return Path(name) if name else None  # the file dialog asked before replacing
+            return Path(name) if name else None
         folder = self.shared_dir if self.kind() == SHARED else self.user_dir
         path = folder / f"{self.name.text().strip()}.json"
         if path.exists() and not confirm(
@@ -129,7 +122,6 @@ class NewListDialog(QDialog):
 def ask_new_list(
     parent: QWidget | None, *, shared_dir: Path, user_dir: Path, texts: ListTexts
 ) -> Path | None:
-    """The new list's file, or None when cancelled."""
     dialog = NewListDialog(parent, shared_dir=shared_dir, user_dir=user_dir, texts=texts)
     accepted = run_modal(dialog) == QDialog.DialogCode.Accepted
     return dialog.chosen if accepted else None

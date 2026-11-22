@@ -1,5 +1,3 @@
-"""The updater in the app, with GitHub faked: nothing reaches the network."""
-
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import replace
@@ -30,7 +28,6 @@ NEWER = Release(
 
 @pytest.fixture
 def github(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    """What GitHub answers: a Release, None, or an UpdateError to raise; and how often asked."""
     answer: dict[str, Any] = {"latest": NEWER, "asked": 0}
 
     def latest(timeout: float = 15) -> Release | None:
@@ -62,7 +59,7 @@ def _wait(condition: Callable[[], bool]) -> None:
 
 def test_from_source_nothing_looks_on_its_own(window: CapyWindow, github: dict[str, Any]) -> None:
     assert not updater_ui.packaged()
-    assert not window.updater._timer.isActive()  # only CapyPanel.exe looks once a day
+    assert not window.updater._timer.isActive()
     assert github["asked"] == 0 and window.update_button.isHidden()
 
 
@@ -75,15 +72,15 @@ def test_a_newer_release_puts_a_button_on_the_menu_bar(window: CapyWindow) -> No
     window.show()
     QApplication.processEvents()
     words = window.update_button.fontMetrics().horizontalAdvance("Update 99.0.0")
-    assert window.update_button.width() > words  # the words fit, beside the icon
+    assert window.update_button.width() > words
     assert window.menuBar().cornerWidget() is window.update_button
-    assert window.updater._own()["last"]  # when it last looked, for the once a day
+    assert window.updater._own()["last"]
     window.updater.skip("99.0.0")
     assert window.update_button.isHidden() and window.prefs["updates"]["skip"] == "99.0.0"
-    window.updater.look(asked=False)  # on its own, a skipped version stays skipped
+    window.updater.look(asked=False)
     _wait(lambda: not window.updater.looking)
     assert window.updater.offer is None
-    window.updater.look(asked=True)  # asked from Help, it's offered again
+    window.updater.look(asked=True)
     _wait(lambda: not window.updater.looking)
     assert window.updater.offer == NEWER
 
@@ -105,34 +102,34 @@ def test_at_every_start_by_default_and_the_other_choices(
     window: CapyWindow, github: dict[str, Any]
 ) -> None:
     updater = window.updater
-    assert updater.how_often() == updates.AT_START  # the default, with no file
-    updater._own()["last"] = datetime.now(UTC).isoformat()  # looked a moment ago
-    updater._maybe_look(started=True)  # a new start: looks again all the same
+    assert updater.how_often() == updates.AT_START
+    updater._own()["last"] = datetime.now(UTC).isoformat()
+    updater._maybe_look(started=True)
     _wait(lambda: not updater.looking)
     asked = github["asked"]
-    updater._maybe_look(started=False)  # the hourly tick: not again within a day
+    updater._maybe_look(started=False)
     assert github["asked"] == asked
     updater.set_how_often(updates.DAILY)
-    updater._maybe_look(started=True)  # once a day: a start soon after doesn't look
+    updater._maybe_look(started=True)
     assert github["asked"] == asked
     updater.set_how_often(updates.WEEKLY)
     updater._own()["last"] = (datetime.now(UTC) - timedelta(days=3)).isoformat()
     updater._maybe_look(started=True)
-    assert github["asked"] == asked  # three days: not a week yet
+    assert github["asked"] == asked
     updater.set_how_often(updates.OFF)
     updater._own()["last"] = "2000-01-01T00:00:00+00:00"
     updater._maybe_look(started=True)
     assert github["asked"] == asked
-    assert "updates" not in window.prefs or "check" not in window.prefs["updates"]  # not per person
+    assert "updates" not in window.prefs or "check" not in window.prefs["updates"]
     dialog = window.settings_dialog()
     choice = dialog.general.updates
     assert choice.currentData() == updates.OFF and choice.isEnabled()
     words = " ".join(label.text() for label in dialog.general.findChildren(QLabel))
-    assert "Everyone on this PC" in words  # the mark of the settings shared on this PC
+    assert "Everyone on this PC" in words
     assert "A change here reaches everyone on this PC: an update replaces" in words
     choice.setCurrentIndex(choice.findData(updates.AT_START))
     assert updater.how_often() == updates.AT_START
-    assert not (window.paths.company_tools_dir / updates.CHECK_FILE).exists()  # the default
+    assert not (window.paths.company_tools_dir / updates.CHECK_FILE).exists()
     dialog.close()
 
 
@@ -143,19 +140,18 @@ def test_help_asks_and_says_when_it_is_up_to_date(
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: False)  # fmt: skip
     assert dialog.windowTitle() == "CapyPanel"
-    assert dialog.help_button.place() == "download-update-capypanel"  # first in the footer
+    assert dialog.help_button.place() == "download-update-capypanel"
     assert dialog.heading.text() == "Checking for updates…" and not dialog.busy.isHidden()
     _wait(lambda: not window.updater.looking)
-    # Just the message, in the middle of a narrower window: no icon, chip or list.
     assert dialog.heading.text() == "You already have the newest version."
     assert dialog.line.text() == f"CapyPanel {__version__}"
     assert dialog.icon.isHidden() and dialog.chip.isHidden() and dialog.changes.isHidden()
     assert dialog.busy.isHidden() and dialog.heading.alignment() & Qt.AlignmentFlag.AlignHCenter
     assert dialog.install.isHidden() and dialog.skip.isHidden()
     assert dialog.later.text() == "Close" and dialog.later.isDefault()
-    QApplication.processEvents()  # fitted to its few lines, no empty space
+    QApplication.processEvents()
     assert dialog.width() == NARROW and dialog.height() < NOTES_HEIGHT / 2
-    assert dialog._body.contentsMargins().top() == updater_ui.SHORT_BODY[1]  # centred, as drawn
+    assert dialog._body.contentsMargins().top() == updater_ui.SHORT_BODY[1]
     dialog.close()
 
 
@@ -212,14 +208,14 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
                           quit_for_update=quit_for_update)  # fmt: skip
     assert not dialog.install.isHidden() and dialog.install.isDefault()
     dialog._release = NEWER
-    dialog._unpacked(str(updates.places(app_dir).new_app), "")  # downloaded, checked, unpacked
+    dialog._unpacked(str(updates.places(app_dir).new_app), "")
     assert dialog.status.text() == "Waiting for CapyPanel to finish what it's doing…" and not quits
     working[0] = False
     dialog._try_restart()
     assert quits == [True]
     [helper] = started
     assert helper[0].endswith(str(Path("new") / "CapyPanel" / "CapyPanel.exe"))
-    assert not Path(helper[0]).is_relative_to(tmp_path)  # in app data, not beside CapyPanel
+    assert not Path(helper[0]).is_relative_to(tmp_path)
     assert helper[1:] == ["--apply-update", str(app_dir.resolve()), str(updates.own_pid()),
                           __version__, "99.0.0"]  # fmt: skip
     dialog.close()
@@ -228,7 +224,6 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
 def test_install_waits_for_the_separate_ssh_windows_to_close(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # They run CapyPanel's own exe, so its files stay in use and the swap would roll back.
     monkeypatch.setattr(updater_ui, "packaged", lambda: True)
     monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
     monkeypatch.setattr(updater_ui._Job, "start", lambda self: pytest.fail("it downloaded"))
@@ -243,7 +238,7 @@ def test_install_waits_for_the_separate_ssh_windows_to_close(
     assert box.text() == (
         "2 SSH connections are still open in separate windows. Close them, then install the update."
     )
-    assert box.standardButtons() == QMessageBox.StandardButton.Ok  # no choice to offer
+    assert box.standardButtons() == QMessageBox.StandardButton.Ok
     assert dialog.install.isEnabled() and dialog._job is None
     dialog.close()
 
@@ -261,10 +256,10 @@ def test_a_separate_window_opened_during_the_download_stops_the_hand_over(
     dialog = UpdateWindow(window, window.updater, app_dir=app_dir, working=lambda: False,
                           quit_for_update=lambda start: pytest.fail("it quit"))  # fmt: skip
     dialog._release = NEWER
-    dialog._unpacked(str(updates.places(app_dir).new_app), "")  # downloaded and unpacked
+    dialog._unpacked(str(updates.places(app_dir).new_app), "")
     one = "1 SSH connection is still open in a separate window. Close it, then install the update."
     assert said == [one]
-    assert dialog.status.text() == one and dialog.install.isEnabled()  # Install again later
+    assert dialog.status.text() == one and dialog.install.isEnabled()
     dialog.close()
 
 
@@ -285,7 +280,7 @@ def test_a_tool_that_keeps_capypanel_open_stops_the_hand_over(
     started: list[bool] = []
     monkeypatch.setattr(window.tools["profiles"], "quit_question", lambda parent: False)
     assert not window.quit_for_update(lambda: started.append(True))
-    assert not started and not window._quitting  # nothing started, CapyPanel stays
+    assert not started and not window._quitting
 
 
 def test_the_start_after_an_update_opens_a_window_saying_what_happened(
@@ -299,7 +294,7 @@ def test_the_start_after_an_update_opens_a_window_saying_what_happened(
     shown: list[RestartWindow] = []
     monkeypatch.setattr(window_module, "run_modal", lambda dialog: shown.append(dialog) or 0)
     this = replace(NEWER, version=__version__, notes="## English\n- Brand new.\n## Other\n- No.")
-    window.updater.remember_install(this)  # kept through the restart
+    window.updater.remember_install(this)
     assert window.prefs["updates"]["installed"]["version"] == __version__
     window.show_restart_note("updated", "0.26.0", "")
     [done] = shown
@@ -308,14 +303,13 @@ def test_the_start_after_an_update_opens_a_window_saying_what_happened(
     assert done.line.text() == "Your settings, lists and saved logins are as they were."
     assert done.changes_text() == ["Brand new."] and not done.changes.isHidden()
     assert done.close_button.isDefault()
-    assert "installed" not in window.prefs["updates"]  # said once
+    assert "installed" not in window.prefs["updates"]
     window.show_restart_note("failed", "0.26.1", "The new version didn't pass its self-test")
     failed = shown[1]
     assert failed.heading.text() == "The update to 0.26.1 wasn't installed."
-    assert failed.line.text() == (  # the reason on its own line, never one word left alone
+    assert failed.line.text() == (
         f"You still have CapyPanel {__version__}.\nThe new version didn't pass its self-test."
     )
-    # Its own sentence: a capital first, one closing period even when Windows brought one.
     assert updater_ui.sentence("access is denied.") == "Access is denied"
     assert failed.changes.isHidden() and failed.chip.isHidden()
     assert "Releases on GitHub" in failed.links.text()
@@ -324,7 +318,7 @@ def test_the_start_after_an_update_opens_a_window_saying_what_happened(
 def test_a_release_found_on_its_own_opens_its_window_once(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert updater_ui.FIRST_LOOK <= 1000  # not a long wait after the start
+    assert updater_ui.FIRST_LOOK <= 1000
     opened: list[UpdateWindow] = []
     monkeypatch.setattr(window_module, "run_modal", lambda dialog: opened.append(dialog) or 0)
     monkeypatch.setattr(window_module, "on_screen", lambda w: True)
@@ -332,12 +326,12 @@ def test_a_release_found_on_its_own_opens_its_window_once(
     monkeypatch.setattr(type(window.guides), "running", property(lambda self: guide[0]))
     window.updater.look(asked=False)
     _wait(lambda: not window.updater.looking)
-    assert not opened and not window.update_button.isHidden()  # a guide is up: it waits
+    assert not opened and not window.update_button.isHidden()
     guide[0] = ""
-    window._offer_update()  # the retry, once the guide is gone
+    window._offer_update()
     [dialog] = opened
     assert dialog.heading.text() == "Update available" and not dialog.changes.isHidden()
-    window.updater.look(asked=False)  # the next look in this run: the button is enough
+    window.updater.look(asked=False)
     _wait(lambda: not window.updater.looking)
     window._offer_update()
     assert len(opened) == 1
@@ -383,9 +377,9 @@ def test_the_notes_become_one_change_each_and_their_links(window: CapyWindow) ->
     words = [label.text() for label in dialog.findChildren(QLabel, "updateChange")]
     assert "<b>Bold</b>" in words[1] and "<code>code</code>" in words[1]
     assert '<a href="https://example.com/a">a page</a>' in words[1]
-    shown = dialog.links.text()  # the release page first, then the notes' own link
+    shown = dialog.links.text()
     assert shown.index("Notes on GitHub ↗") < shown.index("Code signing policy ↗")
-    assert "Code signing" not in " ".join(words)  # a link line isn't a change
+    assert "Code signing" not in " ".join(words)
     QApplication.processEvents()
     assert dialog.width() == WIDE and dialog.height() <= NOTES_HEIGHT
     dialog.close()
@@ -424,7 +418,7 @@ def test_long_notes_scroll_inside_the_tallest_window(window: CapyWindow) -> None
                           quit_for_update=lambda start: False)  # fmt: skip
     dialog.show()
     _wait(lambda: dialog.height() == NOTES_HEIGHT)
-    assert dialog.changes.verticalScrollBar().maximum() > 0  # the rest is a scroll away
+    assert dialog.changes.verticalScrollBar().maximum() > 0
     dialog.close()
 
 
@@ -433,7 +427,7 @@ def test_the_download_shows_in_the_footer_in_skip_s_place(
 ) -> None:
     monkeypatch.setattr(updater_ui, "packaged", lambda: True)
     monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
-    monkeypatch.setattr(updater_ui._Job, "start", lambda self: None)  # nothing downloads
+    monkeypatch.setattr(updater_ui._Job, "start", lambda self: None)
     window.updater.offer = NEWER
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: False)  # fmt: skip
@@ -444,7 +438,7 @@ def test_the_download_shows_in_the_footer_in_skip_s_place(
     assert not dialog.install.isEnabled() and not dialog.install.isHidden()
     assert dialog.later.text() == "Cancel" and dialog.later.isDefault()
     dialog._step("Downloading…", 12_400_000, 48_000_000)
-    words = dialog.status.text()  # the decimal mark is the PC's own
+    words = dialog.status.text()
     assert words.startswith("Downloading… 12") and "of 48" in words and words.endswith(" MB")
     assert dialog.progress.maximum() == 48_000_000 and not dialog.progress.isHidden()
     dialog._job = None
@@ -459,7 +453,6 @@ def test_about_shows_beta_and_checks_for_updates(window: CapyWindow) -> None:
 
 
 def _job_world(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, passes: bool) -> list[str]:
-    """Download, check and unpack, faked: nothing reaches the network or runs an exe."""
     tested: list[str] = []
 
     def download(url: str, path: Path, **_kwargs: Any) -> None:
@@ -490,11 +483,11 @@ def test_the_new_version_s_self_test_runs_before_capypanel_closes(
     job._run()
     assert tested == ["CapyPanel.exe"] and "Checking the new version…" in steps
     assert ended == [(str(updates.places(app_dir).new_app), "")]
-    assert updates.was_tested(updates.places(app_dir), "99.0.0")  # the helper won't run it again
+    assert updates.was_tested(updates.places(app_dir), "99.0.0")
     _job_world(monkeypatch, tmp_path, passes=False)
     ended.clear()
     job._run()
-    assert ended == [("", "The new version didn't pass its self-test")]  # CapyPanel stays open
+    assert ended == [("", "The new version didn't pass its self-test")]
 
 
 def test_the_helper_s_splash_says_it_is_updating(
@@ -504,7 +497,7 @@ def test_the_helper_s_splash_says_it_is_updating(
 
     assert update_splash.splash_text("0.26.4") == "Updating to 0.26.4…"
     picture = update_splash.picture("Updating to 0.26.4…", 1.5)
-    assert picture.devicePixelRatio() == 1.5  # pixel for pixel, like the launcher's
+    assert picture.devicePixelRatio() == 1.5
     assert (picture.width(), picture.height()) == (480, 300)
     swapped: list[tuple[Any, ...]] = []
     monkeypatch.setattr(updates, "run_helper", lambda *args: swapped.append(args) or 0)

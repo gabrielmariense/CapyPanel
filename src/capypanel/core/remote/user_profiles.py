@@ -1,5 +1,3 @@
-"""A PC's user profiles: which, how big, and deleting a READY one, checked again right before."""
-
 import contextlib
 import ctypes
 import json
@@ -35,35 +33,34 @@ DELETE_TIMEOUT = 60 * 60  # seconds Windows gets to remove one profile: big ones
 
 
 class Kind(StrEnum):
-    PROFILE = "profile"  # what Windows lists as a profile
+    PROFILE = "profile"
     ENTRY = "entry"  # a registry entry whose folder is gone
     FOLDER = "folder"  # a folder in Users that no registry entry names
-    BACKUP = "backup"  # a ".bak" entry with its folder: a profile that failed to load
+    BACKUP = "backup"
 
 
-class State(StrEnum):  # in this order: the first that applies
+class State(StrEnum):
     PROTECTED = "protected"  # one of Windows' own, or the built-in Administrator's
-    OUTSIDE = "outside"  # not in the Users folder
-    IN_USE = "in-use"  # signed in now
+    OUTSIDE = "outside"
+    IN_USE = "in-use"
     REVIEW = "review"  # a .bak entry: fixed by hand, never deleted here
     READY = "ready"
 
 
 @dataclass(frozen=True)
 class Profile:
-    sid: str  # "" for a folder no entry names
-    key: str  # its ProfileList key: the SID, or "<SID>.bak"; "" when it has none
-    user: str  # "EXAMPLE\\ana"; the folder's name when Windows can't name the account
-    known: bool  # whether Windows could name the account (False: likely deleted)
-    path: str  # C:\Users\ana, as the PC sees it; "" for an entry without one
+    sid: str
+    key: str
+    user: str
+    known: bool
+    path: str
     kind: Kind
     state: State
-    last_used: datetime | None = None  # the last sign-in or sign-out Windows wrote down (UTC)
-    modified: datetime | None = None  # the folder's own date (UTC)
+    last_used: datetime | None = None
+    modified: datetime | None = None
 
     @property
     def ident(self) -> str:
-        """Tells it from every other row of a scan, whatever its kind."""
         return self.key or self.sid or self.path.casefold()
 
     @property
@@ -74,24 +71,24 @@ class Profile:
 @dataclass(frozen=True)
 class Scan:
     host: str
-    root: str  # the PC's Users folder: C:\Users
+    root: str
     profiles: tuple[Profile, ...]
 
 
 class Outcome(StrEnum):
     DELETED = "deleted"
-    SKIPPED = "skipped"  # the check right before found a reason not to
+    SKIPPED = "skipped"
     FAILED = "failed"
 
 
 class Why(StrEnum):
-    NOT_READY = "not-ready"  # it wasn't READY in the scan
-    IN_USE = "in-use"  # signed in since the scan
-    GONE = "gone"  # no longer there
-    CHANGED = "changed"  # not what the scan saw: scan again
+    NOT_READY = "not-ready"
+    IN_USE = "in-use"
+    GONE = "gone"
+    CHANGED = "changed"
     PROTECTED = "protected"
-    LEFT = "left"  # some of its files couldn't be removed
-    ERROR = "error"  # Windows refused, or the PC stopped answering
+    LEFT = "left"
+    ERROR = "error"
 
 
 @dataclass(frozen=True)
@@ -99,19 +96,16 @@ class Deleted:
     profile: Profile
     outcome: Outcome
     why: Why | None = None
-    detail: str = ""  # Windows' own words or code, when it gave any
+    detail: str = ""
 
 
-# Maps a path as the PC sees it (C:\Users\ana) to one this PC can open.
 Opened = Callable[[str], str]
-# An account's name for its SID, "EXAMPLE\\ana", or "" when Windows knows none.
 NameOf = Callable[[str], str]
 
 # People: domain and local accounts (S-1-5-21-…) and Entra ID ones (S-1-12-1-…).
 _PERSON = re.compile(r"S-1-(?:5-21|12-1)(?:-\d+)+")
 _KEY = re.compile(r"S-1-(?:5-21|12-1)(?:-\d+)+(?:\.bak)?", re.IGNORECASE)
 _BUILTIN_ADMIN = "-500"  # how the built-in Administrator's SID ends, whatever its name
-# Folders Windows makes itself in Users, in the languages it names them in.
 _WINDOWS_OWN = (
     "Public", "Default", "All Users", "Default User", "defaultuser0", "Administrator",
     "Administrador", "WDAGUtilityAccount",
@@ -123,19 +117,14 @@ _SERVICE_PROFILES = (
 
 
 def share_path(host: str, path: str) -> str:
-    r"""`path` on `host` (C:\Users\ana) as this PC opens it, through the drive's admin share and
-    in Windows' long form, so paths deep in AppData work: \\?\UNC\host\C$\Users\ana."""
+    r"""Through C$ in Windows' long form (\\?\UNC\…), so paths deep in AppData work."""
     if not re.fullmatch(r"[A-Za-z]:(\\.*)?", path):
         raise ValueError(f"not a path on a drive: {path!r}")
     return rf"\\?\UNC\{host}\{path[0]}$" + path[2:].rstrip("\\")
 
 
 def confirmed(typed: str, host: str) -> bool:
-    """Whether what the admin typed is the PC's name: the last step before deleting."""
     return bool(host.strip()) and typed.strip().casefold() == host.strip().casefold()
-
-
-# ---- reading ----
 
 
 def scan(
@@ -145,9 +134,7 @@ def scan(
     opened: Opened | None = None,
     name_of: NameOf | None = None,
 ) -> Scan:
-    """Every user profile on `host`, and the leftovers of old ones, by name. Reads only.
-    Raises RemoteError or TimeoutError."""
-    from capypanel.core.remote import inventory  # its PowerShell parts load on first use
+    from capypanel.core.remote import inventory
 
     check_reachable(host)
     facts = inventory.run_cim(_FACTS, host, account)
@@ -159,16 +146,15 @@ def scan(
 
 
 def _combine(host: str, facts: Mapping[str, Any], opened: Opened, name_of: NameOf) -> Scan:
-    """One row per profile and leftover, from what WMI said and what the folders show."""
     root = str(facts.get("root") or r"C:\Users").rstrip("\\")
     try:
         os.stat(opened(root))
-    except OSError as e:  # the share, not one folder: nothing below can be told apart
+    except OSError as e:
         raise RemoteError(reason_of(e.winerror or 0), e.winerror or 0) from e
     own = _own_paths(facts, root)
     hives = {str(h.get("sid") or ""): h for h in _rows(facts.get("hives"))}
     listed = {str(p.get("sid") or ""): p for p in _rows(facts.get("profiles"))}
-    named: set[str] = set()  # the paths a registry entry or Windows' list names, case-folded
+    named: set[str] = set()
     found: list[Profile] = []
     for key in _rows(facts.get("keys")):
         name = str(key.get("name") or "")
@@ -194,7 +180,7 @@ def _combine(host: str, facts: Mapping[str, Any], opened: Opened, name_of: NameO
         modified = folder.modified if folder else None
         found.append(_named(name_of, sid, name, path, kind, state, _last_used(key), modified))
         named.add(path.casefold())
-    for sid, cim in listed.items():  # listed by Windows with no entry of its own: rare
+    for sid, cim in listed.items():
         if not _PERSON.fullmatch(sid) or any(p.sid == sid for p in found):
             continue
         path = str(cim.get("path") or "").rstrip("\\")
@@ -218,8 +204,6 @@ def _combine(host: str, facts: Mapping[str, Any], opened: Opened, name_of: NameO
 def _leftover_folders(
     facts: Mapping[str, Any], root: str, own: frozenset[str], named: set[str], opened: Opened
 ) -> list[Profile]:
-    """The folders in Users that no entry names. One whose name is a signed-in person's counts
-    as in use, even with no entry: better a folder left than a person's files gone."""
     hives = _rows(facts.get("hives"))
     active_paths = {str(h.get("folder") or "").rstrip("\\").casefold() for h in hives}
     active_names = {str(h.get("user") or "").casefold() for h in hives}
@@ -263,11 +247,10 @@ def _state(protected: bool, outside: bool, loaded: bool, kind: Kind) -> State:
 
 
 def _own_paths(facts: Mapping[str, Any], root: str) -> frozenset[str]:
-    """Windows' own profile folders on this PC, case-folded."""
     windows = str(facts.get("windows") or r"C:\Windows").rstrip("\\")
     paths = [f"{windows}\\{sub}" for sub in _SERVICE_PROFILES]
     paths += [f"{root}\\{name}" for name in _WINDOWS_OWN]
-    if admin := str(facts.get("admin") or ""):  # the built-in Administrator, when renamed
+    if admin := str(facts.get("admin") or ""):
         paths.append(f"{root}\\{admin}")
     return frozenset(p.casefold() for p in paths)
 
@@ -277,7 +260,6 @@ def _inside(root: str, path: str) -> bool:
 
 
 def _last_used(key: Mapping[str, Any]) -> datetime | None:
-    """The later of the last sign-in and sign-out, which Windows keeps in the entry."""
     times = [
         _filetime(key.get(f"{which}_high"), key.get(f"{which}_low")) for which in ("load", "unload")
     ]
@@ -298,15 +280,13 @@ _EARLIEST = datetime(1980, 1, 1, tzinfo=UTC)  # before any Windows that keeps pr
 
 
 def _plausible(when: datetime) -> datetime | None:
-    """`when`, or None for a time no profile can have: a half-written registry value reads as
-    1601 or the far future, and Windows can't show a date before 1970 in local time."""
+    """None for a time no profile can have: half-written values read as 1601 or the far future."""
     if when < _EARLIEST or when > datetime.now(UTC) + timedelta(days=2):
         return None
     return when
 
 
 def _modified(seconds: float) -> datetime | None:
-    """A folder's last change, from its file times; None when they make no sense."""
     try:
         return _plausible(datetime.fromtimestamp(seconds, UTC))
     except (OverflowError, OSError, ValueError):
@@ -314,12 +294,8 @@ def _modified(seconds: float) -> datetime | None:
 
 
 def _rows(value: object) -> list[Mapping[str, Any]]:
-    """PowerShell writes a list of one as the one itself."""
     rows = value if isinstance(value, list) else [value]
     return [row for row in rows if isinstance(row, dict)]
-
-
-# ---- folders ----
 
 
 @dataclass(frozen=True)
@@ -329,8 +305,7 @@ class _Folder:
 
 
 def _look(opened: Opened, path: str) -> _Folder | None:
-    """The folder at `path` on the PC, or None when there's none. One that's there but can't be
-    read counts as a link: it's never taken for gone, and never touched."""
+    """A folder that can't be read counts as a link: never taken for gone, never touched."""
     if not path:
         return None
     try:
@@ -349,7 +324,6 @@ def _is_link(found: os.stat_result) -> bool:
 
 
 def _children(folder: str) -> Iterator[tuple[str, _Folder]]:
-    """The folders directly inside `folder`, links among them."""
     with os.scandir(folder) as entries:
         listed = sorted(entries, key=lambda e: e.name.casefold())
     for entry in listed:
@@ -371,8 +345,6 @@ def profile_size(
     opened: Opened | None = None,
     progress: Callable[[int], None] | None = None,
 ) -> int | None:
-    """The bytes in `profile`'s folder, None when `stop` said so first or it has none. `progress`
-    hears the count so far, from the threads that read it. Reads only. Raises RemoteError."""
     if not profile.path or profile.kind is Kind.ENTRY:
         return None
     opened = opened or (lambda path: share_path(scanned.host, path))
@@ -383,7 +355,7 @@ def profile_size(
             raise RemoteError(reason_of(e.winerror or 0), e.winerror or 0) from e
 
 
-WALKERS = 8  # folders of one profile read at the same time: each is a wait on the network
+WALKERS = 8
 
 
 def folder_size(
@@ -394,9 +366,8 @@ def folder_size(
     walkers: int = WALKERS,
     identity: Callable[[], AbstractContextManager[None]] = nullcontext,
 ) -> int | None:
-    """Bytes under `folder`, None when `stop` said so. Links aren't followed; an unreadable folder
-    inside counts as empty. `walkers` threads read at once, each in `identity()`. Raises OSError."""
-    total, inside = _listed(folder)  # the folder itself, here: its error is the caller's
+    """Links aren't followed; an unreadable folder inside counts as empty."""
+    total, inside = _listed(folder)
     if progress is not None:
         progress(total)
     if stop():
@@ -406,7 +377,7 @@ def folder_size(
     waiting: queue.SimpleQueue[str | None] = queue.SimpleQueue()
     for path in inside:
         waiting.put(path)
-    left = len(inside)  # folders not read yet, the ones being read among them
+    left = len(inside)
     lock = threading.Lock()
     failed: list[BaseException] = []
 
@@ -420,7 +391,7 @@ def folder_size(
             with identity():
                 while (current := waiting.get()) is not None:
                     size, found = 0, []
-                    if not stop():  # stopped: the folders waiting are let go unread
+                    if not stop():
                         with contextlib.suppress(OSError):
                             size, found = _listed(current)
                     with lock:
@@ -451,8 +422,6 @@ def folder_size(
 
 
 def _listed(folder: str) -> tuple[int, list[str]]:
-    """The bytes of the files directly in `folder`, and the folders in it that aren't links.
-    One listing: Windows hands each entry's size and kind with its name."""
     size, folders = 0, []
     with os.scandir(folder) as entries:
         for entry in entries:
@@ -467,9 +436,6 @@ def _listed(folder: str) -> tuple[int, list[str]]:
     return size, folders
 
 
-# ---- deleting ----
-
-
 def delete(
     scanned: Scan,
     profile: Profile,
@@ -479,8 +445,6 @@ def delete(
     opened: Opened | None = None,
     name_of: NameOf | None = None,
 ) -> Deleted:
-    """Deletes a profile or leftover of `scanned`'s PC, checked there again first, and writes what
-    happened to `log_file`. Never raises for what the PC answers: a refusal is the outcome."""
     host = scanned.host
     opened = opened or (lambda path: share_path(host, path))
     if not profile.ready:
@@ -503,7 +467,6 @@ def delete(
 
 
 def _delete_profile(host: str, profile: Profile, account: Account | None) -> Deleted:
-    """Windows' own removal: the folder and the registry entries together."""
     from capypanel.core.remote import inventory
 
     if not _PERSON.fullmatch(profile.sid):  # it goes into a WMI query
@@ -519,14 +482,12 @@ def _delete_profile(host: str, profile: Profile, account: Account | None) -> Del
 
 
 def _delete_entry(host: str, profile: Profile, account: Account | None, opened: Opened) -> Deleted:
-    """A registry entry whose folder is gone: the entry goes, and the PC's index of profile
-    GUIDs with it. What the entry held is kept in the log."""
     from capypanel.core.remote import inventory
 
     if not _KEY.fullmatch(profile.key):
         return Deleted(profile, Outcome.SKIPPED, Why.CHANGED)
     with as_account(account):
-        if _look(opened, profile.path) is not None:  # its folder is back: a profile again
+        if _look(opened, profile.path) is not None:
             return Deleted(profile, Outcome.SKIPPED, Why.CHANGED)
     answer = inventory.run_cim(
         _DELETE_ENTRY,
@@ -540,8 +501,7 @@ def _delete_entry(host: str, profile: Profile, account: Account | None, opened: 
 def _delete_folder(
     scanned: Scan, profile: Profile, account: Account | None, opened: Opened, name_of: NameOf
 ) -> Deleted:
-    """A folder no entry names. Scanned again first: it must still be a real folder directly in
-    Users that nothing names and nobody signed in owns."""
+    """Checked again first: a folder in Users that nothing names and no signed-in person owns."""
     from capypanel.core.remote import inventory
 
     host, root = scanned.host, scanned.root
@@ -564,8 +524,7 @@ def _delete_folder(
 
 
 def remove_tree(folder: str) -> list[str]:
-    """Deletes `folder` and everything in it. A link inside is removed as a link: what it points
-    at is never touched. Answers with what couldn't be removed, as "path: why"."""
+    """A link inside is removed as a link: what it points at is never touched."""
     failed: list[str] = []
 
     def drop(path: str, *, is_dir: bool) -> None:
@@ -573,8 +532,8 @@ def remove_tree(folder: str) -> list[str]:
         try:
             try:
                 remove(path)
-            except PermissionError:  # a read-only file refuses to go; the link itself, never
-                os.chmod(path, stat.S_IWRITE, follow_symlinks=False)  # what it points at
+            except PermissionError:
+                os.chmod(path, stat.S_IWRITE, follow_symlinks=False)
                 remove(path)
         except OSError as e:
             failed.append(f"{path}: {e.strerror or e}")
@@ -632,7 +591,6 @@ def _answered(profile: Profile, answer: object) -> Deleted:
 
 
 def _write_log(log_file: Path, host: str, account: Account | None, done: Deleted) -> None:
-    """One line per delete asked for: when, the PC, who asked, what, and how it ended."""
     p = done.profile
     who = account.user if account is not None else "(your Windows account)"
     when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -646,8 +604,6 @@ def _write_log(log_file: Path, host: str, account: Account | None, done: Deleted
         log.warning("Couldn't write the user profiles log %s: %s", log_file, e)
 
 
-# ---- account names ----
-
 _advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
 _advapi32.ConvertStringSidToSidW.restype = wintypes.BOOL
 _advapi32.ConvertStringSidToSidW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_void_p)]
@@ -658,12 +614,10 @@ _advapi32.LookupAccountSidW.argtypes = [
 ]  # fmt: skip
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 _kernel32.LocalFree.argtypes = [ctypes.c_void_p]
-_DELETED_ACCOUNT, _UNKNOWN_ACCOUNT = 6, 8  # what kind of name came back
+_DELETED_ACCOUNT, _UNKNOWN_ACCOUNT = 6, 8  # SID_NAME_USE values
 
 
 def account_of(host: str, sid: str) -> str:
-    """The account `host` knows `sid` by ("EXAMPLE\\ana"), or "" when none: deleted, or its domain
-    can't be asked. `host` answers, so its own local accounts get their names too."""
     binary = ctypes.c_void_p()
     if not _advapi32.ConvertStringSidToSidW(sid, ctypes.byref(binary)):
         return ""
@@ -684,15 +638,11 @@ def account_of(host: str, sid: str) -> str:
         _kernel32.LocalFree(binary)
 
 
-# ---- the WMI scripts (they run on your PC, with a session to the other) ----
-
 _REG = r"""
 $list = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
 $guids = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileGuid'
 """
 
-# ProfileList has an entry per profile, with its folder and when it was last loaded and unloaded;
-# HKEY_USERS a hive per person signed in, whose Volatile Environment names them and their folder.
 _FACTS = (
     _REG
     + r"""
@@ -764,8 +714,7 @@ finally { Remove-CimSession $session }
 """
 )
 
-# The entry's values are read first and sent back, for the log. The PC's GUID index loses the
-# SID's line only when no twin entry (the SID beside its .bak) still stands for that person.
+# The GUID index loses the SID's line only when no twin entry (the SID beside its .bak) remains.
 _DELETE_ENTRY = (
     _REG
     + r"""
@@ -813,8 +762,6 @@ finally { Remove-CimSession $session }
 )
 
 
-# ---- the same reads and deletes over WMI directly ----
-
 _LIST = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
 _GUIDS = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileGuid"
 _LISTED = re.compile(r"S-1-(5-21|12-1)-.*", re.IGNORECASE)  # ProfileList's people
@@ -858,7 +805,7 @@ def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
         if _SIGNED_IN.fullmatch(sid)
     ]  # fmt: skip
     admin = ""
-    with contextlib.suppress(RemoteError):  # a renamed built-in Administrator; often unreadable
+    with contextlib.suppress(RemoteError):
         for found in wmi.rows("SELECT Name, SID FROM Win32_UserAccount WHERE LocalAccount=True"):
             if str(found.SID or "").endswith("-500"):
                 admin = str(found.Name or "")
@@ -872,14 +819,13 @@ def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
 
 @inventory.reads(_DELETE_PROFILE)
 def _delete_profile_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
-    """Checked again in the same connection that deletes, then Windows' own removal: the
-    folder and the registry entries together, done by WMI on that PC."""
+    """Checked again in the same connection that deletes, then Windows' own removal."""
     import pywintypes
 
     from capypanel.core.remote.wmi import message_of
 
     sid = values["sid"]
-    if not _PERSON.fullmatch(sid):  # it goes into the query
+    if not _PERSON.fullmatch(sid):
         return {"outcome": "changed"}
     found = wmi.first(f"SELECT * FROM Win32_UserProfile WHERE SID='{sid}'")
     if found is None:
@@ -902,8 +848,6 @@ _STRINGS, _BINARY, _DWORD, _MULTI, _QWORD = (1, 2), 3, 4, 7, 11  # registry valu
 
 @inventory.reads(_DELETE_ENTRY)
 def _delete_entry_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
-    """The entry's values are read first and sent back, for the log. The GUID index loses the SID's
-    line only when no twin entry (the SID beside its .bak) still stands for that person."""
     from capypanel.core.remote.wmi import HKLM
 
     key, sid = f"{_LIST}\\{values['key']}", values["sid"]
@@ -930,7 +874,7 @@ def _delete_entry_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
                 data = wmi.reg("GetBinaryValue", HKLM, key, name).uValue or ()
                 kept[name] = "-".join(f"{int(b):02X}" for b in data)
         twin = f"{sid}.bak" if values["key"] == sid else sid
-        if wmi.value_names(HKLM, f"{_LIST}\\{twin}")[0]:  # no twin left: the GUID line goes
+        if wmi.value_names(HKLM, f"{_LIST}\\{twin}")[0]:
             for guid in wmi.subkeys(HKLM, _GUIDS):
                 if wmi.string(HKLM, f"{_GUIDS}\\{guid}", "SidString") == sid:
                     _drop_key(wmi, f"{_GUIDS}\\{guid}")
@@ -941,7 +885,7 @@ def _delete_entry_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
 
 
 def _drop_key(wmi: Any, key: str) -> None:
-    """A registry key and everything under it: StdRegProv deletes only empty keys."""
+    """StdRegProv deletes only empty keys: the subkeys go first."""
     from capypanel.core.remote.wmi import HKLM
 
     for sub in wmi.subkeys(HKLM, key):

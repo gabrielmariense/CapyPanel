@@ -21,12 +21,11 @@ def test_details_round_trip_through_the_list_file(tmp_path: Path) -> None:
 
 
 def test_the_file_is_a_plain_host_list_with_one_extra_key(tmp_path: Path) -> None:
-    # Keys the app doesn't know are kept, so other tools can open, edit and save the list.
     path = tmp_path / "printers.json"
     listfile.save(path, _list_with(PrinterInfo(brand="RICOH", serial="X1")), expected=None)
     [entry] = json.loads(path.read_text(encoding="utf-8"))["hosts"]
     assert entry["address"] == "192.0.2.10"
-    assert entry["printer"] == {"brand": "RICOH", "serial": "X1"}  # empty fields and SNMP left out
+    assert entry["printer"] == {"brand": "RICOH", "serial": "X1"}
 
 
 def test_a_host_without_details_is_an_snmp_printer() -> None:
@@ -42,7 +41,7 @@ def test_odd_values_are_kept_as_found() -> None:
     host = replace(host, extra={"printer": odd})
     info = info_of(host)
     assert info.brand == "" and info.counter_source == "papercut" and not info.known_source
-    assert with_info(host, info).extra["printer"] == odd  # saved back untouched
+    assert with_info(host, info).extra["printer"] == odd
 
 
 def test_a_new_value_replaces_an_odd_one() -> None:

@@ -1,5 +1,3 @@
-"""How an ssh.exe connection ended, in words both the holder and the terminal tab use."""
-
 from capypanel.core.i18n import _
 
 CTRL_C_EXIT = 0xC000013A  # Windows ended the program: Ctrl+C, or its window was closed
@@ -12,14 +10,10 @@ def is_error(code: int) -> bool:
 
 
 def code_text(code: int) -> str:
-    """Decimal up to 255 and hex above it (0xC0000005), as Windows writes those codes and as
-    people search for them."""
     return str(code) if code <= 255 else f"0x{code:08X}"
 
 
 def error_line(host: str, code: int) -> str:
-    """The line for an error: for 255 it points at ssh.exe's own message, above it; above 255
-    ssh.exe usually printed nothing, so it gives the code."""
     if code == 255:
         return _(
             "The connection to {host} ended with an error. ssh.exe's message is above."
@@ -30,8 +24,7 @@ def error_line(host: str, code: int) -> str:
 
 
 def ended_line(host: str, code: int, *, by_us: bool = False) -> str:
-    """The terminal tab's strip: the error line, or that the connection ended. One CapyPanel closed
-    (Reconnect, closing the tab) is never an error: Windows gives it 0xC000013A or 0 as it likes."""
+    """One CapyPanel closed is never an error: Windows gives it 0xC000013A or 0 as it likes."""
     if by_us or not is_error(code):
         return _("The connection to {host} ended.").format(host=host)
     return error_line(host, code)

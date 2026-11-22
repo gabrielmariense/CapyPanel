@@ -1,5 +1,3 @@
-"""The translation files stay in step with the code: nothing missing, stale or half-translated."""
-
 import gettext
 import re
 from pathlib import Path
@@ -13,8 +11,8 @@ from capypanel.core import i18n
 PACKAGE = Path(i18n.__file__).resolve().parent.parent
 TRANSLATED = [code for code in i18n.LANGUAGES if code != i18n.DEFAULT_LANGUAGE]
 FIX = "run: uv run python scripts/translations.py"
-type Texts = tuple[str, ...]  # one text, or singular and plural
-type Key = tuple[str | None, Texts]  # the context (most texts have none) and the texts
+type Texts = tuple[str, ...]
+type Key = tuple[str | None, Texts]
 
 
 def _texts(value: object) -> Texts:
@@ -29,7 +27,6 @@ def _in_code() -> set[Key]:
 
 
 def _po(code: str) -> list[tuple[Key, Texts, set[str]]]:
-    """(context and source texts, translated texts, flags) for every entry but the header."""
     path = i18n.LOCALE_DIR / code / "LC_MESSAGES" / f"{i18n.DOMAIN}.po"
     with path.open("rb") as f:
         catalog = read_po(f, locale=code)
@@ -54,7 +51,6 @@ def test_every_text_is_translated_with_the_same_fields(code: str) -> None:
     for (_context, ids), strings, flags in _po(code):
         assert "fuzzy" not in flags, f"needs checking: {ids[0]!r}"
         assert strings and all(strings), f"not translated: {ids[0]!r}"
-        # A translation may drop {n} ("O host desse grupo…") but never invent a field.
         for text in strings:
             assert _fields(text) <= _fields(ids[-1]), f"unknown field in {text!r}"
             if "&" in ids[0]:
@@ -63,7 +59,6 @@ def test_every_text_is_translated_with_the_same_fields(code: str) -> None:
 
 @pytest.mark.parametrize("code", TRANSLATED)
 def test_compiled_catalog_matches_the_source(code: str) -> None:
-    # The app reads the .mo; a forgotten compile would ship old translations.
     compiled = gettext.translation(i18n.DOMAIN, i18n.LOCALE_DIR, [code])
     for (context, ids), strings, _flags in _po(code):
         if len(ids) == 2 and context:
@@ -77,7 +72,7 @@ def test_compiled_catalog_matches_the_source(code: str) -> None:
 
 
 def test_portuguese_zero_is_plural() -> None:
-    # "0 selecionados", not "0 selecionado": only exactly one is singular (maintainer's call).
+    # "0 selecionados": only exactly one is singular.
     compiled = gettext.translation(i18n.DOMAIN, i18n.LOCALE_DIR, ["pt_BR"])
     assert compiled.ngettext("{n} selected", "{n} selected", 0) == "{n} selecionados"
     assert compiled.ngettext("{n} selected", "{n} selected", 1) == "{n} selecionado"
@@ -96,13 +91,12 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
 
     named = {text for _context, texts in _in_code() for text in texts if names_one(text)}
     fixed = {
-        "Details (Enter)",  # the Profile cleanup tool's: not on the Keyboard shortcuts page
-        # Import hosts' own table, where F2 is Qt's key to edit a cell. Hosts' and Printers'
-        # Edit take F2 too, and a person can change theirs: F2 elsewhere is caught.
+        "Details (Enter)",
+        # Import hosts' table, where F2 is Qt's own key to edit a cell: F2 anywhere else is caught.
         "Double-click a cell, or press F2, to change it; the list above follows. Right-click "
         "for more.",
     }
     assert named == fixed
     old = "Reads the status, toner and page count of every printer shown. Nothing is read until"
-    assert names_one(f"{old} you press it or F5.")  # the guide's older words
+    assert names_one(f"{old} you press it or F5.")
     assert names_one("Open Settings (Ctrl+,)") and names_one("Home (Ctrl+0)")

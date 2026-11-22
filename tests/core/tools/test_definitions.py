@@ -34,7 +34,7 @@ def test_every_shipped_preset_is_valid() -> None:
     assert {p.stem for p in presets} >= {"ultravnc", "realvnc"}
     for path in presets:
         tool = definitions.load(path)
-        assert path.stem == tool.id  # one file per tool, named after it
+        assert path.stem == tool.id
 
 
 def test_groups_with_an_empty_value_are_left_out() -> None:
@@ -43,7 +43,6 @@ def test_groups_with_an_empty_value_are_left_out() -> None:
     assert command_line(tool, EXE, full) == [
         str(EXE), "pc1::5900", "-user", "ana", "-password", "s3cret",
     ]  # fmt: skip
-    # No user: plain VNC password servers get only -password.
     assert command_line(tool, EXE, {**full, "user": ""}) == [
         str(EXE), "pc1::5900", "-password", "s3cret",
     ]  # fmt: skip
@@ -79,7 +78,6 @@ def test_a_password_file_tool_needs_its_placeholder() -> None:
         _data(credentials="vnc_password_file", arguments=arguments, options={})
     )
     assert tool.wants_user and tool.wants_password
-    # Its arguments still pass the password on the command line: refused.
     with pytest.raises(ToolDefinitionError, match="placeholder"):
         definitions.from_data(_data(credentials="vnc_password_file"))
 
@@ -92,10 +90,10 @@ def test_a_password_file_tool_needs_its_placeholder() -> None:
         ({"schema": 99}, "newer version"),
         ({"arguments": [["{address}", "{hostname}"]], "credentials": "none"}, "placeholder"),
         ({"arguments": [["{address"]], "credentials": "none"}, "Broken placeholder"),
-        ({"credentials": "none"}, "arguments"),  # password in the arguments but method "none"
+        ({"credentials": "none"}, "arguments"),
         ({"port": 70000}, "port"),
         ({"arguments": []}, "arguments"),
-        ({"options": {}}, "crypto"),  # an option group whose option isn't listed
+        ({"options": {}}, "crypto"),
         ({"options": ["crypto"]}, "options"),
     ],
 )

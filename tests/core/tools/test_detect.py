@@ -32,7 +32,6 @@ def _programs(monkeypatch: pytest.MonkeyPatch, rows: list[tuple[str, str, str]])
 def test_found_where_windows_says_it_was_installed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # e.g. C:\Programas\UltraVNC: not a usual folder, but Windows recorded it.
     exe = _exe(tmp_path / "Programas" / "Viewer")
     _programs(monkeypatch, [("Other app", str(tmp_path), ""), ("Viewer 2.1", str(exe.parent), "")])
     tool = _tool(detect=Detect(installed_as=("Viewer",), exe="viewer.exe"))
@@ -52,9 +51,8 @@ def test_without_an_install_folder_the_uninstaller_s_folder_is_used(
 def test_an_uninstall_command_without_a_folder_never_means_the_current_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Installers made with MSI record "MsiExec.exe /X{…}": no folder at all.
     _exe(tmp_path)
-    monkeypatch.chdir(tmp_path)  # a viewer.exe planted where CapyPanel was started
+    monkeypatch.chdir(tmp_path)
     # Windows lets PATH lookups try the current folder first unless this is set.
     monkeypatch.delenv("NoDefaultCurrentDirectoryInExePath", raising=False)
     _programs(monkeypatch, [("Viewer", "", "MsiExec.exe /X{12345678-1234-1234-1234-123456789012}")])
@@ -79,6 +77,5 @@ def test_a_path_the_user_set_is_final(tmp_path: Path, monkeypatch: pytest.Monkey
     detect_rule = Detect(installed_as=("Viewer",), exe="viewer.exe")
     chosen = _exe(tmp_path / "Chosen")
     assert detect.find_executable(_tool(executable=str(chosen), detect=detect_rule)) == chosen
-    # A missing chosen path is reported, not silently swapped for another copy.
     gone = str(tmp_path / "Gone" / "viewer.exe")
     assert detect.find_executable(_tool(executable=gone, detect=detect_rule)) is None

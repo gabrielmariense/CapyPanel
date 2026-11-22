@@ -1,5 +1,3 @@
-"""The splash the update's helper shows while it swaps files: "Updating to" and the version."""
-
 import logging
 import threading
 import time
@@ -24,11 +22,11 @@ from capypanel.ui.branding import BRANDING_DIR
 
 log = logging.getLogger(__name__)
 
-SPLASH = BRANDING_DIR / "splash.png"  # the launcher's own splash shows the same picture
+SPLASH = BRANDING_DIR / "splash.png"
 BASELINE = 272  # where the launcher writes the version (packaging/capypanel.spec)
 TEXT_PX = 16  # Segoe UI at 16 pixels, light, as the launcher writes it
 TEXT_COLOR = "#dde3ee"
-HAND_OVER = 1.5  # seconds it stays after starting the new CapyPanel, whose splash then shows
+HAND_OVER = 1.5  # seconds
 
 
 class UpdateSplash(QSplashScreen):
@@ -43,8 +41,6 @@ def splash_text(version: str) -> str:
 
 
 def picture(text: str, ratio: float) -> QPixmap:
-    """The splash picture with `text` centred on the version's line, at the screen's own
-    scale so it shows pixel for pixel like the launcher's."""
     pixmap = QPixmap(str(SPLASH))
     painter = QPainter(pixmap)
     font = QFont("Segoe UI")
@@ -66,7 +62,6 @@ def run(
     close_launcher_splash: Callable[[], None],
     staging: Path | None = None,
 ) -> int:
-    """The swap (core/updates.run_helper) on a thread, with the splash on screen meanwhile."""
     app = QApplication.instance() or QApplication([])
     screen = QGuiApplication.primaryScreen()
     ratio = screen.devicePixelRatio() if screen is not None else 1.0
@@ -74,7 +69,7 @@ def run(
     splash.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, False)
     splash.show()
     app.processEvents()
-    close_launcher_splash()  # this one is on screen now, in the same place
+    close_launcher_splash()
     done: dict[str, int] = {}
     worker = threading.Thread(
         target=lambda: done.update(code=updates.run_helper(app_dir, pid, old, new, staging)),

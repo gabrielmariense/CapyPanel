@@ -34,7 +34,6 @@ from capypanel.ui.menus import label
 
 @pytest.fixture
 def office(tmp_path: Path) -> Path:
-    # Made in this order on purpose: not alphabetical.
     hl, zebra = HostList().add_group("Zebra wing")
     hl, alpha = hl.add_group("alpha wing")
     hl, lab = hl.add_group("Lab", parent=alpha.id)
@@ -67,18 +66,18 @@ def test_groups_keep_the_list_s_order_and_all_computers_is_pinned_above(
     window: CapyWindow,
 ) -> None:
     root = window.hosts.nav.groups.invisibleRootItem()
-    assert _names(root) == ["Zebra wing (1)", "alpha wing (1)"]  # not sorted A–Z
+    assert _names(root) == ["Zebra wing (1)", "alpha wing (1)"]
     everything = window.hosts.nav.everything.topLevelItem(0)
     assert everything is not None and everything.text(0) == "All hosts (2)"
     assert window.hosts.nav.current_filter().kind == "all"
     window.hosts.nav.select_group(_id(window, "Lab"))
-    assert not everything.isSelected()  # one pick at a time across both lists
+    assert not everything.isSelected()
 
 
 def test_dragging_a_group_saves_the_new_place(window: CapyWindow) -> None:
     tree = window.hosts.nav.groups
     root = tree.invisibleRootItem()
-    alpha = root.takeChild(1)  # what a drag above "Zebra wing" leaves behind
+    alpha = root.takeChild(1)
     assert alpha is not None
     root.insertChild(0, alpha)
     tree.rearranged.emit()
@@ -102,7 +101,7 @@ def test_sort_groups_a_to_z_asks_once_then_sorts_every_level(
     hosts = window.hosts
     assert hosts.sort_groups_action.text() == "&Sort groups A–Z"
     assert hosts.sort_groups_action in hosts.toolbar.inventory_menu.actions()
-    hosts.sort_groups_action.trigger()  # Cancel: nothing moves
+    hosts.sort_groups_action.trigger()
     doc = hosts.document
     assert doc is not None and asked == ["Sort groups A–Z"]
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing"]
@@ -112,7 +111,7 @@ def test_sort_groups_a_to_z_asks_once_then_sorts_every_level(
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
     assert listfile.load(doc.path).hosts == doc.hosts
-    hosts.sort_groups_action.trigger()  # already A–Z: no question
+    hosts.sort_groups_action.trigger()
     assert len(asked) == 2
 
 
@@ -123,9 +122,9 @@ def test_the_arrow_keys_go_on_from_the_row_edited_after_the_table_refills(
     rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
     last = rows[-1]
     assert last is not None and len(rows) == 2
-    table.setCurrentItem(last)  # as a click on it, before Edit
+    table.setCurrentItem(last)
     picked = last.data(0, ROLE_ID)
-    window.hosts.refresh()  # what saving an edit does
+    window.hosts.refresh()
     current = table.currentItem()
     assert current is not None and current.data(0, ROLE_ID) == picked
     assert table.selected_ids() == [picked]
@@ -158,13 +157,13 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
     tops = dialog.tree.invisibleRootItem()
-    assert _names(tops) == ["Groups"]  # everything hangs from it; drop a group on it to un-nest
+    assert _names(tops) == ["Groups"]
     root = dialog.tree.top()
     assert _names(root) == ["Zebra wing", "alpha wing"]
     dialog.sort_button.click()
-    assert _names(root) == ["alpha wing", "Zebra wing"]  # A–Z ignores upper and lower case
+    assert _names(root) == ["alpha wing", "Zebra wing"]
     alpha = root.child(0)
-    assert alpha is not None and alpha.isExpanded()  # its subgroups stay in view
+    assert alpha is not None and alpha.isExpanded()
     zebra = root.child(1)
     assert zebra is not None
     dialog.tree.setCurrentItem(zebra)
@@ -176,7 +175,7 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
         alpha = d.tree.top().child(1)
         assert alpha is not None
         d.tree.setCurrentItem(alpha)
-        d.up_button.click()  # alpha wing first
+        d.up_button.click()
         return QDialog.DialogCode.Accepted
 
     monkeypatch.setattr(ManageGroupsDialog, "exec", use)
@@ -185,7 +184,7 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
     lab = doc.hosts.group(_id(window, "Lab"))
-    assert lab is not None and lab.parent == _id(window, "alpha wing")  # nesting kept
+    assert lab is not None and lab.parent == _id(window, "alpha wing")
     item = window.hosts.nav.groups.invisibleRootItem().child(0)
     assert item is not None and item.data(0, ROLE_ID) == _id(window, "alpha wing")
     assert item.child(0) is not None and item.isExpanded()
@@ -198,13 +197,13 @@ def test_removing_a_group_can_keep_what_is_inside(
 
     def keep(_group_id: str, groups: int, hosts: int) -> tuple[str, str | None]:
         asked.append((groups, hosts))
-        return ("move", None)  # the top level: its parent
+        return ("move", None)
 
     monkeypatch.setattr(window.hosts, "_ask_how_to_remove", keep)
     window.hosts.remove_group(_id(window, "alpha wing"))
     doc = window.hosts.document
     assert doc is not None
-    assert asked == [(1, 1)]  # Lab, and L-01 inside it
+    assert asked == [(1, 1)]
     assert {g.name: g.parent for g in doc.hosts.groups} == {"Zebra wing": None, "Lab": None}
     assert {h.name for h in doc.hosts.hosts} == {"Z-01", "L-01"}
 
@@ -225,7 +224,7 @@ def _texts(menu: QMenu) -> list[str]:
 
 
 def _choose(menu: QMenu, text: str) -> None:
-    next(a for a in menu.actions() if a.text().strip() == text).trigger()  # past the indent
+    next(a for a in menu.actions() if a.text().strip() == text).trigger()
 
 
 def test_move_to_offers_groups_itself_first_and_never_the_group_itself(
@@ -236,12 +235,11 @@ def test_move_to_offers_groups_itself_first_and_never_the_group_itself(
     chosen: list[str | None] = []
     menu = TreeMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
-    # "Groups": directly under the pane's heading, in no other group.
-    assert _texts(menu) == ["Groups", TREE_INDENT + "Zebra wing"]  # not alpha wing, nor its Lab
-    assert menu.actions()[0].isChecked()  # where it is now
-    assert menu.marked is menu.actions()[0]  # tinted too, easy to spot in a long menu
+    assert _texts(menu) == ["Groups", TREE_INDENT + "Zebra wing"]
+    assert menu.actions()[0].isChecked()
+    assert menu.marked is menu.actions()[0]
     _choose(menu, "Groups")
-    assert chosen == []  # already there
+    assert chosen == []
     _choose(menu, "Zebra wing")
     assert chosen == [_id(window, "Zebra wing")]
     menu = TreeMenu()
@@ -258,8 +256,6 @@ def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
     menu = TreeMenu()
     fill_move_menu(menu, hl, annex.id, lambda _p: None)
     rows = {a.text().strip(): menu.branches(a) for a in menu.actions() if a.text()}
-    # Everything hangs from "Groups". Finance's line carries on past Payroll down to Reports,
-    # the last one under Headquarters.
     assert rows == {
         "Groups": (),
         "Headquarters": (True,),
@@ -268,7 +264,7 @@ def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
         "Reports": (True, True),
     }
     menu.adjustSize()
-    assert not menu.grab().isNull()  # draws its lines in any theme without failing
+    assert not menu.grab().isNull()
 
 
 def test_right_click_move_to_puts_the_group_inside_another(
@@ -293,7 +289,7 @@ def test_right_click_move_to_puts_the_group_inside_another(
     assert doc.hosts.group(_id(window, "Lab")).parent == _id(window, "Zebra wing")  # type: ignore[union-attr]
     assert listfile.load(doc.path).hosts == doc.hosts
     picked = window.hosts.nav.selected_group_id()
-    assert picked == _id(window, "Lab")  # still picked, in its new place
+    assert picked == _id(window, "Lab")
     window.close()
 
 
@@ -349,7 +345,7 @@ def test_manage_groups_move_to_changes_only_its_working_copy(window: CapyWindow)
     assert _names(root) == ["Zebra wing", "alpha wing", "Lab"]
     assert dict(dialog.order())[_id(window, "Lab")] is None
     saved = doc.hosts.group(_id(window, "Lab"))
-    assert saved is not None and saved.parent is not None  # nothing saved before OK
+    assert saved is not None and saved.parent is not None
 
 
 def test_the_tree_s_drag_data_drops_on_the_heading(window: CapyWindow) -> None:
@@ -357,10 +353,10 @@ def test_the_tree_s_drag_data_drops_on_the_heading(window: CapyWindow) -> None:
     alpha = tree.invisibleRootItem().child(1)
     lab = alpha.child(0) if alpha is not None else None
     assert lab is not None
-    data = tree.mimeData([lab])  # what dragging "Lab" carries
+    data = tree.mimeData([lab])
     drop = QDropEvent(
         QPointF(5, 5),
-        Qt.DropAction.MoveAction | Qt.DropAction.CopyAction,  # what the tree offers
+        Qt.DropAction.MoveAction | Qt.DropAction.CopyAction,
         data,
         Qt.MouseButton.LeftButton,
         Qt.KeyboardModifier.NoModifier,
@@ -369,7 +365,7 @@ def test_the_tree_s_drag_data_drops_on_the_heading(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     assert doc.hosts.group(_id(window, "Lab")).parent is None  # type: ignore[union-attr]
-    assert drop.dropAction() == Qt.DropAction.CopyAction  # the tree doesn't drop its own row
+    assert drop.dropAction() == Qt.DropAction.CopyAction
 
 
 def test_the_plus_by_the_heading_adds_at_the_top_level(
@@ -390,19 +386,18 @@ def test_a_group_closed_by_hand_stays_closed_after_a_change(window: CapyWindow) 
     doc = window.hosts.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
-    window.hosts.move_items([z01], _id(window, "Lab"))  # any change rebuilds the tree
+    window.hosts.move_items([z01], _id(window, "Lab"))
     alpha = window.hosts.nav.groups.invisibleRootItem().child(1)
     assert alpha is not None and alpha.childCount() and not alpha.isExpanded()
 
 
 def test_hosts_with_no_group_show_under_no_group(window: CapyWindow) -> None:
     nav = window.hosts.nav
-    # Always there, so the first host can be dragged onto it too.
     assert not nav._no_group_item.isHidden() and nav._no_group_item.text(0) == "No group (0)"
     doc = window.hosts.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
-    window.hosts.nav.everything.hosts_dropped.emit([z01], NO_GROUP)  # dragged onto "No group"
+    window.hosts.nav.everything.hosts_dropped.emit([z01], NO_GROUP)
     doc = window.hosts.document
     assert doc is not None and doc.hosts.host(z01).group == NO_GROUP  # type: ignore[union-attr]
     assert nav._no_group_item.text(0) == "No group (1)"
@@ -448,9 +443,8 @@ def test_removing_a_group_offers_where_its_contents_go(
         menu = move.menu()  # type: ignore[attr-defined]
         assert isinstance(menu, QMenu)
         texts = [a.text().strip() for a in menu.actions() if a.text()]
-        # The hosts' own Move to, without alpha wing itself and its Lab.
         assert texts == ["No group", "Zebra wing"]
-        assert menu.actions()[0].isChecked()  # its parent: the top level
+        assert menu.actions()[0].isChecked()
         _choose(menu, "Zebra wing")
         return 0
 
@@ -477,8 +471,8 @@ def test_hosts_dragged_over_a_group_light_it_without_leaving_where_they_are(
         QDragMoveEvent(point.toPoint(), actions, data, Qt.MouseButton.LeftButton,
                        Qt.KeyboardModifier.NoModifier)
     )  # fmt: skip
-    assert zebra.isSelected()  # shows where they'd go
-    assert window.hosts.nav.current_filter().kind == "all"  # but the table still shows all hosts
+    assert zebra.isSelected()
+    assert window.hosts.nav.current_filter().kind == "all"
     tree.dragLeaveEvent(QDragLeaveEvent())
     assert not zebra.isSelected() and window.hosts.nav.current_filter().kind == "all"
     window.close()
@@ -507,10 +501,10 @@ def test_a_group_dropped_below_the_last_row_goes_under_groups(window: CapyWindow
     QApplication.processEvents()
     tree = dialog.tree
     lab = next(i for i in _walk_items(tree) if i.data(0, ROLE_ID) == _id(window, "Lab"))
-    below = QPointF(20, tree.viewport().height() - 5)  # empty space under the rows
+    below = QPointF(20, tree.viewport().height() - 5)
     drop = QDropEvent(below, Qt.DropAction.MoveAction, tree.mimeData([lab]),
                       Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)  # fmt: skip
-    # Qt moves the group as if it were dropped onto "Groups" (a real drag needs a real mouse).
+    # A real drag needs a real mouse: Qt's own drop onto "Groups" instead.
     onto = tree.onto_root(drop)
     assert tree.itemAt(onto.position().toPoint()) is tree.top()
     assert onto.mimeData() is drop.mimeData()
@@ -521,15 +515,14 @@ def test_manage_groups_draws_tree_lines(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
-    assert dialog.tree.tree_lines and not window.hosts.nav.groups.tree_lines  # only in this window
+    assert dialog.tree.tree_lines and not window.hosts.nav.groups.tree_lines
     dialog.show()
     QApplication.processEvents()
-    assert not dialog.tree.viewport().grab().isNull()  # draws in any theme without failing
+    assert not dialog.tree.viewport().grab().isNull()
     dialog.close()
 
 
 def _reopened(window: CapyWindow, tmp_path: Path) -> CapyWindow:
-    """The app started again, with the settings the first window saved as it closed."""
     window.close()
     again = CapyWindow(settings.resolve_paths(tmp_path), window.prefs)
     return again
@@ -541,12 +534,12 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
     lab = _id(window, "Lab")
     window.hosts.nav.select_group(lab)
     again = _reopened(window, tmp_path)
-    assert again.hosts.nav.current_filter().kind == "all"  # the default: All hosts
+    assert again.hosts.nav.current_filter().kind == "all"
     path = again.hosts.document.path  # type: ignore[union-attr]
     locations.set_list_view(again.hosts.prefs, path, locations.ListView(show=locations.SHOW_LAST))
     again.hosts.nav.select_group(lab)
     third = _reopened(again, tmp_path)
-    assert third.hosts.nav.selected_group_id() == lab  # where it was left
+    assert third.hosts.nav.selected_group_id() == lab
     assert [third.hosts.table.topLevelItem(0).text(0)] == ["L-01"]  # type: ignore[union-attr]
 
     class Ticking(QMenu):
@@ -559,7 +552,7 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
     QApplication.processEvents()
     item = next(i for i in _walk_items(third.hosts.nav.groups) if i.data(0, ROLE_ID) == zebra)
     third.hosts._group_menu(third.hosts.nav.groups.visualItemRect(item).center())
-    third.hosts.nav.select_group(lab)  # left on Lab, but Zebra wing is the chosen one
+    third.hosts.nav.select_group(lab)
     fourth = _reopened(third, tmp_path)
     assert fourth.hosts.nav.selected_group_id() == zebra
     fourth.close()
@@ -571,12 +564,11 @@ def test_settings_chooses_what_the_open_list_shows_first(window: CapyWindow) -> 
     assert page.show_first.text() == "All hosts"
     menu = page.show_first.menu()
     assert menu is not None
-    menu.aboutToShow.emit()  # filled as it opens
+    menu.aboutToShow.emit()
     texts = [label(a) for a in menu.actions() if a.text()]
     assert texts == ["All hosts", "Where I left off", "A chosen &group"]
     chosen = menu.actions()[2].menu()
     assert isinstance(chosen, QMenu)
-    # The groups as a tree, "No group" first, as in Move to.
     assert [a.text().strip() for a in chosen.actions() if a.text()] == [
         "No group", "Zebra wing", "alpha wing", "Lab"
     ]  # fmt: skip

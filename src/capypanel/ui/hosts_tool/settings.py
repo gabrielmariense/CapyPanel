@@ -1,5 +1,3 @@
-"""The Hosts tool's part of Settings: General (its lists, startup, Refresh) and Connecting."""
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -21,13 +19,11 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class SettingsPrefs:
-    """The Hosts choices Settings hands over on every change."""
-
-    start_list: str  # see locations.START_KEY
-    added_lists: list[Path]  # the lists in the lists table, besides the default and personal
-    hidden_lists: list[Path]  # lists in a lists folder removed from the lists table
-    auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
-    start_view: tuple[str, str] | None = None  # the open list's (show, group) first
+    start_list: str
+    added_lists: list[Path]
+    hidden_lists: list[Path]
+    auto_status: tuple[bool, int] = (False, 5)  # every N minutes
+    start_view: tuple[str, str] | None = None
 
 
 class HostsSettings(SettingsGroup):
@@ -36,16 +32,14 @@ class HostsSettings(SettingsGroup):
 
     general: HostsPage
     connections: ConnectionsPage
-    accounts_page: Page  # only this person's: which account signs in where, and passwords
+    accounts_page: Page
     accounts: AccountsSection
 
     def __init__(self, tool: "HostsTool") -> None:
         self._tool = tool
-        self._building = False  # pages report changes while they're filled
-        self._chosen: Path | None = None  # the list picked in the lists table, across a rebuild
-        self._kept: QLabel | None = None  # the open Settings' line saying which logins are kept
-        # Once, for as long as the tool lives. Hooked up in build(), each opening of Settings
-        # added one more listener, all still called after its pages were deleted.
+        self._building = False
+        self._chosen: Path | None = None
+        self._kept: QLabel | None = None
         tool.accounts.changed.connect(self.credentials_changed)
 
     def build(self) -> list[tuple[str, Page]]:
@@ -82,7 +76,7 @@ class HostsSettings(SettingsGroup):
         )
         self.credentials_changed()
         self.general.view.open_requested.connect(self._open)
-        self.connections.changed.connect(tool.profiles_changed)  # Connect's menu follows
+        self.connections.changed.connect(tool.profiles_changed)
         self._building = False
         return [
             ("hosts", self.general),
@@ -111,18 +105,14 @@ class HostsSettings(SettingsGroup):
             self._tool.apply_prefs(self.choices())
 
     def credentials_changed(self) -> None:
-        """An account or a saved login changed: an open Settings says what's kept now. Called
-        with Settings closed too (Details changes accounts), when there's no page to update."""
         if self._kept is not None and shiboken6.isValid(self._kept):
             self._kept.setText(kept_text(self._tool.every_kept_login()))
 
     def _open(self, path: Path) -> None:
-        """A list opened from the lists table: Settings then shows it as the open one."""
         self._tool.open_list(path)
         self.list_opened()
 
     def list_opened(self) -> None:
-        """The lists table marks the open list; Show first is now about it."""
         doc = self._tool.document
         self.general.view.list_opened(doc)
         self.general.list_opened(self._tool.start_view(), doc.hosts if doc else None)

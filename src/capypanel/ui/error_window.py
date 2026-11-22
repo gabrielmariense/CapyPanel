@@ -1,5 +1,3 @@
-"""The one window for errors nobody planned for: later ones join it, a repeat is only counted."""
-
 import logging
 import traceback
 from types import TracebackType
@@ -23,7 +21,7 @@ from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 
-SIZE = QSize(860, 520)  # a traceback's lines are long: wide enough to read most without scrolling
+SIZE = QSize(860, 520)
 
 
 class ErrorWindow(QDialog):
@@ -32,7 +30,7 @@ class ErrorWindow(QDialog):
         self.setWindowTitle(_("Unexpected error"))
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setSizeGripEnabled(True)
-        self._errors: dict[str, int] = {}  # each error's text, and how many times it happened
+        self._errors: dict[str, int] = {}
         self.message = QLabel()
         self.message.setWordWrap(True)
         self.details = QPlainTextEdit()
@@ -59,7 +57,6 @@ class ErrorWindow(QDialog):
         self.resize(SIZE)
 
     def add(self, error: str) -> None:
-        """One more error, as its whole text. One already shown is counted, not repeated."""
         error = error.strip()
         self._errors[error] = self._errors.get(error, 0) + 1
         times = sum(self._errors.values())
@@ -72,7 +69,6 @@ class ErrorWindow(QDialog):
         self.details.setPlainText(self.text())
 
     def text(self) -> str:
-        """Every error once, the first one on top; one that repeated says how many times."""
         parts = []
         for error, times in self._errors.items():
             if times > 1:
@@ -88,14 +84,11 @@ _window: ErrorWindow | None = None
 
 
 def report(exc_type: type[BaseException], exc: BaseException, tb: TracebackType | None) -> None:
-    """Python's hook for an error nothing caught. The log first: it's what a bug report needs."""
     log.critical("Unexpected error", exc_info=(exc_type, exc, tb))
     show("".join(traceback.format_exception(exc_type, exc, tb)))
 
 
 def show(error: str) -> ErrorWindow:
-    """Shows `error` in the error window, opening it if it isn't open. It never waits for the
-    window to close: the errors that follow at once reach the same window."""
     global _window
     if _window is None or not shiboken6.isValid(_window):
         window = ErrorWindow()

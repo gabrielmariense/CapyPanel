@@ -1,5 +1,3 @@
-"""Themes: the native Windows look, the CapyPanel look and the shipped *.json looks over them."""
-
 import ctypes
 import gc
 import json
@@ -48,15 +46,9 @@ TOKENS = {
         "ink_yellow": "#f2c94c", "ink_yellow_edge": "#8d7100", "ink_other": "#68768c",
     },
 }  # fmt: skip
-# What each status colour says: a PC or printer that answers; one that doesn't, or was never
-# checked; this deletes, is risky or needs attention; a problem; in use or at work.
 STATUS_KEYS = ("online", "offline", "attention", "stopped", "working")
-# A supply bar's fill by the colour its name says; drums and boxes are "other". Yellow gets an
-# edge where it would vanish into a light pane (in dark themes the edge is the fill's colour).
 INK_KEYS = ("ink_black", "ink_cyan", "ink_magenta", "ink_yellow", "ink_yellow_edge", "ink_other")
 TEXT_CONTRAST, MARK_CONTRAST = 4.5, 3.0  # WCAG AA: for text; for dots, icons and bars
-# Native themes keep Windows' own widgets; this light layer only adds visible structure
-# (window background, pane borders, header/footer bars), following the resolved dark/light.
 NATIVE_TOKENS = {
     "light": {"bg": "#e3e3e3", "card": "#ffffff", "chrome": "#d0d0d0", "border": "#aeaeae",
               "text": "#000000", "text2": "#404040"},
@@ -68,14 +60,14 @@ NATIVE_TOKENS = {
 @dataclass(frozen=True)
 class Theme:
     id: str
-    engine: str  # "native" or "custom"
-    scheme: str  # "system", "dark" or "light"
-    label: str = ""  # translatable name of a built-in theme
-    name: str = ""  # literal name from a theme file
+    engine: str
+    scheme: str
+    label: str = ""
+    name: str = ""
     colors: dict[str, str] = field(default_factory=dict)
     font: tuple[tuple[str, ...], float] = DEFAULT_FONT
-    radius: int = 6  # containers: panels, cards, menus, strips
-    control_radius: int | None = None  # what you click or type in; None: radius - 2
+    radius: int = 6
+    control_radius: int | None = None  # buttons and fields; None: radius - 2
 
     @property
     def control(self) -> int:
@@ -98,7 +90,6 @@ DEFAULT_THEME = BUILTIN[0]
 
 
 def load_theme_file(path: Path) -> Theme:
-    """Parse and check one shipped theme file; raises ValueError with the reason."""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
@@ -119,7 +110,7 @@ def load_theme_file(path: Path) -> Theme:
             raise ValueError(f'"{key}": "{value}" is not a colour')
         colors[key] = value
     for key in STATUS_KEYS:
-        if key not in own:  # the base's, made readable on this file's pane and selection
+        if key not in own:
             colors[key] = fit_status(
                 key, colors[key], colors["card"], colors["sel_solid"], colors["text"]
             )
@@ -142,14 +133,12 @@ def load_theme_file(path: Path) -> Theme:
 
 
 class Registry:
-    """Every theme the app ships: the built-in ones plus the files in this folder."""
-
     def __init__(self, folder: Path = THEMES_DIR) -> None:
         self.shipped: list[Theme] = []
         for path in sorted(folder.glob("*.json")):
             try:
                 self.shipped.append(load_theme_file(path))
-            except ValueError as e:  # a broken shipped file is our bug: log it, skip it
+            except ValueError as e:
                 log.error("Theme %s not loaded: %s", path.name, e)
 
     def all(self) -> list[Theme]:
@@ -159,15 +148,13 @@ class Registry:
         return next((t for t in self.all() if t.id == theme_id), DEFAULT_THEME)
 
 
-# ---- applying ----
-
 _current: Theme = DEFAULT_THEME
 _applied_once = False
 _generation = 0  # counts theme switches: a window open across one is never deleted
 _watching_system = False
 _native_font: QFont | None = None
 _watcher: "_Watcher | None" = None
-_status: dict[str, str] | None = None  # the current theme's status colours, once worked out
+_status: dict[str, str] | None = None
 
 
 class _Switches(QObject):
@@ -178,8 +165,6 @@ _switches: _Switches | None = None
 
 
 def switches() -> _Switches:
-    """Its `switched` fires after every theme switch, by Windows under "follow system" too. Connect
-    what's drawn once in the theme's colours (status dots, coloured icons), to draw it again."""
     global _switches
     if _switches is None:
         _switches = _Switches()
@@ -191,7 +176,6 @@ def current() -> Theme:
 
 
 def background() -> str:
-    """The colour the stylesheet paints behind the panes."""
     if _current.engine == "native":
         return NATIVE_TOKENS[native_scheme()]["bg"]
     return _current.colors["bg"]
@@ -214,20 +198,16 @@ def apply(theme: Theme) -> None:
         "dark": Qt.ColorScheme.Dark,
         "light": Qt.ColorScheme.Light,
     }[theme.scheme]
-    # Compare with the engine applied last, not app.style(): with a stylesheet set, app.style()
-    # is Qt's stylesheet wrapper, whose name is empty, so it never reads as "fusion".
+    # Not app.style(): under a stylesheet it's Qt's wrapper, whose name is empty.
     engine_changed = theme.engine != _current.engine or not _applied_once
     _current, _applied_once = theme, True
-    # Qt copies Windows' "slide open" for dropdowns, and a long list rolled open in visible
-    # steps (it flashed): lists open at once instead.
+    # Qt copies Windows' slide-open for dropdowns: a long list flashed open in steps.
     QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
     _follow_system_changes()
     watcher = _watch_widgets(app)
-    # Nothing the watcher fixes happens during a switch, and its Python call on each of the
-    # thousands of events a switch sends only made the switch slower.
+    # A Python call on each of a switch's thousands of events only slowed it.
     app.removeEventFilter(watcher)
-    # Qt restyles from lists of widgets it takes first: one Python's collector frees meanwhile
-    # stays on them, and Qt reading it crashes the app.
+    # An object the collector frees while Qt restyles stays on Qt's list: reading it crashes.
     collecting = gc.isenabled()
     gc.disable()
     try:
@@ -245,8 +225,8 @@ def apply(theme: Theme) -> None:
 def _switch(
     app: QApplication, theme: Theme, scheme: Qt.ColorScheme, *, engine_changed: bool
 ) -> None:
-    """Every stylesheet, style or palette change makes Qt restyle every widget, the slow part
-    of a switch, so each switch asks for as few as it can."""
+    """Each stylesheet, style or palette change restyles every widget: a switch makes as few
+    as it can."""
     global _status
     assert _native_font is not None
     if theme.engine == "native":
@@ -257,8 +237,6 @@ def _switch(
         app.setFont(readable)
         QGuiApplication.styleHints().setColorScheme(scheme)
         app.setPalette(QPalette())  # an empty palette makes Qt resolve the system one again
-        # A fresh style instance re-polishes every widget; switching the scheme alone left some
-        # views with the previous theme's colours.
         app.setStyle("windows11")
         tokens = native_tokens(app.palette().color(QPalette.ColorRole.Accent))
         _status = _native_status(tokens)
@@ -272,12 +250,10 @@ def _switch(
     font = QFont()
     font.setFamilies(installed(theme.font[0]))
     font.setPointSizeF(theme.font[1])
-    # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
     font.setFeature(QFont.Tag("lnum"), 1)
     QGuiApplication.styleHints().setColorScheme(scheme)
     if engine_changed:
-        # Widgets keep the font a stylesheet first found them with: give them the native one under
-        # an empty stylesheet, quick to restyle. The theme's own is set once, below, never here too.
+        # Widgets keep the font a stylesheet first found them with: native, under an empty one.
         app.setFont(_native_font)
         app.setStyleSheet("QWidget { }")
         app.setStyle("Fusion")
@@ -289,14 +265,13 @@ def _switch(
 
 
 def native_tokens(accent: QColor) -> dict[str, str]:
-    """The structure layer's colours for the resolved dark/light, plus selection and hover."""
     tokens = dict(NATIVE_TOKENS[native_scheme()])
     tokens["sel"] = selection_tint(accent, tokens["card"], tokens["text"])
     tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
     tokens["accent"] = accent.name()
     tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
     tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
-    tokens["accent_fill"] = button_fill(accent)  # behind a white tick: any accent reads
+    tokens["accent_fill"] = button_fill(accent)
     tokens.update(_card_tokens(tokens))
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     tokens["check"] = (THEMES_DIR / "check.svg").as_posix()
@@ -304,18 +279,14 @@ def native_tokens(accent: QColor) -> dict[str, str]:
 
 
 def selection_tint(accent: QColor, card: str, text: str) -> str:
-    """The lightest tint of the user's accent colour that stands out from the pane (1.35:1)
-    while keeping text readable on it (4.5:1). Any accent works, from yellow to purple."""
     for step in range(10, 70, 2):
         tint = _mix(accent, QColor(card), step / 100)
         if contrast_ratio(tint, card) >= 1.35 and contrast_ratio(text, tint) >= 4.5:
             return tint
-    return _mix(QColor(text), QColor(card), 0.18)  # an accent too close to text: plain grey
+    return _mix(QColor(text), QColor(card), 0.18)
 
 
 def readable_on(accent: QColor, card: str, text: str) -> str:
-    """The accent as text on the pane (4.5:1), moved toward the text colour as far as needed, so
-    a dark accent still reads as a heading on a dark pane."""
     for step in range(0, 101, 5):
         tint = _mix(QColor(text), accent, step / 100)
         if contrast_ratio(tint, card) >= 4.5:
@@ -324,7 +295,6 @@ def readable_on(accent: QColor, card: str, text: str) -> str:
 
 
 def button_fill(accent: QColor) -> str:
-    """The default button's colour: the accent, darkened as far as white text needs (4.5:1)."""
     for step in range(0, 101, 5):
         fill = _mix(QColor("#000000"), accent, step / 100)
         if contrast_ratio("#ffffff", fill) >= 4.5:
@@ -333,8 +303,6 @@ def button_fill(accent: QColor) -> str:
 
 
 def mark_tint(accent: QColor, card: str, text: str) -> str:
-    """A tint of the accent that marks one menu row, as plain as Graphite's teal (1.6:1 against the
-    menu), text readable on it (4.5:1). A dark accent on a dark menu is lifted toward the text."""
     for lift in (0.0, 0.2, 0.4, 0.6):
         base = QColor(_mix(QColor(text), accent, lift))
         for step in range(10, 92, 2):
@@ -345,7 +313,6 @@ def mark_tint(accent: QColor, card: str, text: str) -> str:
 
 
 def menu_mark() -> QColor:
-    """The current theme's colour for a row marked in a menu ("Move to"'s current place)."""
     if _current.engine == "native":
         tokens = NATIVE_TOKENS[native_scheme()]
         accent = QApplication.palette().color(QPalette.ColorRole.Accent)
@@ -355,8 +322,6 @@ def menu_mark() -> QColor:
 
 
 def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
-    """Settings' cards between the window and a pane, a faint edge, the line beside the page list,
-    and a table's row line, softer than its frame: each from the theme's own colours."""
     bg = QColor(colors["bg"])
     return {
         "section": _mix(QColor(colors["card"]), bg, 0.6),
@@ -366,18 +331,11 @@ def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
     }
 
 
-# ---- status and ink colours ----
-
-
 def status_floors(key: str) -> tuple[float, float]:
-    """The contrast a status colour needs on the pane and a selected row: all are words on the pane
-    and dots on a selected row; amber is also a whole row's text, kept amber when it's picked."""
     return TEXT_CONTRAST, TEXT_CONTRAST if key == "attention" else MARK_CONTRAST
 
 
 def fit_status(key: str, color: str, card: str, selection: str, text: str) -> str:
-    """`color` when it reads on this pane and selection, else moved toward the text colour as far
-    as it needs: for themes without status colours of their own, and any accent's selection."""
     pane, picked = status_floors(key)
     for step in range(0, 101, 5):
         fitted = _mix(QColor(text), QColor(color), step / 100)
@@ -395,10 +353,8 @@ def _native_status(tokens: Mapping[str, str]) -> dict[str, str]:
 
 
 def status_colors() -> Mapping[str, str]:
-    """The current theme's status colours, by STATUS_KEYS; "not-found" (a name with no
-    address) is amber, as "attention". Drawn once with them? Draw again on switches()."""
     global _status
-    if _status is None:  # before the first theme is applied (tests, mostly)
+    if _status is None:
         if _current.engine == "custom":
             _status = {key: _current.colors[key] for key in STATUS_KEYS}
         elif isinstance(QApplication.instance(), QApplication):
@@ -414,29 +370,23 @@ def _with_alias(colors: dict[str, str]) -> dict[str, str]:
 
 
 def status_color(key: object) -> str:
-    """One of the current theme's status colours; `key` may be a host's Status."""
     return status_colors()[str(key)]
 
 
 def ink_colors() -> Mapping[str, str]:
-    """The current theme's supply colours: black, cyan, magenta, yellow, yellow_edge, other."""
     colors = _current.colors if _current.engine == "custom" else TOKENS[native_scheme()]
     return {key.removeprefix("ink_"): colors[key] for key in INK_KEYS}
 
 
 def text_on(fill: str) -> str:
-    """White or near-black, whichever reads better on `fill` (a button filled in amber)."""
     return max(("#ffffff", "#1b1b1b"), key=lambda ink: contrast_ratio(ink, fill))
 
 
 def badge_fill() -> str:
-    """The red behind a white count (the rail's and the tray's), darkened as far as white
-    digits need."""
     return button_fill(QColor(status_colors()["stopped"]))
 
 
 def _mix(color: QColor, base: QColor, amount: float) -> str:
-    """`amount` of `color` laid over `base`."""
     channels = (
         round(base.redF() * 255 + (color.redF() - base.redF()) * 255 * amount),
         round(base.greenF() * 255 + (color.greenF() - base.greenF()) * 255 * amount),
@@ -446,7 +396,6 @@ def _mix(color: QColor, base: QColor, amount: float) -> str:
 
 
 def native_scheme() -> str:
-    """The dark/light the native theme resolves to ("follow system" asks Windows)."""
     if _current.scheme != "system":
         return _current.scheme
     dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
@@ -454,7 +403,6 @@ def native_scheme() -> str:
 
 
 def _follow_system_changes() -> None:
-    # When Windows switches dark/light, "follow system" re-applies itself with the new scheme.
     global _watching_system
     if not _watching_system:
         _watching_system = True
@@ -470,9 +418,6 @@ _ACTION_EVENTS = (QEvent.Type.ActionAdded, QEvent.Type.ActionChanged, QEvent.Typ
 
 
 class _Watcher(QObject):
-    """Fixes every widget needs, wherever made: lists and trees place their rows again when shown
-    (the theme's padding came late); menus with ticks are marked and show dimmed shortcuts."""
-
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         kind = event.type()
         if kind == QEvent.Type.Show and isinstance(watched, (QListView, QTreeView)):
@@ -501,15 +446,13 @@ def _watch_widgets(app: QApplication) -> "_Watcher":
 
 
 def installed(families: Sequence[str]) -> list[str]:
-    """The first of `families` this PC has, alone: Qt then needn't walk a list of fallbacks when it
-    first measures text (up to 2.6 s with many fonts). The whole list when it has none of them."""
+    """Only the first one this PC has: Qt walking a list of fallbacks took up to 2.6 s."""
     have = {family.casefold() for family in QFontDatabase.families()}
     first = next((family for family in families if family.casefold() in have), None)
     return [first] if first is not None else list(families)
 
 
 def _refont(app: QApplication, families: list[str]) -> None:
-    """Widgets given an explicit font (a bold heading) keep their old family; move them over."""
     for widget in app.allWidgets():
         if widget.testAttribute(Qt.WidgetAttribute.WA_SetFont):
             font = QFont(widget.font())
@@ -518,7 +461,7 @@ def _refont(app: QApplication, families: list[str]) -> None:
 
 
 def paint_title_bar(window: QWidget) -> None:
-    """Custom themes colour the title bar like their background (Windows 11; ignored on 10)."""
+    """The title bar in the theme's background: Windows 11 only, 10 ignores it."""
     if QGuiApplication.platformName() != "windows":
         return
     if _current.engine == "custom":
@@ -551,15 +494,13 @@ def _palette(t: dict[str, str]) -> QPalette:
     ):
         palette.setColor(color_role, QColor(t[key]))
     palette.setColor(role.HighlightedText, QColor("#ffffff"))
-    # Links in text, e.g. the About window's: the accent, made readable on cards.
     palette.setColor(role.Link, QColor(readable_on(QColor(t["accent"]), t["card"], t["text"])))
     for color_role in (role.ButtonText, role.WindowText, role.Text):
         palette.setColor(QPalette.ColorGroup.Disabled, color_role, QColor(t["text3"]))
     return palette
 
 
-# Tree rows use padding, never a fixed "height:": a stylesheet height draws rows taller than
-# the view spaces them, and they overlap.
+# Tree rows get padding, never "height:": that draws rows taller than the view spaces them.
 _QSS = """
 QMainWindow, QDialog { background: %(bg)s; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; padding: 4px 8px 2px 8px; }
@@ -1055,8 +996,6 @@ QToolButton#tagChipRemove {
 
 
 def _status_tokens(status: Mapping[str, str]) -> dict[str, str]:
-    """The stylesheet's status colours, and what goes with them: the text on an amber fill
-    and the fill behind a white count."""
     return {
         **{key: status[key] for key in ("online", "offline", "stopped", "attention")},
         "on_attention": text_on(status["attention"]),
@@ -1071,8 +1010,6 @@ def stylesheet(theme: Theme) -> str:
     accent = QColor(colors["accent"])
     t["accent_text"] = readable_on(accent, colors["card"], colors["text"])
     t["accent_drop"] = readable_on(accent, colors["sel_solid"], colors["text"])
-    # The hint grey is picked on the pane; the one small label on the window's own background
-    # (the Commands window's groups) gets it as dark as that background needs.
     t["text3_bg"] = readable_on(QColor(colors["text3"]), colors["bg"], colors["text"])
     t.update(_card_tokens(colors))
     t["button"] = button_fill(accent)
@@ -1085,8 +1022,6 @@ def stylesheet(theme: Theme) -> str:
 
 
 def contrast_ratio(a: str, b: str) -> float:
-    """WCAG contrast between two colours; normal text needs at least 4.5."""
-
     def luminance(value: str) -> float:
         color = QColor(value)
 

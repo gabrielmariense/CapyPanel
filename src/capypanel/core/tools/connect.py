@@ -1,5 +1,3 @@
-"""Starting a remote tool for one target, with its password from memory or Credential Manager."""
-
 import logging
 import subprocess
 from collections.abc import Collection
@@ -27,18 +25,16 @@ class Credential:
     password: str
 
 
-SAVED = "profile/"  # saved passwords: CapyPanel/profile/<profile id> in Credential Manager
+SAVED = "profile/"
 
 
 class SessionCredentials:
-    """Passwords typed while the app runs, one per profile, kept in memory until it closes (and in
-    Credential Manager when chosen): one profile's password never reaches another's hosts."""
+    """One password per profile, in memory only: a profile's never reaches another's hosts."""
 
     def __init__(self) -> None:
         self._by_profile: dict[str, Credential] = {}
 
     def get(self, profile_id: str) -> Credential | None:
-        """Typed this session, or saved on this computer earlier."""
         found = self._by_profile.get(profile_id)
         if found is None:
             found = self._load(profile_id)
@@ -47,14 +43,11 @@ class SessionCredentials:
         return found
 
     def remember(self, profile_id: str, credential: Credential, *, save: bool = False) -> None:
-        """Kept until the app closes; with `save`, in Credential Manager too. Raises OSError or
-        ValueError when it couldn't be saved; it's kept in memory anyway."""
         self._by_profile[profile_id] = credential
         if save:
             credstore.save(SAVED + profile_id, credential.password, user=credential.user)
 
     def forget(self, profile_id: str | None = None) -> None:
-        """Also deletes the saved password. Raises OSError."""
         if profile_id is None:
             self._by_profile.clear()
         else:
@@ -62,7 +55,6 @@ class SessionCredentials:
         self._delete_saved(profile_id)
 
     def kept(self) -> list[tuple[str, Credential, bool]]:
-        """Every password kept: (profile id, credential, saved in Credential Manager), by id."""
         saved = {name.removeprefix(SAVED) for name in self._saved_names()}
         found = []
         for profile_id in sorted(set(self._by_profile) | saved):
@@ -112,8 +104,6 @@ def launch(
     options: Collection[str] = (),
     settings: Path | None = None,
 ) -> subprocess.Popen[bytes]:
-    """Starts the tool and returns at once; the tool runs on its own. `settings` is the profile's
-    viewer settings file. Raises OSError, SettingsFileError."""
     port = target.port if target.port is not None else tool.port
     values = {
         "address": target.address,
@@ -135,7 +125,7 @@ def launch(
     try:
         process = subprocess.Popen(
             argv,
-            cwd=executable.parent,  # some tools look for their DLLs and settings next to them
+            cwd=executable.parent,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

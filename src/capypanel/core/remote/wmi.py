@@ -1,4 +1,4 @@
-"""WMI from Python itself, over DCOM: no program started, so no antivirus judges a command line."""
+"""Over DCOM from Python itself: no program starts, so no antivirus judges a command line."""
 
 import contextlib
 import logging
@@ -22,8 +22,7 @@ _PACKET_PRIVACY = 6  # wbemAuthenticationLevelPktPrivacy: what hardened DCOM ask
 
 
 class Unavailable(Exception):
-    """WMI can't be used from this PC at all (pywin32 missing, Windows' scripting objects not
-    registered): another way may still work. Never about the other PC."""
+    pass
 
 
 def available() -> bool:
@@ -36,8 +35,6 @@ def available() -> bool:
 
 
 def error_of(error: BaseException) -> RemoteError:
-    """A COM failure as the RemoteError the other ways raise. WMI's own code is in the error's
-    details; Windows' errors among them (0x8007xxxx) carry the same codes as the other calls."""
     code = 0
     args = getattr(error, "args", ())
     if len(args) >= 3 and isinstance(args[2], tuple) and len(args[2]) >= 6 and args[2][5]:
@@ -60,9 +57,6 @@ def message_of(error: BaseException) -> str:
 
 
 class Wmi:
-    """One PC's WMI, root\\cimv2 for its classes and root\\default for its registry, signed in
-    with `account` (None: this Windows account)."""
-
     def __init__(self, host: str, account: Account | None) -> None:
         import pywintypes
         import win32com.client
@@ -110,7 +104,6 @@ class Wmi:
         return found[0] if found else None
 
     def call(self, class_name: str, method: str, **arguments: Any) -> Any:
-        """A class's own method (Win32_Process.Create…): its answer, with ReturnValue."""
         import pywintypes
 
         try:
@@ -123,7 +116,6 @@ class Wmi:
             raise error_of(e) from e
 
     def reg(self, method: str, hive: int, key: str, name: str | None = None) -> Any:
-        """One StdRegProv call; its answer has ReturnValue and the method's own values."""
         import pywintypes
 
         try:
@@ -142,7 +134,6 @@ class Wmi:
         return [str(n) for n in (self.reg("EnumKey", hive, key).sNames or ()) if n]
 
     def value_names(self, hive: int, key: str) -> tuple[int, list[str], list[int]]:
-        """(Windows' answer, 0 when the key exists; its value names; their types)."""
         found = self.reg("EnumValues", hive, key)
         names = [str(n) for n in (found.sNames or ())]
         types = [int(t) for t in (found.Types or ())]
@@ -157,8 +148,6 @@ class Wmi:
         return None if value is None else str(value)
 
     def dword(self, hive: int, key: str, name: str) -> int | None:
-        """A DWORD as the unsigned number it is: COM hands one of 2**31 or more over as negative,
-        as a FILETIME's low half is about half the time."""
         value = self.reg("GetDWORDValue", hive, key, name).uValue
         return None if value is None else int(value) & 0xFFFF_FFFF
 
@@ -170,8 +159,7 @@ def read(
     values: Mapping[str, str],
     timeout: float,
 ) -> Any:
-    """`reader` connected to `host`, on its own thread with COM set up: plain data only comes back.
-    Raises what it raises, RemoteError, Unavailable, or TimeoutError after `timeout` seconds."""
+    """On its own thread with COM set up; only plain data comes back."""
     box: dict[str, Any] = {}
 
     def run() -> None:

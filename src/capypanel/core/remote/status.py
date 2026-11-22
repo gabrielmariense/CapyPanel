@@ -1,5 +1,3 @@
-"""Is a PC up? A ping and its ports at once, on every address: many PCs block ping. No account."""
-
 import ctypes
 import logging
 import selectors
@@ -15,34 +13,31 @@ TIMEOUT = 2.0  # seconds for the whole check; Windows retries a refused port for
 PING_TIMEOUT = 1.0
 BASE_PORTS = (445, 22)  # Windows file sharing and SSH, besides each tool's own port
 _REFUSED = (10061, 111)  # WSAECONNREFUSED, ECONNREFUSED: something answered
-_SLICE = 0.1  # how often the ports wait checks whether a ping already answered
+_SLICE = 0.1  # seconds
 
 
 class Status(StrEnum):
     ONLINE = "online"
-    OFFLINE = "offline"  # nothing answered in time
-    NOT_FOUND = "not-found"  # the name or address couldn't be resolved
+    OFFLINE = "offline"
+    NOT_FOUND = "not-found"
 
 
 class PortState(StrEnum):
-    """What one port of a computer said when connected to: the SSH tool's Status."""
-
-    OPEN = "open"  # it took the connection
-    CLOSED = "closed"  # the computer answered, refusing it: nothing listens on that port
-    NO_ANSWER = "no-answer"  # nothing answered in time
-    NOT_FOUND = "not-found"  # the name or address couldn't be resolved
+    OPEN = "open"
+    CLOSED = "closed"
+    NO_ANSWER = "no-answer"
+    NOT_FOUND = "not-found"
 
 
-Answer = tuple[str, int | None]  # the address that answered, and its port (None: a ping)
+Answer = tuple[str, int | None]
 
 
 def probe(host: str, ports: Iterable[int]) -> tuple[Status, Answer | None]:
-    """The status, and what answered: shows a PC reached only over its Wi-Fi, say."""
     try:
         addresses = _resolve(host)
     except OSError:
         return Status.NOT_FOUND, None
-    pinged: list[str] = []  # the address that answered a ping, once one does
+    pinged: list[str] = []
     answered = threading.Event()
 
     def ping(ip: str) -> None:
@@ -72,8 +67,6 @@ def _resolve(host: str) -> list[tuple[int, str]]:
 def _any_port_answers(
     addresses: list[tuple[int, str]], ports: list[int], pinged: threading.Event
 ) -> Answer | None:
-    """What answered first, or None after TIMEOUT. A ping answering ends the wait too (the
-    caller names it)."""
     deadline = time.monotonic() + TIMEOUT
     selector = selectors.DefaultSelector()
     sockets: list[socket.socket] = []
@@ -90,10 +83,9 @@ def _any_port_answers(
         while (left := deadline - time.monotonic()) > 0:
             if pinged.is_set():
                 return None
-            if not selector.get_map():  # every port gave up: only a ping can still answer
+            if not selector.get_map():
                 pinged.wait(min(left, _SLICE))
                 continue
-            # A finished connect, accepted or refused, shows as writable (or as an error).
             for key, _events in selector.select(min(left, _SLICE)):
                 sock = key.fileobj
                 assert isinstance(sock, socket.socket)
@@ -109,8 +101,6 @@ def _any_port_answers(
 
 
 def port_state(host: str, port: int) -> tuple[PortState, str | None]:
-    """Whether `port` takes a connection on any of the computer's addresses, and which answered.
-    No ping. It connects and closes at once, sending nothing to the program on that port."""
     try:
         addresses = _resolve(host)
     except OSError:
@@ -121,12 +111,10 @@ def port_state(host: str, port: int) -> tuple[PortState, str | None]:
 
 
 def _port_answers(addresses: list[tuple[int, str]], port: int) -> tuple[PortState, str | None]:
-    """OPEN as soon as one address takes the connection; CLOSED when none did and one refused
-    it; NO_ANSWER after TIMEOUT otherwise."""
     deadline = time.monotonic() + TIMEOUT
     selector = selectors.DefaultSelector()
     sockets: list[socket.socket] = []
-    refused: str | None = None  # the first address that refused
+    refused: str | None = None
     try:
         for family, ip in addresses:
             sock = socket.socket(family, socket.SOCK_STREAM)
@@ -140,7 +128,6 @@ def _port_answers(addresses: list[tuple[int, str]], port: int) -> tuple[PortStat
                 continue
             selector.register(sock, selectors.EVENT_WRITE, ip)
         while selector.get_map() and (left := deadline - time.monotonic()) > 0:
-            # A finished connect, taken or refused, shows as writable (or as an error).
             for key, _events in selector.select(min(left, _SLICE)):
                 sock = key.fileobj
                 assert isinstance(sock, socket.socket)
@@ -156,8 +143,6 @@ def _port_answers(addresses: list[tuple[int, str]], port: int) -> tuple[PortStat
         for sock in sockets:
             sock.close()
 
-
-# Ping through IcmpSendEcho: no administrator rights needed, unlike raw sockets.
 
 _iphlpapi = ctypes.WinDLL("iphlpapi", use_last_error=True)
 _iphlpapi.IcmpCreateFile.restype = wintypes.HANDLE
@@ -177,7 +162,7 @@ def _ping(ip: str) -> bool:
     try:
         payload = b"CapyPanel"
         reply = ctypes.create_string_buffer(256)  # an ICMP_ECHO_REPLY plus the echoed data
-        target = int.from_bytes(socket.inet_aton(ip), "little")  # network order in memory
+        target = int.from_bytes(socket.inet_aton(ip), "little")
         count = _iphlpapi.IcmpSendEcho(
             handle, target, payload, len(payload), None, reply, len(reply),
             int(PING_TIMEOUT * 1000),

@@ -1,5 +1,3 @@
-"""The groups as a tree, in the order a team arranged them, moved by dragging or "Move to"."""
-
 from collections.abc import Callable, Iterable, Sequence
 
 from PySide6.QtCore import (
@@ -53,8 +51,8 @@ from capypanel.ui.themes import engine as themes
 ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
 GROUP_INDENT = 14  # px per nesting level; Windows 11's ~30 px ran deep trees off the pane
-HOSTS_MIME = "application/x-capypanel-hosts"  # host ids dragged from the host table
-GROUPS_MIME = "application/x-capypanel-groups"  # group ids dragged within the groups tree
+HOSTS_MIME = "application/x-capypanel-hosts"
+GROUPS_MIME = "application/x-capypanel-groups"
 TREE_INDENT = "\u2003\u2009"  # per level in a TreeMenu, room for its lines (~16 px)
 
 
@@ -70,17 +68,13 @@ def dropped_hosts(event: QDropEvent) -> list[str]:
 
 
 class HostDropTree(QTreeWidget):
-    """A list hosts can be dropped onto. The row under them shows as picked while they're
-    over it, without being picked: the table keeps showing where they came from."""
-
-    hosts_dropped = Signal(list, str)  # host ids, group id (or NO_GROUP)
+    hosts_dropped = Signal(list, str)
 
     def __init__(self) -> None:
         super().__init__()
         self._picked_before: list[QTreeWidgetItem] | None = None
 
     def drop_group(self, item: QTreeWidgetItem) -> str | None:
-        """The group hosts dropped on this row go to; None when they can't go there."""
         return item.data(0, ROLE_ID)
 
     def _host_target(self, event: QDragMoveEvent | QDropEvent) -> QTreeWidgetItem | None:
@@ -95,7 +89,7 @@ class HostDropTree(QTreeWidget):
             return
         if self._picked_before is None:
             self._picked_before = self.selectedItems()
-        self.blockSignals(True)  # picking it would show its hosts
+        self.blockSignals(True)
         self.setCurrentItem(item)
         self.blockSignals(False)
 
@@ -118,7 +112,7 @@ class HostDropTree(QTreeWidget):
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
         if event.mimeData().hasFormat(HOSTS_MIME):
             item = self._host_target(event)
-            self._mark(item)  # shows where the hosts will go
+            self._mark(item)
             if item is not None:
                 event.acceptProposedAction()
             else:
@@ -133,7 +127,7 @@ class HostDropTree(QTreeWidget):
     def dropEvent(self, event: QDropEvent) -> None:
         if event.mimeData().hasFormat(HOSTS_MIME):
             item = self._host_target(event)
-            self._unmark()  # before the move rebuilds the list
+            self._unmark()
             ids = dropped_hosts(event)
             group_id = self.drop_group(item) if item is not None else None
             if group_id is not None and ids:
@@ -144,9 +138,6 @@ class HostDropTree(QTreeWidget):
 
 
 class GroupTree(HostDropTree):
-    """The groups, in the list's order. Dragging a group reorders or nests it (`rearranged`);
-    hosts dropped from the host table onto a group move there (`hosts_dropped`)."""
-
     rearranged = Signal()
 
     def __init__(self) -> None:
@@ -155,19 +146,18 @@ class GroupTree(HostDropTree):
         self.setIndentation(GROUP_INDENT)
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.set_editable(True)
-        self._root: QTreeWidgetItem | None = None  # "Groups", when every group hangs under it
-        self.tree_lines = False  # lines joining each group to its parent, as in Move to
+        self._root: QTreeWidgetItem | None = None
+        self.tree_lines = False
         self.itemCollapsed.connect(self._keep_root_open)
 
     def drawBranches(
         self, painter: QPainter, rect: QRect, index: QModelIndex | QPersistentModelIndex
     ) -> None:
-        """The style's arrows, plus the Move to menus' tree lines when `tree_lines` is on."""
         super().drawBranches(painter, rect, index)
         item = self.itemFromIndex(index) if isinstance(index, QModelIndex) else None
         if not self.tree_lines or item is None:
             return
-        lasts: list[bool] = []  # from the top level down to this item: last among its siblings?
+        lasts: list[bool] = []
         node: QTreeWidgetItem | None = item
         while node is not None:
             siblings = node.parent() or self.invisibleRootItem()
@@ -175,33 +165,32 @@ class GroupTree(HostDropTree):
             node = node.parent()
         depth = len(lasts) - 1
         step = self.indentation()
-        left = rect.right() + 1 - (depth + 1) * step  # where the level-0 column starts
+        left = rect.right() + 1 - (depth + 1) * step
 
         def middle(level: int) -> int:
             return left + level * step + step // 2
 
-        arrow = max(4, step // 3)  # room left around the style's arrow
+        arrow = max(4, step // 3)
         top, mid, bottom = rect.top(), rect.center().y(), rect.bottom() + 1
         color = QColor(self.palette().color(QPalette.ColorRole.Text))
         color.setAlpha(90)
         painter.save()
         painter.setPen(QPen(color, 1))
-        if item.childCount() and item.isExpanded():  # down from its arrow to its first group
+        if item.childCount() and item.isExpanded():
             painter.drawLine(middle(depth), mid + arrow, middle(depth), bottom)
-        if depth == 0:  # top-level rows hang from nothing
+        if depth == 0:
             painter.restore()
             return
-        for level in range(1, depth):  # ancestors' lines running on past this row
+        for level in range(1, depth):
             if not lasts[level]:
                 painter.drawLine(middle(level - 1), top, middle(level - 1), bottom)
         x = middle(depth - 1)
-        painter.drawLine(x, top, x, mid if lasts[depth] else bottom)  # this row's own branch
+        painter.drawLine(x, top, x, mid if lasts[depth] else bottom)
         end = middle(depth) - arrow if item.childCount() else left + (depth + 1) * step - 3
         painter.drawLine(x, mid, end, mid)
         painter.restore()
 
     def top(self) -> QTreeWidgetItem:
-        """What the top-level groups hang from: the "Groups" row, or the tree itself."""
         return self._root or self.invisibleRootItem()
 
     def _keep_root_open(self, item: QTreeWidgetItem) -> None:
@@ -209,22 +198,17 @@ class GroupTree(HostDropTree):
             item.setExpanded(True)
 
     def set_editable(self, editable: bool) -> None:
-        """Read-only lists can't be rearranged."""
         mode = QAbstractItemView.DragDropMode.InternalMove
         self.setDragDropMode(mode if editable else QAbstractItemView.DragDropMode.NoDragDrop)
         self.setAcceptDrops(editable)
         self.setDropIndicatorShown(editable)
 
     def mimeData(self, items: Sequence[QTreeWidgetItem]) -> QMimeData:
-        # The tree's own data, plus the group ids, so the Groups heading can take the drop.
         data = super().mimeData(items)
         data.setData(GROUPS_MIME, "\n".join(i.data(0, ROLE_ID) for i in items).encode())
         return data
 
     def fill(self, host_list: HostList, counts: bool = True, rooted: bool = False) -> None:
-        """rooted: every group hangs under a "Groups" row, and a group dropped onto it goes in
-        no other group."""
-        # Groups closed by hand stay closed when the tree is rebuilt after a change.
         closed = {
             i.data(0, ROLE_ID)
             for i in _all_items(self.invisibleRootItem())
@@ -235,7 +219,6 @@ class GroupTree(HostDropTree):
         if rooted:
             self._root = QTreeWidgetItem([_("Groups")])
             self._root.setData(0, ROLE_KIND, "root")
-            # Groups can be dropped onto it, never next to it: it stays the only top row.
             self._root.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsDropEnabled)
             self.addTopLevelItem(self._root)
             top = self.invisibleRootItem()
@@ -256,12 +239,11 @@ class GroupTree(HostDropTree):
             item = QTreeWidgetItem([text])
             item.setData(0, ROLE_KIND, "group")
             item.setData(0, ROLE_ID, group.id)
-            item.setToolTip(0, group_path(host_list, group.id))  # full name when cut short
+            item.setToolTip(0, group_path(host_list, group.id))
             parent.addChild(item)
             self._add(host_list, group.id, item, counts)
 
     def order(self) -> list[tuple[str, str | None]]:
-        """Every group with its parent, in the tree's order: what arrange_groups() takes."""
         found: list[tuple[str, str | None]] = []
 
         def walk(item: QTreeWidgetItem, parent: str | None) -> None:
@@ -275,7 +257,6 @@ class GroupTree(HostDropTree):
         return found
 
     def _onto_empty_space(self, event: QDragMoveEvent | QDropEvent) -> bool:
-        """A group dragged below the last row, under a "Groups" root: it goes in no group."""
         return (
             self._root is not None
             and event.mimeData().hasFormat(GROUPS_MIME)
@@ -289,8 +270,7 @@ class GroupTree(HostDropTree):
         super().dragMoveEvent(event)
 
     def onto_root(self, event: QDropEvent) -> QDropEvent:
-        """The same drop, as if onto the "Groups" row, so Qt moves the group itself. Moving
-        it by hand made Qt delete the dragged row once the drag ended."""
+        """As if dropped onto "Groups": moving the group by hand made Qt delete the dragged row."""
         assert self._root is not None
         self.scrollToItem(self._root)  # the row must be in view for the drop to land on it
         point = QPointF(self.visualItemRect(self._root).center())
@@ -307,7 +287,7 @@ class GroupTree(HostDropTree):
             open_ids = set().union(*(_expanded_ids(i) for i in dragged))
             scrolled = self.verticalScrollBar().value()
             moved = self.onto_root(event)
-            super().dropEvent(moved)  # appended last under Groups
+            super().dropEvent(moved)
             event.setDropAction(moved.dropAction())
             event.setAccepted(moved.isAccepted())
             for item in _all_items(self.top()):
@@ -318,15 +298,12 @@ class GroupTree(HostDropTree):
             return
         hosts = event.mimeData().hasFormat(HOSTS_MIME)
         super().dropEvent(event)
-        if not hosts:  # a group dragged within the tree
+        if not hosts:
             self.rearranged.emit()
 
 
 class GroupsHeading(QLabel):
-    """The "Groups" title above the tree. A group dropped on it goes directly under Groups,
-    inside no other group."""
-
-    group_dropped = Signal(str)  # group id
+    group_dropped = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -334,7 +311,7 @@ class GroupsHeading(QLabel):
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasFormat(GROUPS_MIME):
-            event.setDropAction(Qt.DropAction.CopyAction)  # the tree keeps its rows
+            event.setDropAction(Qt.DropAction.CopyAction)
             event.accept()
             self._show_target(True)
 
@@ -350,25 +327,19 @@ class GroupsHeading(QLabel):
             self.group_dropped.emit(group_id)
 
     def _show_target(self, shown: bool) -> None:
-        # Stylesheets read the property: the heading lights up while a group is over it.
         self.setProperty("dropTarget", shown)
         self.style().unpolish(self)
         self.style().polish(self)
 
 
 class TreeMenu(QMenu):
-    """A menu indented like a tree, with the tree's lines drawn into the indent. The items stay
-    plain menu items, so hover, ticks and the keyboard work as in any menu."""
-
     def __init__(self, title: str = "", parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
         self._branches: dict[QAction, tuple[bool, ...]] = {}
         self._text_left: int | None = None
-        self.marked: QAction | None = None  # tinted, so it stands out in a long menu
+        self.marked: QAction | None = None
 
     def add_row(self, text: str, branches: tuple[bool, ...] = ()) -> QAction:
-        """`branches`: one per level below the top, whether the group there is its parent's last
-        (its line stops)."""
         action = self.addAction(TREE_INDENT * len(branches) + text.replace("&", "&&"))
         if branches:
             self._branches[action] = branches
@@ -381,13 +352,11 @@ class TreeMenu(QMenu):
         super().paintEvent(event)
         painter = QPainter(self)
         if self.marked is not None:
-            # The menu paints its own background, so the tint goes on top and the item is
-            # drawn again over it, keeping its text crisp.
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(themes.menu_mark())
             rect = self.actionGeometry(self.marked)
-            corner = themes.current().control  # as the menu's own rows
+            corner = themes.current().control
             painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), corner, corner)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
             option = QStyleOptionMenuItem()
@@ -403,17 +372,17 @@ class TreeMenu(QMenu):
             left, mid = self._find_text_left(action), rect.center().y()
             for level, last in enumerate(branches):
                 x = left + level * step + 4
-                if level < len(branches) - 1:  # a group further up: its line runs on past us
+                if level < len(branches) - 1:
                     if not last:
                         painter.drawLine(x, rect.top(), x, rect.bottom())
-                else:  # this item's own branch
+                else:
                     painter.drawLine(x, rect.top(), x, mid if last else rect.bottom())
                     painter.drawLine(x, mid, x + step - 6, mid)
         painter.end()
 
     def _find_text_left(self, action: QAction) -> int:
-        """Where the style starts an item's text (each theme pads menus its own way): the item
-        is drawn with and without a block of text, and the first column that differs is it."""
+        """Each theme pads menus its own way: it's the first column where the item drawn with
+        and without text differs."""
         if self._text_left is None:
             option = QStyleOptionMenuItem()
             self.initStyleOption(option, action)
@@ -441,8 +410,6 @@ class TreeMenu(QMenu):
 def fill_move_menu(
     menu: TreeMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
 ) -> None:
-    """Move to: "Groups" (the pane's heading: in no group), every group this one can go into
-    as a tree under it, its place now ticked and tinted. `apply` gets the parent's id, or None."""
     group = host_list.group(group_id)
     current = group.parent if group else None
     exclusive = QActionGroup(menu)
@@ -450,7 +417,6 @@ def fill_move_menu(
     _tick(menu, exclusive, top, current is None)
     if current is not None:
         top.triggered.connect(lambda _checked=False: apply(None))
-    # It can't go into itself or its own groups.
     fill_group_menu(
         menu, host_list, apply, current=current, skip=host_list.subtree(group_id), rooted=True
     )
@@ -467,8 +433,6 @@ def fill_host_move_menu(
     current: str | None = None,
     skip: Iterable[str] = (),
 ) -> None:
-    """Where hosts can go: "No group" first, then the groups as a tree. `apply` gets the group's id
-    or NO_GROUP; `current` (a group or NO_GROUP) is ticked, and picking it does nothing."""
     left_out = set(skip)
     loose = menu.add_row(_("No group"))
     loose.setData(NO_GROUP)
@@ -489,14 +453,11 @@ def fill_group_menu(
     skip: Iterable[str] = (),
     rooted: bool = False,
 ) -> None:
-    """Every group as a tree (`skip`'s left out); `current` is ticked and tinted, picking it does
-    nothing. `apply` gets the picked id; `rooted`: top-level groups hang from a "Groups" row."""
     left_out = set(skip)
 
     def walk(parent_id: str | None, branches: tuple[bool, ...]) -> None:
         children = [c for c in host_list.children(parent_id) if c.id not in left_out]
         for index, child in enumerate(children):
-            # Top-level groups have no line (unless rooted); each level below adds one.
             last = index == len(children) - 1
             mine = (*branches, last) if parent_id or rooted else ()
             item = menu.add_row(child.name, mine)
@@ -519,16 +480,14 @@ def _tick(menu: TreeMenu, exclusive: QActionGroup | None, item: QAction, ticked:
 
 
 class ManageGroupsDialog(QDialog):
-    """Inventory > Manage groups…: reorder and nest every group at once, then Save."""
-
     def __init__(self, parent: QWidget | None, host_list: HostList) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Manage groups"))
         self._hosts = host_list
         self.tree = GroupTree()
-        self.tree.fill(host_list, counts=False, rooted=True)  # drop on "Groups": in no group
-        self.tree.tree_lines = True  # where each group sits, at a glance
-        self.tree.setIndentation(GROUP_INDENT + 8)  # room for the lines beside the arrows
+        self.tree.fill(host_list, counts=False, rooted=True)
+        self.tree.tree_lines = True
+        self.tree.setIndentation(GROUP_INDENT + 8)
         self.up_button = QPushButton(_("Move &up"))
         self.down_button = QPushButton(_("Move &down"))
         self.move_button = QPushButton(_("Move &to"))
@@ -536,7 +495,6 @@ class ManageGroupsDialog(QDialog):
         self.sort_button.setToolTip(
             _("Sorts every level by name, once; you can rearrange them after")
         )
-        # As every list screen: the buttons in a row under the list, from the left.
         buttons = QHBoxLayout()
         for button in (self.up_button, self.down_button, self.move_button, self.sort_button):
             button.setAutoDefault(False)
@@ -594,7 +552,6 @@ class ManageGroupsDialog(QDialog):
         self._update()
 
     def move_menu(self) -> TreeMenu:
-        """The "Move to" menu for the picked group, from the groups as arranged here so far."""
         menu = TreeMenu("", self)
         item = self.tree.currentItem()
         if item is not None:
@@ -624,7 +581,6 @@ class ManageGroupsDialog(QDialog):
 
     def _sort(self) -> None:
         root = self.tree.top()
-        # Read before sorting: a group taken out of the tree forgets that it was open.
         expanded: set[str] = set()
         for index in range(root.childCount()):
             child = root.child(index)
@@ -656,7 +612,6 @@ def _all_items(root: QTreeWidgetItem) -> list[QTreeWidgetItem]:
 
 
 def _expanded_ids(item: QTreeWidgetItem) -> set[str]:
-    """Which of the item's groups are open, so moving it keeps them that way."""
     found = {item.data(0, ROLE_ID)} if item.isExpanded() else set()
     for index in range(item.childCount()):
         child = item.child(index)

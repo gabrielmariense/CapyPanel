@@ -1,5 +1,3 @@
-"""Dialogs for hosts and groups: add/edit host (with its tag field), and confirming removals."""
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
@@ -33,7 +31,7 @@ from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel, quiet_default
 from capypanel.ui.list_workspace.texts import ListTexts
 
-MAX_NAME = 255  # longest host name typed
+MAX_NAME = 255
 MAX_TAG = 64
 
 
@@ -44,16 +42,14 @@ class HostValues:
     group: str
     tags: tuple[str, ...]
     notes: str
-    profile: str = ""  # "" = the group's
+    profile: str = ""
 
 
 @dataclass(frozen=True)
 class ProfilePicker:
-    """What the host dialog needs to offer connection profiles."""
-
-    choices: list[tuple[str, str]] = field(default_factory=list)  # (id, name)
-    inherited: Callable[[str], str] = lambda group_id: _("From group")  # text for "follow it"
-    label: Callable[[str], str] = lambda profile_id: profile_id  # name of any id, even unknown
+    choices: list[tuple[str, str]] = field(default_factory=list)
+    inherited: Callable[[str], str] = lambda group_id: _("From group")
+    label: Callable[[str], str] = lambda profile_id: profile_id
 
 
 def list_file_filter() -> str:
@@ -61,7 +57,6 @@ def list_file_filter() -> str:
 
 
 def host_list_texts() -> ListTexts:
-    """The words for host lists: Hosts' own, and SSH's, which shows the same lists."""
     return ListTexts(
         kind=listfile.HOSTS,
         everything=_("All hosts"),
@@ -80,8 +75,6 @@ def host_list_texts() -> ListTexts:
 
 
 def group_path(host_list: HostList, group_id: str) -> str:
-    """ "Headquarters › Finance": where a group sits, readable without indentation. A host
-    with no group reads "No group"."""
     if group_id == NO_GROUP:
         return _("No group")
     names = []
@@ -93,12 +86,10 @@ def group_path(host_list: HostList, group_id: str) -> str:
 
 
 def group_choices(host_list: HostList) -> list[tuple[str, str]]:
-    """(id, path) for every group, depth-first, so each group follows the one it's inside;
-    "No group" first."""
     choices: list[tuple[str, str]] = [(NO_GROUP, _("No group"))]
 
     def visit(parent: str | None) -> None:
-        for group in host_list.children(parent):  # the list's own order
+        for group in host_list.children(parent):
             choices.append((group.id, group_path(host_list, group.id)))
             visit(group.id)
 
@@ -134,11 +125,11 @@ class HostDialog(QDialog):
         self.notes.setTabChangesFocus(True)
         self._profiles = profiles or ProfilePicker()
         self.profile = QComboBox()
-        self.profile.addItem("", "")  # "follow the group": its text follows the chosen group
+        self.profile.addItem("", "")
         for profile_id, text in self._profiles.choices:
             self.profile.addItem(text, profile_id)
         current = host.profile if host else ""
-        if current and self.profile.findData(current) < 0:  # kept, even if this PC lacks it
+        if current and self.profile.findData(current) < 0:
             self.profile.addItem(self._profiles.label(current), current)
         self.profile.setCurrentIndex(self.profile.findData(current))
         self.group.currentIndexChanged.connect(self._update_inherited)
@@ -149,7 +140,7 @@ class HostDialog(QDialog):
         form.addRow(_("&Address:"), self.address)
         form.addRow(_("&Group:"), self.group)
         tags_label = QLabel(_("&Tags:"))
-        tags_label.setBuddy(self.tags.input)  # Alt+T goes to the text box inside the field
+        tags_label.setBuddy(self.tags.input)
         form.addRow(tags_label, self.tags)
         form.addRow(_("Connection &profile:"), self.profile)
         form.addRow(_("N&otes:"), self.notes)
@@ -182,14 +173,13 @@ class HostDialog(QDialog):
 
 
 def confirm(parent: QWidget, title: str, text: str, action: str, details: str = "") -> bool:
-    """A yes/no question whose default is Cancel, so Enter or a stray click never confirms.
-    `details` goes under the question, in the normal font."""
+    """Cancel is the default, so Enter or a stray click never confirms."""
     box = QMessageBox(QMessageBox.Icon.Question, title, text, parent=parent)
     box.setInformativeText(details)
     yes = box.addButton(action, QMessageBox.ButtonRole.DestructiveRole)
     cancel = box.addButton(QMessageBox.StandardButton.Cancel)
     box.setDefaultButton(cancel)
-    quiet_default(cancel)  # Enter's button, drawn plain: it isn't what the box asks
+    quiet_default(cancel)
     box.setEscapeButton(cancel)
     box.exec()
     return box.clickedButton() is yes
@@ -199,9 +189,6 @@ SEPARATORS = ",;"
 
 
 class TagEdit(QFrame):
-    """Tags as removable chips. Enter or a comma turns the typed text into a chip; Enter on an
-    empty box still presses the dialog's OK. Known tags are suggested and keep their spelling."""
-
     def __init__(self, known: Iterable[str] = ()) -> None:
         super().__init__()
         self.setObjectName("tagEdit")
@@ -230,7 +217,6 @@ class TagEdit(QFrame):
         self._update_placeholder()
 
     def tags(self) -> tuple[str, ...]:
-        """The chips, plus whatever is still typed in the box (so OK never loses it)."""
         pending = self.input.text().split(",")
         return clean_tags([*(chip.text for chip in self._chips), *pending])
 
@@ -241,7 +227,6 @@ class TagEdit(QFrame):
             self._add(tag)
 
     def add_text(self, text: str) -> None:
-        """Turns text into chips; commas or semicolons separate several tags."""
         for sep in SEPARATORS[1:]:
             text = text.replace(sep, SEPARATORS[0])
         for tag in text.split(SEPARATORS[0]):
@@ -251,11 +236,11 @@ class TagEdit(QFrame):
         tag = tag.strip()
         if not tag or any(c.text.casefold() == tag.casefold() for c in self._chips):
             return
-        tag = self._known.get(tag.casefold(), tag)  # "Kiosk" becomes the existing "kiosk"
+        tag = self._known.get(tag.casefold(), tag)
         chip = TagChip(tag)
         chip.remove_button.clicked.connect(lambda: self._remove(chip))
         self._chips.append(chip)
-        self._flow.insertWidget(len(self._chips) - 1, chip)  # chips first, the box last
+        self._flow.insertWidget(len(self._chips) - 1, chip)
         self._update_placeholder()
 
     def _remove(self, chip: "TagChip") -> None:
@@ -266,7 +251,7 @@ class TagEdit(QFrame):
         self.input.setFocus()
 
     def _typed(self, text: str) -> None:
-        if any(sep in text for sep in SEPARATORS):  # typed or pasted a separator
+        if any(sep in text for sep in SEPARATORS):
             *done, rest = text.replace(";", ",").split(",")
             self.add_text(",".join(done))
             self.input.setText(rest.lstrip())
@@ -288,14 +273,12 @@ class TagEdit(QFrame):
                 self.input.clear()
                 return True  # consumed: an Enter that made a chip doesn't also press OK
             if key == Qt.Key.Key_Backspace and not self.input.text() and self._chips:
-                # The last chip goes back to being text, so a typo costs one letter, not the tag.
                 last = self._chips[-1]
                 self._remove(last)
                 self.input.setText(last.text)
                 return True
         if event.type() in (QEvent.Type.FocusIn, QEvent.Type.FocusOut):
             self._show_focus(event.type() == QEvent.Type.FocusIn)
-        # Leaving the field keeps what was typed, except when the suggestions pop-up opens.
         if (
             isinstance(event, QFocusEvent)
             and event.type() == QEvent.Type.FocusOut
@@ -312,7 +295,7 @@ class TagEdit(QFrame):
         self.style().polish(self)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        self.input.setFocus()  # a click anywhere in the field types into it
+        self.input.setFocus()
         super().mousePressEvent(event)
 
 
@@ -337,12 +320,9 @@ class TagChip(QFrame):
 
 
 class FlowLayout(QLayout):
-    """Lays widgets out left to right, wrapping onto new lines like words in a paragraph."""
-
     def __init__(
         self, parent: QWidget | None = None, spacing: int = 4, *, stretch_last: bool = True
     ) -> None:
-        """stretch_last: the last widget (a text box) takes the rest of its line."""
         super().__init__(parent)
         self._items: list[QLayoutItem] = []
         self._stretch_last = stretch_last

@@ -1,5 +1,3 @@
-"""Profile cleanup's work off the main thread, under one limit across tabs; deletes one by one."""
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -8,16 +6,16 @@ from PySide6.QtCore import QObject
 
 from capypanel.ui.hosts_tool.runner import Job
 
-AT_ONCE = 4  # reads and counts running at the same time: walking a tree is mostly waiting
+AT_ONCE = 4
 
 
 @dataclass
 class _Task:
-    owner: object  # who asked: what drop() matches
+    owner: object
     work: Callable[[], Any]
     done: Callable[[Any], None]
     failed: Callable[[BaseException], None]
-    began: Callable[[], None] | None = None  # its turn came: called just before it starts
+    began: Callable[[], None] | None = None
 
 
 def start(
@@ -26,8 +24,7 @@ def start(
     failed: Callable[[BaseException], None],
     jobs: set[Job],
 ) -> None:
-    """`work` on a background thread at once; its value or its error comes back on this one.
-    `jobs` holds the Job until then, or Qt would drop it halfway."""
+    """`jobs` holds the Job until it ends, or Qt would drop it halfway."""
     job = Job(work)
     jobs.add(job)
 
@@ -43,8 +40,6 @@ def start(
 
 
 class Pool(QObject):
-    """At most AT_ONCE pieces of work at a time; the rest wait in order, reads first."""
-
     def __init__(self, at_once: int = AT_ONCE) -> None:
         super().__init__()
         self._at_once = at_once
@@ -75,11 +70,9 @@ class Pool(QObject):
         self._next()
 
     def waiting(self, owner: object) -> int:
-        """How many of `owner`'s are still waiting for a turn."""
         return sum(t.owner is owner for t in (*self._reads, *self._counts))
 
     def drop(self, owner: object) -> None:
-        """`owner`'s work that hasn't started never will. Work under way ends on its own."""
         self._reads = [t for t in self._reads if t.owner is not owner]
         self._counts = [t for t in self._counts if t.owner is not owner]
 

@@ -1,5 +1,3 @@
-"""The ? in the tools' windows: first in each button row, opening that window's part of the docs."""
-
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -51,7 +49,6 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 
 
 def _first_in_its_row(dialog: QWidget, button: QWidget) -> bool:
-    """The ? is left of every button on its line."""
     dialog.show()
     QApplication.processEvents()
     left, middle = (
@@ -151,7 +148,6 @@ def test_each_window_s_question_mark_comes_first_and_opens_its_part(
         assert button.place() == place, name
         assert _first_in_its_row(dialog, button), name
         dialog.close()
-    # The Report and Customize open through their tools.
     reports: list[ExportDialog] = []
     monkeypatch.setattr(ExportDialog, "exec", lambda d: reports.append(d) or 0)
     hosts.commands.export_hosts.trigger()
@@ -160,8 +156,8 @@ def test_each_window_s_question_mark_comes_first_and_opens_its_part(
     assert _first_in_its_row(report, report.help_button)
     shown: list[customize.CustomizeDialog] = []
     monkeypatch.setattr(workspace, "run_modal", lambda d: shown.append(d) or 0)
-    hosts.customize_details(0)  # Quick commands
-    hosts.customize_details(1)  # Information
+    hosts.customize_details(0)
+    hosts.customize_details(1)
     assert [d.help_place() for d in shown] == [
         "commands-choose-your-quick-commands",
         "start-hide-parts-of-the-details-panel",
@@ -180,13 +176,13 @@ def test_the_commands_window_s_question_mark_follows_the_command_picked(
     assert target is not None
     commands = CommandsWindow(hosts, target, hosts.profile_for(target))
     assert _first_in_its_row(commands, commands.help_button)
-    assert commands.help_place() == "hosts-checking-check-your-hosts"  # opens on Refresh host
+    assert commands.help_place() == "hosts-checking-check-your-hosts"
     commands.pick(next(r for r in commands.rows if r.command.id == "restart"))
     commands.help_button.click()
     assert no_browser == [f"{SITE}hosts/commands/#commands-restart-or-shut-down-a-pc"]
     monkeypatch.setattr(commands, "picked", lambda: None)
-    assert commands.help_place() == "commands-the-commands-window"  # none picked
-    assert set(COMMAND_PLACES) == {c.id for c in COMMANDS}  # every command has its part
+    assert commands.help_place() == "commands-the-commands-window"
+    assert set(COMMAND_PLACES) == {c.id for c in COMMANDS}
     assert set(COMMAND_PLACES.values()) <= set(help_links.PLACES)
     commands.close()
 
@@ -196,7 +192,7 @@ def test_f1_in_a_question_opens_the_part_of_the_window_that_asked(
 ) -> None:
     ana = Session("ana", "EXAMPLE", "console", "active", None, session_id=1)
     question = windows.PowerDialog(None, "DESK-01", (ana,), restart=True)
-    assert question.findChild(help_links.HelpButton) is None  # a question has no ?
+    assert question.findChild(help_links.HelpButton) is None
     question.show()
     question.activateWindow()
     QApplication.processEvents()

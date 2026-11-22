@@ -1,11 +1,9 @@
-"""Secrets kept between runs, in this user's Windows Credential Manager: never a file or a log."""
-
 import ctypes
 from ctypes import wintypes
 
 PREFIX = "CapyPanel/"
 _GENERIC = 1  # CRED_TYPE_GENERIC
-_PERSIST_LOCAL_MACHINE = 2  # kept for this user on this PC, not roamed to others
+_PERSIST_LOCAL_MACHINE = 2
 _NOT_FOUND = 1168  # ERROR_NOT_FOUND
 _MAX_SECRET = 2560  # CRED_MAX_CREDENTIAL_BLOB_SIZE, in bytes
 
@@ -43,8 +41,6 @@ _advapi32.CredFree.argtypes = [ctypes.c_void_p]
 
 
 def save(name: str, secret: str, user: str = "CapyPanel") -> None:
-    """Keeps `secret` as CapyPanel/<name>, replacing what was there. `user` is shown beside it
-    in Credential Manager. Raises OSError."""
     blob = secret.encode("utf-16-le")
     if len(blob) > _MAX_SECRET:
         raise ValueError("too long to keep")
@@ -62,13 +58,11 @@ def save(name: str, secret: str, user: str = "CapyPanel") -> None:
 
 
 def load(name: str) -> str | None:
-    """The secret kept as CapyPanel/<name>, or None when there's none. Raises OSError."""
     found = read(name)
     return found[1] if found is not None else None
 
 
 def read(name: str) -> tuple[str, str] | None:
-    """The user and secret kept as CapyPanel/<name>, or None when there's none. Raises OSError."""
     found = _P(_Credential)()
     if not _advapi32.CredReadW(PREFIX + name, _GENERIC, 0, ctypes.byref(found)):
         error = ctypes.get_last_error()
@@ -84,7 +78,6 @@ def read(name: str) -> tuple[str, str] | None:
 
 
 def names(folder: str) -> list[str]:
-    """The names kept under CapyPanel/<folder> (a folder ends in "/"). Raises OSError."""
     count = wintypes.DWORD()
     found = _P(_P(_Credential))()
     if not _advapi32.CredEnumerateW(PREFIX + folder + "*", 0, ctypes.byref(count),
@@ -101,7 +94,6 @@ def names(folder: str) -> list[str]:
 
 
 def forget(name: str) -> None:
-    """Removes CapyPanel/<name>; nothing happens when there's none. Raises OSError."""
     if not _advapi32.CredDeleteW(PREFIX + name, _GENERIC, 0):
         error = ctypes.get_last_error()
         if error != _NOT_FOUND:

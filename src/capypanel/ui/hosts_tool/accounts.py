@@ -1,5 +1,3 @@
-"""Which account signs in to which PCs, and its password, kept in memory or Credential Manager."""
-
 import getpass
 import logging
 import os
@@ -50,7 +48,6 @@ OLD_SAVED = "account/logged-on-users"  # 0.23's one account for every PC, in Cre
 
 
 def windows_account() -> str:
-    """The Windows account CapyPanel runs as: "EXAMPLE\\ana", or the name alone off a domain."""
     try:
         user = getpass.getuser()
     except (OSError, KeyError):
@@ -61,7 +58,6 @@ def windows_account() -> str:
 
 
 def group_chain(host_list: HostList, group_id: str) -> tuple[str, ...]:
-    """The group's id, then each parent's."""
     chain: list[str] = []
     group = host_list.group(group_id) if group_id != NO_GROUP else None
     while group is not None and group.id not in chain:
@@ -75,7 +71,6 @@ def _same_list(link: Link, doc: OpenList | None) -> bool:
 
 
 def used_for(link: Link, doc: OpenList | None) -> str:
-    """What the Used for column says: "Every PC", "DESK-02", "Group Clinic › Front desk"."""
     if link.scope is Scope.ALL:
         return _("Every PC")
     if link.scope is Scope.PC:
@@ -94,20 +89,17 @@ def used_for(link: Link, doc: OpenList | None) -> str:
 
 
 class Accounts(QObject):
-    """The links and their passwords, for the Hosts tool, its commands and Settings."""
-
     changed = Signal()
 
     def __init__(self, tool: "HostsTool") -> None:
         super().__init__(tool)
         self._tool = tool
         self.links: list[Link] = accounts.load(tool.prefs.get(PREFS_KEY))
-        self._typed: dict[str, tuple[Account, bool]] = {}  # by user, folded: (account, saved)
+        self._typed: dict[str, tuple[Account, bool]] = {}
         if PREFS_KEY not in tool.prefs:
             self._adopt_old()
 
     def _adopt_old(self) -> None:
-        """0.23 kept one account for every PC: it becomes a link for every PC."""
         try:
             found = credstore.read(OLD_SAVED)
         except OSError as e:
@@ -127,12 +119,10 @@ class Accounts(QObject):
         self._tool.keep_pref(PREFS_KEY, accounts.dump(links))
         self.changed.emit()
 
-    # ---- which account a PC gets ----
-
     def place(self, target: "HostTarget") -> Place:
         doc = self.document()
         host = doc.hosts.host(target.key) if doc is not None else None
-        if doc is None or host is None:  # an address typed in the Commands window
+        if doc is None or host is None:
             return Place(target.address)
         return Place(target.address, str(doc.path), group_chain(doc.hosts, host.group), host.tags)
 
@@ -140,8 +130,6 @@ class Accounts(QObject):
         return accounts.pick(self.links, self.place(target))
 
     def known(self, user: str) -> Account | None:
-        """Its password, typed this session or remembered by Windows; None until typed (and
-        for the Windows account, which needs none)."""
         if user == WINDOWS:
             return None
         kept = self._typed.get(user.casefold())
@@ -171,8 +159,6 @@ class Accounts(QObject):
     def account_for(
         self, target: "HostTarget", parent: QWidget | None
     ) -> tuple[bool, Account | None]:
-        """(go on, the account; None is the Windows account). A password not typed yet for the PC's
-        account is asked over `parent`; (False, None) when cancelled or with no `parent`."""
         link = self.link_for(target)
         if link is None or link.user == WINDOWS:
             return True, None
@@ -192,8 +178,6 @@ class Accounts(QObject):
         return True, account
 
     def uses_for(self, targets: Sequence["HostTarget"]) -> list[tuple[str, Link]]:
-        """What "Use it for" offers for these PCs, most specific first: this PC, each group
-        they're all in, each tag they all have, every PC."""
         places = [self.place(t) for t in targets]
         found: list[tuple[str, Link]] = []
         if len(targets) == 1 and targets[0].address:
@@ -215,13 +199,10 @@ class Accounts(QObject):
         found.append((_("Every PC"), Link("", Scope.ALL)))
         return found
 
-    # ---- changes ----
-
     def document(self) -> OpenList | None:
         return self._tool.document
 
     def keep(self, account: Account, *, remember: bool) -> None:
-        """Its password from now on; in Credential Manager too when `remember`."""
         name = accounts.credential_name(account.user)
         saved = False
         try:
@@ -244,13 +225,11 @@ class Accounts(QObject):
         self.changed.emit()
 
     def use(self, link: Link, account: Account | None, *, remember: bool) -> None:
-        """A link added (or replacing the one for the same PCs); its password, when typed."""
         self._store(accounts.with_link(self.links, link))
         if account is not None:
             self.keep(account, remember=remember)
 
     def own(self, target: "HostTarget") -> Link | None:
-        """The PC's own row (for its address), if it has one."""
         return next((lk for lk in self.links if lk.scope is Scope.PC
                      and lk.value.casefold() == target.address.casefold()), None)  # fmt: skip
 
@@ -260,8 +239,6 @@ class Accounts(QObject):
                      and doc is not None and _same_list(lk, doc)), None)  # fmt: skip
 
     def set_pcs(self, targets: Sequence["HostTarget"], user: str | None) -> None:
-        """Each PC's own row: `user` (WINDOWS for the Windows account), or None to remove it, so
-        its group's, tag's or Every PC row applies again."""
         links = list(self.links)
         for target in targets:
             if not target.address:
@@ -273,7 +250,6 @@ class Accounts(QObject):
         self._set(links)
 
     def set_group(self, group_id: str, user: str | None) -> None:
-        """The group's row: `user`, or None to remove it."""
         doc = self.document()
         if doc is None:
             return
@@ -283,7 +259,6 @@ class Accounts(QObject):
         self._set([*links, new] if user is not None else links)
 
     def _set(self, links: list[Link]) -> None:
-        """New rows; a password no row uses any more is forgotten."""
         before = accounts.users(self.links)
         self._store(links)
         for user in before:
@@ -291,7 +266,6 @@ class Accounts(QObject):
                 self.forget(user)
 
     def replace_link(self, old: Link, new: Link) -> None:
-        """An edited row: in the same place in the table."""
         links = [new if lk == old else lk for lk in self.links
                  if lk == old or not lk.same_place(new)]  # fmt: skip
         self._store(links if new in links else [*links, new])
@@ -299,13 +273,11 @@ class Accounts(QObject):
             self.forget(old.user)
 
     def remove(self, link: Link) -> None:
-        """The link goes; its password too when no other link uses that account."""
         self._store([lk for lk in self.links if lk != link])
         if link.user != WINDOWS and not accounts.uses(self.links, link.user):
             self.forget(link.user)
 
     def forget(self, user: str) -> None:
-        """Its password, from memory and Credential Manager. Raises OSError."""
         self._typed.pop(user.casefold(), None)
         try:
             credstore.forget(accounts.credential_name(user))
@@ -313,7 +285,6 @@ class Accounts(QObject):
             self.changed.emit()
 
     def kept_logins(self) -> list[KeptLogin]:
-        """For the Saved credentials window: each account whose password is kept."""
         logins = []
         for user in accounts.users(self.links):
             if self.known(user) is None:
@@ -325,13 +296,7 @@ class Accounts(QObject):
         return logins
 
 
-# ---- Settings › Hosts › Credentials › Accounts ----
-
-
 class LinkDialog(QDialog):
-    """Add or edit one row of the Accounts table: the account, its password (optional), the
-    PCs it's for and whether Windows remembers it."""
-
     def __init__(
         self, parent: QWidget | None, title: str, manager: Accounts, link: Link | None
     ) -> None:
@@ -366,7 +331,7 @@ class LinkDialog(QDialog):
                 self.group.addItem(path, group_id)
             self.tag.addItems(sorted(doc.hosts.all_tags(), key=str.casefold))
         self.tag.setCurrentText("")
-        self.every_pc = QLineEdit()  # Every PC names nothing; the greyed field keeps its row
+        self.every_pc = QLineEdit()
         self.every_pc.setEnabled(False)
         self.every_pc.setPlaceholderText(_("Nothing to name: it's used on every PC"))
         self.every_pc.setToolTip(_("Nothing to name: it's used on every PC"))
@@ -374,7 +339,7 @@ class LinkDialog(QDialog):
         for widget in (self.every_pc, self.address, self.group, self.tag):
             self.value.addWidget(widget)
         self.value.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        for index in (2, 3):  # a group or a tag belongs to the open list
+        for index in (2, 3):
             if doc is None:
                 self.kind.model().item(index).setEnabled(False)  # type: ignore[attr-defined]
         self.remember = QCheckBox(_("&Remember it on this computer"))
@@ -410,7 +375,7 @@ class LinkDialog(QDialog):
             self.address.setText(link.value)
         elif link.scope is Scope.GROUP:
             index = self.group.findData(link.value) if _same_list(link, self._doc) else -1
-            if index < 0:  # another list's group: kept as it is
+            if index < 0:
                 self.group.addItem(used_for(link, self._doc), link.value)
                 index = self.group.count() - 1
             self.group.setCurrentIndex(index)
@@ -433,7 +398,7 @@ class LinkDialog(QDialog):
             Scope.GROUP: self.group.currentData() or "",
             Scope.TAG: self.tag.currentText().strip(),
         }.get(scope, "")
-        typed = bool(self.user.text().strip())  # none: the Windows account, with no password
+        typed = bool(self.user.text().strip())
         self.password.setEnabled(typed)
         self.remember.setEnabled(typed)
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
@@ -464,8 +429,6 @@ class LinkDialog(QDialog):
 
 
 class AccountsSection(Section):
-    """Which account signs in to which PCs: one row per link, in the table every list uses."""
-
     def __init__(self, manager: Accounts) -> None:
         super().__init__(_("Accounts"))
         self._manager = manager
@@ -537,7 +500,7 @@ class AccountsSection(Section):
             manager.keep(Account(link.user, typed), remember=remember)
         elif (known := manager.known(link.user)) is not None and remember != manager.saved(
                 link.user):  # fmt: skip
-            manager.keep(known, remember=remember)  # only where it's kept changed
+            manager.keep(known, remember=remember)
 
     def add(self) -> None:
         dialog = LinkDialog(self.window(), _("Add an account"), self._manager, None)
@@ -559,4 +522,4 @@ class AccountsSection(Section):
         try:
             self._manager.remove(link)
         except OSError as e:
-            forget_failed(self, e)  # where to delete it by hand, as Saved credentials says
+            forget_failed(self, e)

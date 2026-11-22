@@ -1,5 +1,3 @@
-"""Printers' warnings: the strip over the table and the rail's red count; invented printers."""
-
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
@@ -30,28 +28,24 @@ def test_attention_is_the_first_reason_that_is_ticked() -> None:
     assert status.attention(JAMMED, 10) is Reason.JAMMED
     assert status.attention(OFFLINE, 10) is Reason.OFFLINE
     assert status.attention(LOW, 10) is Reason.LOW
-    assert status.attention(LOW, 5) is None  # above the low level
+    assert status.attention(LOW, 5) is None
     assert status.attention(FINE, 10) is None
-    assert status.attention(Checked(NOW, error="bad"), 10) is None  # unreadable isn't a warning
+    assert status.attention(Checked(NOW, error="bad"), 10) is None
     assert status.attention(Checked(NOW, refused="user"), 10) is None
     found = [Reason.LOW, Reason.JAMMED, Reason.OFFLINE, Reason.LOW, Reason.NO_PAPER]
     assert reasons_text(found) == "2 stopped, 1 offline, 2 low"
 
-    # Out of paper isn't ticked by default: a printer with only that never counts.
     no_paper = Checked(NOW, Reading(device=Device.DOWN, problems=frozenset({Problem.NO_PAPER})))
     assert status.reasons(no_paper, 10) == [Reason.NO_PAPER]
     assert status.attention(no_paper, 10) is None
     assert status.attention(no_paper, 10, frozenset({Reason.NO_PAPER})) is Reason.NO_PAPER
-    # Down with a reason that has no row (a door open) never falls back into Stopped.
     door = Checked(NOW, Reading(device=Device.DOWN, problems=frozenset({Problem.DOOR_OPEN})))
     assert status.reasons(door, 10) == []
-    down = Checked(NOW, Reading(device=Device.DOWN))  # a service error: no reason given
+    down = Checked(NOW, Reading(device=Device.DOWN))
     assert status.reasons(down, 10) == [Reason.STOPPED]
-    assert status.attention(down, 10) is None  # Stopped isn't ticked by default
-    # Any ticked reason counts, not only the first: a jam unticked, out of paper ticked.
+    assert status.attention(down, 10) is None
     both = Checked(NOW, Reading(problems=frozenset({Problem.JAMMED, Problem.NO_PAPER})))
     assert status.attention(both, 10, frozenset({Reason.NO_PAPER})) is Reason.NO_PAPER
-    # Stopped for an unticked reason, and a supply low: it counts as low.
     low_too = Checked(NOW, Reading(problems=frozenset({Problem.NO_PAPER}),
                                    supplies=(Supply("Black", SupplyKind.TONER, 4),)))  # fmt: skip
     assert status.attention(low_too, 10) is Reason.LOW
@@ -92,7 +86,7 @@ def _shown(tool: PrintersTool) -> list[str]:
 def test_the_strip_and_the_rail_count_show_what_needs_attention(window: CapyWindow) -> None:
     tool = _printers(window)
     strip, badge = tool.attention_strip, window.rail.badges["printers"]
-    assert strip.isHidden() and badge.isHidden()  # nothing checked yet
+    assert strip.isHidden() and badge.isHidden()
     ids = {h.name: h.id for h in tool.document.hosts.hosts}  # type: ignore[union-attr]
     for name, checked in (("PRN-2F-01", JAMMED), ("PRN-2F-02", OFFLINE), ("PRN-1F-02", LOW),
                           ("PRN-1F-01", FINE)):  # fmt: skip
@@ -104,22 +98,22 @@ def test_the_strip_and_the_rail_count_show_what_needs_attention(window: CapyWind
         window.rail.buttons["printers"].toolTip() == "Printers (Ctrl+2)\n3 printers need attention"
     )
 
-    tool.search.setText("PRN-1F")  # a search hides some: Show lists all three anyway
+    tool.search.setText("PRN-1F")
     tool._show_items()
     strip.button.click()
     assert _shown(tool) == ["PRN-1F-02", "PRN-2F-01", "PRN-2F-02"] and tool.search.text() == ""
     assert strip._words == "Showing the <b>3 printers</b> that need attention."
     assert strip.button.text() == "Show all"
-    assert len(tool.visible_items()) == 3  # F5 checks just these three
+    assert len(tool.visible_items()) == 3
 
-    strip.button.click()  # Show all
+    strip.button.click()
     assert len(_shown(tool)) == 4 and strip.button.text() == "Show"
     strip.button.click()
     tool.nav.select_group(tool.document.hosts.groups[0].id)  # type: ignore[union-attr]
-    tool.nav.filter_changed.emit()  # picking a group means browsing again
+    tool.nav.filter_changed.emit()
     assert len(_shown(tool)) == 4
 
-    tool._checked[ids["PRN-2F-01"]] = FINE  # the jam is cleared
+    tool._checked[ids["PRN-2F-01"]] = FINE
     tool._count_attention()
     assert badge.text() == "2"
     for name in ("PRN-2F-02", "PRN-1F-02"):
@@ -147,22 +141,22 @@ def test_closing_asks_keeps_running_in_the_tray_and_quits_from_there(
     window.show()
     assert not any(t.works_in_background() for t in window.tools.values())
     monkeypatch.setattr(window_module, "ask_closing", answer(None, False))
-    window.close()  # nothing works on its own and it still asks (the tray reopens at once): Cancel
+    window.close()
     assert len(asked) == 1 and window.isVisible()
 
     monkeypatch.setattr(window_module, "ask_closing", answer(settings.CLOSE_TRAY, True))
-    window.close()  # Keep in tray, and don't ask again
+    window.close()
     assert not window.isVisible() and window._in_tray and shown[-1] is True
     assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_TRAY
-    assert not QApplication.quitOnLastWindowClosed()  # a box closing now mustn't end the app
+    assert not QApplication.quitOnLastWindowClosed()
     window.open_from_tray()
     assert window.isVisible() and not window._in_tray and QApplication.quitOnLastWindowClosed()
-    window.close()  # remembered: straight to the tray
+    window.close()
     assert len(asked) == 2 and window._in_tray
 
     quits: list[bool] = []
     monkeypatch.setattr(QApplication, "quit", lambda: quits.append(True))
-    window.tray.quit_requested.emit()  # the tray's Quit CapyPanel
+    window.tray.quit_requested.emit()
     assert quits == [True] and shown[-1] is False and QApplication.quitOnLastWindowClosed()
 
 
@@ -177,7 +171,7 @@ def test_the_tray_menu_and_a_notification_open_what_needs_attention(
     tool._count_attention()
     texts = [a.text() for a in window.tray.menu.actions() if not a.isSeparator()]
     assert texts == ["&Open CapyPanel", "1 printer needs attention…", "&Quit CapyPanel"]
-    assert window.tray.menu.defaultAction() is window.tray.menu.actions()[0]  # bold: the click
+    assert window.tray.menu.defaultAction() is window.tray.menu.actions()[0]
     assert window.tray.icon.toolTip() == "CapyPanel\n1 printer needs attention"
     window.tray.menu.actions()[2].trigger()
     assert window.shown_tool() is tool and _shown(tool) == ["PRN-2F-02"]
@@ -188,18 +182,17 @@ def test_the_tray_menu_and_a_notification_open_what_needs_attention(
     monkeypatch.setattr(window.tray, "notify", lambda title, text: sent.append((title, text)))
     tool.notify_requested.emit("1 printer needs attention", "PRN-2F-02: Offline")
     assert sent == [("1 printer needs attention", "PRN-2F-02: Offline")]
-    window.tray.message_clicked.emit()  # a click on the notification: Show
+    window.tray.message_clicked.emit()
     assert window.shown_tool() is tool and _shown(tool) == ["PRN-2F-02"]
 
 
 def test_settings_keeps_the_when_closing_choice(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     closing = dialog.general.closing
-    assert closing.currentData() == settings.CLOSE_ASK  # the default
+    assert closing.currentData() == settings.CLOSE_ASK
     closing.setCurrentIndex(closing.findData(settings.CLOSE_QUIT))
     assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_QUIT
     dialog.close()
-    # Opened again, it shows what's saved, and going back to "Ask each time" is saved too.
     dialog = window.settings_dialog()
     closing = dialog.general.closing
     assert closing.currentData() == settings.CLOSE_QUIT
@@ -215,7 +208,7 @@ def test_the_close_question_offers_tray_quit_and_cancel(
 
     def click(label: str, tick: bool):  # noqa: ANN202
         def run(box: QMessageBox) -> int:
-            box.checkBox().setChecked(tick)  # the box must still hold its tick box
+            box.checkBox().setChecked(tick)
             texts = [b.text() for b in box.buttons()]
             assert sorted(texts) == ["&Quit", "Cancel", "Keep in &tray"]
             assert box.defaultButton().text() == texts[0]
@@ -240,9 +233,9 @@ def test_windows_shutting_down_quits_without_asking(
     monkeypatch.setattr(window.tray, "available", lambda: True)
     asked: list[object] = []
     monkeypatch.setattr(window_module, "ask_closing", lambda parent: asked.append(parent))
-    for tool in window.tools.values():  # as an open SSH connection would
+    for tool in window.tools.values():
         monkeypatch.setattr(tool, "quit_question", lambda parent: asked.append(parent) or False)
-    window.prefs[settings.CLOSE_KEY] = settings.CLOSE_TRAY  # even with the tray picked
+    window.prefs[settings.CLOSE_KEY] = settings.CLOSE_TRAY
     _printers(window).set_auto_refresh(15)
     window.show()
     window._session_ending()  # what aboutToQuit calls when Windows ends the session

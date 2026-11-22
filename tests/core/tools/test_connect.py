@@ -9,8 +9,6 @@ from capypanel.core import credstore
 from capypanel.core.tools import definitions, vncpass
 from capypanel.core.tools.connect import Credential, SessionCredentials, Target, launch
 
-# Stands in for a viewer: records the arguments it received, as the program sees them, and the
-# content of a -PasswordFile= it was given (read once, like RealVNC does).
 RECORDER = """
 import json, sys
 args = sys.argv[2:]
@@ -79,7 +77,7 @@ def test_a_password_file_comes_through_a_pipe_never_the_command_line(tmp_path: P
     assert isinstance(args, list) and "raspberry" not in " ".join(args)
     assert args[-1].startswith(r"-PasswordFile=\\.\pipe\capypanel-")
     assert received["file"] == vncpass.obfuscate("raspberry").hex()
-    assert not list(tmp_path.glob("*.vnc"))  # and nothing was written to disk
+    assert not list(tmp_path.glob("*.vnc"))
 
 
 def test_the_password_never_reaches_the_log(
@@ -96,19 +94,19 @@ def test_typed_passwords_are_kept_per_profile_until_forgotten() -> None:
     assert not kept
     kept.remember("ultravnc-account", Credential("ana", "x"))
     assert kept.get("ultravnc-account") == Credential("ana", "x")
-    assert kept.get("realvnc-account") is None  # another profile never gets it
+    assert kept.get("realvnc-account") is None
     kept.forget()
     assert not kept and kept.get("ultravnc-account") is None
-    assert credstore.names("") == []  # not saved: nothing in Credential Manager
+    assert credstore.names("") == []
 
 
 def test_saved_passwords_outlive_the_session_until_forgotten() -> None:
     kept = SessionCredentials()
-    kept.remember("ultravnc-account", Credential("CORP\\ana", "x"), save=True)  # ticked
+    kept.remember("ultravnc-account", Credential("CORP\\ana", "x"), save=True)
     kept.remember("realvnc-password", Credential("", "y"), save=True)
-    kept.remember("rustdesk", Credential("", "z"))  # not ticked: this session only
+    kept.remember("rustdesk", Credential("", "z"))
     assert credstore.read("profile/ultravnc-account") == ("CORP\\ana", "x")
-    later = SessionCredentials()  # the next time CapyPanel opens
+    later = SessionCredentials()
     assert later and "ultravnc-account" in later and "rustdesk" not in later
     assert later.get("ultravnc-account") == Credential("CORP\\ana", "x")
     later.forget("ultravnc-account")

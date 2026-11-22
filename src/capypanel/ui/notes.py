@@ -1,5 +1,3 @@
-"""Small pieces every screen uses: short help under a control, a thin line, safe rich text."""
-
 import html
 
 from PySide6.QtCore import Qt
@@ -8,7 +6,6 @@ from PySide6.QtWidgets import QFrame, QLabel, QSizePolicy
 
 
 def escape(text: str) -> str:
-    """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
     return html.escape(text, quote=False)
 
 
@@ -20,9 +17,6 @@ def divider() -> QFrame:
 
 
 class Elided(QLabel):
-    """One line that takes the width it's given and puts "…" where its text doesn't fit: at
-    the end, or in the middle for a path (both ends stay). Cut, its tooltip says it in full."""
-
     def __init__(
         self, text: str = "", mode: Qt.TextElideMode = Qt.TextElideMode.ElideRight
     ) -> None:
@@ -53,7 +47,6 @@ def hint(text: str = "") -> QLabel:
 
 
 def notes(*lines: str) -> QLabel:
-    """A few lines as bullets; a single line needs none."""
     kept = [line for line in lines if line]
     label = hint("\n".join(f"• {line}" for line in kept) if len(kept) > 1 else "".join(kept))
     font = label.font()

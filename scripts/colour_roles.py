@@ -1,11 +1,8 @@
-"""Writes every built-in theme's colour roles, read from the code, to the Markdown file named."""
-
 import sys
 from pathlib import Path
 
 from capypanel.ui.themes import engine
 
-# What each role is for (not in the code). A role missing here shows "(no use line)".
 USE = {
     "bg": "window background behind the panels",
     "card": "panels and cards",
@@ -43,7 +40,7 @@ def themes() -> list[tuple[str, dict[str, str]]]:
         out.append((theme.title(), dict(theme.colors)))
     for scheme in ("dark", "light"):
         native = dict(engine.NATIVE_TOKENS[scheme])
-        for key in engine.STATUS_KEYS:  # fitted at run time to Windows' accent selection
+        for key in engine.STATUS_KEYS:
             native.setdefault(key, f"~{engine.TOKENS[scheme][key]}")
         for key in engine.INK_KEYS:
             native.setdefault(key, engine.TOKENS[scheme][key])

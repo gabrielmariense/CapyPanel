@@ -1,5 +1,3 @@
-"""The checks Refresh runs on one host: whether it's up, and who is logged on."""
-
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -15,8 +13,8 @@ from capypanel.core.tools.definitions import ToolDefinition
 class Checks:
     status: bool = True
     users: bool = True
-    ports: tuple[int, ...] = BASE_PORTS  # the field "status" hides the module here
-    account: Account | None = None  # None: the Windows login
+    ports: tuple[int, ...] = BASE_PORTS
+    account: Account | None = None
 
 
 @dataclass(frozen=True)
@@ -26,7 +24,7 @@ class Found:
     status: Status | None = None
     sessions: tuple[Session, ...] | None = None
     users_error: RemoteError | None = None
-    answered: Answer | None = None  # the address (and port) that proved the status
+    answered: Answer | None = None
     when: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -35,7 +33,6 @@ def run(address: str, checks: Checks) -> Found:
     if not checks.users:
         return Found(state, answered=answered)
     if state is not None and state is not Status.ONLINE:
-        # Nothing answered: reading users would only wait for the same silence.
         return Found(state, users_error=RemoteError(Reason.UNREACHABLE))
     try:
         found = tuple(sessions.read_sessions(address, checks.account))
@@ -45,13 +42,11 @@ def run(address: str, checks: Checks) -> Found:
 
 
 def account_rejected(found: Found | None, _error: Exception | None = None) -> bool:
-    """A host refused the account: with a typed one, stop, so it isn't tried on every host."""
     error = found.users_error if found is not None else None
     return error is not None and error.reason is Reason.REJECTED
 
 
 def account_proven(found: Found | None, error: Exception | None) -> bool:
-    """A host that read the users, or said "not an admin", accepted the account."""
     if found is None:
         return False
     if found.sessions is not None:

@@ -1,5 +1,3 @@
-"""The Details panel: the selected item in sections, each value copied by a click, or a summary."""
-
 import html
 from collections.abc import Sequence
 
@@ -23,29 +21,25 @@ from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
 
 LONG_WORD = 24  # longer runs of letters may break anywhere, so they never widen the panel
-MARK = "rgba(255, 196, 0, 0.38)"  # the search's mark, as in the items table
+MARK = "rgba(255, 196, 0, 0.38)"
 
 
 def breakable(text: str) -> str:
-    """Lets long words (an address, a path) wrap at any character: a word too wide for the panel
-    would otherwise make it wider."""
     zero_width = "\u200b"
     return " ".join(
         zero_width.join(word) if len(word) > LONG_WORD else word for word in text.split(" ")
     )
 
 
-SIDE = 14  # px at each side of a panel's page
-BUTTON_HEIGHT = 44  # px: a button on top of the panel, its icon over its word
-BUTTON_ROOM = 16  # px beside the widest word: every button is that wide
-COLUMNS = 4  # the buttons' grid: rows of four
-GAP = 8  # px between buttons
+SIDE = 14
+BUTTON_HEIGHT = 44
+BUTTON_ROOM = 16
+COLUMNS = 4
+GAP = 8
 BUTTON_ICON = 18
 
 
 class CopyValue(QLabel):
-    """A value that highlights on hover and copies itself on a click."""
-
     copied = Signal(str)
 
     def __init__(self, text: str, shown: str | None = None) -> None:
@@ -53,7 +47,7 @@ class CopyValue(QLabel):
         self._text = text
         self.setObjectName("copyValue")
         self.setWordWrap(True)
-        self.setAttribute(Qt.WidgetAttribute.WA_Hover)  # the stylesheet's :hover
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(_("Click to copy"))
 
@@ -61,7 +55,6 @@ class CopyValue(QLabel):
         return self._text
 
     def set_text(self, text: str) -> None:
-        """Another value in the same place: what shows, and what a click copies."""
         self._text = text
         self.setText(breakable(text))
 
@@ -73,11 +66,9 @@ class CopyValue(QLabel):
 
 
 class DetailsPanel(QWidget):
-    """Details of the selected item, or a summary when none or several are selected."""
-
-    copied = Signal(str)  # a value was copied: the window says so in its status bar
-    customize_requested = Signal()  # the panel's right-click, or its hidden-parts line
-    customizable = False  # a tool with parts that can be hidden sets it
+    copied = Signal(str)
+    customize_requested = Signal()
+    customizable = False
 
     def __init__(self) -> None:
         super().__init__()
@@ -89,9 +80,8 @@ class DetailsPanel(QWidget):
         self._scroll.setFrameShape(QFrame.Shape.NoFrame)
         self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._values: dict[str, list[CopyValue]] = {}
-        self._shown: tuple[object, str] | None = None  # what's on show, and the search
+        self._shown: tuple[object, str] | None = None
 
-        # A card with the lists' background, so the three panels read as a set in every theme.
         card = QFrame()
         card.setObjectName("card")
         card.setFrameShape(QFrame.Shape.StyledPanel)
@@ -106,29 +96,22 @@ class DetailsPanel(QWidget):
         self.show_item(None, 0)
 
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
-        """The sections for one item, added to `layout` with the helpers below."""
         raise NotImplementedError
 
     def selected_text(self, selected: int) -> str:
-        """With several items selected: "{n} hosts selected"."""
         raise NotImplementedError
 
     def pick_hint(self) -> str:
-        """With none selected: "Select a host to see its details."."""
         raise NotImplementedError
 
     def item_id(self, shown: object) -> str:
-        """Which item a page is about. The same item drawn again keeps its scroll position."""
         return ""
 
     def minimum_width(self) -> int:
-        """The narrowest the panel may be dragged, when its own parts need more than the
-        workspace's usual minimum; 0 when they don't."""
         return 0
 
     def word_button(self, icon: str, color: QColor, word: str, tip: str, *,
                     risky: bool = False) -> QToolButton:  # fmt: skip
-        """One button of the grid; `tip` is its full name. Risky ones are amber."""
         button = QToolButton()
         button.setObjectName("commandButton")
         button.setProperty("risky", risky)
@@ -141,20 +124,15 @@ class DetailsPanel(QWidget):
         return button
 
     def grid_width(self, words: Sequence[str]) -> int:
-        """How wide every button is: what the widest of `words` needs in this font and language.
-        Give it every word a button can have, so the grid never changes width."""
         metrics = self.fontMetrics()
         return max(metrics.horizontalAdvance(word) for word in words) + BUTTON_ROOM
 
     def grid_minimum(self, width: int) -> int:
-        """Room for four columns of `width`, the page's sides and a scroll bar beside them."""
         bar = self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
         return COLUMNS * width + (COLUMNS - 1) * GAP + 2 * SIDE + bar + 4
 
     @staticmethod
     def button_rows(buttons: Sequence[QToolButton], width: int) -> QVBoxLayout:
-        """`buttons` in rows of four, each `width` wide. A row that isn't full keeps its buttons
-        on the left: nothing stretches."""
         rows = QVBoxLayout()
         rows.setSpacing(GAP)
         for start in range(0, len(buttons), COLUMNS):
@@ -168,7 +146,6 @@ class DetailsPanel(QWidget):
         return rows
 
     def hidden_line(self, layout: QVBoxLayout, hidden: int) -> None:
-        """At the foot of the page, when parts are hidden: how many, and the way back."""
         if not hidden:
             return
         text = ngettext("{n} part hidden", "{n} parts hidden", hidden).format(n=hidden)
@@ -189,15 +166,12 @@ class DetailsPanel(QWidget):
         popup(menu, event.globalPos())
 
     def retranslate(self) -> None:
-        """The hint comes back with the next show_item(); an item on show is drawn again."""
         if self._shown is not None:
             self._build(*self._shown)
 
     def show_item(
         self, shown: object | None, selected: int, summary: str = "", needle: str = ""
     ) -> None:
-        """summary: what the table shows, above the hint when none is picked.
-        needle: the search, marked where it's found in the notes."""
         if shown is None:
             self._shown = None
             if selected > 1:
@@ -213,11 +187,10 @@ class DetailsPanel(QWidget):
         kept = bar.value() if before and before == self.item_id(shown) else 0
         self._build(shown, needle)
         self._pages.setCurrentIndex(1)
-        if kept:  # after the new page is laid out, or the bar's range is still the old one's
-            QTimer.singleShot(0, self, lambda: bar.setValue(kept))  # dropped if it goes
+        if kept:
+            QTimer.singleShot(0, self, lambda: bar.setValue(kept))
 
     def shown_value(self, key: str) -> str:
-        """The text a section shows, one value per line: for tests and the window."""
         return "\n".join(v.copy_text() for v in self._values.get(key, []))
 
     def _build(self, shown: object, needle: str) -> None:
@@ -264,7 +237,6 @@ class DetailsPanel(QWidget):
 
     @staticmethod
     def section(layout: QVBoxLayout, title: str) -> None:
-        """A thin line across the panel, then the section's heading in the accent colour."""
         rule = QFrame()
         rule.setObjectName("detailsRule")
         layout.addSpacing(10)
@@ -283,7 +255,6 @@ class DetailsPanel(QWidget):
 
 
 def marked(text: str, needle: str) -> str:
-    """The text as rich text, line breaks kept, with every match of the search marked."""
     folded, needle = text.casefold(), needle.strip().casefold()
     pieces, start = [], 0
     while needle and (found := folded.find(needle, start)) != -1:

@@ -1,5 +1,3 @@
-"""What every call to another PC shares: why Windows refuses one, and another account's logon."""
-
 import ctypes
 import socket
 from collections.abc import Callable, Iterator
@@ -13,9 +11,9 @@ REACH_TIMEOUT = 2.0  # seconds: an offline PC otherwise holds a call for ~20 s
 
 
 class Reason(StrEnum):
-    UNREACHABLE = "unreachable"  # off, not on the network, or blocked by a firewall
-    NOT_ADMIN = "not-admin"  # the account was accepted, but isn't an admin there
-    REJECTED = "rejected"  # the account wasn't accepted: wrong password, locked…
+    UNREACHABLE = "unreachable"
+    NOT_ADMIN = "not-admin"
+    REJECTED = "rejected"
     OTHER = "other"
 
 
@@ -25,8 +23,7 @@ _UNREACHABLE = {53, 67, 1231, 1237, 1721, 1722, 1723, 1753}
 
 
 def code_text(code: int) -> str:
-    """A Windows error's number as people look it up: 5 or 1722, and 0x80041002 for the long
-    ones (WMI's and COM's), which nobody finds as 2147749890."""
+    """Long codes (WMI's, COM's) in hex: nobody finds 0x80041002 as 2147749890."""
     return f"0x{code:08X}" if code > 0xFFFF else str(code)
 
 
@@ -53,12 +50,11 @@ def last_error() -> RemoteError:
 
 @dataclass(frozen=True)
 class Account:
-    user: str  # "DOMAIN\\name" or "name@domain"
+    user: str
     password: str
 
 
 def check_reachable(host: str) -> None:
-    """Raises RemoteError (UNREACHABLE) unless `host` answers on file sharing's port."""
     try:
         socket.create_connection((host, REACH_PORT), REACH_TIMEOUT).close()
     except OSError as e:
@@ -80,7 +76,6 @@ _kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 
 @contextmanager
 def as_account(account: Account | None) -> Iterator[None]:
-    """This thread uses `account` for the network calls inside; nothing changes locally."""
     with network_identity(account) as identity, identity():
         yield
 
@@ -89,12 +84,11 @@ def as_account(account: Account | None) -> Iterator[None]:
 def network_identity(
     account: Account | None,
 ) -> Iterator[Callable[[], AbstractContextManager[None]]]:
-    """Logs `account` on once, for the network only, for every `with identity():` block on this
-    thread: one connection per PC for them all; programs started between run as the user."""
+    """Network-only logon: remote calls use `account`; programs started meanwhile don't."""
     if account is None:
         yield nullcontext
         return
-    domain, _sep, name = account.user.rpartition("\\")  # "DOMAIN\\name", or a UPN
+    domain, _sep, name = account.user.rpartition("\\")
     token = wintypes.HANDLE()
     new_credentials, provider_winnt50 = 9, 3  # each PC checks the password, not this one
     if not _advapi32.LogonUserW(

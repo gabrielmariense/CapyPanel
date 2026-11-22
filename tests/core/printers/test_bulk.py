@@ -77,17 +77,17 @@ def test_windows_export_names_ports_and_notes() -> None:
     parsed = read_windows_export(text)
     assert parsed is not None
     assert [(r.name, r.address) for r in parsed.rows] == [
-        ("Reception laser", "192.0.2.10"),  # the "IP_" Windows puts before it, dropped
-        ("Lab", "192.0.2.11"),  # Windows' second port to the same printer
-        ("PRN-WARD-2", "PRN-WARD-2.example.net"),  # a port named after the printer
+        ("Reception laser", "192.0.2.10"),
+        ("Lab", "192.0.2.11"),
+        ("PRN-WARD-2", "PRN-WARD-2.example.net"),
         ("Ward printer", ""),
         ("Desk", ""),
         ("Microsoft Print to PDF", ""),
     ]
     assert parsed.rows[0].notes == "Ground floor · Toner in cabinet 3"
-    assert dict(parsed.rows[3].more)[PORT].startswith("WSD-")  # said in the preview
+    assert dict(parsed.rows[3].more)[PORT].startswith("WSD-")
     assert parsed.rows[0].more == ()
-    assert parsed.ignored == ("the other 36 columns Windows exports",)  # one line, not 36 names
+    assert parsed.ignored == ("the other 36 columns Windows exports",)
 
 
 def test_windows_export_with_the_list_separator_and_a_bom() -> None:
@@ -102,7 +102,6 @@ def test_other_lists_are_not_windows_exports() -> None:
 
 
 def test_a_port_that_isnt_an_address_comes_in_marked_whatever_the_name() -> None:
-    # "Desk" would be a fine network name; its port says it's on USB, so it needs an address.
     rows = parse(_windows([{"Name": "Desk", "PortName": "USB001"},
                            {"Name": "Lab", "PortName": "IP_192.0.2.11"}])).rows  # fmt: skip
     planned = plan(HostList(), rows, NO_GROUP)
@@ -121,7 +120,7 @@ def test_the_report_reads_back_with_every_printer_column() -> None:
              "PAT-0001", "Doc360 MPS", "toner;front", "Ground floor"]  # fmt: skip
     rows = parse(write_csv(titles, [cells])).rows
     planned = plan(printers, rows, NO_GROUP)
-    assert [i.verdict for i in planned.items] == [Verdict.ADD]  # https:// is a printer address
+    assert [i.verdict for i in planned.items] == [Verdict.ADD]
     [host] = planned.result.hosts
     assert (host.address, host.group, host.tags) == ("https://192.0.2.10", group.id,
                                                      ("toner", "front"))  # fmt: skip
@@ -134,7 +133,6 @@ def test_the_report_in_portuguese_reads_back_too() -> None:
     rows = parse(write_csv(titles, [["Lab", "192.0.2.11", "ricoh", "SP 3710", "sample2",
                                      "PAT-2", "SNMP"]], ";")).rows  # fmt: skip
     [host] = plan(HostList(), rows, NO_GROUP).result.hosts
-    # As Add printer saves them: brand and serial in capitals.
     assert info_of(host) == PrinterInfo("RICOH", "SP 3710", "SAMPLE2", "PAT-2", SNMP)
 
 
@@ -145,7 +143,7 @@ def test_printers_already_in_the_list_are_left_alone() -> None:
     planned = plan(printers, rows, NO_GROUP)
     assert [i.verdict for i in planned.items] == [Verdict.SKIP]
     assert planned.result is printers or planned.result == printers
-    assert info_of(planned.result.hosts[0]).brand == "RICOH"  # never overwritten
+    assert info_of(planned.result.hosts[0]).brand == "RICOH"
 
 
 def test_names_that_arent_network_names_need_an_address() -> None:
@@ -159,5 +157,5 @@ def test_page_counters_as_the_report_writes_them() -> None:
     assert counter_source("SNMP") == SNMP
     assert counter_source("Doc360 MPS") == DOC360
     assert counter_source("doc360") == DOC360
-    assert counter_source("Unknown (sample-portal)") == "sample-portal"  # kept as the file had it
+    assert counter_source("Unknown (sample-portal)") == "sample-portal"
     assert counter_source("Desconhecido (sample-portal)") == "sample-portal"

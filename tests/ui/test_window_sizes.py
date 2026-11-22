@@ -1,5 +1,3 @@
-"""No window grows by accident: each one's height as recorded with the spacing scale."""
-
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -23,8 +21,6 @@ from capypanel.ui.saved_credentials import SavedCredentialsDialog
 from capypanel.ui.settings.window import HEIGHT, WIDTH, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
-# Measured in the CapyPanel dark theme, as people see them. With another font than the theme's
-# (a PC without it), heights differ and the comparison says nothing.
 FONT = (13, 13)  # a line's height, an average letter's width
 RECORDED = {
     "add host": 427,
@@ -38,7 +34,7 @@ RECORDED = {
     "send a message": 242,
     "saved credentials": 335,
     "commands": 620,
-    "settings": 346,  # with the ? on a line of its own under the page list
+    "settings": 346,
 }
 
 
@@ -49,7 +45,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     hl, _desk = hl.add_host("DESK-01", desks.id, address="192.0.2.11")
     path = tmp_path / "clinic.json"
     listfile.save(path, hl, expected=None)
-    themes.apply(themes.Registry().find("capypanel-dark"))  # whatever ran before this test
+    themes.apply(themes.Registry().find("capypanel-dark"))
     win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(path)
     yield win
@@ -57,7 +53,6 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 
 
 def heights(win: CapyWindow) -> dict[str, int]:
-    """Every window that can be built without a person, by name: how tall it wants to be."""
     hosts = win.hosts
     doc = hosts.document
     assert doc is not None
@@ -86,9 +81,8 @@ def heights(win: CapyWindow) -> dict[str, int]:
     found = {}
     for name, widget in made.items():
         widget.ensurePolished()
-        # The Commands window opens at a size of its own, whatever its commands would take.
         found[name] = widget.height() if name == "commands" else widget.sizeHint().height()
-        if name != "settings":  # the window keeps its own
+        if name != "settings":
             widget.deleteLater()
     return found
 
@@ -119,7 +113,7 @@ def test_a_settings_page_too_wide_for_the_window_scrolls_sideways(window: CapyWi
     QApplication.processEvents()
     view = dialog.stack.currentWidget()
     assert isinstance(view, QScrollArea)
-    assert view.horizontalScrollBar().maximum() == 0  # as it opens, the page shows whole
+    assert view.horizontalScrollBar().maximum() == 0
     dialog.resize(dialog.minimumWidth(), 400)
     QApplication.processEvents()
     assert view.horizontalScrollBar().maximum() > 0 and view.verticalScrollBar().maximum() > 0
@@ -141,10 +135,9 @@ def test_settings_reopens_at_the_size_it_was_left_at(
 
     monkeypatch.setattr(SettingsDialog, "exec", run)
     window.open_settings()
-    window.open_settings()  # smaller than its pages want: it stays, and they scroll
+    window.open_settings()
     assert seen[1] == (700, 500) and seen[0][1] == HEIGHT
-    # A size kept while Settings opened at another one (0.24's 860 px) isn't used: the new
-    # opening size shows once.
+    # 0.24 kept Settings' size alone (860 px): not used, the new opening size shows once.
     window.prefs["settings_opens_at"] = [860, 700]
     window.open_settings()
     assert seen[2] == seen[0]

@@ -1,5 +1,3 @@
-"""The supply bars' marks: kept in Settings, set in their own window, drawn with an outline."""
-
 import pytest
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QColor, QImage, QPainter
@@ -25,10 +23,10 @@ def test_load_skips_odd_entries_and_keeps_the_low_mark_first() -> None:
         marks.EXTRA: [
             {"percent": 75, "color": "#FF0000"},
             {"percent": 25},
-            {"percent": 10, "color": "#00ff00"},  # where the low mark is: skipped
-            {"percent": 25, "color": "#0000ff"},  # twice: the first one
+            {"percent": 10, "color": "#00ff00"},
+            {"percent": 25, "color": "#0000ff"},
             {"percent": 0}, {"percent": 100}, {"percent": True}, {"percent": "50"}, "x",
-            {"percent": 50, "color": "red"},  # not #rrggbb: the theme's colour
+            {"percent": 50, "color": "red"},
         ],
         marks.LOW_COLOR: "#123456",
     }  # fmt: skip
@@ -44,7 +42,7 @@ def test_save_and_load_round_trip() -> None:
     marks.save(prefs, chosen)
     assert marks.load(prefs, 10) == chosen
     marks.save(prefs, (Mark(10, low=True),))
-    assert prefs == {}  # the default leaves nothing behind
+    assert prefs == {}
 
 
 def test_the_low_mark_follows_the_low_level(printers: PrintersTool) -> None:  # noqa: F811
@@ -71,7 +69,7 @@ def test_the_window_adds_colours_and_removes_marks(
     qapp: QApplication, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     dialog = BarMarksDialog(None, (Mark(10, low=True),))
-    assert dialog.picked() == 0 and not dialog.remove_button.isEnabled()  # the low mark stays
+    assert dialog.picked() == 0 and not dialog.remove_button.isEnabled()
     monkeypatch.setattr(QInputDialog, "getInt", lambda *a, **k: (50, True))
     dialog.add_button.click()
     assert dialog.marks() == (Mark(10, low=True), Mark(50))
@@ -84,11 +82,11 @@ def test_the_window_adds_colours_and_removes_marks(
     assert dialog.marks()[1] == Mark(50)
     told: list[str] = []
     monkeypatch.setattr(QMessageBox, "information", lambda _p, _t, text: told.append(text))
-    dialog.add_button.click()  # 50 again: refused, nothing added
+    dialog.add_button.click()
     assert len(dialog.marks()) == 2 and told == ["There's a mark at 50 % already."]
     dialog.remove_button.click()
     assert dialog.marks() == (Mark(10, low=True),)
-    dialog.colour_button.click()  # the low mark can have a colour too
+    dialog.colour_button.click()
     dialog.add_button.click()
     dialog.reset_button.click()
     assert dialog.marks() == (Mark(10, low=True),)
@@ -119,12 +117,12 @@ def test_each_mark_has_a_black_outline_and_its_colour(qapp: QApplication) -> Non
     image = QImage(width, HEIGHT + 2 * ROOM, QImage.Format.Format_RGB32)
     image.fill(QColor("#336699"))
     painter = QPainter(image)
-    supply = Supply("Black", SupplyKind.TONER, 100)  # a full bar: the marks sit on the fill
+    supply = Supply("Black", SupplyKind.TONER, 100)
     draw_meter(painter, QRectF(0, ROOM, width, HEIGHT), supply,
                (Mark(50, "#ff0000"),), QColor("#ffffff"))  # fmt: skip
     painter.end()
     x = round(width * 0.5) - 1
     top = ROOM - REACH
-    assert QColor(image.pixel(x, top + 1)).name() == "#ff0000"  # its own colour
-    assert QColor(image.pixel(x - OUTLINE, top + 1)).name() == "#000000"  # outlined
+    assert QColor(image.pixel(x, top + 1)).name() == "#ff0000"
+    assert QColor(image.pixel(x - OUTLINE, top + 1)).name() == "#000000"
     assert QColor(image.pixel(x, top - OUTLINE)).name() == "#000000"

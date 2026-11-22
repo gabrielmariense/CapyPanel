@@ -7,8 +7,6 @@ from capypanel.core.remote.access import Reason, RemoteError
 
 
 class FakeAdvapi:
-    """Windows' shutdown calls, recorded; `error` is what a failing call leaves behind."""
-
     def __init__(self) -> None:
         self.calls: list[tuple[object, ...]] = []
         self.error = 0
@@ -71,5 +69,5 @@ def test_a_restart_already_on_its_way_is_told_apart(advapi: FakeAdvapi) -> None:
 
 def test_an_unreachable_host_is_never_asked() -> None:
     with pytest.raises(RemoteError) as caught:
-        power.restart("192.0.2.1")  # a documentation address: never a real host
+        power.restart("192.0.2.1")
     assert caught.value.reason is Reason.UNREACHABLE

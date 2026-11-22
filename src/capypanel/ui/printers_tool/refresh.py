@@ -1,5 +1,3 @@
-"""Refresh on printers: an SNMP read each on a background thread, and one Doc360 download."""
-
 import json
 import logging
 import threading
@@ -15,15 +13,14 @@ from capypanel.core.remote.batch import Batch
 from capypanel.ui.printers_tool.status import NO_ACCOUNT, REFUSED, Checked, Counted
 
 log = logging.getLogger(__name__)
-COMMUNITY = "printers/snmp-community"  # its name in Windows Credential Manager
-V3_ACCOUNT = "printers/snmp-v3"  # the v3 user, its protocols and passwords, in one entry
-DOC360_ACCOUNT = "printers/doc360"  # the Doc360 MPS login: the user, then partner and password
-DEFAULT_COMMUNITY = "public"  # what most printers answer to, until one is set
-V2C, V3 = "v2c", "v3"  # Settings' SNMP version
+COMMUNITY = "printers/snmp-community"
+V3_ACCOUNT = "printers/snmp-v3"
+DOC360_ACCOUNT = "printers/doc360"
+DEFAULT_COMMUNITY = "public"
+V2C, V3 = "v2c", "v3"
 
 
 def community() -> str:
-    """The community string set in Settings, or "public"."""
     try:
         return credstore.load(COMMUNITY) or DEFAULT_COMMUNITY
     except OSError as e:
@@ -32,8 +29,6 @@ def community() -> str:
 
 
 def _read_login(name: str) -> tuple[str, dict[str, object]] | None:
-    """A login kept as a user name plus JSON fields, or None when there's none. Raises
-    OSError or ValueError."""
     found = credstore.read(name)
     if found is None:
         return None
@@ -45,7 +40,6 @@ def _read_login(name: str) -> tuple[str, dict[str, object]] | None:
 
 
 def v3_account() -> usm.Account | None:
-    """The SNMP v3 account set in Settings, or None when there's none (or it can't be read)."""
     try:
         if (found := _read_login(V3_ACCOUNT)) is None:
             return None
@@ -65,7 +59,6 @@ def v3_account() -> usm.Account | None:
 
 
 def save_v3_account(account: usm.Account) -> None:
-    """Keeps the account in Windows Credential Manager. Raises OSError or ValueError."""
     fields = {
         "auth": account.auth.label if account.auth else None,
         "auth_password": account.auth_password,
@@ -76,7 +69,6 @@ def save_v3_account(account: usm.Account) -> None:
 
 
 def doc360_account() -> doc360.Account | None:
-    """The Doc360 MPS login set in Settings, or None when there's none (or it can't be read)."""
     try:
         if (found := _read_login(DOC360_ACCOUNT)) is None:
             return None
@@ -88,7 +80,6 @@ def doc360_account() -> doc360.Account | None:
 
 
 def save_doc360_account(account: doc360.Account) -> None:
-    """Keeps the login in Windows Credential Manager. Raises OSError or ValueError."""
     fields = {"partner": account.partner, "password": account.password}
     credstore.save(DOC360_ACCOUNT, json.dumps(fields), user=account.user)
 
@@ -101,7 +92,6 @@ def _by_label[E: (usm.Auth, usm.Privacy)](kind: type[E], label: object) -> E | N
 
 
 def check(address: str, secret: snmp.Secret) -> Checked:
-    """One printer's reading, or why there's none. Never raises."""
     when = datetime.now()
     try:
         return Checked(when, reading.read(reading.snmp_host(address), secret))
@@ -115,7 +105,6 @@ def check(address: str, secret: snmp.Secret) -> Checked:
 
 
 def count(account: doc360.Account | None) -> Counted:
-    """Every printer's latest counters from Doc360 MPS, or why there are none. Never raises."""
     when = datetime.now()
     if account is None:
         words = _("No Doc360 MPS account is set.")
@@ -138,7 +127,6 @@ def count(account: doc360.Account | None) -> Counted:
 
 
 def _doc360_error(error: doc360.Doc360Error) -> tuple[str, str]:
-    """Its words, and its line in the docs."""
     if isinstance(error, doc360.NoAnswer):
         return _("Doc360 MPS didn't answer."), "doc360-no-answer"
     if isinstance(error, doc360.Changed):
@@ -148,11 +136,8 @@ def _doc360_error(error: doc360.Doc360Error) -> tuple[str, str]:
 
 
 class PrinterRun(QObject):
-    """One Refresh over some printers: (printer id, address) each, plus Doc360 MPS's counters
-    when `counts` is set."""
-
-    found = Signal(str, object)  # printer id, Checked
-    counted = Signal(object)  # Counted
+    found = Signal(str, object)
+    counted = Signal(object)
     finished = Signal()
 
     def __init__(
@@ -181,7 +166,7 @@ class PrinterRun(QObject):
 
     def _run(self) -> None:
         doc360_job = None
-        if self.counts:  # one download, beside the printers: Stop lets it finish
+        if self.counts:
             doc360_job = threading.Thread(
                 target=lambda: self.counted.emit(count(self._account)),
                 name="printers-doc360",

@@ -89,7 +89,7 @@ def test_nothing_changes_until_add_is_clicked(
     monkeypatch.setattr(ImportDialog, "exec", cancel)
     window.hosts.commands.import_hosts.trigger()
     doc = window.hosts.document
-    assert doc is not None and doc.hosts == before  # Cancel: untouched
+    assert doc is not None and doc.hosts == before
 
     def add(dialog: ImportDialog) -> int:
         dialog.set_text(PASTED)
@@ -118,21 +118,20 @@ def test_editing_the_table_asks_once_then_rewrites_the_list(
     dialog.show()
     QTest.qWaitForWindowExposed(dialog)
     row = dialog.table.visualItemRect(dialog.table.topLevelItem(0)).center()  # type: ignore[arg-type]
-    for x in range(5, 200, 20):  # the pointer passing over doesn't ask
+    for x in range(5, 200, 20):
         QTest.mouseMove(dialog.table.viewport(), QPoint(x, row.y()))
     qapp.processEvents()
     assert asked == []
     QTest.mouseClick(dialog.table.viewport(), Qt.MouseButton.LeftButton, pos=row)
-    assert len(asked) == 1  # the first click asks
+    assert len(asked) == 1
     assert dialog.table._may_edit()
-    assert len(asked) == 1  # once per import
+    assert len(asked) == 1
     duplicate = dialog.table.topLevelItem(2)
     assert duplicate is not None
-    duplicate.setText(NAME, "Finance 02")  # what typing in the cell does
+    duplicate.setText(NAME, "Finance 02")
     qapp.processEvents()
     assert "Finance 02,PC-0201" in dialog.text.toPlainText()
     assert dialog.text.toPlainText().startswith("name,address,group,tags,notes")
-    # Still the same address as Finance 01: skipped, now for being already in this import.
     assert _add_button(dialog) == "&Add 2 hosts"
 
 
@@ -149,7 +148,6 @@ def test_a_cell_being_edited_shows_its_whole_text(window: CapyWindow) -> None:
             dialog.table.editItem(item, NAME)
             editor = dialog.table.findChild(QLineEdit)
             assert editor is not None
-            # The field covers the cell, tall enough for its text.
             assert editor.height() >= editor.minimumSizeHint().height(), theme
             assert editor.height() >= dialog.table.visualItemRect(item).height() - 2, theme
             dialog.close()
@@ -170,7 +168,7 @@ def test_rows_can_be_left_out_or_added_below(
     dialog._add_row(0)
     qapp.processEvents()
     new = dialog.table.topLevelItem(1)
-    assert new is not None and new.text(NAME) == ""  # right under the clicked row
+    assert new is not None and new.text(NAME) == ""
     assert new.text(WARNING) == "No name"
 
 
@@ -179,8 +177,8 @@ def test_a_list_it_cant_read_is_explained_and_adds_nothing(window: CapyWindow) -
     dialog.set_text("PC-1,10.0.0.1,Lab,kiosk")
     assert "<b>name, address, group, tags, notes</b>" in dialog.problem.text()
     assert not dialog.problem.isHidden()
-    assert _add_button(dialog) == ""  # greyed out
-    dialog.set_text("PC-1,10.0.0.1", from_file=True)  # a CSV file needs its header
+    assert _add_button(dialog) == ""
+    dialog.set_text("PC-1,10.0.0.1", from_file=True)
     assert "header" in dialog.problem.text()
 
 

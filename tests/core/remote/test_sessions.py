@@ -12,7 +12,7 @@ from capypanel.core.remote.access import Account, Reason, RemoteError
     ("code", "reason"),
     [
         (259, Reason.NOT_ADMIN),  # seen on real hosts for a non-admin account
-        (5, Reason.REJECTED),  # seen for an account the host didn't accept
+        (5, Reason.REJECTED),
         (1326, Reason.REJECTED),  # wrong password
         (1722, Reason.UNREACHABLE),  # RPC server unavailable: the PC is off
         (53, Reason.UNREACHABLE),
@@ -26,7 +26,7 @@ def test_windows_errors_get_a_reason_the_user_can_act_on(code: int, reason: Reas
 def test_session_kinds_and_logon_times() -> None:
     assert sessions.session_kind("Console") == "console"
     assert sessions.session_kind("RDP-Tcp#3") == "rdp"
-    assert sessions.session_kind("") == "unknown"  # a disconnected session's type is gone
+    assert sessions.session_kind("") == "unknown"
     assert sessions.filetime(0) is None
     # A FILETIME: 100 ns steps since 1601.
     ft = int((datetime(2026, 10, 4, 12, tzinfo=UTC) - datetime(1601, 1, 1, tzinfo=UTC))
@@ -35,7 +35,7 @@ def test_session_kinds_and_logon_times() -> None:
 
 
 def test_this_pc_can_be_read_with_the_real_api() -> None:
-    found = sessions.read_sessions(None)  # this PC: checks the structures match Windows
+    found = sessions.read_sessions(None)
     assert all(isinstance(s, sessions.Session) and s.user for s in found)
 
 
@@ -48,14 +48,12 @@ def test_another_account_only_changes_the_network_identity() -> None:
 def test_an_unreachable_host_fails_fast() -> None:
     began = time.monotonic()
     with pytest.raises(RemoteError) as caught:
-        sessions.read_sessions("192.0.2.1")  # a documentation address: never a real host
+        sessions.read_sessions("192.0.2.1")
     assert caught.value.reason is Reason.UNREACHABLE
     assert time.monotonic() - began < access.REACH_TIMEOUT + 2
 
 
 class FakeWts:
-    """The session API calls Log off, Disconnect and Send a message make, recorded."""
-
     def __init__(self, works: bool = True) -> None:
         self.calls: list[tuple[object, ...]] = []
         self.works = works
@@ -116,7 +114,7 @@ def test_a_refused_action_says_why_and_still_closes_the_handle(fake_wts: FakeWts
 
 def test_an_action_on_an_unreachable_host_fails_fast() -> None:
     with pytest.raises(RemoteError) as caught:
-        sessions.log_off("192.0.2.1", 1)  # a documentation address: never a real host
+        sessions.log_off("192.0.2.1", 1)
     assert caught.value.reason is Reason.UNREACHABLE
 
 

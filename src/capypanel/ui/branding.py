@@ -1,5 +1,3 @@
-"""The app's icon and its mascot, from the files in branding/."""
-
 import ctypes
 import logging
 import sys
@@ -12,7 +10,7 @@ from PySide6.QtSvg import QSvgRenderer
 log = logging.getLogger(__name__)
 APP_ID = "CapyPanel.CapyPanel"
 BRANDING_DIR = Path(__file__).resolve().parent / "branding"
-ICON_SIZES = (16, 20, 24, 32, 40, 48, 64, 128, 256)  # drawn for each size, not scaled down
+ICON_SIZES = (16, 20, 24, 32, 40, 48, 64, 128, 256)
 
 
 def app_icon() -> QIcon:
@@ -23,7 +21,6 @@ def app_icon() -> QIcon:
 
 
 def mascot(height: int, pixel_ratio: float = 1.0) -> QPixmap:
-    """The mascot at its desk, `height` px tall, sharp on high-DPI screens."""
     svg = (BRANDING_DIR / "capypanel-mascot.svg").read_bytes()
     renderer = QSvgRenderer(QByteArray(svg))
     box = renderer.viewBoxF()
@@ -39,8 +36,7 @@ def mascot(height: int, pixel_ratio: float = 1.0) -> QPixmap:
 
 
 def use_own_taskbar_icon() -> None:
-    """Run from Python, Windows groups the app under python.exe with Python's icon; its own app id
-    shows CapyPanel's; CapyPanel.exe keeps the exe's own, so it opens on its pinned button."""
+    """From source, Windows would group the app under python.exe with its icon."""
     if getattr(sys, "frozen", False):
         return
     _set_app_id(APP_ID)
@@ -49,5 +45,5 @@ def use_own_taskbar_icon() -> None:
 def _set_app_id(app_id: str) -> None:
     try:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-    except (AttributeError, OSError):  # not Windows
+    except (AttributeError, OSError):
         log.debug("No taskbar app id")

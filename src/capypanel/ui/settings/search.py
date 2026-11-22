@@ -1,5 +1,3 @@
-"""The Settings search: sections with a word starting with what's typed, each match marked."""
-
 import html
 import re
 
@@ -25,8 +23,6 @@ MARK = MatchMarker.COLOR
 
 
 def spans(text: str, needle: str) -> list[tuple[int, int]]:
-    """Where `needle` starts a word in `text`, ignoring case: "tem" finds "Theme"'s "Tema", not
-    the "tem" inside "System32"."""
     if not needle:
         return []
     found = re.finditer(r"(?<!\w)" + re.escape(needle), text, re.IGNORECASE)
@@ -34,13 +30,10 @@ def spans(text: str, needle: str) -> list[tuple[int, int]]:
 
 
 def shown(text: str) -> str:
-    """A button's text as shown: "&Save" reads "Save", "&&" reads "&"."""
     return re.sub(r"&(.)", r"\1", text)
 
 
 def own_texts(widget: QWidget) -> list[str]:
-    """What one widget says: a label's or button's text, a dropdown's items, a table's headers.
-    Not a table's rows: those are data, like a tool's path, not settings."""
     if isinstance(widget, QLabel):
         return [visible_text(widget)]
     if isinstance(widget, QAbstractButton):
@@ -54,7 +47,6 @@ def own_texts(widget: QWidget) -> list[str]:
 
 
 def mentions(widget: QWidget, needle: str) -> bool:
-    """Whether a widget or anything in it says `needle`."""
     return any(
         spans(text, needle)
         for part in (widget, *widget.findChildren(QWidget))
@@ -63,9 +55,6 @@ def mentions(widget: QWidget, needle: str) -> bool:
 
 
 class SearchMarks(QWidget):
-    """Over the results page: labels get their matching words marked; buttons, ticks, dropdowns and
-    table headers get a painted mark, on a dropdown's arrow when the match is only in its list."""
-
     def __init__(self, page: QWidget) -> None:
         super().__init__(page)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -81,7 +70,7 @@ class SearchMarks(QWidget):
         for root in widgets:
             labels = [root] if isinstance(root, QLabel) else root.findChildren(QLabel)
             for label in labels:
-                if type(label) is QLabel and spans(visible_text(label), needle):  # not custom
+                if type(label) is QLabel and spans(visible_text(label), needle):
                     self._labels.append((label, label.text(), label.textFormat()))
                     marked = (
                         _marked_rich(label.text(), needle)
@@ -95,7 +84,7 @@ class SearchMarks(QWidget):
                     spans(text, needle) for text in own_texts(control)
                 ):
                     self._controls.append(control)
-                    control.installEventFilter(self)  # repainted as it moves or changes
+                    control.installEventFilter(self)
         page = self.parentWidget()
         if page is not None:
             self.resize(page.size())
@@ -144,7 +133,6 @@ def _is_rich(label: QLabel) -> bool:
 
 
 def visible_text(label: QLabel) -> str:
-    """What a label shows: a link's words, not its address or tags."""
     if not _is_rich(label):
         return label.text()
     return QTextDocumentFragment.fromHtml(label.text()).toPlainText()
@@ -156,7 +144,6 @@ _MARK_STYLE = (
 
 
 def _marked_html(text: str, needle: str) -> str:
-    """Plain text, its matches marked, as rich text."""
     parts, last = [], 0
     for start, end in spans(text, needle):
         parts += [html.escape(text[last:start]), f'<span style="{_MARK_STYLE}">']
@@ -167,8 +154,6 @@ def _marked_html(text: str, needle: str) -> str:
 
 
 def _marked_rich(text: str, needle: str) -> str:
-    """Rich text (a link, say), its matches marked only in what it shows: tags and the
-    addresses inside them stay as they are."""
     marked = []
     for part in re.split(r"(<[^>]*>)", text):
         if part.startswith("<"):
@@ -188,7 +173,6 @@ def _marked_rich(text: str, needle: str) -> str:
 
 
 def _word_rects(text: str, needle: str, left: int, area: QRect, widget: QWidget) -> list[QRect]:
-    """The matches in a line of `text` drawn from `left`, centred in `area`'s height."""
     metrics = widget.fontMetrics()
     height = metrics.height()
     top = area.top() + (area.height() - height) // 2
@@ -200,7 +184,6 @@ def _word_rects(text: str, needle: str, left: int, area: QRect, widget: QWidget)
 
 
 def _marks(control: QWidget, needle: str) -> list[tuple[QWidget, QRect]]:
-    """Each mark on a control, in the coordinates of the widget it's drawn on."""
     style = control.style()
     if isinstance(control, (QCheckBox, QRadioButton)):
         option = QStyleOptionButton()
@@ -213,7 +196,7 @@ def _marks(control: QWidget, needle: str) -> list[tuple[QWidget, QRect]]:
         area = style.subElementRect(element, option, control)
         text = shown(control.text())
         return [(control, r) for r in _word_rects(text, needle, area.left(), area, control)]
-    if isinstance(control, QAbstractButton):  # a push button: its text is centred
+    if isinstance(control, QAbstractButton):
         text = shown(control.text())
         left = (control.width() - control.fontMetrics().horizontalAdvance(text)) // 2
         return [(control, r) for r in _word_rects(text, needle, left, control.rect(), control)]

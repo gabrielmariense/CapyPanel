@@ -1,5 +1,3 @@
-"""A printer's details, under its host entry's "printer" key: a printer list is a host list."""
-
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
@@ -8,10 +6,8 @@ from capypanel.core.hosts.model import Host
 
 KEY = "printer"
 
-# Where a printer's page counters are read from. A source this version doesn't know is kept
-# as written and shown as unknown.
-SNMP = "snmp"  # asked straight from the printer on the network
-DOC360 = "doc360"  # Doc360 MPS, the managed-print portal: reaches printers on other networks
+SNMP = "snmp"
+DOC360 = "doc360"
 COUNTER_SOURCES = (SNMP, DOC360)
 
 _FIELDS = ("brand", "model", "serial", "asset_tag", "counter_source")
@@ -22,9 +18,9 @@ class PrinterInfo:
     brand: str = ""
     model: str = ""
     serial: str = ""
-    asset_tag: str = ""  # the organization's own inventory number
+    asset_tag: str = ""
     counter_source: str = SNMP
-    extra: Mapping[str, Any] = field(default_factory=dict)  # keys this version doesn't know
+    extra: Mapping[str, Any] = field(default_factory=dict)
 
     @property
     def known_source(self) -> bool:
@@ -44,8 +40,7 @@ def info_of(host: Host) -> PrinterInfo:
 
 
 def with_info(host: Host, info: PrinterInfo) -> Host:
-    """The host with these details. Empty fields aren't written, so entries stay short."""
-    data: dict[str, Any] = dict(info.extra)  # an odd value kept as found, unless replaced now
+    data: dict[str, Any] = dict(info.extra)
     for name in _FIELDS:
         value = getattr(info, name)
         if value and not (name == "counter_source" and value == SNMP):

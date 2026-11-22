@@ -1,5 +1,3 @@
-"""Restarting a service on another PC (the Print Spooler, say) as `sc` does: nothing runs there."""
-
 import ctypes
 import time
 from collections.abc import Callable
@@ -8,11 +6,11 @@ from ctypes import wintypes
 from capypanel.core.remote.access import Account, as_account, check_reachable, last_error
 
 SPOOLER = "Spooler"
-STOP_TIMEOUT = 30.0  # seconds a service gets to stop before giving up
+STOP_TIMEOUT = 30.0  # seconds
 _CONNECT = 0x0001
 _QUERY, _START, _STOP = 0x0004, 0x0010, 0x0020
 _STOPPED, _STOP_CONTROL = 1, 1
-STATES = {  # what QueryServiceStatus reports, by the words sc.exe uses
+STATES = {
     1: "stopped", 2: "starting", 3: "stopping", 4: "running",
     5: "continuing", 6: "pausing", 7: "paused",
 }  # fmt: skip
@@ -32,8 +30,6 @@ def restart_service(
     account: Account | None = None,
     sleep: Callable[[float], None] = time.sleep,
 ) -> None:
-    """Stops service `name` on `host`, waits until it has stopped, and starts it again. A
-    stopped service is just started. Raises RemoteError, or TimeoutError when it won't stop."""
     check_reachable(host)
     with as_account(account):
         manager = _advapi32.OpenSCManagerW(host, None, _CONNECT)
@@ -54,7 +50,6 @@ def restart_service(
 
 
 def service_state(host: str, name: str, account: Account | None = None) -> str:
-    """Whether service `name` on `host` runs: "running", "stopped"… (STATES). Raises RemoteError."""
     check_reachable(host)
     with as_account(account):
         manager = _advapi32.OpenSCManagerW(host, None, _CONNECT)

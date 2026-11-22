@@ -1,5 +1,3 @@
-"""Mapped drives, a Users command: the drives saved for each person signed in to a PC."""
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -31,7 +29,6 @@ def drive_header() -> list[str]:
 
 
 def drive_rows(people: Sequence[Person]) -> list[DriveRow]:
-    """Each person's saved drives by letter; a person with none gets one line saying so."""
     rows: list[DriveRow] = []
     for person in people:
         if not person.drives:
@@ -49,8 +46,6 @@ def row_text(row: DriveRow) -> list[str]:
 
 
 class DrivesDialog(ReadList):
-    """Mapped drives: the drives saved for each person signed in, and Copy list."""
-
     READ = "Mapped drives"
     HELP_PLACE = "commands-see-whats-installed-and-mapped"
 

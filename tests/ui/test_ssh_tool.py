@@ -9,7 +9,7 @@ import shiboken6
 from PySide6.QtCore import QCoreApplication, QEvent
 from PySide6.QtGui import QKeySequence, QValidator
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMenu, QTreeWidgetItem
-from test_printers_tool import FakeShell  # the same pretend shell as Printers' tests
+from test_printers_tool import FakeShell
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -17,7 +17,7 @@ from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote.status import PortState
 from capypanel.core.ssh import launch
 from capypanel.core.ssh.host import SshInfo, group_login, info_of, with_info
-from capypanel.core.ssh.launch import connect as real_connect  # before no_ssh stands in for it
+from capypanel.core.ssh.launch import connect as real_connect
 from capypanel.core.ssh.launch import tab_command as real_tab_command
 from capypanel.ui import menus
 from capypanel.ui.list_workspace.panels import ROLE_NOTHING
@@ -51,7 +51,7 @@ def servers(tmp_path: Path) -> Path:
     hl = _host(hl, "nas-01", racks.id, "192.0.2.41", port=2222, login="root")
     hl = _host(hl, "web-01", NO_GROUP, "198.51.100.42")
     path = tmp_path / "servers.json"
-    listfile.save(path, hl, expected=None)  # a host list: SSH shows Hosts' lists
+    listfile.save(path, hl, expected=None)
     return path
 
 
@@ -92,7 +92,7 @@ def _select(tool: SshTool, *names: str) -> None:
 
 
 def _wait(tool: SshTool) -> None:
-    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    deadline = time.monotonic() + 10
     while tool._run is not None and time.monotonic() < deadline:
         QApplication.processEvents()
         time.sleep(0.01)
@@ -104,12 +104,12 @@ def test_the_table_shows_name_address_log_in_as_status_and_tags(ssh: SshTool) ->
     table = ssh.table
     header = table.headerItem()
     shown = [header.text(i) for i in range(table.columnCount()) if not table.isColumnHidden(i)]
-    assert shown == ["Name", "Address", "Log in as", "Status", "Tags"]  # Port hidden at first
+    assert shown == ["Name", "Address", "Log in as", "Status", "Tags"]
     rows = _rows(ssh)
     assert rows["nas-01"] == ["nas-01", "192.0.2.41", "2222", "root", "Not checked", ""]
     assert rows["web-01"][table.PORT] == "22" and rows["web-01"][table.LOGIN] == ""
     first = table.topLevelItem(0)
-    assert first is not None and first.data(table.STATUS, ROLE_NOTHING)  # sorts last
+    assert first is not None and first.data(table.STATUS, ROLE_NOTHING)
     assert ssh.nav.everything.topLevelItem(0).text(0).startswith("All hosts")  # type: ignore[union-attr]
     assert ssh.search.placeholderText() == "Search name, address, log in as, status, tags, notes"
 
@@ -135,12 +135,11 @@ def test_a_tool_built_alone_takes_its_toolbar_with_it(shell: FakeShell) -> None:
     toolbar = tool.toolbar
     tool.deleteLater()
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-    assert not shiboken6.isValid(toolbar)  # at once: a theme switch can come next
+    assert not shiboken6.isValid(toolbar)
 
 
 @pytest.fixture
 def capy(qapp: QApplication, tmp_path: Path) -> Iterator["CapyWindow"]:
-    """The whole window on a host list with a PC and a server: SSH shows Hosts' open list."""
     from capywindow import CapyWindow
 
     (tmp_path / settings.PORTABLE_MARKER).touch()
@@ -168,7 +167,7 @@ def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
     from capypanel.ui.hosts_tool import tool as hosts_module
 
     ssh = _ssh(capy)
-    assert ssh.document is capy.hosts.document and _rows(ssh) == {}  # behind Hosts: waits
+    assert ssh.document is capy.hosts.document and _rows(ssh) == {}
     assert capy.show_tool("ssh") and set(_rows(ssh)) == {"DESK-01", "nas-01"}
 
     def add(dialog: QDialog) -> QDialog.DialogCode:
@@ -184,7 +183,7 @@ def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
     table = capy.hosts.table
     rows = (table.topLevelItem(i) for i in range(table.topLevelItemCount()))
     shown = {row.text(0) for row in rows if row is not None}
-    assert shown == {"DESK-01", "nas-01", "backup-01"}  # Hosts' table, once it's shown
+    assert shown == {"DESK-01", "nas-01", "backup-01"}
 
     def rename(dialog: QDialog) -> QDialog.DialogCode:
         assert isinstance(dialog, HostDialog)
@@ -195,11 +194,11 @@ def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
     doc = capy.hosts.document
     assert doc is not None
     capy.hosts.edit_item(next(h for h in doc.hosts.hosts if h.name == "nas-01"))
-    assert set(_rows(ssh)) == {"DESK-01", "nas-01", "backup-01"}  # behind Hosts: not refilled
+    assert set(_rows(ssh)) == {"DESK-01", "nas-01", "backup-01"}
     assert capy.show_tool("ssh")
-    assert set(_rows(ssh)) == {"DESK-01", "nas-02", "backup-01"}  # SSH's table, once shown
+    assert set(_rows(ssh)) == {"DESK-01", "nas-02", "backup-01"}
     saved = {h.name: h for h in listfile.load(tmp_path / "clinic.json").hosts.hosts}
-    assert info_of(saved["nas-02"]) == SshInfo(port=2222, login="root")  # Hosts kept them
+    assert info_of(saved["nas-02"]) == SshInfo(port=2222, login="root")
     assert info_of(saved["backup-01"]) == SshInfo(login="admin")
 
 
@@ -210,8 +209,8 @@ def test_a_list_picked_or_made_in_ssh_opens_in_hosts_and_profile_cleanup(
     from capypanel.ui.profiles_tool.tool import ProfilesTool
 
     ssh = _ssh(capy)
-    assert ssh.document is capy.hosts.document  # else picking a host list asks, and waits
-    assert capy.show_tool("ssh")  # its dropdown is picked from SSH itself
+    assert ssh.document is capy.hosts.document
+    assert capy.show_tool("ssh")
     servers, racks = HostList().add_group("Racks")
     servers = _host(servers, "core-sw-01", racks.id, "192.0.2.40")
     listfile.save(tmp_path / "servers.json", servers, expected=None)
@@ -219,12 +218,12 @@ def test_a_list_picked_or_made_in_ssh_opens_in_hosts_and_profile_cleanup(
     doc = capy.hosts.document
     assert doc is not None and doc.path == tmp_path / "servers.json"
     assert ssh.document is doc and set(_rows(ssh)) == {"core-sw-01"}
-    assert ssh.list_choices() == capy.hosts.list_choices()  # one dropdown's lists
+    assert ssh.list_choices() == capy.hosts.list_choices()
     profiles = capy.tools["profiles"]
     assert isinstance(profiles, ProfilesTool) and profiles.list_picker.text() == "servers"
     made = tmp_path / "linux.json"
     monkeypatch.setattr(workspace, "ask_new_list", lambda *_a, **_k: made)
-    ssh.new_list()  # New list… in SSH's dropdown makes a host list
+    ssh.new_list()
     doc = capy.hosts.document
     assert doc is not None and doc.path == made and ssh.document is doc
     assert listfile.load(made).hosts.hosts == ()
@@ -272,7 +271,7 @@ def test_refresh_checks_only_the_ssh_port_of_every_host_shown(
         "Answered at 192.0.2.41, but port 2222 is closed: ssh.exe would fail with "
         "“Connection refused”."
     )
-    assert closed.data(table.STATUS, ROLE_QUIET)  # only Online reads at full strength
+    assert closed.data(table.STATUS, ROLE_QUIET)
     assert shell.messages[-1] == "Checked 3 hosts."
     assert "1 online" in ssh.status_label.text()
 
@@ -282,7 +281,7 @@ def test_a_host_with_no_usable_address_is_skipped(
 ) -> None:
     doc = ssh.document
     assert doc is not None
-    hl, _host_added = doc.hosts.add_host("two words", NO_GROUP)  # no address, nor a PC name
+    hl, _host_added = doc.hosts.add_host("two words", NO_GROUP)
     assert ssh._commit(hl)
     ssh.commands.refresh_shown.trigger()
     _wait(ssh)
@@ -297,7 +296,7 @@ def test_connect_hands_ssh_exe_the_address_port_and_login(
     assert ssh.commands.connect_host.isEnabled()
     ssh.commands.connect_host.trigger()
     assert no_ssh == [("192.0.2.41", SshInfo(port=2222, login="root"))]
-    ssh.activate_selected()  # a double-click, or Enter in the table
+    ssh.activate_selected()
     assert len(no_ssh) == 2
     _select(ssh, "core-sw-01", "web-01")
     ssh.details.connect_clicked.emit()
@@ -308,7 +307,7 @@ def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:
     _select(ssh, "nas-01")
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
-    words = [menus.label(a) for a in menu.actions() if not a.isSeparator()]  # no shortcut room
+    words = [menus.label(a) for a in menu.actions() if not a.isSeparator()]
     assert words[:3] == ["&Connect", "Connect in a separate &window", "Re&fresh host"]
     assert menu.defaultAction() is ssh.commands.connect_host
     assert menu.toolTipsVisible()
@@ -321,7 +320,7 @@ def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:
 
 
 def test_connect_s_key_reads_enter_in_the_host_menu(ssh: SshTool) -> None:
-    themes.apply(themes.DEFAULT_THEME)  # its watcher keeps the room in every menu
+    themes.apply(themes.DEFAULT_THEME)
     _select(ssh, "nas-01")
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
@@ -336,9 +335,9 @@ def test_a_server_typed_in_the_search_is_offered_and_connected_at_once(
     ssh: SshTool, no_ssh: list[tuple[str, object]]
 ) -> None:
     [offer] = ssh.typed_offer("db-07", ())
-    assert offer.text() == "Connect to db-07"  # no ellipsis: nothing opens before it connects
+    assert offer.text() == "Connect to db-07"
     offer.trigger()
-    assert no_ssh == [("db-07", SshInfo())]  # port 22, and ssh.exe's own login
+    assert no_ssh == [("db-07", SshInfo())]
     assert ssh.typed_offer("-oProxyCommand=calc", ()) == []  # never an option for ssh.exe
     assert ssh.typed_offer("nas-01", ssh.document.hosts.hosts) == []  # type: ignore[union-attr]
 
@@ -352,14 +351,14 @@ def test_without_ssh_exe_it_says_where_to_add_it(
     monkeypatch.setattr(launch, "connect", missing)
     monkeypatch.setattr(launch, "tab_command", missing)
     _select(ssh, "core-sw-01", "web-01")
-    ssh.connect_selected()  # in tabs
+    ssh.connect_selected()
     ssh.connect_selected(window=True)
     words = (
         "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for "
         "“Optional features” and add “OpenSSH Client”. Adding it needs an administrator."
     )
     box = (words, "ssh-not-installed")
-    assert help_boxes == [box, box]  # once each time, not once per host
+    assert help_boxes == [box, box]
     assert ssh.connections() == []
 
 
@@ -370,16 +369,15 @@ def test_the_separate_window_is_told_the_host_s_name(
     monkeypatch.setattr(launch, "connect", lambda _address, _info, name="": names.append(name))
     _select(ssh, "web-01")
     ssh.commands.connect_window.trigger()
-    assert names == ["web-01"]  # its words say "The connection to web-01 ended…"
-    assert ssh.connections() == []  # a window, not a tab
+    assert names == ["web-01"]
+    assert ssh.connections() == []
 
 
 @pytest.mark.parametrize("address", ["-oProxyCommand=calc", "srv;calc", "srv&calc"])
 def test_an_address_ssh_exe_would_misread_is_never_handed_over(
     ssh: SshTool, shell: FakeShell, monkeypatch: pytest.MonkeyPatch, address: str
 ) -> None:
-    # A list file edited by hand: the real checks run before anything starts, in a tab or in a
-    # separate window. A leading "-" is an option; ; and & would reach a ProxyCommand's shell.
+    # A hand-edited list: a leading "-" is an option; ; and & would reach a ProxyCommand's shell.
     started: list[object] = []
     monkeypatch.setattr(launch, "connect", real_connect)
     monkeypatch.setattr(launch, "tab_command", real_tab_command)
@@ -417,7 +415,7 @@ def test_adding_a_host_saves_its_port_and_login(
 
     monkeypatch.setattr(tool_module, "run_modal", fill)
     ssh.add_item()
-    saved = {h.name: h for h in listfile.load(servers).hosts.hosts}  # a host list
+    saved = {h.name: h for h in listfile.load(servers).hosts.hosts}
     assert info_of(saved["backup-01"]) == SshInfo(port=2200, login="EXAMPLE\\user")
     assert ssh.table.selected_ids() == [saved["backup-01"].id]
 
@@ -438,8 +436,7 @@ def test_the_fields_take_no_space_nor_a_leading_dash(qapp: QApplication) -> None
 
 
 def test_the_fields_take_none_of_the_characters_ssh_exe_refuses(qapp: QApplication) -> None:
-    # Windows' own ssh.exe 9.5 refuses them; an older one would pass them on to a ProxyCommand
-    # that names the host or the user, in a shell. A key that would type one does nothing.
+    # ssh.exe 9.5 refuses them; an older one passes them to a ProxyCommand's shell.
     dialog = SshHostDialog(None, HostList())
     address, login = dialog.address.validator(), dialog.login.validator()
     assert address is not None and login is not None
@@ -467,7 +464,7 @@ def test_editing_the_address_forgets_the_last_check(
     doc = ssh.document
     assert doc is not None
     ssh.edit_item(next(h for h in doc.hosts.hosts if h.name == "web-01"))
-    assert _rows(ssh)["web-01"][ssh.table.STATUS] == "Not checked"  # about the old address
+    assert _rows(ssh)["web-01"][ssh.table.STATUS] == "Not checked"
     assert _rows(ssh)["nas-01"][ssh.table.STATUS] == "Online"
 
 
@@ -483,7 +480,6 @@ def test_details_show_the_status_connect_and_the_connection(ssh: SshTool) -> Non
 
 
 def _items(menu: QMenu) -> list[tuple[str, bool]]:
-    """Each item's words and tick, "-" for a line."""
     return [("-", False) if a.isSeparator() else (menus.label(a), a.isChecked())
             for a in menu.actions()]  # fmt: skip
 
@@ -514,10 +510,10 @@ def test_details_log_in_as_is_a_picker_of_the_names_the_list_uses(
 ) -> None:
     _select(ssh, "nas-01")
     picker = ssh.details.login_button
-    assert picker is not None and picker.marks == ("pin",)  # its own name, as Hosts pins one
+    assert picker is not None and picker.marks == ("pin",)
     assert picker.toolTip() == "Only this host"
     menu = ssh.details.login_menu
-    menu.aboutToShow.emit()  # what a click on the picker fills it with
+    menu.aboutToShow.emit()
     assert _items(menu) == [
         (NONE, False), ("-", False), ("admin", False), ("root", True), ("-", False),
         ("&Another name…", False),
@@ -525,7 +521,7 @@ def test_details_log_in_as_is_a_picker_of_the_names_the_list_uses(
     _pick(menu, "admin")
     assert _saved_logins(servers)["nas-01"] == "admin"
     picker = ssh.details.login_button
-    assert picker is not None and picker.value_text() == "admin"  # Details shows it at once
+    assert picker is not None and picker.value_text() == "admin"
     menu.aboutToShow.emit()
     _pick(menu, NONE)
     assert _saved_logins(servers)["nas-01"] == ""
@@ -542,7 +538,6 @@ def test_the_host_menu_s_log_in_as_sets_every_host_picked(
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
     logins = _submenu(menu, "&Log in as")
-    # One has admin, the other none: neither is ticked.
     assert _items(logins) == [
         (NONE, False), ("-", False), ("admin", False), ("root", False), ("-", False),
         ("&Another name…", False),
@@ -554,7 +549,7 @@ def test_the_host_menu_s_log_in_as_sets_every_host_picked(
     def another(dialog: QDialog) -> QDialog.DialogCode:
         assert isinstance(dialog, LoginDialog) and dialog.windowTitle() == "Log in as"
         assert dialog.about.text() == "2 hosts selected"
-        assert dialog.login.text() == "root"  # what both have now
+        assert dialog.login.text() == "root"
         assert dialog.login.placeholderText().startswith("Empty: your SSH config")
         assert not _accepts(cast(QValidator, dialog.login.validator()), "-oProxyCommand=calc")
         dialog.login.setText("EXAMPLE\\user")
@@ -590,10 +585,10 @@ def test_a_group_s_log_in_as_is_taken_by_its_hosts_without_a_name_of_their_own(
     _pick(_submenu(menu, "&Log in as"), "&Another name…")
     assert _saved_logins(servers)["Racks"] == "pi"
     core = next(h for h in ssh.document.hosts.hosts if h.name == "core-sw-01")  # type: ignore[union-attr]
-    ssh.set_hosts_login([core.id], "")  # follows Racks now
+    ssh.set_hosts_login([core.id], "")
     rows = _rows(ssh)
     assert (rows["core-sw-01"][ssh.table.LOGIN], rows["nas-01"][ssh.table.LOGIN]) == ("pi", "root")
-    assert rows["web-01"][ssh.table.LOGIN] == ""  # in no group
+    assert rows["web-01"][ssh.table.LOGIN] == ""
     _select(ssh, "core-sw-01")
     picker = ssh.details.login_button
     assert picker is not None and (picker.value_text(), picker.marks) == ("pi", ())
@@ -601,7 +596,7 @@ def test_a_group_s_log_in_as_is_taken_by_its_hosts_without_a_name_of_their_own(
     ssh.details.login_menu.aboutToShow.emit()
     assert _items(ssh.details.login_menu)[0] == ("From group “Racks”: pi", True)
     ssh.commands.connect_host.trigger()
-    assert no_ssh == [("192.0.2.40", SshInfo(login="pi"))]  # the group's name reaches ssh.exe
+    assert no_ssh == [("192.0.2.40", SshInfo(login="pi"))]
     menu = QMenu()
     now = ssh.document.hosts.group(racks.id)  # type: ignore[union-attr]  # as the menu reads it
     assert now is not None
@@ -634,7 +629,7 @@ def test_the_edit_window_s_hint_says_what_an_empty_log_in_as_takes(ssh: SshTool)
     hosts = ssh.document.hosts  # type: ignore[union-attr]
     dialog = SshHostDialog(None, hosts, next(h for h in hosts.hosts if h.name == "web-01"))
     assert dialog.login.placeholderText().startswith("Empty: your SSH config")
-    dialog.group.setCurrentIndex(dialog.group.findData(racks.id))  # moving it into Racks
+    dialog.group.setCurrentIndex(dialog.group.findData(racks.id))
     assert dialog.login.placeholderText() == "From group “Racks”: pi"
     dialog.deleteLater()
 
@@ -642,7 +637,7 @@ def test_the_edit_window_s_hint_says_what_an_empty_log_in_as_takes(ssh: SshTool)
 def test_log_in_as_is_greyed_on_a_list_that_can_t_be_saved(
     ssh: SshTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(ssh, "_writable", lambda: None)  # read-only: Connect still works
+    monkeypatch.setattr(ssh, "_writable", lambda: None)
     _select(ssh, "nas-01")
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
@@ -656,7 +651,7 @@ def test_refresh_status_by_itself_is_off_until_picked_and_warns_about_fail2ban(
 ) -> None:
     group = ssh.settings_group()
     [(page_id, page)] = group.build()
-    assert page_id == "ssh" and isinstance(page, AutoStatusOnlyPage)  # its lists are Hosts'
+    assert page_id == "ssh" and isinstance(page, AutoStatusOnlyPage)
     assert page.auto_every.currentText() == "Off"
     assert ssh.auto_status() == (False, 5) and not ssh._auto_timer.isActive()
     [row] = [

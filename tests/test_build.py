@@ -1,5 +1,3 @@
-"""The build label (version, an ever-growing build number, commit) and the exe's version info."""
-
 import importlib.util
 import re
 import shutil
@@ -37,19 +35,19 @@ def test_git_is_asked_for_the_build_number_once_per_commit(
     monkeypatch.setattr(subprocess, "run", git)
     number = str(100 + capypanel._SQUASHED)
     assert capypanel._build_number(tmp_path, "abc1234") == number and len(asked) == 1
-    assert capypanel._build_number(tmp_path, "abc1234") == number and len(asked) == 1  # kept
-    assert capypanel._build_number(tmp_path, "def5678") == number and len(asked) == 2  # new commit
+    assert capypanel._build_number(tmp_path, "abc1234") == number and len(asked) == 1
+    assert capypanel._build_number(tmp_path, "def5678") == number and len(asked) == 2
 
     def no_git(command: list[str], **_more: Any) -> subprocess.CompletedProcess[str]:
         raise FileNotFoundError("git")
 
     monkeypatch.setattr(subprocess, "run", no_git)
-    assert capypanel._build_number(tmp_path, "0000000") == ""  # no git: no number, nothing kept
+    assert capypanel._build_number(tmp_path, "0000000") == ""
     assert capypanel._build_number(tmp_path, "def5678") == number
 
 
 def test_a_packaged_build_carries_its_version_build_number_and_commit(tmp_path: Path) -> None:
-    assert capypanel._stamped(tmp_path) is None  # from source: no such file
+    assert capypanel._stamped(tmp_path) is None
     (tmp_path / capypanel.STAMP).write_text("0.26.0 472 181cb7c\n", encoding="utf-8")
     assert capypanel._stamped(tmp_path) == ("0.26.0", "472", "181cb7c")
     (tmp_path / capypanel.STAMP).write_text("half written", encoding="utf-8")

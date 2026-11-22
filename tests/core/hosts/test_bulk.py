@@ -20,7 +20,7 @@ def _office() -> tuple[HostList, str]:
 
 def test_a_csv_with_headers_in_any_order_and_language() -> None:
     parsed = parse(
-        "Endereço;Nome;Grupo;Tags;Sala\n"  # Excel's CSV in pt-BR: semicolons
+        "Endereço;Nome;Grupo;Tags;Sala\n"
         "PC-0142.corp.example.net;Reception 01;Headquarters/Front desk;kiosk, 2nd floor;12\n"
     )
     assert parsed.rows == (
@@ -29,7 +29,7 @@ def test_a_csv_with_headers_in_any_order_and_language() -> None:
             ("kiosk", "2nd floor"),
         ),
     )  # fmt: skip
-    assert parsed.ignored == ("Sala",)  # said, not silently dropped
+    assert parsed.ignored == ("Sala",)
 
 
 def test_lines_without_a_header_are_name_and_address() -> None:
@@ -38,7 +38,6 @@ def test_lines_without_a_header_are_name_and_address() -> None:
     assert [(r.name, r.address) for r in rows] == [
         ("Lab 07", "10.20.30.47"), ("Lab 08,10.20.30.48", ""), ("LAB-09", ""),
     ]  # fmt: skip
-    # One delimiter per list, from its first line: here a tab, so the comma line stays whole.
     assert parse("Lab 08,10.20.30.48").rows[0].address == "10.20.30.48"
 
 
@@ -52,8 +51,8 @@ def test_a_table_lined_up_with_spaces_imports_by_its_columns() -> None:
     pasted = (
         "Hostname        Address         Group Name\n"
         "Lab 07          192.0.2.47      Ward A / 2nd floor\n"
-        "LAB-08                          Ward B\n"  # an empty address: cut where titles start
-        "Reception-workstation-01  192.0.2.49  Ward C\n"  # too long for its column
+        "LAB-08                          Ward B\n"
+        "Reception-workstation-01  192.0.2.49  Ward C\n"
     )
     parsed = parse(pasted)
     assert [(r.name, r.address, r.group) for r in parsed.rows] == [
@@ -61,7 +60,6 @@ def test_a_table_lined_up_with_spaces_imports_by_its_columns() -> None:
         ("LAB-08", "", "Ward B"),
         ("Reception-workstation-01", "192.0.2.49", "Ward C"),
     ]
-    # Without a header row, two-space gaps are part of the name.
     assert parse("Lab 07    192.0.2.47\n").rows[0].name == "Lab 07    192.0.2.47"
 
 
@@ -75,12 +73,12 @@ def test_the_plan_adds_skips_and_flags_without_changing_the_list() -> None:
     rows = [
         ImportRow("Reception 01", "PC-0142", "Headquarters/Front desk", ("kiosk",)),
         ImportRow("Finance 01", "PC-0201", "Headquarters/Finance"),
-        ImportRow("Finance 01", "PC-0201", "Headquarters/Finance"),  # twice in the paste
-        ImportRow("Old HQ", "10.0.0.1"),  # another name, but HQ-01's address
-        ImportRow("hq-01"),  # HQ-01, in other case
+        ImportRow("Finance 01", "PC-0201", "Headquarters/Finance"),
+        ImportRow("Old HQ", "10.0.0.1"),
+        ImportRow("hq-01"),
         ImportRow("", "10.20.30.48"),
         ImportRow("Lab 07", "not an address!"),
-        ImportRow("Lab 08"),  # no address, and spaces: it can't be connected to by name
+        ImportRow("Lab 08"),
         ImportRow("LAB-09"),
     ]
     p = plan(hl, rows, branch)
@@ -88,15 +86,14 @@ def test_the_plan_adds_skips_and_flags_without_changing_the_list() -> None:
         Verdict.ADD, Verdict.ADD, Verdict.SKIP, Verdict.SKIP, Verdict.SKIP,
         Verdict.BAD, Verdict.BAD, Verdict.BAD, Verdict.ADD,
     ]  # fmt: skip
-    # A skipped row says which host or row it repeats, so the right one can be kept.
     assert p.items[2].reason == "Same as row 2"
     assert p.items[3].reason == "“HQ-01” has this address, in “Headquarters”"
     assert p.items[4].reason == "A host with this name is already in the list, in “Headquarters”"
     assert p.items[5].reason == "No name"
     assert p.adding == 3
-    assert p.new_groups == (("Headquarters", "Finance"),)  # Front desk was there already
-    assert p.items[8].group == ("Branch office",)  # no group: the one picked
-    assert len(hl.hosts) == 1  # planning changes nothing
+    assert p.new_groups == (("Headquarters", "Finance"),)
+    assert p.items[8].group == ("Branch office",)
+    assert len(hl.hosts) == 1
     assert {h.name for h in p.result.hosts} == {"HQ-01", "Reception 01", "Finance 01", "LAB-09"}
 
 
@@ -116,12 +113,11 @@ def test_group_names_match_without_regard_to_case() -> None:
 def test_an_export_imports_back_into_the_same_groups() -> None:
     hl, branch = _office()
     slash = next(g.id for g in hl.groups if g.name == "Front desk")
-    hl = hl.rename_group(slash, "Front desk / lobby")  # a "/" in a group's own name
+    hl = hl.rename_group(slash, "Front desk / lobby")
     hl, _ = hl.add_host("FD-01", slash, address="10.0.0.2", tags=["kiosk", "2nd floor"])
     text = export(hl, hl.hosts)
     assert text.splitlines()[0] == "name,address,group,tags,notes"
     assert "FD-01,10.0.0.2,Headquarters/Front desk / lobby,kiosk;2nd floor," in text
-    # Into the list it came from, emptied: every host lands back in its own group.
     emptied = hl.remove_hosts(h.id for h in hl.hosts)
     back = plan(emptied, parse(text).rows, branch)
     assert back.adding == 2 and back.new_groups == ()
@@ -136,8 +132,7 @@ def test_a_report_never_hands_a_spreadsheet_a_formula() -> None:
     hl, _ = hl.add_host("@SUM", branch, address="192.0.2.6", tags=["+kiosk"])
     text = export(hl, hl.hosts)
     assert "'=HYPERLINK" in text and "'-2 floors" in text and "'@SUM" in text
-    assert "'+kiosk" in text and "HQ-01,10.0.0.1," in text  # plain cells stay as they were
-    # It imports back as it was, without the marks.
+    assert "'+kiosk" in text and "HQ-01,10.0.0.1," in text
     emptied = hl.remove_hosts(h.id for h in hl.hosts)
     back = plan(emptied, parse(text).rows, branch).result.hosts
     assert {(h.name, h.notes, h.tags) for h in back} >= {
@@ -155,9 +150,9 @@ def test_table_edits_are_written_back_as_csv() -> None:
 
 
 def test_a_list_that_cant_be_read_says_why_instead_of_guessing() -> None:
-    assert parse("PC-1,10.0.0.1,Lab,kiosk").needs_header  # 4 columns, no header: what are they?
-    assert parse("PC-1,10.0.0.1", file=True).needs_header  # a CSV file needs its header row
-    assert not parse("PC-1,10.0.0.1").needs_header  # pasted name and address: fine
+    assert parse("PC-1,10.0.0.1,Lab,kiosk").needs_header
+    assert parse("PC-1,10.0.0.1", file=True).needs_header
+    assert not parse("PC-1,10.0.0.1").needs_header
     assert parse("PC-1,10.0.0.1,Lab").rows == ()
 
 
@@ -181,7 +176,6 @@ def test_the_list_separator_is_one_excel_splits_on() -> None:
     assert list_separator() in (",", ";", "\t")
 
 
-# A caller's own columns (Printers' brand, model and so on) and its own check of a row.
 MORE = {"brand": {"brand", "marca"}, "asset_tag": {"asset tag", "patrimônio"}}
 
 
@@ -190,10 +184,9 @@ def test_a_callers_own_columns_come_in_and_are_not_ignored() -> None:
     parsed = parse(text, more=MORE)
     assert [r.more for r in parsed.rows] == [
         (("brand", "RICOH"), ("asset_tag", "PAT-1")),
-        (("asset_tag", "PAT-2"),),  # an empty cell isn't kept
+        (("asset_tag", "PAT-2"),),
     ]
     assert parsed.ignored == ("Sala",)
-    # Without `more`, the same list reads exactly as Hosts always read it.
     plain = parse(text)
     assert all(r.more == () for r in plain.rows)
     assert plain.ignored == ("Marca", "Patrimônio", "Sala")
@@ -214,9 +207,9 @@ def test_a_callers_own_columns_read_back_from_the_tables_csv() -> None:
 
 def test_a_callers_own_check_takes_the_place_of_the_hosts_one() -> None:
     rows = (
-        ImportRow("Web", "https://192.0.2.10"),  # not a computer address; fine for the caller
-        ImportRow("USB-01"),  # a fine network name; the caller says why it can't come in
-        ImportRow("Lab 07"),  # the caller leaves it to the hosts' check
+        ImportRow("Web", "https://192.0.2.10"),
+        ImportRow("USB-01"),
+        ImportRow("Lab 07"),
     )
 
     def check(row: ImportRow) -> str | None:
@@ -228,5 +221,4 @@ def test_a_callers_own_check_takes_the_place_of_the_hosts_one() -> None:
         (Verdict.BAD, "Its port is USB001"),
         (Verdict.BAD, "No address: the name must then be the computer's name on the network"),
     ]
-    # Without a check, the hosts' own: the first can't be added.
     assert plan(HostList(), rows, NO_GROUP).items[0].verdict is Verdict.BAD

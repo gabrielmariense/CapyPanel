@@ -1,5 +1,3 @@
-"""The Hosts tool's commands: the list workspace's, plus adding, connecting and Refresh."""
-
 from dataclasses import dataclass
 
 from PySide6.QtCore import QObject
@@ -28,10 +26,10 @@ class HostsActions(ListActions):
 SHORTCUTS = {
     **list_actions.SHORTCUTS,
     "add_host": "Ctrl+N",
-    "connect_host": "Return",  # only while the host table has focus (see HostsTool)
+    "connect_host": "Return",
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
-    "refresh_shown": "F5",  # what Refresh's right-click panel has ticked
+    "refresh_shown": "F5",
 }
 CHECKABLE = {*list_actions.CHECKABLE, "show_domains"}
 
@@ -49,7 +47,7 @@ def retranslate_actions(a: HostsActions) -> None:
     a.export_hosts.setText(_("&Report…"))
     a.connect_host.setText(_("&Connect"))
     a.manual_connect.setText(_("&Manual connection…"))
-    a.copy_address.setText(_("&Address"))  # in the host menu's Copy submenu
+    a.copy_address.setText(_("&Address"))
     a.refresh_shown.setText(_("Refresh all"))
     a.connection_profiles.setText(_("Connection &profiles…"))
     a.saved_credentials.setText(_("Sa&ved credentials…"))

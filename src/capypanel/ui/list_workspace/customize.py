@@ -1,5 +1,3 @@
-"""Customizing the Details panel: a tick per part, applied at once, for this person only."""
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -25,18 +23,14 @@ SIZE = (680, 670)
 
 @dataclass(frozen=True)
 class Part:
-    """A part of the Details panel that can be hidden."""
-
     key: str
-    name: str  # as its heading in the panel
-    shows: str  # a few words on what it holds
+    name: str
+    shows: str
 
 
 class PartsTab(QWidget):
-    """The Information tab: every part with a tick. Unticking one hides it in the panel."""
-
     HELP_PLACE = "start-hide-parts-of-the-details-panel"
-    changed = Signal(list)  # the hidden parts' keys
+    changed = Signal(list)
 
     def __init__(self, parts: Sequence[Part], hidden: Sequence[str], always: str) -> None:
         super().__init__()
@@ -56,7 +50,7 @@ class PartsTab(QWidget):
         layout.addWidget(hint(always))
         layout.addStretch(1)
         self._show(hidden)
-        fit_rows(self.table)  # once the ticks are there: they take room too
+        fit_rows(self.table)
 
     def hidden(self) -> list[str]:
         rows = [self.table.topLevelItem(i) for i in range(self.table.topLevelItemCount())]
@@ -67,7 +61,6 @@ class PartsTab(QWidget):
         ]
 
     def show_hidden(self, hidden: Sequence[str]) -> None:
-        """Ticks every part but `hidden`, and says so."""
         self._show(hidden)
         self.changed.emit(self.hidden())
 
@@ -90,8 +83,6 @@ class PartsTab(QWidget):
 
 
 class CustomizeDialog(QDialog):
-    """Tabs: a tool's own (in front), then Information."""
-
     def __init__(
         self,
         parent: QWidget | None,
@@ -106,9 +97,9 @@ class CustomizeDialog(QDialog):
             self.tabs.addTab(tab, title)
         self.tabs.addTab(parts, _("Information"))
         if self.tabs.count() == 1:
-            self.tabs.tabBar().hide()  # one tab needs no bar
+            self.tabs.tabBar().hide()
         close = QPushButton(_("&Close"))
-        close.setAutoDefault(False)  # plain: nothing here is waiting to be confirmed
+        close.setAutoDefault(False)
         close.clicked.connect(self.accept)
         own = QLabel(_("Only for you, on this PC."))
         own.setObjectName("hint")
@@ -124,7 +115,6 @@ class CustomizeDialog(QDialog):
         self.resize(*SIZE)
 
     def help_place(self) -> str:
-        """The tab shown's part of the docs: each tab names its own HELP_PLACE."""
         return getattr(self.tabs.currentWidget(), "HELP_PLACE", "") or (PartsTab.HELP_PLACE)
 
     def show_tab(self, index: int) -> None:

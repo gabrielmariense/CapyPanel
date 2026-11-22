@@ -24,7 +24,6 @@ def test_get_reads_values_and_none_for_what_is_missing() -> None:
 
 
 def test_walk_reads_a_whole_table_in_order_and_stops_at_its_end() -> None:
-    # More rows than one GetBulk brings, then the next table, where the walk must stop.
     rows: dict[str, snmp.Value] = {f"{LEVELS}.1.{i}": i * 10 for i in range(1, 46)}
     rows["1.3.6.1.2.1.43.12.1.1.4.1.1"] = b"next table"
     with (
@@ -33,7 +32,7 @@ def test_walk_reads_a_whole_table_in_order_and_stops_at_its_end() -> None:
     ):
         walked = session.walk(LEVELS)
     assert [value for _oid, value in walked] == [i * 10 for i in range(1, 46)]
-    assert walked[1][0] == f"{LEVELS}.1.2"  # numeric order, not text order (2 before 10)
+    assert walked[1][0] == f"{LEVELS}.1.2"
     assert set(agent.requests) == {snmp.GET_BULK}
 
 
@@ -52,7 +51,7 @@ def test_a_wrong_community_gets_no_answer() -> None:
         pytest.raises(snmp.NoAnswer),
     ):
         session.get([SYS_DESCR])
-    assert agent.requests == [snmp.GET, snmp.GET]  # asked, then asked once more
+    assert agent.requests == [snmp.GET, snmp.GET]
 
 
 def test_an_unknown_name_is_no_answer() -> None:
@@ -85,9 +84,8 @@ def test_encoding_round_trips() -> None:
         b"\x30\x05\x02\x01\x01",  # claims more than it has
         b"\x30\x84\xff\xff\xff\xff",  # a length past any real answer
         b"\x04\x00",  # not a sequence
-        snmp.message(b"c", snmp.RESPONSE, 1, [(SYS_DESCR, b"x")])[:-3],  # cut short
+        snmp.message(b"c", snmp.RESPONSE, 1, [(SYS_DESCR, b"x")])[:-3],
         b"\x30\x0e\x02\x01\x00\x04\x01c\xa2\x06\x02\x01\x01\x02\x01\x00",  # SNMP v1, no bindings
-        # A counter far longer than any real one (it would be a number too big to show).
         snmp.message(b"c", snmp.RESPONSE, 1, [(SYS_DESCR, (0x41, b"\x01" * 40))]),
     ],
 )
@@ -103,7 +101,7 @@ def test_a_session_stops_asking_after_its_time_limit() -> None:
         pytest.raises(snmp.SnmpError, match="too slowly"),
     ):
         session.get([SYS_DESCR])
-    assert agent.requests == []  # nothing sent once the time is up
+    assert agent.requests == []
 
 
 SIGNED = usm.Account("sample", usm.Auth.SHA256, "auth-pass-1")
@@ -119,7 +117,6 @@ def test_v3_reads_at_every_security_level(account: usm.Account) -> None:
     ):
         assert session.get([SYS_DESCR]) == {SYS_DESCR: b"SAMPLE printer"}
         assert [v for _o, v in session.walk(LEVELS)] == list(range(1, 30))
-    # The engine is found once, then every request is answered.
     assert agent.requests[:2] == [snmp.GET, snmp.REPORT]
     assert snmp.REPORT not in agent.requests[2:]
 
@@ -157,7 +154,6 @@ def test_v3_says_why_the_printer_refused(asked: usm.Account, reason: str) -> Non
 
 
 def test_v3_ignores_answers_whose_signature_does_not_match() -> None:
-    # The agent signs with another password's key, as a forged answer would: nothing is read.
     forger = usm.Account("sample", usm.Auth.SHA256, "other-pass-1")
     with running({SYS_DESCR: b"x"}, account=SIGNED) as agent:
         agent._keys = usm.keys(forger, snmp_agent.ENGINE_ID)
@@ -175,6 +171,6 @@ def test_v3_messages_are_encrypted_on_the_wire() -> None:
         engine_id=snmp_agent.ENGINE_ID, boots=1, engine_time=1, keys=keys, privacy=True,
     )  # fmt: skip
     header = snmp.parse_v3(packet)
-    assert b"\x06\x08\x2b\x06\x01\x02\x01\x01\x01\x00" not in packet  # the OID isn't readable
+    assert b"\x06\x08\x2b\x06\x01\x02\x01\x01\x01\x00" not in packet
     assert usm.verified(keys, packet, header.auth_at)
     assert snmp.open_v3(header, keys).bindings[0].oid == SYS_DESCR

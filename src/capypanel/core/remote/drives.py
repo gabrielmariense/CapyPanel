@@ -1,5 +1,3 @@
-"""People's network drives on a PC, read over WMI's registry provider: nothing runs there."""
-
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -11,8 +9,8 @@ from capypanel.core.remote.access import Account, check_reachable
 
 @dataclass(frozen=True)
 class Drive:
-    letter: str  # "S:"
-    path: str  # \\FS01\Setores
+    letter: str
+    path: str
 
 
 @dataclass(frozen=True)
@@ -23,9 +21,7 @@ class Person:
 
 
 def saved_drives(host: str, account: Account | None = None) -> list[Person]:
-    """Everyone signed in to `host` and the drives saved for them, by letter. A person with
-    none is listed too. Raises RemoteError or TimeoutError."""
-    from capypanel.core.remote import inventory  # its PowerShell parts load on first use
+    from capypanel.core.remote import inventory
 
     check_reachable(host)
     found = inventory.run_cim(_SAVED, host, account)
@@ -49,8 +45,6 @@ def _letter(value: object) -> str:
     return f"{text}:" if text else ""
 
 
-# HKEY_USERS holds a hive for everyone signed in (and for services). A signed-in person's hive
-# has Volatile Environment, with their name; their saved drives are under Network\<letter>.
 _SAVED = r"""
 try {
   $found = New-Object System.Collections.ArrayList

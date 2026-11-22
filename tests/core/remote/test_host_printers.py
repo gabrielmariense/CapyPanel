@@ -9,7 +9,7 @@ from capypanel.core.remote.host_printers import HostPrinter
 
 
 def test_this_pcs_printers_can_be_read_with_the_real_api() -> None:
-    found = host_printers.list_printers(None)  # checks the structures match Windows
+    found = host_printers.list_printers(None)
     assert all(isinstance(p, HostPrinter) and p.name and "\\" not in p.name for p in found)
     assert [p.name.casefold() for p in found] == sorted(p.name.casefold() for p in found)
 

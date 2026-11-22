@@ -27,7 +27,7 @@ from capypanel.ui.settings.connections import ProfileDialog, ProfilesSection, To
 @pytest.fixture
 def catalogs(qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Catalogs:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    found = {"ultravnc": Path(r"C:\Tools\vncviewer.exe")}  # RealVNC isn't installed here
+    found = {"ultravnc": Path(r"C:\Tools\vncviewer.exe")}
     monkeypatch.setattr(connections.detect, "find_executable", lambda t: found.get(t.id))
     return Catalogs.for_paths(settings.resolve_paths(tmp_path))
 
@@ -35,7 +35,7 @@ def catalogs(qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[ProfileDialog], None]) -> None:
     def run(dialog: ProfileDialog) -> int:
         fill(dialog)
-        return 1  # Accepted
+        return 1
 
     monkeypatch.setattr(ProfileDialog, "exec", run)
 
@@ -54,7 +54,6 @@ def _names(page: ProfilesSection) -> list[str]:
 
 
 def _tool_row(page: ToolsSection, tool_id: str) -> tuple[str, str]:
-    """The tool's status and the tooltip on it."""
     for row in range(page.tools.topLevelItemCount()):
         item = page.tools.topLevelItem(row)
         if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == tool_id:
@@ -63,7 +62,6 @@ def _tool_row(page: ToolsSection, tool_id: str) -> tuple[str, str]:
 
 
 def _menu(fill: Callable[[QMenu], None], *, enabled_only: bool = False) -> list[str]:
-    """What a row's right-click menu holds, as `fill` builds it."""
     menu = QMenu()
     fill(menu)
     return [a.text() for a in menu.actions() if a.text() and (a.isEnabled() or not enabled_only)]
@@ -79,7 +77,7 @@ def _trigger(fill: Callable[[QMenu], None], text: str) -> None:
 def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
-    assert dialog.tool.currentData() == "ultravnc"  # starts on a tool this PC has
+    assert dialog.tool.currentData() == "ultravnc"
     assert list(dialog.option_boxes) == ["securevnc"]
     assert [dialog.login.itemData(i) for i in range(dialog.login.count())] == [
         "account", "password",
@@ -88,9 +86,9 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
     realvnc = dialog.tool.findData("realvnc")
     assert dialog.tool.itemText(realvnc) == "RealVNC Viewer (not installed on this PC)"
     dialog.tool.setCurrentIndex(realvnc)
-    assert dialog.option_boxes == {}  # RealVNC has no options
+    assert dialog.option_boxes == {}
     ok = dialog.buttons.button(QDialogButtonBox.StandardButton.Ok)
-    assert not ok.isEnabled()  # a name is required
+    assert not ok.isEnabled()
     dialog.name.setText("Pis")
     assert ok.isEnabled()
 
@@ -106,7 +104,7 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
 ) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     names = {tool.id for tool in tools}
-    fitter = ScreenFit(qapp)  # the app's own dialog fitting, as in the real app
+    fitter = ScreenFit(qapp)
     qapp.installEventFilter(fitter)
     dialog = ProfileDialog(None, "New", tools, names)
     vnc = ConnectionProfile("vnc", "ultravnc", name="VNC")
@@ -132,15 +130,15 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
             dialog.tool.setCurrentIndex(dialog.tool.findData(tool))
             QApplication.processEvents()
             assert all(c.isVisible() for c in controls), tool
-            first = next(iter(dialog.option_boxes.values()), dialog.no_options)  # or None
+            first = next(iter(dialog.option_boxes.values()), dialog.no_options)
             line = first.mapTo(dialog, first.rect().center()).y()
-            assert line == options_label.geometry().center().y(), tool  # on the label's line
+            assert line == options_label.geometry().center().y(), tool
             seen.append((dialog.size(), dialog.sizeHint(), places()))
         assert seen == [seen[0]] * len(seen)
-        dialog.resize(dialog.width(), dialog.height() + 60)  # the room to spare goes below
+        dialog.resize(dialog.width(), dialog.height() + 60)
         QApplication.processEvents()
         assert places() == seen[0][2]
-        _shown(editing)  # opens on UltraVNC
+        _shown(editing)
         assert editing.size() == seen[0][0]
     finally:
         dialog.close()
@@ -193,8 +191,8 @@ def test_starter_profiles_can_be_duplicated_edited_and_deleted(
     page = ProfilesSection(catalogs, None)
     _select(page, "ultravnc")
     assert page.edit_button.isEnabled() and page.delete_button.isEnabled()
-    assert _menu(page.fill_row_menu) == ["&Edit…", "D&uplicate…", "&Delete…"]  # right-click
-    _answer(monkeypatch, lambda dialog: None)  # keep the suggested name
+    assert _menu(page.fill_row_menu) == ["&Edit…", "D&uplicate…", "&Delete…"]
+    _answer(monkeypatch, lambda dialog: None)
     _trigger(page.fill_row_menu, "D&uplicate…")
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     _select(page, "ultravnc")
@@ -221,7 +219,7 @@ def test_deleting_says_how_many_hosts_use_it(
     _select(page, "pis")
     page.delete()
     assert "2 hosts and 1 group" in asked[0]
-    assert "Pis" in _names(page)  # answered no: still there
+    assert "Pis" in _names(page)
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     page.delete()
     assert catalogs.profiles.find("pis") is None
@@ -272,7 +270,7 @@ def test_with_a_settings_file_the_file_decides_not_the_options(
     dialog.choose_settings.click()
     box = dialog.option_boxes["securevnc"]
     assert not box.isEnabled() and not box.isChecked()
-    assert dialog.profile("secure").options == ()  # nothing added on top of the file
+    assert dialog.profile("secure").options == ()
     assert dialog.new_settings is not None and b"UseDSMPlugin=1" in dialog.new_settings
     dialog.default_settings.click()
     assert dialog.option_boxes["securevnc"].isEnabled()
@@ -281,16 +279,16 @@ def test_with_a_settings_file_the_file_decides_not_the_options(
 def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ToolsSection(catalogs)  # UltraVNC found by itself, RealVNC missing
+    page = ToolsSection(catalogs)
     assert _tool_row(page, "ultravnc") == ("✓ Found", r"C:\Tools\vncviewer.exe")
-    page.select_tool("ultravnc")  # the buttons act on the tool picked
+    page.select_tool("ultravnc")
     assert page.tool_actions("ultravnc") == ["locate"]
     assert page.locate_button.isEnabled() and not page.download_button.isEnabled()
     assert _menu(page.fill_row_menu) == ["Change path…"]
     assert _tool_row(page, "realvnc")[0] == "✗ Not found"
     page.select_tool("realvnc")
     assert page.tool_actions("realvnc") == ["locate", "download"]
-    assert page.locate_button.text() == "Change path…"  # one name, found or not
+    assert page.locate_button.text() == "Change path…"
     assert page.download_button.isEnabled()
     assert _menu(page.fill_row_menu) == ["Change path…", "Download"]
     opened: list[QUrl] = []
@@ -308,7 +306,6 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     page.locate_button.click()
     assert _tool_row(page, "realvnc")[0] == "✓ Your choice"
     assert page.tool_actions("realvnc") == ["locate", "automatic"]
-    # Still on RealVNC after the table refilled; the chosen path can be dropped again.
     assert _menu(page.fill_row_menu) == ["Change path…", "Use the &automatic path"]
     entry = catalogs.tools.find("realvnc")
     assert entry is not None and entry.item.executable == r"D:\Apps\vncviewer.exe"
@@ -345,13 +342,12 @@ def test_files_that_arent_used_are_named_with_the_reason(
     assert not page.profiles_skipped.isHidden()
     assert page.profiles_skipped.text() == (
         "2 files skipped: broken.json (can't be read), planted.json (made by another user)"
-    )  # a note, like the others
-    assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
-    assert ToolsSection(catalogs).tools_skipped.isHidden()  # nothing skipped there
+    )
+    assert str(folder / "planted.json") in page.profiles_skipped.toolTip()
+    assert ToolsSection(catalogs).tools_skipped.isHidden()
 
 
 def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
-    # "no password" read as if none were needed; Remote Desktop's own window asks for it.
     page = ProfilesSection(catalogs, None)
     rows = range(page.list.topLevelItemCount())
     [rdp] = [i for r in rows if (i := page.list.topLevelItem(r)) and i.text(0) == "Remote Desktop"]
@@ -377,7 +373,7 @@ def test_a_new_profile_is_written_at_once(
 
     _answer(monkeypatch, fill)
     page.add()
-    assert "Clinics (SecureVNC)" in _names(page) and told  # the main window hears of it
+    assert "Clinics (SecureVNC)" in _names(page) and told
     assert catalogs.profiles.find("clinics-securevnc") == ConnectionProfile(
         "clinics-securevnc", "ultravnc", "account", ("securevnc",), name="Clinics (SecureVNC)"
     )
@@ -439,7 +435,6 @@ def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
     copied = catalogs.profiles.folder / "view-only.vnc"
     assert copied.read_bytes() == b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
 
-    # A duplicate gets its own copy; going back to defaults removes the file.
     _select(page, "view-only")
     _answer(monkeypatch, lambda dialog: dialog.name.setText("View only 2"))
     page.duplicate()
@@ -454,9 +449,9 @@ def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
 
 def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> None:
     page = ProfilesSection(catalogs, None)
-    assert not catalogs.profiles.folder.exists()  # the built-in profiles are shown
+    assert not catalogs.profiles.folder.exists()
     assert not page.builtin_note.isHidden()
-    page.default.setCurrentIndex(page.default.findData("realvnc"))  # a change makes the folder
+    page.default.setCurrentIndex(page.default.findData("realvnc"))
     assert page.builtin_note.isHidden()
 
 
@@ -479,7 +474,7 @@ def test_restore_built_in_brings_back_deleted_profiles_after_asking(
     catalogs.profiles.place_starters()
     page = ProfilesSection(catalogs, None)
     assert page.restore_button.text() == "&Restore built-in…"
-    assert not page.restore_button.isEnabled()  # none missing
+    assert not page.restore_button.isEnabled()
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     for starter in ("realvnc", "remote-desktop"):
         _select(page, starter)
@@ -489,7 +484,7 @@ def test_restore_built_in_brings_back_deleted_profiles_after_asking(
 
     def answer(_parent: object, title: str, text: str, _action: str) -> bool:
         asked.append((title, text))
-        return len(asked) > 1  # no the first time, yes the second
+        return len(asked) > 1
 
     monkeypatch.setattr(connections, "confirm", answer)
     page.restore_button.click()
@@ -498,7 +493,7 @@ def test_restore_built_in_brings_back_deleted_profiles_after_asking(
         "Bring back 2 built-in profiles: RealVNC, Remote Desktop?\n\n"
         "Profiles you changed or made yourself stay as they are.",
     )
-    assert _names(page) == ["UltraVNC"]  # answered no
+    assert _names(page) == ["UltraVNC"]
     page.restore_button.click()
     assert _names(page) == ["RealVNC", "Remote Desktop", "UltraVNC"]
     assert not page.restore_button.isEnabled()
@@ -519,5 +514,5 @@ def test_how_pcs_are_read_is_one_line_set_for_everyone_with_the_way_in_use(
     page.reads.setCurrentIndex(page.reads.findData("powershell"))
     page.reads.activated.emit(page.reads.currentIndex())
     assert inventory.transport == inventory.POWERSHELL and catalogs.tools.reads() == "powershell"
-    assert page.reads_note.text() == ""  # pinned: nothing to say about Automatic's pick
-    assert ToolsSection(catalogs).reads.currentData() == "powershell"  # kept for everyone
+    assert page.reads_note.text() == ""
+    assert ToolsSection(catalogs).reads.currentData() == "powershell"

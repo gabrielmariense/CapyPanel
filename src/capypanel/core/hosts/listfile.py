@@ -1,5 +1,3 @@
-"""Reading and writing host list files: JSON with a schema version."""
-
 import hashlib
 import json
 from collections.abc import Mapping
@@ -12,11 +10,11 @@ from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList
 from capypanel.core.i18n import _
 
 SCHEMA = 1
-HOSTS = "hosts"  # a list's kind: the tool it belongs to; a file without one is a host list
+HOSTS = "hosts"  # a list's kind; a file without one is a host list
 
 
 class HostListFileError(Exception):
-    """Base for problems with a host list file. The message is shown to the user."""
+    pass
 
 
 class HostListFormatError(HostListFileError):
@@ -24,25 +22,21 @@ class HostListFormatError(HostListFileError):
 
 
 class HostListTooNewError(HostListFileError):
-    """Written by a newer version of the app: opening or saving it here could lose data."""
+    pass
 
 
 class HostListKindError(HostListFileError):
-    """A list of another kind (another tool's): opening it here would mix them up."""
-
     def __init__(self, kind: str) -> None:
         super().__init__(kind)
         self.kind = kind
 
 
 class HostListChangedError(HostListFileError):
-    """The file changed on disk since it was opened, e.g. someone else saved a shared list."""
+    pass
 
 
 @dataclass(frozen=True)
 class FileStamp:
-    """Fingerprint of the file's content, to notice changes made by someone else."""
-
     digest: str
 
 
@@ -61,7 +55,6 @@ def stamp_of(path: Path) -> FileStamp | None:
 
 
 def load(path: Path, kind: str | None = HOSTS) -> LoadedList:
-    """A list of `kind` (None: any kind); another kind raises HostListKindError."""
     raw = path.read_bytes()
     try:
         data = json.loads(raw.decode("utf-8-sig"))  # -sig: accept files saved by Notepad with a BOM
@@ -82,8 +75,6 @@ def kind_of(data: object) -> str:
 def save(
     path: Path, host_list: HostList, *, expected: FileStamp | None, kind: str = HOSTS
 ) -> FileStamp:
-    """Saves atomically, only if the file is still what was loaded (`expected`; None: a new file),
-    so someone else's changes are never overwritten; the caller decides what to do instead."""
     if stamp_of(path) != expected:
         raise HostListChangedError(_("Someone else has changed the file since you opened it."))
     text = json.dumps(to_data(host_list, kind), indent=2, ensure_ascii=False) + "\n"
@@ -94,7 +85,6 @@ def save(
 
 
 def can_write(path: Path) -> bool:
-    """Whether saving would work: the folder takes new files (saves swap one in), not read-only."""
     if not path.parent.is_dir() or not files.can_create_files(path.parent):
         return False
     try:
@@ -162,12 +152,10 @@ def from_data(data: object) -> HostList:
 
 
 def _migrate(data: dict[str, Any]) -> dict[str, Any]:
-    # No older formats exist yet. Each future schema bump adds one upgrade step here (1 -> 2, ...).
     return data
 
 
 def validate(host_list: HostList) -> None:
-    """The structural rules: unique IDs, references that exist, no group inside itself."""
     ids = [g.id for g in host_list.groups] + [h.id for h in host_list.hosts]
     if len(ids) != len(set(ids)):
         raise HostListFormatError(_("The file has two items with the same ID."))
@@ -250,7 +238,7 @@ def _host(item: object) -> Host:
     return Host(
         id=_text(item, "id", required=True),
         name=_text(item, "name"),
-        group=_text(item, "group"),  # "" or missing: no group
+        group=_text(item, "group"),
         address=_text(item, "address"),
         tags=tuple(tags),
         notes=_text(item, "notes"),

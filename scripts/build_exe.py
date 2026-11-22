@@ -1,5 +1,3 @@
-"""Builds dist/CapyPanel/, then its zip and SHA-256 if the built exe's self-test passes."""
-
 import hashlib
 import os
 import subprocess
@@ -18,8 +16,7 @@ NAME = "CapyPanel"
 
 
 def version_info(version: str, number: str, build: str) -> str:
-    """What Windows shows under the exe's Properties > Details, and SmartScreen beside its
-    name: a file with none of it reads as an unnamed program."""
+    """Windows shows it in Properties > Details and SmartScreen: without it, an unnamed program."""
     parts = [int(n) for n in version.split(".")[:3]] + [int(number or 0)]
     numbers = tuple(parts + [0] * (4 - len(parts)))
     strings = {
@@ -46,8 +43,7 @@ def version_info(version: str, number: str, build: str) -> str:
 
 
 def splash_x(text: str, width: int = 480) -> int:
-    """Where the splash's text line starts so it sits centred: the launcher only takes its
-    left edge. Measured in Segoe UI at 16 px, as the launcher draws it."""
+    """The launcher takes only the line's left edge: this centres it, measured as it draws."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     # Offscreen Qt has no fonts of its own: without Windows' it measures empty boxes.
     os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["SYSTEMROOT"]) / "Fonts"))
@@ -79,8 +75,7 @@ def main() -> int:
     info = WORK / "version_info.txt"
     info.write_text(version_info(version, number, capypanel.BUILD), encoding="utf-8")
 
-    # PyInstaller looks for libraries along PATH and would take a C runtime or OpenSSL from any
-    # program's folder there; with only Windows' own folders, they come from Python and Windows.
+    # PyInstaller takes DLLs found along PATH, any program's OpenSSL too: only Windows' here.
     windows = Path(os.environ["SYSTEMROOT"])
     env = {
         **os.environ,
@@ -118,7 +113,6 @@ def main() -> int:
             if path.is_file():
                 packed.write(path, Path(NAME) / path.relative_to(DIST / NAME))
     digest = sha256_of(archive)
-    # As `sha256sum` writes it; in PowerShell: (Get-FileHash <zip>).Hash is the same letters.
     Path(f"{archive}.sha256").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")
     print(f"{archive.name}: {archive.stat().st_size / 1e6:.1f} MB, SHA-256 {digest}")
     return 0

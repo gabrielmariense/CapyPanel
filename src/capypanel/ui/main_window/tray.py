@@ -1,5 +1,3 @@
-"""CapyPanel's tray icon, there so its notifications can show; a click opens the window."""
-
 import html
 from collections.abc import Mapping
 
@@ -17,7 +15,6 @@ SIZE = 32  # px the icon is drawn at; Windows scales it to the tray
 
 
 def counted_icon(count: int) -> QIcon:
-    """The app icon, with `count` in a red circle on its top right corner when there's one."""
     if count <= 0:
         return branding.app_icon()
     pixmap = branding.app_icon().pixmap(SIZE, SIZE)
@@ -40,7 +37,7 @@ def counted_icon(count: int) -> QIcon:
 class Tray(QObject):
     open_requested = Signal()
     quit_requested = Signal()
-    attention_requested = Signal(str)  # a tool's id: list just its items needing attention
+    attention_requested = Signal(str)
     message_clicked = Signal()
 
     def __init__(self, parent: QObject) -> None:
@@ -50,7 +47,7 @@ class Tray(QObject):
         self.icon.setContextMenu(self.menu)
         self.icon.activated.connect(self._activated)
         self.icon.messageClicked.connect(self.message_clicked)
-        self._counts: dict[str, tuple[int, str]] = {}  # tool id: (count, "3 printers need …")
+        self._counts: dict[str, tuple[int, str]] = {}
         self.fill()
 
     @staticmethod
@@ -61,17 +58,15 @@ class Tray(QObject):
         self.icon.setVisible(shown and self.available())
 
     def set_counts(self, counts: Mapping[str, tuple[int, str]]) -> None:
-        """Each tool's count and what it means, in the rail's order."""
         self._counts = {t: c for t, c in counts.items() if c[0] > 0}
         self.fill()
 
     def fill(self) -> None:
-        """The menu and tooltip, in the current language."""
         self.menu.clear()
         opener = QAction(_("&Open CapyPanel"), self.menu)
         opener.triggered.connect(self.open_requested)
         self.menu.addAction(opener)
-        self.menu.setDefaultAction(opener)  # bold: what a click on the icon does
+        self.menu.setDefaultAction(opener)
         for tool_id, (_count, meaning) in self._counts.items():
             if meaning:
                 self.menu.addSeparator()
@@ -89,7 +84,6 @@ class Tray(QObject):
         self.icon.setToolTip("\n".join(lines))
 
     def notify(self, title: str, text: str) -> None:
-        """A Windows notification; a click on it emits message_clicked."""
         if self.available():
             self.icon.showMessage(title, text, counted_icon(0), 15_000)
 
@@ -107,8 +101,6 @@ class Tray(QObject):
 
 
 def ask_closing(parent: QWidget) -> tuple[str | None, bool]:
-    """The window's X, with "Ask each time": (settings.CLOSE_TRAY or CLOSE_QUIT, or None for
-    Cancel; whether "Don't ask again" was ticked)."""
     box = QMessageBox(parent)
     box.setWindowTitle("CapyPanel")
     box.setIconPixmap(branding.app_icon().pixmap(48, 48))

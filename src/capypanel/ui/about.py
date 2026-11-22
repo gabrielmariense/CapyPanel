@@ -1,5 +1,3 @@
-"""Settings > About, the third-party licenses, and the Help menu's website and problem links."""
-
 import platform
 import sys
 from collections.abc import Callable
@@ -46,25 +44,22 @@ LICENSES_DIR = Path(__file__).resolve().parent.parent / "licenses"
 
 
 def docs_url() -> str:
-    """The website, in Portuguese when the app is."""
     return DOCS_URL + ("pt-BR/" if i18n.language() == "pt_BR" else "")
 
 
 def source_url() -> str:
-    """The repository; in Portuguese, its Portuguese README (GitHub always shows the English)."""
+    """In Portuguese, the Portuguese README: GitHub always shows the English one."""
     return f"{REPO_URL}/blob/main/README.pt-BR.md" if i18n.language() == "pt_BR" else REPO_URL
 
 
 def install_kind(portable: bool) -> str:
-    """How this copy runs: "installed", "portable" or "source" (a checkout, run with uv)."""
     if portable:
         return "portable"
     return "installed" if getattr(sys, "frozen", False) else "source"
 
 
 def report_url(portable: bool) -> str:
-    """A new GitHub issue that starts with what helps to reproduce a problem: versions, theme,
-    language and how the app runs. Never a user, domain, computer name or path."""
+    """What helps reproduce a problem; never a user, domain, computer name or path."""
     body = (
         f"CapyPanel {BUILD} · {install_kind(portable)}\n"
         f"Windows {platform.version()}\n"
@@ -80,9 +75,6 @@ def open_url(url: str) -> None:
 
 
 class AboutPage(Page):
-    """Settings › About: the app (icon, name, version, what it is, notices, links), Credits and
-    Licenses, then where CapyPanel keeps its files (`paths`). Help › About opens it too."""
-
     HELP_PLACE = "settings-about"
 
     def __init__(
@@ -90,7 +82,7 @@ class AboutPage(Page):
     ) -> None:
         super().__init__(_("About"))
         self._portable = portable
-        self.reader = LicenseReader(self)  # one, reused
+        self.reader = LicenseReader(self)
         self.body.addWidget(self._app_section(log_dir))
         self.body.addWidget(self._credits_section())
         self.licenses_section = self._licenses_section()
@@ -101,8 +93,6 @@ class AboutPage(Page):
         self.body.addStretch(1)
 
     def _app_section(self, log_dir: Path) -> Section:
-        """The mascot on the left; name and version, what CapyPanel is, its notices and links
-        on the right; the tools for a problem report under them."""
         icon = QLabel()
         icon.setPixmap(branding.app_icon().pixmap(32, 32))
         name = QLabel("CapyPanel")
@@ -110,7 +100,6 @@ class AboutPage(Page):
         font.setPointSizeF(font.pointSizeF() * 1.4)
         font.setBold(True)
         name.setFont(font)
-        # The version beside the name, in its font; a click copies it with its commit.
         self.version = CopyValue(BUILD, __version__)
         self.version.setFont(font)
         self.version.setWordWrap(False)
@@ -119,9 +108,9 @@ class AboutPage(Page):
         top.setSpacing(spacing.CONTROLS)
         top.addWidget(icon)
         top.addWidget(name)
-        top.addSpacing(-8)  # the version's hover padding is gap enough
+        top.addSpacing(-8)
         top.addWidget(self.version)
-        self.beta = QLabel(_("beta"))  # until 1.0
+        self.beta = QLabel(_("beta"))
         self.beta.setObjectName("stateBadge")
         self.beta.setToolTip(_("A beta: it works, and it still changes from version to version."))
         top.addWidget(self.beta, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -130,7 +119,6 @@ class AboutPage(Page):
         text.setSpacing(spacing.CONTROLS)
         text.addLayout(top)
         text.addWidget(_text(_("Every computer you look after, in one window.")))
-        # The GPL's "appropriate legal notices": the ©, no warranty, and the license a click away.
         text.addWidget(_text(f"© {YEAR} {CREATOR}"))
         text.addWidget(
             _text(
@@ -144,7 +132,7 @@ class AboutPage(Page):
             (_("Documentation:"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
             (_("Source code:"), _link(source_url(), REPO_URL.removeprefix("https://"))),
         ]
-        build = [f"build {_NUMBER}"] if _NUMBER else []  # only what applies
+        build = [f"build {_NUMBER}"] if _NUMBER else []
         build += [f"commit {_COMMIT}"] if _COMMIT else []
         if self._portable:
             build.append(_("portable mode"))
@@ -186,8 +174,6 @@ class AboutPage(Page):
         return section
 
     def _licenses_section(self) -> Section:
-        """The software CapyPanel is built with, in the one table design: Read license opens
-        the copy shipped with CapyPanel in a window here, so it reads offline."""
         self.licenses = grid_table([_("Software"), _("Version"), _("License"), _("Notice")])
         for part in COMPONENTS:
             item = QTreeWidgetItem([part.name, part.version, part.license, part.notice])
@@ -221,7 +207,7 @@ class AboutPage(Page):
             self.reader.show_license(next(c for c in COMPONENTS if c.file == file))
 
     def _open_link(self, url: str) -> None:
-        if url == "#licenses":  # "see Licenses": scroll down to it
+        if url == "#licenses":
             area = self.parentWidget()
             while area is not None and not isinstance(area, QScrollArea):
                 area = area.parentWidget()
@@ -232,13 +218,10 @@ class AboutPage(Page):
 
 
 class LicenseReader(QDialog):
-    """A license's text, read inside the app rather than in Notepad."""
-
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.text = QPlainTextEdit()
         self.text.setReadOnly(True)
-        # Fixed width: the texts line up their lists and tables with spaces.
         self.text.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         close = QPushButton(_("Close"))
         close.setAutoDefault(False)
@@ -270,13 +253,12 @@ class LicenseReader(QDialog):
 class Component:
     name: str
     version: str
-    notice: str  # its copyright line
+    notice: str
     license: str
-    file: str  # the license text, shipped in capypanel/licenses
+    file: str
 
 
 TABLER_URL = "https://tabler.io/icons"
-# CapyPanel, then what ships inside it. LGPL-3.0 builds on the GPL-3.0: both texts ship.
 COMPONENTS = (
     Component(
         "CapyPanel",
@@ -351,7 +333,6 @@ COMPONENTS = (
 
 
 def _text(text: str, on_link: Callable[[str], None] | None = None, *, wrap: bool = True) -> QLabel:
-    """Plain text in the window's font and colour; links open through `on_link`."""
     label = QLabel(text)
     label.setWordWrap(wrap)
     if on_link is not None:
@@ -361,7 +342,6 @@ def _text(text: str, on_link: Callable[[str], None] | None = None, *, wrap: bool
 
 
 def _rows(rows: list[tuple[str, str]], on_link: Callable[[str], None]) -> QGridLayout:
-    """Label: value rows, labels and values each lined up on the left."""
     grid = QGridLayout()
     grid.setContentsMargins(0, 0, 0, 0)
     grid.setHorizontalSpacing(12)

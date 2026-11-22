@@ -1,5 +1,3 @@
-"""The supply bars' marks: the low level's, always, plus the user's own, each with a colour."""
-
 import re
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
@@ -8,21 +6,20 @@ from typing import Any
 from capypanel.core.i18n import _
 
 EXTRA = "bar_marks"  # [{"percent": 50, "color": "#ffffff"}, …]: the marks the user added
-LOW_COLOR = "low_mark_color"  # the low mark's colour; "" or missing: the theme's text colour
+LOW_COLOR = "low_mark_color"
 LOWEST, HIGHEST = 1, 99  # % a mark can sit at
-MOST = 8  # marks the user can add
+MOST = 8
 _HEX = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 @dataclass(frozen=True)
 class Mark:
     percent: int
-    color: str = ""  # "#rrggbb", or "" for the theme's text colour
-    low: bool = False  # the low level's mark: it follows that setting and can't be removed
+    color: str = ""
+    low: bool = False
 
 
 def load(prefs: Mapping[str, Any], low: int) -> tuple[Mark, ...]:
-    """The low mark first, then the user's own, by %; odd entries are skipped."""
     found: dict[int, Mark] = {}
     saved = prefs.get(EXTRA)
     for entry in saved if isinstance(saved, list) else ():
@@ -55,7 +52,6 @@ def _color(value: object) -> str:
 
 
 def percents_text(marks: tuple[Mark, ...]) -> str:
-    """ "10 % (low), 50 %": what the marks show, for Details' hint and Settings' row."""
     parts = []
     for mark in marks:
         text = _("{percent} %").format(percent=mark.percent)
@@ -64,7 +60,6 @@ def percents_text(marks: tuple[Mark, ...]) -> str:
 
 
 def hint(marks: tuple[Mark, ...]) -> str:
-    """The line under Details' bars."""
     if len(marks) == 1:
         return _("The mark shows the low level, {low} %.").format(low=marks[0].percent)
     return _("The marks show {marks}.").format(marks=percents_text(marks))

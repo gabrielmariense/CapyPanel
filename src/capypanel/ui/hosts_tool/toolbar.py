@@ -1,5 +1,3 @@
-"""The Hosts toolbar; Refresh checks every host shown, with the checks ticked in its panel."""
-
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
@@ -23,9 +21,6 @@ from capypanel.ui.shortcuts import key_tip
 
 
 class RefreshPanel(QFrame):
-    """Right-click on Refresh: tick what to check on the hosts shown, then Run. It stays open
-    while boxes are ticked; the ticks are kept for next time."""
-
     run_clicked = Signal()
 
     def __init__(self, parent: QWidget) -> None:
@@ -53,7 +48,6 @@ class RefreshPanel(QFrame):
         self.retranslate()
 
     def retranslate(self) -> None:
-        # A small label over the ticks: in capitals, as the Commands window's groups.
         self._check_title.setText(_("Refresh every host shown").upper())
         self.status_box.setText(_("&Status"))
         self.users_box.setText(_("&Logged-on users"))
@@ -81,28 +75,23 @@ class HostsToolBar(ToolBar):
 
     def __init__(self, commands: HostsActions) -> None:
         super().__init__()
-        # Connect: a dropdown like the others, never greyed out. Its menu connects the selected
-        # hosts (also Enter or a double-click), once with another profile, or by address.
         self.connect_button = tool_button(dropdown=True)
         self.connect_menu = QMenu(self.connect_button)
         self.connect_button.setMenu(self.connect_menu)
         self.refresh_button = tool_button()
         self.refresh_button.clicked.connect(commands.refresh_shown.trigger)
         self._refresh = commands.refresh_shown
-        self._refresh.changed.connect(self._key_tips)  # a key set in Settings shows at once
+        self._refresh.changed.connect(self._key_tips)
         self.refresh_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
             lambda _pos: self.refresh_panel_requested.emit(
                 self.refresh_button.mapToGlobal(QPoint(0, self.refresh_button.height()))
             )
         )
-        # Commands: a split button. A click opens the Commands window; its arrow, the selected
-        # host's commands by group (the tool fills the menu each time it opens).
         self.commands_button = tool_button()
         self.commands_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.commands_menu = QMenu(self.commands_button)
         self.commands_button.setMenu(self.commands_menu)
-        # Inventory: adding hosts and groups, and importing them; its menu is filled by the tool.
         self.inventory_button = tool_button(dropdown=True)
         self.inventory_menu = QMenu(self.inventory_button)
         self.inventory_button.setMenu(self.inventory_menu)
@@ -114,7 +103,7 @@ class HostsToolBar(ToolBar):
         self.retranslate()
 
     def retranslate(self) -> None:
-        gap = " "  # the stylesheet drops the gap between icon and text
+        gap = " "
         self.connect_button.setText(gap + _("Connect"))
         self.connect_button.setToolTip(
             _("Connect to the selected hosts, once with another profile, or by address")
@@ -133,13 +122,11 @@ class HostsToolBar(ToolBar):
         )
 
     def _key_tips(self) -> None:
-        """The tips that name a key, with the key as it is now."""
         words = _("Refresh every host shown (a group's, or the ones a search leaves), with the "
                   "checks ticked on a right-click")  # fmt: skip
         self.refresh_button.setToolTip(key_tip(words, self._refresh))
 
     def restyle(self) -> None:
-        """Icons in the theme's text colour."""
         color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)
         self.connect_button.setIcon(tabler_icon("plug-connected", color))
         self.refresh_button.setIcon(tabler_icon("refresh", color))

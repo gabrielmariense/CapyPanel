@@ -1,5 +1,3 @@
-"""A connection profile: one way to reach a kind of host, with a password kept for it alone."""
-
 import json
 import re
 from collections.abc import Mapping
@@ -18,38 +16,34 @@ _FILE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}\.[a-z0-9]{1,8}$")  # a name, nev
 
 
 class ProfileError(ValueError):
-    """A profile file is broken, or doesn't fit its tool; the message says what's wrong."""
+    pass
 
 
 @dataclass(frozen=True)
 class ConnectionProfile:
     id: str
     tool: str
-    login: str = "password"  # the prompt asks for: "account" (user, password), "password" or "none"
+    login: str = "password"
     options: tuple[str, ...] = ()
-    port: int | None = None  # None: the tool's port
+    port: int | None = None
     name: str = ""
-    settings_file: str = ""  # beside the profile; "" = the viewer's own defaults
+    settings_file: str = ""
     extra: Mapping[str, Any] = field(default_factory=dict)
 
 
 def login_label(login: str, tool: str = "") -> str:
-    """How a profile signs in. "none": CapyPanel asks nothing, the tool asks for it itself
-    (Remote Desktop's own window): never "no password", which reads as none being needed."""
     if login == "none":
         return _("asked by {tool} itself").format(tool=tool) if tool else _("asked by the tool")
     return {"account": _("user and password"), "password": _("password only")}.get(login, login)
 
 
 def logins_of(tool: ToolDefinition) -> tuple[str, ...]:
-    """The logins a tool supports, in the order the editor offers them."""
     if not tool.wants_password:
         return ("none",)
     return ("account", "password") if tool.wants_user else ("password",)
 
 
 def check_fits(profile: ConnectionProfile, tool: ToolDefinition) -> None:
-    """Raises ProfileError when the profile asks for something its tool can't do."""
     for option in profile.options:
         if option not in tool.options:
             raise ProfileError(

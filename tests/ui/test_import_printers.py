@@ -37,15 +37,13 @@ def test_a_report_comes_back_with_the_printers_columns(qapp: QApplication) -> No
     dialog.set_text(REPORT)
     assert dialog.windowTitle() == "Import printers"
     header = dialog.table.headerItem()
-    # Import hosts' seven columns slot by slot, Warning right after Address so it's never off
-    # to the side; the printers' own after Notes, so a narrow window cuts one of them.
     assert [header.text(i) for i in range(dialog.table.columnCount())] == [
         "", "Name", "Address", "Warning", "Group", "Tags", "Notes", "Brand", "Model",
         "Serial number", "Asset tag", "Page counters",
     ]  # fmt: skip
     hosts = ImportDialog(None, HostList(), NO_GROUP)
     assert list(dialog.col.items())[:7] == list(hosts.col.items())
-    assert _row(dialog, 0)["brand"] == "hp"  # as typed; saved in capitals, as Add printer does
+    assert _row(dialog, 0)["brand"] == "hp"
     assert _add_button(dialog) == "&Add 2 printers"
     assert "2 printers will be added." in dialog.summary.text()
     new = dialog.imported_list()
@@ -73,7 +71,7 @@ def test_editing_a_printer_column_rewrites_the_list_with_it(
 ) -> None:
     dialog = ImportPrintersDialog(None, HostList(), NO_GROUP)
     dialog.set_text("name,address\nLab,192.0.2.11\n")
-    dialog.table.unlocked = True  # the question was answered Yes
+    dialog.table.unlocked = True
     item = dialog.table.topLevelItem(0)
     assert item is not None
     item.setText(dialog.col["brand"], "ricoh")
@@ -81,7 +79,7 @@ def test_editing_a_printer_column_rewrites_the_list_with_it(
         "name,address,group,tags,notes,brand,model,serial,asset_tag,counter_source",
         "Lab,192.0.2.11,,,,ricoh,,,,",
     ]
-    QApplication.processEvents()  # the preview is planned again after the editor closes
+    QApplication.processEvents()
     new = dialog.imported_list()
     assert new is not None and info_of(new.hosts[0]).brand == "RICOH"
 

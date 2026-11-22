@@ -61,7 +61,7 @@ def test_which_outcomes_prove_or_reject_an_account() -> None:
         return Found(users_error=RemoteError(reason))
 
     assert checks.account_proven(Found(sessions=()), None)
-    assert checks.account_proven(failed(Reason.NOT_ADMIN), None)  # accepted, just not admin
+    assert checks.account_proven(failed(Reason.NOT_ADMIN), None)
     assert not checks.account_proven(failed(Reason.UNREACHABLE), None)
     assert checks.account_rejected(failed(Reason.REJECTED))
     assert not checks.account_rejected(failed(Reason.NOT_ADMIN))

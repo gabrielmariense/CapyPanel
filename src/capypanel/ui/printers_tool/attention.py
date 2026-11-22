@@ -1,5 +1,3 @@
-"""The strip above the printer table while printers need attention, with Show and Show all."""
-
 from collections import Counter
 from collections.abc import Iterable
 
@@ -14,14 +12,12 @@ from capypanel.ui.icons import tabler_icon
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.status import Attention, Checked, Reason, amber
 
-MOST_LINES = 5  # printers named in one notification; the rest are counted
+MOST_LINES = 5
 
 ICON = 16
 
 
 def reasons_text(found: Iterable[Reason]) -> str:
-    """Why they need it, "1 stopped, 1 offline, 1 low", in that order, leaving out the ones at 0.
-    A jam, no paper and no toner count as stopped."""
     counts = Counter(reason.kind for reason in found)
     texts = {
         Attention.STOPPED: lambda n: ngettext("{n} stopped", "{n} stopped", n),
@@ -34,12 +30,10 @@ def reasons_text(found: Iterable[Reason]) -> str:
 
 
 def attention_text(n: int) -> str:
-    """What the rail's count means, "3 printers need attention": its tooltip, and the tray."""
     return ngettext("{n} printer needs attention", "{n} printers need attention", n).format(n=n)
 
 
 def why_text(checked: Checked, why: Reason, low: int) -> str:
-    """A notification's reason for one printer: "Paper jam", "Offline", "Black 7 %"."""
     reading = checked.reading
     if why is not Reason.LOW or reading is None:
         return why.words()
@@ -53,19 +47,17 @@ def why_text(checked: Checked, why: Reason, low: int) -> str:
 
 
 def notice_text(lines: list[str]) -> str:
-    """One line per printer, at most MOST_LINES, then how many more."""
     shown = lines[:MOST_LINES]
     if more := len(lines) - len(shown):
         shown.append(ngettext("and {n} more", "and {n} more", more).format(n=more))
     return "\n".join(shown)
 
 
-# The strip's "What does this mean?": the part on which printers need attention, and why.
 HELP_PLACE = "printers-checking-see-which-printers-need-attention"
 
 
 class AttentionStrip(QFrame):
-    show_clicked = Signal()  # Show, or Show all once only those are listed
+    show_clicked = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -73,8 +65,6 @@ class AttentionStrip(QFrame):
         self._icon = QLabel()
         self.restyle()
         self._words = ""
-        # One "What does this mean?" for the whole line, inside its text, so it reads straight
-        # after the message and wraps with it: the warnings' part of the docs.
         self._text = QLabel()
         self._text.setTextFormat(Qt.TextFormat.RichText)
         self._text.setWordWrap(True)
@@ -92,8 +82,6 @@ class AttentionStrip(QFrame):
         self.hide()
 
     def restyle(self) -> None:
-        """The warning icon in the current theme's amber, and the link in its link colour,
-        again after a theme switch."""
         icon = tabler_icon("alert-triangle", QColor(amber()), ICON)
         self._icon.setPixmap(icon.pixmap(ICON, ICON))
         if getattr(self, "_words", ""):
@@ -107,7 +95,6 @@ class AttentionStrip(QFrame):
         self._text.setToolTip(help_links.url(HELP_PLACE))
 
     def show_found(self, found: list[Reason], only_them: bool) -> None:
-        """Hidden when nothing needs attention."""
         n = len(found)
         self.setVisible(bool(n))
         if not n:

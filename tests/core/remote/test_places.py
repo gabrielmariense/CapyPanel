@@ -20,10 +20,10 @@ def test_c_drive_and_startup_folder_paths() -> None:
         ("Users\\Public", "\\\\DESK-02\\C$\\Users\\Public"),
         ("\\Users\\Public\\", "\\\\DESK-02\\C$\\Users\\Public"),
         ("C:\\Users\\Public", "\\\\DESK-02\\C$\\Users\\Public"),
-        ('"D:\\Logs\\App folder"', "\\\\DESK-02\\D$\\Logs\\App folder"),  # Copy as path
+        ('"D:\\Logs\\App folder"', "\\\\DESK-02\\D$\\Logs\\App folder"),
         ("  d$/Logs ", "\\\\DESK-02\\D$\\Logs"),
         ("e:", "\\\\DESK-02\\E$"),
-        ("\\\\DESK-03\\D$\\Logs", "\\\\DESK-03\\D$\\Logs"),  # a full path stays as typed
+        ("\\\\DESK-03\\D$\\Logs", "\\\\DESK-03\\D$\\Logs"),
     ],
 )
 def test_a_typed_path_becomes_one_on_the_pc(typed: str, opened: str) -> None:
@@ -38,7 +38,6 @@ def test_an_empty_path_is_refused(typed: str) -> None:
 
 @pytest.fixture
 def users(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A stand-in for the PC's C:\\Users folder."""
     monkeypatch.setattr(places, "share", lambda host, path="": str(tmp_path / path))
     (tmp_path / "Users").mkdir()
     return tmp_path / "Users"
@@ -81,6 +80,6 @@ def test_only_a_folder_is_opened(tmp_path: Path) -> None:
     script = tmp_path / "run.bat"
     script.write_text("echo", encoding="utf-8")
     with pytest.raises(NotADirectoryError):
-        places.require_folder(str(script))  # opening it would run it
+        places.require_folder(str(script))
     with pytest.raises(NotADirectoryError):
         places.require_folder(str(tmp_path / "missing"))

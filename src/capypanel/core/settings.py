@@ -1,5 +1,3 @@
-"""Where the app keeps its files: a folder the PC's users share, and a private one per user."""
-
 import copy
 import json
 import logging
@@ -15,18 +13,17 @@ from capypanel.core.i18n import _
 
 log = logging.getLogger(__name__)
 
-APP_ID = "CapyPanel"  # internal folder name; stays the same if the product is renamed
+APP_ID = "CapyPanel"
 PORTABLE_MARKER = "capypanel.portable"
 SETTINGS_SCHEMA = 1
 _NOT_IN_FILE_NAMES = '<>:"/\\|?*'
 
 
 class UserFolderError(Exception):
-    """The user's folder belongs to someone else, so it isn't safe to use."""
+    pass
 
 
 def app_dir() -> Path:
-    """The folder with the executable when packaged, or the repository root from source."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parents[3]
@@ -34,8 +31,8 @@ def app_dir() -> Path:
 
 @dataclass(frozen=True)
 class ListPlaces:
-    shared_dir: Path  # lists saved here show up for everyone on the PC, with no adding
-    user_dir: Path  # this user's own: lists saved here show up for them only
+    shared_dir: Path
+    user_dir: Path
 
     @property
     def default(self) -> Path:
@@ -48,8 +45,8 @@ class ListPlaces:
 
 @dataclass(frozen=True)
 class Paths:
-    root: Path  # ProgramData\CapyPanel, or <app>\userdata when portable
-    account: str  # "user@DOMAIN": names this user's folder and log file
+    root: Path
+    account: str
     portable: bool
 
     @property
@@ -74,8 +71,6 @@ class Paths:
 
     @property
     def user_profiles_log_file(self) -> Path:
-        """Every user profile this user deleted on a PC, or tried to: when, where, whose and how
-        it ended."""
         return self.log_dir / f"{self.account}.user-profiles.log"
 
     @property
@@ -84,16 +79,13 @@ class Paths:
 
     @property
     def lists_dir(self) -> Path:
-        """Every tool's shared lists, in a folder per tool."""
         return self.root / "lists"
 
     @property
     def user_lists_dir(self) -> Path:
-        """This user's own lists, in a folder per tool."""
         return self.user_dir / "lists"
 
     def lists(self, tool_id: str) -> ListPlaces:
-        """One tool's lists folders, shared and the user's own: lists\\<tool id>\\."""
         return ListPlaces(self.lists_dir / tool_id, self.user_lists_dir / tool_id)
 
 
@@ -102,7 +94,6 @@ def resolve_paths(
     env: Mapping[str, str] | None = None,
     account: str | None = None,
 ) -> Paths:
-    """ProgramData normally; a marker file next to the app means portable (in the app folder)."""
     folder = folder if folder is not None else app_dir()
     name = account if account is not None else winsec.account_name()
     name = "".join("_" if c in _NOT_IN_FILE_NAMES else c for c in name)
@@ -113,8 +104,6 @@ def resolve_paths(
 
 
 def ensure_dirs(paths: Paths) -> None:
-    """Creates the user's folder, private to them; its tools subfolder comes with the first save.
-    Raises UserFolderError if someone else made the folder first."""
     paths.log_dir.mkdir(parents=True, exist_ok=True)
     paths.user_dir.mkdir(parents=True, exist_ok=True)
     me = winsec.current_user_sid()
@@ -128,13 +117,12 @@ def ensure_dirs(paths: Paths) -> None:
             ).format(folder=paths.user_dir)
         )
     try:
-        winsec.make_private(paths.user_dir, me)  # every start: repairs changed permissions
+        winsec.make_private(paths.user_dir, me)
     except OSError as e:
         log.warning("Couldn't make %s private: %s", paths.user_dir, e)
 
 
 def load_settings(path: Path) -> dict[str, Any]:
-    """Read settings; a missing file gives defaults, a corrupt one is set aside, not overwritten."""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -147,11 +135,9 @@ def load_settings(path: Path) -> dict[str, Any]:
     return data
 
 
-TOOLS_KEY = "tools"  # each tool's own settings, by tool id
-TOOL_KEY = "tool"  # the tool shown last
-# What the window shows at start: the Home page, the tool shown last, or a tool's id.
+TOOLS_KEY = "tools"
+TOOL_KEY = "tool"
 START_KEY, START_HOME, START_LAST = "start", "home", "last"
-# What the window's X does: ask each time, keep CapyPanel running in the tray, or quit.
 CLOSE_KEY, CLOSE_ASK, CLOSE_TRAY, CLOSE_QUIT = "on_close", "ask", "tray", "quit"
 # The shell's own settings; everything else at the top level was the Hosts tool's before 0.20.
 SHELL_KEYS = frozenset(
@@ -173,8 +159,7 @@ SHELL_KEYS = frozenset(
 
 
 def language_of(settings_file: Path) -> str:
-    """The language the person chose, read without touching the file (a running copy owns
-    it); Windows' language when the file can't say, as on a first start."""
+    """Read without touching the file: a running copy owns it."""
     try:
         kept = json.loads(settings_file.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -184,8 +169,6 @@ def language_of(settings_file: Path) -> str:
 
 
 def tool_prefs(prefs: dict[str, Any], tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
-    """A tool's own section of the settings, made the first time it's asked for. With `inherit`
-    (Hosts), a new one starts from 0.19's top-level keys, kept there for older versions."""
     tools = prefs.get(TOOLS_KEY)
     if not isinstance(tools, dict):
         tools = prefs[TOOLS_KEY] = {}

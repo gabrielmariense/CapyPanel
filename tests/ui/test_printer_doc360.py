@@ -1,5 +1,3 @@
-"""Printers whose page counters come from Doc360 MPS, with Doc360 itself faked."""
-
 from dataclasses import replace
 from datetime import datetime
 
@@ -44,11 +42,11 @@ def test_details_and_the_report_show_doc360_s_total(printers: PrintersTool) -> N
     printers.table.select_ids([printer.id])
     labels = _labels(printers)
     assert "20,500" in labels or "20.500" in labels
-    assert not any("1,604,394" in text for text in labels)  # the printer's own isn't the source
+    assert not any("1,604,394" in text for text in labels)
     [source] = [t for t in labels if t.startswith("Doc360 MPS · fetched")]
     [total] = [w for w in printers.details.findChildren(QLabel) if w.text() in ("20,500", "20.500")]
     assert "Doc360 reads printers on its own schedule" in total.toolTip()
-    assert printers._report_cells(printer.id)[3] == "20500"  # plain digits
+    assert printers._report_cells(printer.id)[3] == "20500"
     assert source
 
 
@@ -60,7 +58,7 @@ def test_counts_from_an_older_month_say_so(printers: PrintersTool) -> None:  # n
                  if w.objectName() == "doc360Older"]  # fmt: skip
     assert "From October 2026" in warning.text() and "Check the portal" in warning.text()
     assert printers._report_cells(printer.id)[3] == "20500 (from October 2026)"
-    printers._counted = Counted(WHEN, {"sample0001": Counter(20_500, 0, 0)})  # this month's
+    printers._counted = Counted(WHEN, {"sample0001": Counter(20_500, 0, 0)})
     printers.table.select_ids([])
     printers.table.select_ids([printer.id])
     assert not [w for w in printers.details.findChildren(QLabel)
@@ -137,7 +135,7 @@ def test_refresh_fetches_doc360_once_beside_the_printers(
     monkeypatch.setattr(tool_module, "doc360_account", lambda: ACCOUNT)
     printers.commands.refresh_shown.trigger()
     _wait(printers)
-    assert asked == [ACCOUNT]  # one login for every Doc360 printer
+    assert asked == [ACCOUNT]
     assert printers._counted is not None
     assert status.doc360_pages(info_of(printer), None, printers._counted) == (20_500, "")
 
@@ -161,7 +159,6 @@ def test_refresh_says_when_the_doc360_account_is_missing(
     printers.table.select_ids([printer.id])
     assert "Error: No Doc360 MPS account is set." in _labels(printers)
 
-    # A button under it opens the account's window straight from Details.
     [button] = [b for b in printers.details.findChildren(QPushButton)
                 if b.objectName() == "doc360Account"]  # fmt: skip
     assert button.text() == "Set the account…"
@@ -262,7 +259,7 @@ def test_settings_keeps_the_doc360_account_in_the_vault_only(
 
     def keep(dialog: QDialog) -> QDialog.DialogCode:
         assert isinstance(dialog, settings_module.Doc360AccountDialog)
-        assert dialog.password.text() == ""  # a kept password isn't shown
+        assert dialog.password.text() == ""
         assert dialog.save_button.isEnabled()
         dialog.user.setText("EXAMPLE\\other")
         return QDialog.DialogCode.Accepted

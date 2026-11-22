@@ -1,5 +1,3 @@
-"""The panels of a list tool: groups and tags, the search above the items, and the items table."""
-
 import html
 import re
 from collections.abc import Callable, Iterable, Sequence
@@ -70,12 +68,11 @@ from capypanel.ui.notes import divider
 
 @dataclass(frozen=True)
 class Filter:
-    kind: str  # "all", "nogroup" or "group": where to look (picked tags then narrow it)
+    kind: str
     value: str | None = None
 
 
 def pane_title(text: str, label: QLabel | None = None) -> QLabel:
-    """A pane's small bold heading: a new label, or `label` styled as one."""
     label = label if label is not None else QLabel()
     label.setText(text)
     label.setObjectName("paneTitle")
@@ -87,16 +84,12 @@ def pane_title(text: str, label: QLabel | None = None) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """One card: "All hosts" (or the tool's word) on top, then the groups (in the list's order) and
-    the tags. A group (All hosts, No group) picks where to look; tags keep items with them all."""
-
     filter_changed = Signal()
 
     def add_list_picker(self, fill: Callable[[], None]) -> MenuCombo:
-        """The list dropdown, on top of the pane; `fill` fills its menu each time it opens."""
         picker = MenuCombo()
         picker.setObjectName("listPicker")
-        picker.menu().setToolTipsVisible(True)  # each list's path
+        picker.menu().setToolTipsVisible(True)
         picker.menu().aboutToShow.connect(fill)
         layout = self.layout()
         assert isinstance(layout, QVBoxLayout)
@@ -104,14 +97,13 @@ class NavigationPane(QWidget):
         return picker
 
     def __init__(self, everything: Callable[[], str], icon: str = "device-desktop") -> None:
-        """icon: the outline icon beside "All hosts" (the tool's own: a printer for Printers)."""
         super().__init__()
         self._filter = Filter("all")
-        self._everything_text = everything  # "All hosts", in the current language
+        self._everything_text = everything
         self._icon = icon
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
-        self.groups_heading = GroupsHeading()  # drop a group here: it goes to the top level
+        self.groups_heading = GroupsHeading()
         pane_title("", self.groups_heading)
         self.groups_heading.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tags_title = pane_title("")
@@ -123,8 +115,6 @@ class NavigationPane(QWidget):
         header.addWidget(self.groups_heading, 1)
         header.addWidget(self.add_group_button)
 
-        # Its own small list above the tree: it never scrolls away under a long tree. "No group"
-        # is always there, so hosts can be dragged onto it even before any host is in it.
         self.everything = PinnedList()
         self._everything_item = QTreeWidgetItem([""])
         self._everything_item.setData(0, ROLE_KIND, "all")
@@ -139,21 +129,17 @@ class NavigationPane(QWidget):
         self.tags = QTreeWidget()
         self.tags.setHeaderHidden(True)
         self.tags.setRootIsDecorated(False)
-        # A click picks a tag or drops it again, without Ctrl.
         self.tags.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         tags_header = QHBoxLayout()
         tags_header.addWidget(self._tags_title, 1)
         tags_header.addWidget(self.clear_tags_button)
 
-        # The lists drop their own frames ("flat"): the card around them is the only box.
         for tree in (self.everything, self.groups, self.tags):
             tree.setObjectName("flat")
         self._tags_line = divider()
         card = self._card = QFrame()
         card.setObjectName("card")
         card.setFrameShape(QFrame.Shape.StyledPanel)
-        # Groups above, tags below, and the line between them drags: a long tag list or a deep
-        # group tree gets the room it needs, and the place is kept (saved by the workspace).
         top, bottom = QWidget(), QWidget()
         above = QVBoxLayout(top)
         above.setContentsMargins(0, 0, 0, 0)
@@ -177,7 +163,7 @@ class NavigationPane(QWidget):
         self.split.addWidget(bottom)
         self.split.setStretchFactor(0, 3)
         self.split.setStretchFactor(1, 1)
-        self.split.setSizes([300, 130])  # until the user drags it: about a third for the tags
+        self.split.setSizes([300, 130])
         inside = QVBoxLayout(card)
         inside.setContentsMargins(4, 4, 4, 4)
         inside.addWidget(self.split)
@@ -191,8 +177,6 @@ class NavigationPane(QWidget):
         self.retranslate()
 
     def natural_width(self) -> int:
-        """As wide as its widest group or tag in full, and anything above the card (the list
-        dropdown), with the card's margins."""
         lists = [_tree_width(t) for t in (self.everything, self.groups, self.tags) if t.isVisible()]
         heading = self.groups_heading.sizeHint().width() + self.add_group_button.sizeHint().width()
         card = max([heading, *lists]) + 8 + 2 * self._card.frameWidth()  # 4 px margins
@@ -205,8 +189,6 @@ class NavigationPane(QWidget):
         return max([card, *above])
 
     def card_top(self) -> int:
-        """How far below the pane's top its card starts: what's above (the list dropdown) and the
-        layout's gap under each, known before it shows, so a panel beside it lines up at once."""
         layout = self.layout()
         assert isinstance(layout, QVBoxLayout)
         top = 0
@@ -218,7 +200,6 @@ class NavigationPane(QWidget):
         return top
 
     def retranslate(self) -> None:
-        """Titles only; the lists' own texts come back with the next show_list()."""
         self.add_group_button.setToolTip(_("Add group"))
         self.groups_heading.setText(_("Groups"))
         self.groups_heading.setToolTip(_("Drop a group here to put it directly under Groups"))
@@ -226,10 +207,9 @@ class NavigationPane(QWidget):
         self._show_tag_count()
 
     def set_tags_visible(self, visible: bool) -> None:
-        """View > Tags pane. Hiding it drops the picked tags: nothing filters out of sight."""
         for widget in (self._tags_line, self._tags_title, self.clear_tags_button, self.tags):
             widget.setVisible(visible)
-        self._tags_part.setVisible(visible)  # its half of the split too: no empty room
+        self._tags_part.setVisible(visible)
         if not visible and self._picked_tags:
             self.clear_tags()
 
@@ -240,11 +220,9 @@ class NavigationPane(QWidget):
         return list(self._picked_tags)
 
     def clear_tags(self) -> None:
-        self.tags.clearSelection()  # _tags_picked() follows
+        self.tags.clearSelection()
 
     def set_searching(self, searching: bool) -> None:
-        """A search looks through every item, so no group shows as picked meanwhile. The picked
-        tags stay: they narrow the search too."""
         for tree in (self.everything, self.groups):
             tree.blockSignals(True)
         if searching:
@@ -258,25 +236,20 @@ class NavigationPane(QWidget):
         return self._filter.value if self._filter.kind == "group" else None
 
     def group_at(self, position: QPoint) -> str | None:
-        """The group under a point of the groups tree; None on empty space."""
         item = self.groups.itemAt(position)
         return item.data(0, ROLE_ID) if item else None
 
     def show_view(self, kind: str, value: str) -> None:
-        """A view as saved ("group", "nogroup" or "all"); All hosts when it's gone. A "tag" view
-        (saved by 0.19) shows everything with that tag picked."""
         if kind == "tag":
             self._pick_tags([value])
             kind = "all"
         self._filter = self._select(Filter(kind, value or None))
 
     def select_group(self, group_id: str) -> None:
-        """A group, or NO_GROUP for the hosts in none."""
         wanted = Filter("nogroup") if group_id == NO_GROUP else Filter("group", group_id)
         self._filter = self._select(wanted)
 
     def show_list(self, host_list: HostList | None) -> None:
-        """Rebuilds the lists from the host list, keeping the current pick when it still exists."""
         wanted = self._filter
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(True)
@@ -294,12 +267,12 @@ class NavigationPane(QWidget):
                 item.setData(0, ROLE_KIND, "tag")
                 item.setData(0, ROLE_ID, tag)
                 self.tags.addTopLevelItem(item)
-                item.setSelected(tag in self._picked_tags)  # still picked, while it exists
+                item.setSelected(tag in self._picked_tags)
         self._filter = self._select(wanted) if host_list is not None else Filter("all")
         self._read_picked_tags()
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(False)
-        self._fit_everything()  # the count may have grown a digit
+        self._fit_everything()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -309,27 +282,23 @@ class NavigationPane(QWidget):
         super().changeEvent(event)
         if event.type() in (QEvent.Type.StyleChange, QEvent.Type.FontChange):
             self._fit_everything()
-        if event.type() == QEvent.Type.PaletteChange:  # the new theme's text colour
+        if event.type() == QEvent.Type.PaletteChange:
             self._paint_icons()
 
     def _paint_icons(self) -> None:
-        """Outline icons in the text's colour, as everywhere else in the app."""
         color = self.palette().color(QPalette.ColorRole.Text)
         self._everything_item.setIcon(0, tabler_icon(self._icon, color, 16))
         self._no_group_item.setIcon(0, tabler_icon("folder", color, 16))
 
     def split_state(self) -> str:
-        """Where the line between groups and tags sits, to save."""
         return self.split.saveState().toBase64().toStdString()
 
     def restore_split(self, saved: object) -> None:
         if isinstance(saved, str):
             self.split.restoreState(QByteArray.fromBase64(saved.encode()))
-            self.split.setChildrenCollapsible(False)  # restoring turns collapsing back on
+            self.split.setChildrenCollapsible(False)
 
     def _fit_everything(self) -> None:
-        """As tall as its two rows, whatever the padding, and never narrower than "All hosts (N)":
-        the pane can't be dragged past it. Group names don't count: a long one shows a tooltip."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
@@ -365,7 +334,7 @@ class NavigationPane(QWidget):
         if not items:
             return
         self._clear(self.groups)
-        self._filter = Filter(items[0].data(0, ROLE_KIND))  # "all" or "nogroup"
+        self._filter = Filter(items[0].data(0, ROLE_KIND))
         self.filter_changed.emit()
 
     def _groups_picked(self) -> None:
@@ -395,13 +364,10 @@ class NavigationPane(QWidget):
     def _show_tag_count(self) -> None:
         picked = len(self._picked_tags)
         self._tags_title.setText(_("Tags ({n})").format(n=picked) if picked else _("Tags"))
-        self.clear_tags_button.setEnabled(bool(picked))  # kept in place, greyed out
+        self.clear_tags_button.setEnabled(bool(picked))
 
 
 class PinnedList(HostDropTree):
-    """ "All hosts" and "No group". Hosts dragged from the table onto "No group" leave their
-    group (`hosts_dropped` with NO_GROUP)."""
-
     def __init__(self) -> None:
         super().__init__()
         self.setHeaderHidden(True)
@@ -424,20 +390,18 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class SearchBox(QLineEdit):
-    """Above the items table: its placeholder says what's searched. Esc clears it; Down or Enter
-    moves to the results (never acts on them, so a typo can't reach a wrong PC)."""
+    """Enter only moves to the results, never acts on them: a typo can't reach a wrong PC."""
 
     to_results = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.setObjectName("paneSearch")  # the panels' corners and border, so its edges match
+        self.setObjectName("paneSearch")
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
         self._paint_icon()
 
     def set_fields(self, fields: Sequence[str], tip: str) -> None:
-        """The placeholder names exactly what's searched: each a lower-case word."""
         self.setPlaceholderText(_("Search {fields}").format(fields=", ".join(fields)))
         self.setToolTip(tip)
 
@@ -452,7 +416,7 @@ class SearchBox(QLineEdit):
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:  # the new theme's colour
+        if event.type() == QEvent.Type.PaletteChange:
             self._paint_icon()
 
     def _paint_icon(self) -> None:
@@ -462,9 +426,6 @@ class SearchBox(QLineEdit):
 
 
 class TagStrip(QFrame):
-    """Between the search box and the table while tags are picked: which ones, how many items
-    they leave, and Clear. It's there so nobody wonders where the other items went."""
-
     clear_clicked = Signal()
 
     def __init__(self) -> None:
@@ -483,7 +444,6 @@ class TagStrip(QFrame):
         self.hide()
 
     def show_tags(self, tags: Sequence[str], text: str) -> None:
-        """text: the tool's sentence, with {tags} where the picked tags go (in bold)."""
         self.setVisible(bool(tags))
         if tags:
             names = html.escape(", ".join(tags))
@@ -493,13 +453,11 @@ class TagStrip(QFrame):
             self.clear_button.setToolTip(_("Clear the picked tags"))
 
 
-# A cell that says nothing was read yet ("Not checked"): it sorts as an empty one.
 ROLE_NOTHING = Qt.ItemDataRole.UserRole + 9
-NOTHING: tuple[tuple[int, int | str], ...] = ((2, ""),)  # natural_key's answer for no text
+NOTHING: tuple[tuple[int, int | str], ...] = ((2, ""),)
 
 
 def natural_key(text: str) -> tuple[tuple[int, int | str], ...]:
-    """Sorts "Room 2" before "Room 10", and ignores case. Empty cells go last."""
     if not text:
         return NOTHING
     parts = re.split(r"(\d+)", text.casefold())
@@ -509,9 +467,7 @@ def natural_key(text: str) -> tuple[tuple[int, int | str], ...]:
 def sorted_by[T](
     rows: Sequence[T], name: Callable[[T], str], cell: Callable[[T], str], descending: bool
 ) -> list[T]:
-    """Rows by a column's text, A–Z or Z–A; ties by name A–Z; cells with nothing ("" from
-    `cell`) last either way. What the tables show, for anything listing rows in their order."""
-    by_name = sorted(rows, key=lambda r: natural_key(name(r)))  # stable sorts keep it in ties
+    by_name = sorted(rows, key=lambda r: natural_key(name(r)))
     filled = [r for r in by_name if cell(r)]
     filled.sort(key=lambda r: natural_key(cell(r)), reverse=descending)
     return filled + [r for r in by_name if not cell(r)]
@@ -521,19 +477,14 @@ SAMPLE_ID = "guide-sample"  # a guide's sample item: never saved, never read fro
 
 
 def sample_tag() -> str:
-    """The tag every guide sample carries: one that reads like a real one."""
     return _("2nd floor")
 
 
 def is_sample(item_id: object) -> bool:
-    """A guide's sample (SAMPLE_ID, or SAMPLE_ID and a number when a tool shows several)."""
     return isinstance(item_id, str) and item_id.startswith(SAMPLE_ID)
 
 
 class SortedRow(QTreeWidgetItem):
-    """A row sorting naturally by the clicked column, ties by name A–Z either way. An empty cell
-    or one marked ROLE_NOTHING goes last either way; a guide's sample stays on top."""
-
     def sort_text(self, column: int) -> str:
         return "" if self.data(column, ROLE_NOTHING) else self.text(column)
 
@@ -560,15 +511,12 @@ class SortedRow(QTreeWidgetItem):
 
 
 def _tree_width(tree: QTreeWidget) -> int:
-    """A list's widest row in full, with its frame and, when shown, its scroll bar."""
     bar = tree.verticalScrollBar()
     extra = bar.sizeHint().width() if bar.isVisible() else 0
     return tree.sizeHintForColumn(0) + 2 * tree.frameWidth() + extra
 
 
 def offers_typed(typed: str, rows: Iterable[Host]) -> bool:
-    """Whether a search offers the PC typed (Connect to {host}…, Scan {host}): while no row is it,
-    by name or address in any case; a text with a space (a group, a note) can't be a PC."""
     wanted = typed.strip().casefold()
     if not wanted or any(c.isspace() for c in wanted):
         return False
@@ -576,10 +524,7 @@ def offers_typed(typed: str, rows: Iterable[Host]) -> bool:
 
 
 class RowsOffer(QObject):
-    """Buttons as a table's last line, under its rows and lined up with their text: what a search
-    offers while no row is what was typed; they scroll with the rows and take no table height."""
-
-    GAP = 6  # px between the last row and the buttons
+    GAP = 6
 
     def __init__(self, tree: QTreeWidget) -> None:
         super().__init__(tree)
@@ -596,7 +541,6 @@ class RowsOffer(QObject):
         tree.horizontalScrollBar().valueChanged.connect(self.place)
 
     def show_actions(self, actions: Sequence[QAction]) -> None:
-        """A button for each action, under the rows; () hides them."""
         for button in self.buttons:
             self._row.removeWidget(button)
             button.hide()  # gone now: deleteLater alone leaves it drawn until Qt gets to it
@@ -613,7 +557,6 @@ class RowsOffer(QObject):
         self.place()
 
     def place(self) -> None:
-        """Under the last row, where it is now; shown only when it fits whole."""
         tree = self._tree
         count = tree.topLevelItemCount()
         last = tree.topLevelItem(count - 1) if count and self.buttons else None
@@ -622,14 +565,13 @@ class RowsOffer(QObject):
             return
         layout = self.box.layout()
         assert layout is not None
-        layout.activate()  # buttons just added count in the size asked for below
+        layout.activate()
         size = self.box.sizeHint()
         top = tree.visualItemRect(last).bottom() + 1 + self.GAP
         self.box.setGeometry(self._text_left(last), top, size.width(), size.height())
         self.box.setVisible(top + size.height() <= tree.viewport().height())
 
     def _text_left(self, item: QTreeWidgetItem) -> int:
-        """Where the first column's text starts, as the table draws it (after a row's icon)."""
         tree = self._tree
         index = tree.indexFromItem(item, 0)
         option = QStyleOptionViewItem()
@@ -651,35 +593,27 @@ class RowsOffer(QObject):
 
 
 class ItemTable(QTreeWidget):
-    """A list tool's items as a table, a QTreeView that selects whole rows in Windows 11. A tool
-    gives its COLUMNS (saved by those keys; the first always shows), retranslate and row_texts."""
-
     COLUMNS: tuple[str, ...] = ()
-    SEARCHED: frozenset[int] = frozenset({0})  # columns where a search's text is marked
-    # Empty until something fills them later: a starting width, in average characters.
+    SEARCHED: frozenset[int] = frozenset({0})
     EMPTY: dict[int, int] = {}
-    ICONS: frozenset[int] = frozenset()  # columns whose cells start with a dot or an icon
-    columns_changed = Signal()  # a column was shown or hidden
+    ICONS: frozenset[int] = frozenset()
+    columns_changed = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.setObjectName("grid")  # a line under each row
+        self.setObjectName("grid")
         self._rows: dict[str, SortedRow] = {}
-        # The user's column widths, by key: saved, shared by every list, changed only by them.
         self._widths: dict[str, int] = {}
-        self._sizing = False  # the table is resizing a column, not the user
+        self._sizing = False
         self._marker = MatchMarker(self, columns=set(self.SEARCHED))
         self.setItemDelegate(self._marker)
         self.retranslate()
         header = self.header()
-        # _fill_last_column stretches the last one. Off before any column hides: a column hidden
-        # while it's on kept counting 100 px, and the scroll bar showed with nothing to scroll.
         header.setStretchLastSection(False)
-        header.setSectionsMovable(False)  # one fixed column order, the same in every menu
+        header.setSectionsMovable(False)
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._columns_menu)
         header.sectionResized.connect(self._resized)
-        # Double-clicking a column's edge fits it (Qt's own); keep that width as the user's.
         header.sectionHandleDoubleClicked.connect(self._keep_width)
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
@@ -687,16 +621,14 @@ class ItemTable(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # Selected items can be dragged onto a group in the Groups panel, to move them there.
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-        # Centred in the table when it has no rows: why, and buttons for what to do next.
         self._empty = QWidget(self.viewport())
         self._empty_text = QLabel()
         self._empty_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_text.setWordWrap(True)
         self.clear_tags_button = QPushButton()
         self.clear_tags_button.setAutoDefault(False)
-        self.note_buttons: list[QPushButton] = []  # one per action of the note shown
+        self.note_buttons: list[QPushButton] = []
         self._note_row = QHBoxLayout()
         self._note_row.setSpacing(8)
         self._note_row.addStretch(1)
@@ -707,20 +639,18 @@ class ItemTable(QTreeWidget):
         note.addWidget(self._empty_text)
         note.addLayout(self._note_row)
         self._empty.hide()
-        self.offer = RowsOffer(self)  # a search's offer while it has rows: show_offer
+        self.offer = RowsOffer(self)
 
     def retranslate(self) -> None:
-        """The column titles, in the current language."""
+        pass
 
     def row_texts(self, item: Host) -> list[str]:
         raise NotImplementedError
 
     def decorate(self, row: QTreeWidgetItem, item: Host) -> None:
-        """Anything a row shows besides its texts (icons, tooltips, colours)."""
+        pass
 
     def longest_texts(self, column: int) -> Sequence[str]:
-        """Every text a column filled later can show (Status: each state), when they're known:
-        its first width then fits the longest, in the current language."""
         return ()
 
     def set_editable(self, editable: bool) -> None:
@@ -733,7 +663,6 @@ class ItemTable(QTreeWidget):
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def set_search(self, needle: str) -> None:
-        """Marks the searched text."""
         self._marker.needle = needle
         self.viewport().update()
 
@@ -741,8 +670,7 @@ class ItemTable(QTreeWidget):
         keep = set(self.selected_ids())
         current = self.currentItem()
         current_id = current.data(0, ROLE_ID) if current is not None else None
-        # A refill after an edit, add or delete keeps the rows where they were (clear() would jump
-        # to the top); another group or search starts at the top.
+        # A refill after an edit keeps the rows where they were: clear() would jump to the top.
         before, after = set(self._rows), {item.id for item in items}
         same = bool(before) and len(before ^ after) <= max(1, len(keep))
         down = self.verticalScrollBar().value() if same else 0
@@ -759,8 +687,6 @@ class ItemTable(QTreeWidget):
             self.decorate(row, item)
             row.setSelected(item.id in keep)
         self.setSortingEnabled(True)
-        # The arrow keys go on from the row they were on, not from the top: the current row
-        # comes back too, without touching the selection just put back.
         if current_id in self._rows:
             self.selectionModel().setCurrentIndex(
                 self.indexFromItem(self._rows[current_id]),
@@ -768,34 +694,29 @@ class ItemTable(QTreeWidget):
             )
         self.blockSignals(False)
         self._place_columns()
-        self.updateGeometries()  # the scroll bars' new range, before going back
+        self.updateGeometries()
         self.verticalScrollBar().setValue(down)
         self.horizontalScrollBar().setValue(across)
-        self.offer.place()  # under the new last row
+        self.offer.place()
         self.itemSelectionChanged.emit()
 
     def in_shown_order(self, items: Sequence[Host]) -> tuple[Host, ...]:
-        """Items in the order the table shows them now: by the sorted column, A–Z or Z–A, ties
-        by name A–Z, as SortedRow does. Report lists them so, wherever they come from."""
         column = max(self.sortColumn(), 0)
         descending = self.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
         texts = {item.id: self.row_texts(item) for item in items}
 
         def cell(item: Host) -> str:
-            row = self._rows.get(item.id)  # what it shows now (Status comes with a Refresh)
+            row = self._rows.get(item.id)
             return row.sort_text(column) if row is not None else texts[item.id][column]
 
         return tuple(sorted_by(items, lambda h: texts[h.id][0], cell, descending))
 
     def show_no_match(self, text: str) -> None:
-        """The note in the empty table when the picked tags leave nothing; "" hides it."""
         self.show_note(text, clear_tags=bool(text))
 
     def show_note(
         self, text: str, actions: Sequence[QAction] = (), *, clear_tags: bool = False
     ) -> None:
-        """The note in the table when it has no rows: `text` says why (a second line, what to
-        do), with a button for each action, or Clear tags. "" hides it."""
         self._empty_text.setText(text)
         self.clear_tags_button.setText(_("Clear tags"))
         self.clear_tags_button.setVisible(clear_tags)
@@ -816,20 +737,17 @@ class ItemTable(QTreeWidget):
         self._place_empty()
 
     def show_offer(self, actions: Sequence[QAction]) -> None:
-        """A button per action as the table's last line, when no row of a search is what was typed;
-        with no rows, the note carries them (show_note). () hides them."""
         self.offer.show_actions(actions if self.topLevelItemCount() else ())
 
     def _place_empty(self) -> None:
         if not self._empty.isVisible():
             return
         area = self.viewport().rect()
-        # Each line whole when the table is wide enough, wrapped only when it isn't.
         metrics = self._empty_text.fontMetrics()
         line = max(metrics.horizontalAdvance(t) for t in self._empty_text.text().split("\n"))
         layout = self._empty.layout()
         assert layout is not None
-        layout.activate()  # buttons just added count in the sizes asked for below
+        layout.activate()
         margins = layout.contentsMargins()
         sides = margins.left() + margins.right()
         buttons = self._note_row.sizeHint().width()
@@ -848,11 +766,10 @@ class ItemTable(QTreeWidget):
     def set_hidden_columns(self, keys: object) -> None:
         hidden = set(keys) if isinstance(keys, list) else set()
         for index, key in enumerate(self.COLUMNS):
-            self.setColumnHidden(index, index > 0 and key in hidden)  # the first always shows
+            self.setColumnHidden(index, index > 0 and key in hidden)
         self._place_columns()
 
     def _columns_menu(self, position: QPoint) -> None:
-        """Right-click on the column titles: tick the columns to show."""
         menu = QMenu(self)
         header = self.headerItem()
         for index in range(1, len(self.COLUMNS)):
@@ -866,12 +783,11 @@ class ItemTable(QTreeWidget):
 
     def _show_column(self, index: int, shown: bool) -> None:
         self.setColumnHidden(index, not shown)
-        self._place_columns()  # one shown for the first time is fitted, once
+        self._place_columns()
         self.columns_changed.emit()
 
     def minimum_width(self, index: int) -> int:
-        """A column is never narrower than its title. Qt keeps room for the sort arrow in every
-        title; only the sorted column shows it, so the others leave it out."""
+        """Qt keeps room for the sort arrow in every title; only the sorted column needs it."""
         header = self.header()
         if index == header.sortIndicatorSection():
             width = header.sectionSizeHint(index)
@@ -879,17 +795,13 @@ class ItemTable(QTreeWidget):
             header.setSortIndicatorShown(False)
             width = header.sectionSizeHint(index)
             header.setSortIndicatorShown(True)
-        # Windows' own header draws a little wider than Qt measures (the column line, bolder
-        # text): a few pixels more keep the last letter.
+        # Windows' header draws a little wider than Qt measures: 6 px keep the last letter.
         return width + 6
-
-    # ---- column widths: the user's ----
 
     def widths(self) -> dict[str, int]:
         return dict(self._widths)
 
     def set_widths(self, saved: object) -> None:
-        """Widths saved by an earlier run; anything unknown (an old "notes" column) is skipped."""
         known = set(self.COLUMNS)
         self._widths = {
             k: v for k, v in (saved.items() if isinstance(saved, dict) else ())
@@ -898,14 +810,11 @@ class ItemTable(QTreeWidget):
         self._place_columns()
 
     def fit_columns(self) -> None:
-        """Column titles' menu > Fit columns to content: every column shown, to its full text."""
         for column in self._shown():
             self._widths[self.COLUMNS[column]] = self._content_width(column)
         self._place_columns()
 
     def _place_columns(self) -> None:
-        """Sizes each column shown: the user's width; a column with none yet (the first start,
-        or switched on for the first time) is fitted once, and keeps that width from then on."""
         header = self.header()
         self._sizing = True
         for column in self._shown():
@@ -924,21 +833,18 @@ class ItemTable(QTreeWidget):
         return max([width, *(self._cell_width(column, t) for t in self.longest_texts(column))])
 
     def _cell_width(self, column: int, text: str) -> int:
-        """The width a cell needs to show `text` in full, as the style measures a real one."""
-        self.ensurePolished()  # the theme's padding counts, also before the table first shows
+        self.ensurePolished()
         option = QStyleOptionViewItem()
         self.initViewItemOption(option)
         option.text = text
         option.features |= QStyleOptionViewItem.ViewItemFeature.HasDisplay
         if column in self.ICONS:
             option.features |= QStyleOptionViewItem.ViewItemFeature.HasDecoration
-            # Any icon: only its size counts, and the view's own option already has it.
             option.icon = QIcon(QPixmap(option.decorationSize))
         contents = QStyle.ContentsType.CT_ItemViewItem
         return self.style().sizeFromContents(contents, option, QSize(), self).width()
 
     def _content_width(self, column: int) -> int:
-        """Its widest text, in full, and never narrower than its title."""
         return max(self.sizeHintForColumn(column), self.minimum_width(column))
 
     def _shown(self) -> list[int]:
@@ -949,8 +855,6 @@ class ItemTable(QTreeWidget):
         ]  # fmt: skip
 
     def _fill_last_column(self) -> None:
-        """The last column stretches into the room left on a wide window, so no gap shows on
-        the right; on a narrow one it keeps its width and the scroll bar appears."""
         shown = self._shown()
         if not shown:
             return
@@ -962,7 +866,6 @@ class ItemTable(QTreeWidget):
         self._sizing = False
 
     def _resized(self, index: int, _old: int, new: int) -> None:
-        """A column dragged by the user keeps that width, never narrower than its title."""
         dragging = QApplication.mouseButtons() & Qt.MouseButton.LeftButton
         if self._sizing or not dragging or self.isColumnHidden(index):
             return
@@ -975,8 +878,6 @@ class ItemTable(QTreeWidget):
         self._fill_last_column()
 
     def natural_width(self) -> int:
-        """As wide as its columns, the last at its own width (not stretched to fill), with the
-        frame and the scroll bar."""
         shown, header = self._shown(), self.header()
         width = sum(header.sectionSize(c) for c in shown[:-1])
         if shown:
@@ -999,8 +900,7 @@ class ItemTable(QTreeWidget):
         index: QModelIndex | QPersistentModelIndex,
         hint: QAbstractItemView.ScrollHint = QAbstractItemView.ScrollHint.EnsureVisible,
     ) -> None:
-        """Brings the row into view, up or down only. Qt also scrolls sideways to show the whole
-        clicked cell, so a click on a long text jumped the table to the right."""
+        """Up or down only: Qt also scrolls sideways to a clicked cell, jumping the table right."""
         across = self.horizontalScrollBar().value()
         super().scrollTo(index, hint)
         self.horizontalScrollBar().setValue(across)
@@ -1019,9 +919,7 @@ class ItemTable(QTreeWidget):
 
 
 class MatchMarker(QStyledItemDelegate):
-    """Marks the searched text in each cell, like a highlighter."""
-
-    COLOR = QColor(255, 196, 0, 96)  # see-through, so it reads in light and dark themes
+    COLOR = QColor(255, 196, 0, 96)
 
     def __init__(self, parent: QWidget, columns: set[int]) -> None:
         super().__init__(parent)

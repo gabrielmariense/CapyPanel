@@ -66,7 +66,7 @@ def test_add_host_keeps_every_host_of_a_list_with_no_groups(
     monkeypatch.setattr(hosts_module, "run_modal", fill)
     window.hosts.commands.add_host.trigger()
     names = [h.name for h in listfile.load(path).hosts.hosts]
-    assert sorted(names) == ["LOOSE-01", "LOOSE-02", "NEW-01"]  # nothing lost
+    assert sorted(names) == ["LOOSE-01", "LOOSE-02", "NEW-01"]
 
 
 def test_another_tool_s_list_isn_t_opened_as_a_host_list(
@@ -79,7 +79,7 @@ def test_another_tool_s_list_isn_t_opened_as_a_host_list(
     assert help_boxes == [(f"“{path}” isn't a host list.", "hosts-not-a-list")]
     assert window.hosts.document is before
     doc = window.hosts.document
-    assert doc is not None and listfile.load(doc.path).kind == "hosts"  # saved with its kind
+    assert doc is not None and listfile.load(doc.path).kind == "hosts"
 
 
 def _table_names(win: CapyWindow) -> set[str]:
@@ -91,7 +91,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: CapyWi
     doc = window.hosts.document
     assert doc is not None and doc.path.name == "default.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Default group"]
-    assert window.windowTitle() == f"Default — CapyPanel {__version__}"  # no build: About has it
+    assert window.windowTitle() == f"Default — CapyPanel {__version__}"
     assert [a.text() for a in window.menuBar().actions()] == [
         "&File",
         "&View",
@@ -114,11 +114,11 @@ def test_picking_a_group_or_tag_filters_the_table(window: CapyWindow, office: Pa
     tree.setCurrentItem(finance)
     assert _table_names(window) == {"FIN-01", "FIN-02"}
     [kiosk] = window.hosts.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
-    window.hosts.nav.tags.setCurrentItem(kiosk)  # narrows the group picked
+    window.hosts.nav.tags.setCurrentItem(kiosk)
     assert _table_names(window) == {"FIN-02"}
     [everything] = window.hosts.nav.everything.findItems("All hosts", Qt.MatchFlag.MatchStartsWith)
-    window.hosts.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
-    assert _table_names(window) == {"HQ-01", "FIN-02"}  # the tag stays picked
+    window.hosts.nav.everything.setCurrentItem(everything)
+    assert _table_names(window) == {"HQ-01", "FIN-02"}
     window.hosts.nav.clear_tags()
     assert len(_table_names(window)) == 3
 
@@ -163,7 +163,7 @@ def test_closing_saves_layout_and_keeps_other_settings(
     win.close()
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
     assert saved["kept"] is True
-    hosts = saved["tools"]["hosts"]  # each tool's settings in its own section
+    hosts = saved["tools"]["hosts"]
     assert hosts["view"]["details"] is False and saved["view"]["toolbar"] is True
     assert isinstance(saved["window_geometry"], str) and isinstance(hosts["main_splitter"], str)
 
@@ -171,7 +171,6 @@ def test_closing_saves_layout_and_keeps_other_settings(
 def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> None:
     hl, hq = HostList().add_group("Headquarters")
     hl, finance = hl.add_group("Finance", parent=hq.id)
-    # Full paths, not indentation: the closed drop-down then reads left-aligned.
     assert [label for _, label in group_choices(hl)] == [
         "No group", "Headquarters", "Headquarters › Finance"
     ]  # fmt: skip
@@ -184,7 +183,6 @@ def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> 
 
 
 def _drag(monkeypatch: pytest.MonkeyPatch, table: HostTable, column: int, width: int) -> None:
-    """A column's edge dragged with the mouse (a plain resize isn't a drag)."""
     with monkeypatch.context() as m:
         m.setattr(QApplication, "mouseButtons", lambda: Qt.MouseButton.LeftButton)
         table.header().resizeSection(column, width)
@@ -195,7 +193,7 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
 ) -> None:
     window.hosts.open_list(office)
     table = window.hosts.table
-    _drag(monkeypatch, table, table.USER, 5)  # almost shut
+    _drag(monkeypatch, table, table.USER, 5)
     assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
     table._show_column(table.USER, False)
     assert table.isColumnHidden(table.USER)
@@ -203,7 +201,7 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     reopened = CapyWindow(window.paths, dict(window.prefs))
     assert reopened.hosts.table.isColumnHidden(reopened.hosts.table.USER)
     reopened.hosts.table.set_hidden_columns(["computer"])
-    assert not reopened.hosts.table.isColumnHidden(0)  # the host name always shows
+    assert not reopened.hosts.table.isColumnHidden(0)
     reopened.close()
 
 
@@ -225,16 +223,14 @@ def _table(qapp: QApplication, hosts: tuple[Host, ...]) -> HostTable:
 
 
 def _fit_view(qapp: QApplication, table: HostTable, view: int) -> None:
-    """Resized so its rows have `view` px (each theme frames the table its own way)."""
     table.resize(view + table.width() - table.viewport().width(), 300)
     qapp.processEvents()
 
 
 def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) -> None:
-    long = "a." * 150 + "example.internal"  # far wider than the view: no cap cuts it
+    long = "a." * 150 + "example.internal"
     table = _table(qapp, _hosts(("Reception 01", long)))
     assert table.columnWidth(table.ADDRESS) >= table.sizeHintForColumn(table.ADDRESS)
-    # User is empty before a check: a starting width with room for one.
     assert table.columnWidth(table.USER) > table.minimum_width(table.USER)
     table.close()
 
@@ -244,7 +240,7 @@ def test_status_starts_wide_enough_for_everything_it_can_say(qapp: QApplication)
     first = table.columnWidth(table.STATUS)
     row = table.topLevelItem(0)
     assert row is not None
-    row.setIcon(table.STATUS, dot_icon("#3fb950"))  # the dot takes room too
+    row.setIcon(table.STATUS, dot_icon("#3fb950"))
     for words in table.longest_texts(table.STATUS):
         row.setText(table.STATUS, words)
         assert table.sizeHintForColumn(table.STATUS) <= first, words
@@ -260,10 +256,10 @@ def test_column_widths_belong_to_the_user(
     _drag(monkeypatch, table, 0, 300)
     other = office.with_name("other.json")
     other.write_bytes(office.read_bytes())
-    window.hosts.open_list(other)  # another list: same widths, one set for all lists
+    window.hosts.open_list(other)
     window.hosts.nav.select_group(next(g.id for g in window.hosts.document.hosts.groups))  # type: ignore[union-attr]
     assert table.columnWidth(0) == 300
-    window.close()  # saved across restarts
+    window.close()
     reopened = CapyWindow(window.paths, dict(window.prefs))
     assert reopened.hosts.table.widths()["computer"] == 300
     reopened.close()
@@ -283,7 +279,6 @@ def test_fit_columns_to_content_fits_the_full_text_again(
 
 def test_panes_cant_be_dragged_too_narrow_to_read(window: CapyWindow) -> None:
     scale = window.hosts._scale()
-    # Details: the usual minimum, or what its grid of buttons needs in this font.
     needed = window.hosts.details.minimum_width()
     assert window.hosts.details.minimumWidth() == max(round(260 * scale), needed)
     assert window.hosts.nav.minimumWidth() == round(180 * scale)
@@ -305,14 +300,14 @@ def test_the_last_column_fills_a_wide_window_and_a_narrow_one_scrolls(
     table = _table(qapp, _hosts(("Reception 01", "PC-0142.corp.example.net")))
     _fit_view(qapp, table, 1400)
     shown = [c for c in range(table.columnCount()) if not table.isColumnHidden(c)]
-    assert sum(table.columnWidth(c) for c in shown) == table.viewport().width()  # no gap
+    assert sum(table.columnWidth(c) for c in shown) == table.viewport().width()
     _fit_view(qapp, table, 200)
     assert table.horizontalScrollBar().isVisible()
     table.close()
 
 
 def test_clicking_a_row_with_a_long_text_doesnt_scroll_sideways(qapp: QApplication) -> None:
-    long = "a." * 150 + "example.internal"  # far wider than the view
+    long = "a." * 150 + "example.internal"
     hosts = _hosts(*((f"Ward {n:02}", long) for n in range(40)))
     table = _table(qapp, hosts)
     _fit_view(qapp, table, 400)
@@ -320,14 +315,12 @@ def test_clicking_a_row_with_a_long_text_doesnt_scroll_sideways(qapp: QApplicati
     assert across.maximum() > 0 and across.value() == 0
     row = table.topLevelItem(0)
     assert row is not None
-    # In the long cell, which starts in view and ends far past it.
     spot = QPoint(
         table.columnViewportPosition(table.ADDRESS) + 20, table.visualItemRect(row).center().y()
     )
     QTest.mouseClick(table.viewport(), Qt.MouseButton.LeftButton, pos=spot)
     QTest.qWait(QApplication.doubleClickInterval() + 200)  # Qt scrolls to a click that late
     assert table.selected_ids() == [hosts[0].id] and across.value() == 0
-    # The keyboard still brings a row into view, up and down only.
     QTest.keyClick(table, Qt.Key.Key_End)
     qapp.processEvents()
     assert table.verticalScrollBar().value() > 0 and across.value() == 0
@@ -371,7 +364,6 @@ def test_the_view_menu_stays_open_while_ticking(window: CapyWindow) -> None:
 def test_right_click_menus_dont_pile_up(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A menu is made per click: each must go once closed, not stay until the app closes.
     class Shown(QMenu):
         def exec(self, *_args: object) -> None:  # type: ignore[override]
             return None
@@ -389,7 +381,7 @@ def test_only_the_sorted_column_keeps_room_for_the_sort_arrow(qapp: QApplication
     table = _table(qapp, _hosts(("PC 1", "10.0.0.1")))
     unsorted = table.minimum_width(table.STATUS)
     table.sortByColumn(table.STATUS, Qt.SortOrder.AscendingOrder)
-    assert table.minimum_width(table.STATUS) > unsorted  # the arrow shows there now
+    assert table.minimum_width(table.STATUS) > unsorted
     table.close()
 
 
@@ -409,7 +401,7 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
     window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
-    window.resize(2400, 700)  # room for the table's columns beside Details' buttons
+    window.resize(2400, 700)
     window.show()
     QApplication.processEvents()
     splitter = window.hosts.splitter  # pyright: ignore[reportPrivateUsage]
@@ -419,7 +411,7 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
     after = splitter.sizes()
     hosts = window.hosts
     assert after[edge - 1] == max(hosts.table.natural_width(), hosts.items_pane.minimumWidth())
-    assert sum(after) == sum(before) and after[0] == before[0]  # only those two panes change
+    assert sum(after) == sum(before) and after[0] == before[0]
     window.close()
 
 
@@ -448,10 +440,10 @@ def test_an_edit_keeps_the_table_where_it_was_scrolled(qapp: QApplication) -> No
     assert middle > 0
     table.select_ids([hosts[40].id])
     renamed = (*hosts[:40], replace(hosts[40], name="PC-040b"), *hosts[41:])
-    table.show_hosts(renamed, {})  # what an edit does: the table is filled again
+    table.show_hosts(renamed, {})
     qapp.processEvents()
     assert bar.value() == middle
-    table.show_hosts(hosts[:5], {})  # another group: back to the top
+    table.show_hosts(hosts[:5], {})
     table.show_hosts(hosts, {})
     assert bar.value() == 0
     table.close()
@@ -461,7 +453,7 @@ def test_the_status_bar_names_the_list_and_a_click_copies_its_path(
     window: CapyWindow, office: Path
 ) -> None:
     bar = window.hosts.status_label
-    assert bar.text() == "Default · 0 hosts · 0 selected"  # named after its kind: said once
+    assert bar.text() == "Default · 0 hosts · 0 selected"
     window.hosts.open_list(office)
     assert bar.text() == "Shared · office · 3 hosts · 0 selected"
     assert str(office.parent) not in bar.text() and "portable" not in bar.text()
@@ -479,13 +471,12 @@ def test_a_table_with_no_rows_says_why_and_offers_what_helps(
     def note() -> tuple[str, list[str]]:
         return table._empty_text.text(), [b.text() for b in table.note_buttons]
 
-    # A new list: what goes here, and the two ways to fill it.
     assert note() == (
         "This list has no hosts yet.\nAdd one, or import several at once.",
         ["Add host…", "Import hosts…"],
     )
     hosts.open_list(office)
-    assert note() == ("", []) and table._empty.isHidden()  # rows: no note
+    assert note() == ("", []) and table._empty.isHidden()
     doc = hosts.document
     assert doc is not None
     hl, empty = doc.hosts.add_group("Storage")
@@ -498,7 +489,6 @@ def test_a_table_with_no_rows_says_why_and_offers_what_helps(
     assert note() == ("Every host is in a group.", [])
     hosts.search.setText("  Laptop ")
     hosts._show_items()
-    # As typed, without the spaces around; it may be a PC that isn't in the list.
     assert note() == ("No host matches “Laptop”.", ["Connect to Laptop…"])
     hosts.search.setText("")
     hosts._show_items()
@@ -507,9 +497,7 @@ def test_a_table_with_no_rows_says_why_and_offers_what_helps(
     window.show()
     QApplication.processEvents()
     button = table.note_buttons[0]
-    # On screen and whole, also when added to a note that was already showing.
     assert button.isVisible() and table._empty.rect().contains(button.geometry())
-    # A button runs its action, and follows whether it can be used.
     asked: list[bool] = []
     go, never = QAction("&Go…", table), QAction("Never", table)
     go.triggered.connect(lambda: asked.append(True))
@@ -533,10 +521,10 @@ def test_the_line_between_groups_and_tags_drags_and_is_remembered(
     split = window.hosts.nav.split
     assert not split.childrenCollapsible() and split.count() == 2
     groups, tags = split.sizes()
-    assert groups > tags > 0  # tags show from the first start, under the groups
+    assert groups > tags > 0
     split.setSizes([groups - 60, tags + 60])
     moved = split.sizes()
-    window.close()  # saved with the rest of the layout
+    window.close()
     again = CapyWindow(window.paths, dict(window.prefs))
     again.hosts.open_list(office)
     again.resize(1200, 700)
@@ -544,7 +532,7 @@ def test_the_line_between_groups_and_tags_drags_and_is_remembered(
     QApplication.processEvents()
     assert again.hosts.nav.split.sizes() == moved
     assert not again.hosts.nav.split.childrenCollapsible()
-    again.hosts.commands.show_tags.setChecked(False)  # View > Tags off: the groups take it all
+    again.hosts.commands.show_tags.setChecked(False)
     QApplication.processEvents()
     assert again.hosts.nav.tags.isHidden() and again.hosts.nav.split.sizes()[1] == 0
     again.close()
@@ -563,4 +551,4 @@ def test_the_groups_panel_uses_outline_icons_in_the_text_colour(window: CapyWind
             for y in range(image.height())
             if image.pixelColor(x, y).alpha() == 255  # solid ink: soft edges round the colour
         }
-        assert inked == {text.rgb()}  # one colour: an outline, not Windows' coloured picture
+        assert inked == {text.rgb()}

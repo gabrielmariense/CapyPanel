@@ -1,5 +1,3 @@
-"""Many printers at once: a Printers Report, Import hosts' formats or Windows' export."""
-
 import csv
 import io
 import re
@@ -12,19 +10,17 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.printer import COUNTER_SOURCES, DOC360, SNMP, PrinterInfo, with_info
 from capypanel.core.printers.reading import snmp_host
 
-# The printers' own columns, by the names a Report writes them under (en and pt-BR) and a few
-# a person might type. Matched as Import hosts matches its own: no case, accents or spaces.
 MORE: Mapping[str, frozenset[str]] = {
     "brand": frozenset({"brand", "marca", "manufacturer", "fabricante"}),
     "model": frozenset({"model", "modelo"}),
     "serial": frozenset({"serial number", "serial", "nº de série", "número de série", "série"}),
     "asset_tag": frozenset({"asset tag", "asset", "patrimônio", "nº de patrimônio"}),
     "counter_source": frozenset({"counter source", "page counters", "contadores de páginas"}),
-}  # each key is among its own names (folded, "asset_tag" is "asset tag"): to_csv reads back
-PORT = "port"  # a Windows export row's port, when it isn't an address
+}
+PORT = "port"
 
 _WINDOWS_TYPE = "#TYPE"
-_WINDOWS_COLUMNS = {"Name", "PortName", "DriverName"}  # enough to know Windows wrote it
+_WINDOWS_COLUMNS = {"Name", "PortName", "DriverName"}
 _WINDOWS_USED = ("Name", "PortName", "Location", "Comment")
 _IP_PORT = re.compile(r"^IP_", re.IGNORECASE)
 _NUMBERED_IP = re.compile(r"^(\d{1,3}(?:\.\d{1,3}){3})_\d+$")
@@ -32,7 +28,6 @@ _LOCAL_PORT = re.compile(r"^(?:WSD-.*|USB\d+|TS\d+|.*:)$", re.IGNORECASE)
 
 
 def parse(text: str, *, file: bool = False) -> Parsed:
-    """Windows' printer export, or anything Import hosts reads, with the printers' columns."""
     windows = read_windows_export(text)
     if windows is not None:
         return windows
@@ -40,8 +35,6 @@ def parse(text: str, *, file: bool = False) -> Parsed:
 
 
 def read_windows_export(text: str) -> Parsed | None:
-    """The rows of Windows PowerShell's `Get-Printer | Export-Csv` (a #TYPE line, then
-    40 quoted columns); None when the text isn't one."""
     lines = [line for line in text.splitlines() if line.strip()]
     if lines and lines[0].lstrip("﻿").startswith(_WINDOWS_TYPE):
         lines = lines[1:]
@@ -82,14 +75,11 @@ def _port_address(port: str) -> str:
 
 
 def problem(row: ImportRow) -> str | None:
-    """A printer row's own check, in place of the hosts' one: an address may start with
-    https://, and a Windows port that isn't an address says so. None: the hosts' check applies."""
     port = dict(row.more).get(PORT, "")
     name, address = row.name.strip(), row.address.strip()
     if not name:
         return None
     if not address and port:
-        # The action first: a long WSD port name runs past the column's edge.
         return _("No address: type the printer's address. Its Windows port, {port}, isn't one.") \
             .format(port=port)  # fmt: skip
     if not address and not is_hostname(name):
@@ -100,12 +90,10 @@ def problem(row: ImportRow) -> str | None:
 
 
 def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> Plan:
-    """What the import would do. The printers it adds carry their brand, model, serial number,
-    asset tag and page counters. Nothing changes until the caller saves `result`."""
     rows = tuple(rows)
     planned = bulk.plan(host_list, rows, default_group, problem=problem)
     known = {h.id for h in host_list.hosts}
-    added = [h for h in planned.result.hosts if h.id not in known]  # in the rows' order
+    added = [h for h in planned.result.hosts if h.id not in known]
     adds = [i.row for i in planned.items if i.verdict is Verdict.ADD]
     result = planned.result
     for host, row in zip(added, adds, strict=True):
@@ -114,7 +102,6 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
 
 
 def info_of_row(row: ImportRow) -> PrinterInfo:
-    """A row's printer columns, as Add printer would save them."""
     cells = dict(row.more)
     return PrinterInfo(
         brand=cells.get("brand", "").strip().upper(),
@@ -126,8 +113,6 @@ def info_of_row(row: ImportRow) -> PrinterInfo:
 
 
 def counter_source(text: str) -> str:
-    """The page counters' source from a Report cell: "SNMP", "Doc360 MPS", or "Unknown (x)" as
-    the Report writes a source this version doesn't know (kept as x). Empty is SNMP."""
     plain = "".join(text.casefold().split())
     if not plain:
         return SNMP

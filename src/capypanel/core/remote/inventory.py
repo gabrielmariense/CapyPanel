@@ -1,5 +1,3 @@
-"""What a PC is and what's installed, read over file sharing and WMI only: nothing runs there."""
-
 import base64
 import ctypes
 import json
@@ -21,26 +19,21 @@ from capypanel.core.remote.access import (
     reason_of,
 )
 
-WMI_TIMEOUT = 90  # seconds for one read, its connection included
+WMI_TIMEOUT = 90  # seconds, its connection included
 
 log = logging.getLogger(__name__)
 
-# How reads reach a PC's WMI (over DCOM; WinRM always goes through PowerShell):
-AUTO = "auto"  # WMI straight from CapyPanel; PowerShell only when that can't be used here
-DIRECT = "direct"  # only WMI straight from CapyPanel
-POWERSHELL = "powershell"  # only a PowerShell started on this PC
-transport = AUTO  # set from Settings
-powershell_blocked = False  # Windows refused to start it here this session
+AUTO = "auto"
+DIRECT = "direct"
+POWERSHELL = "powershell"
+transport = AUTO
+powershell_blocked = False
 
-# Each PowerShell script that has a twin reading the same over WMI directly, with the same answer.
 Reader = Callable[[Any, Mapping[str, str]], Any]
 _READERS: dict[str, Reader] = {}
 
 
 def reads(script: str) -> Callable[[Reader], Reader]:
-    """Marks a function as `script`'s twin: it gets a wmi.Wmi and the script's `$in` values,
-    and answers what the script would have sent."""
-
     def mark(reader: Reader) -> Reader:
         _READERS[script] = reader
         return reader
@@ -49,8 +42,6 @@ def reads(script: str) -> Callable[[Reader], Reader]:
 
 
 class PowerShellBlocked(OSError):
-    """Windows didn't let CapyPanel start PowerShell on this PC, often an antivirus's doing."""
-
     def __init__(self, error: OSError) -> None:
         super().__init__(
             error.errno,
@@ -61,22 +52,20 @@ class PowerShellBlocked(OSError):
 
 @dataclass(frozen=True)
 class DiskSpace:
-    free: int  # bytes on C:
+    free: int
     total: int
 
 
 @dataclass(frozen=True)
 class PcFacts:
-    windows: str  # "Windows 11 Pro"
-    release: str  # "25H2", or "" on old versions that don't have one
-    build: str  # "26200.9168": the build and its patch level
+    windows: str
+    release: str
+    build: str
     maker: str
     model: str
     serial: str
     bios: str
-    memory: int  # bytes
-    # Rows that couldn't be read while the others could ("windows", "model", "serial",
-    # "memory", "bios"), each with why: some PCs' WMI lacks one of the classes.
+    memory: int
     unread: Mapping[str, RemoteError] = field(default_factory=dict)
 
 
@@ -85,11 +74,10 @@ class Program:
     name: str
     version: str
     publisher: str
-    installed: date | None  # when the program says it was installed, if it does
+    installed: date | None
 
 
 def disk_space(host: str, account: Account | None = None) -> DiskSpace:
-    """Free and total space on `host`'s C: drive, over the C$ share. Raises RemoteError."""
     check_reachable(host)
     free, total = ctypes.c_ulonglong(), ctypes.c_ulonglong()
     with as_account(account):
@@ -101,8 +89,7 @@ def disk_space(host: str, account: Account | None = None) -> DiskSpace:
 
 
 def last_restart(host: str, account: Account | None = None) -> datetime:
-    """When Windows last started on `host` (UTC), from when its file-sharing client started: the
-    same minute, as WMI's boot time. Raises RemoteError."""
+    """From the file-sharing client's start time: the same minute as WMI's boot time."""
     check_reachable(host)
     buffer = ctypes.c_void_p()
     with as_account(account):
@@ -119,7 +106,6 @@ def last_restart(host: str, account: Account | None = None) -> datetime:
 
 
 def pc_facts(host: str, account: Account | None = None) -> PcFacts:
-    """`host`'s Windows version and hardware, over WMI. Raises RemoteError, TimeoutError."""
     check_reachable(host)
     found = run_cim(_FACTS, host, account)
     return PcFacts(
@@ -138,8 +124,6 @@ def pc_facts(host: str, account: Account | None = None) -> PcFacts:
 
 # Never Win32_Product: reading it makes Windows check every MSI program it lists.
 def installed_programs(host: str, account: Account | None = None) -> list[Program]:
-    """The programs installed for every user of `host`, by name, without Windows' own parts and
-    updates. Raises RemoteError, TimeoutError."""
     check_reachable(host)
     found = run_cim(_PROGRAMS, host, account)
     programs = {
@@ -154,7 +138,7 @@ def _program(entry: dict[str, str | None]) -> Program:
     try:
         installed = datetime.strptime(when.strip(), "%Y%m%d").date()
     except ValueError:
-        installed = None  # missing, or written another way by its installer
+        installed = None
     return Program(
         name=(entry.get("DisplayName") or "").strip(),
         version=(entry.get("DisplayVersion") or "").strip(),
@@ -170,8 +154,7 @@ def run_cim(
     values: Mapping[str, str] | None = None,
     timeout: float = WMI_TIMEOUT,
 ) -> Any:
-    """Reads `host` with `script`, or with its twin over WMI directly when it has one (no program
-    started for an antivirus to judge). Raises RemoteError, TimeoutError or PowerShellBlocked."""
+    """Its WMI twin when it has one: no program started for an antivirus to judge."""
     from capypanel.core.remote import wmi
 
     reader = _READERS.get(script)
@@ -192,8 +175,7 @@ def _powershell(
     values: Mapping[str, str] | None,
     timeout: float,
 ) -> Any:
-    """Runs a PowerShell script with `$session`, a CIM session to `host`, which answers with Send.
-    Input comes on stdin, never the command line: it can't alter the script or show a password."""
+    """Input goes on stdin, never the command line: it can't alter the script or show a password."""
     data = {**(values or {}), "host": host, "user": "", "password": ""}
     if account:
         data["user"], data["password"] = account.user, account.password
@@ -201,14 +183,14 @@ def _powershell(
     try:
         done = subprocess.run(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", command],
-            input=json.dumps(data).encode(),  # ASCII: other characters travel as \u escapes
+            input=json.dumps(data).encode(),
             capture_output=True,
             timeout=timeout,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
     except subprocess.TimeoutExpired as e:
         raise TimeoutError(f"WMI didn't answer within {timeout:.0f} s") from e
-    except OSError as e:  # the program itself wasn't let start: never the other PC's doing
+    except OSError as e:
         global powershell_blocked  # noqa: PLW0603 - for the session, as the log says
         powershell_blocked = True
         log.warning("PowerShell couldn't start on this PC to read %s: %s", host, e)
@@ -223,8 +205,7 @@ def _powershell(
 
 
 def wmi_error(code: int) -> RemoteError:
-    """WMI's failures come as HRESULTs; Windows' own errors among them (0x8007xxxx) carry the
-    same codes as the other remote calls."""
+    """HRESULTs 0x8007xxxx carry Windows' own error codes, as the other remote calls do."""
     code &= 0xFFFFFFFF
     if code >> 16 == 0x8007:
         return RemoteError(reason_of(code & 0xFFFF), code & 0xFFFF)
@@ -233,8 +214,7 @@ def wmi_error(code: int) -> RemoteError:
     return RemoteError(Reason.OTHER, code)
 
 
-# Shared by every CIM script: the input, one session, base64'd UTF-8 JSON back (any language
-# survives the console), failures as HRESULTs. Reg reads the PC's registry, UReg its people's.
+# Base64'd UTF-8 JSON back, so any language survives the console; failures as HRESULTs.
 _COMMON = r"""
 $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
 function Send($value) {
@@ -285,8 +265,6 @@ try {
 finally { Remove-CimSession $session }
 """
 
-# One registry call per value: EnumValues first, so entries that aren't programs (no name,
-# an update of another program, a part of Windows) cost one call.
 _PROGRAMS = r"""
 try {
   $found = New-Object System.Collections.ArrayList
@@ -327,7 +305,7 @@ def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
             return read()
         except RemoteError as e:
             if e.reason is not Reason.OTHER:
-                raise  # no access, or it stopped answering: the whole read's own error
+                raise
             log.warning("PC facts on %s: %s couldn't be read: %s", wmi.host, name, e)
             failed[name] = e
             return None
@@ -342,7 +320,7 @@ def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
         wmi.string(HKLM, _VERSION_KEY, "DisplayVersion"),
         wmi.dword(HKLM, _VERSION_KEY, "UBR")))  # fmt: skip
     if len(failed) == 4:
-        raise next(iter(failed.values()))  # nothing at all: the read failed
+        raise next(iter(failed.values()))
     unread: dict[str, RemoteError] = {}
     for name, rows in (("Win32_OperatingSystem", ("windows",)),
                        ("Win32_ComputerSystem", ("model", "memory")),

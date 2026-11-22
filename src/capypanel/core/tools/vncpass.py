@@ -1,4 +1,4 @@
-"""VNC's scrambled password, DES with a key every viewer shares: so it's never written to disk."""
+"""DES with a key every viewer shares, so anyone can undo it: never written to disk."""
 
 import ctypes
 from ctypes import wintypes
@@ -27,14 +27,12 @@ for _f in ("BCryptOpenAlgorithmProvider", "BCryptSetProperty", "BCryptGenerateSy
 
 
 def obfuscate(password: str) -> bytes:
-    """8 bytes per started block of 8 password bytes (UTF-8), zero-padded."""
     raw = password.encode("utf-8") or b"\0"
     raw += b"\0" * (-len(raw) % BLOCK)
     return des_ecb(VNC_KEY, raw)
 
 
 def des_ecb(key: bytes, data: bytes) -> bytes:
-    """Plain single DES, each 8-byte block on its own (Windows' own implementation)."""
     algorithm, handle = _VOID(), _VOID()
     _check(_bcrypt.BCryptOpenAlgorithmProvider(ctypes.byref(algorithm), "DES", None, 0))
     try:

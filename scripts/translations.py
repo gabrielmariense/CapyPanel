@@ -1,5 +1,3 @@
-"""Updates capypanel.pot, each language's .po and the .mo files after a text in the app changes."""
-
 import sys
 from pathlib import Path
 
@@ -19,7 +17,6 @@ def pybabel(*args: str) -> None:
 
 def main() -> int:
     LOCALE.mkdir(exist_ok=True)
-    # No line numbers in the files: they'd change on every edit and bury real changes in diffs.
     pybabel(
         "extract", "--no-location", "--sort-output", "--project=CapyPanel",
         "--add-comments=i18n:", "-o", str(TEMPLATE), str(PACKAGE),

@@ -1,5 +1,3 @@
-"""Tries Refresh's reading on one real printer, from a terminal."""
-
 import getpass
 import re
 import sys
@@ -30,14 +28,12 @@ number per line, to find which one matches the version on the printer's web page
 which number matches: the lines are printed as the printer gives them (its own serial number is
 replaced by <serial>), so keep them on this PC."""
 
-# For --brand-data: each brand's own objects, outside the standard ones.
 RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1"  # ricohEngTonerTable, every column
 RICOH_SERIAL = reading.RICOH_SERIAL
-BROTHER_MAINTENANCE = reading.BROTHER_MAINTENANCE.removesuffix(".0")  # and anything beside it
+BROTHER_MAINTENANCE = reading.BROTHER_MAINTENANCE.removesuffix(".0")
 # Brother record codes seen in published readers; the rest print as their code.
 BROTHER_CODES = {0x41: "drum life", 0x6F: "black toner", 0x70: "cyan toner",
                  0x71: "magenta toner", 0x72: "yellow toner"}  # fmt: skip
-# Where printers keep their firmware version, for --firmware: (label, OID, walk it?).
 FIRMWARE_PLACES = [
     ("system description", reading.SYS_DESCR, False),
     ("device description", reading.HR_DEVICE_DESCR, True),
@@ -46,7 +42,7 @@ FIRMWARE_PLACES = [
     ("entity description", "1.3.6.1.2.1.47.1.1.1.1.2", True),  # entPhysicalDescr
     ("installed software", "1.3.6.1.2.1.25.6.3.1.2", True),  # hrSWInstalledName
 ]
-MAX_ROWS = 15  # per place: installed software can be a long list
+MAX_ROWS = 15
 # A word with digits in it might be a serial number: hidden like the printer's own.
 _SERIAL_LIKE = re.compile(r"\b(?=\w*\d)\w{6,}\b")
 

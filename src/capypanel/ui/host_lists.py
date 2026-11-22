@@ -1,5 +1,3 @@
-"""Every list a user works with in one tool: default, personal, in its folders, or added."""
-
 import html
 import logging
 from collections.abc import Callable
@@ -31,7 +29,7 @@ from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
 REMOVE, DELETE = "remove", "delete"
-PATH_WIDTH = 380  # a path in a question box: longer ones are cut in the middle
+PATH_WIDTH = 380
 log = logging.getLogger(__name__)
 
 
@@ -46,16 +44,13 @@ def access_text(access: Access, kind: ListKind) -> str:
 
 
 def ask_remove(parent: QWidget, path: Path, title: str) -> str | None:
-    """Remove from the lists only, or delete the file too; None when cancelled. Cancel is the
-    default, so Enter never deletes."""
+    """Cancel is the default, so Enter never deletes."""
     box = QMessageBox(
         QMessageBox.Icon.Question,
         title,
         _("Remove “{name}” from your lists, or delete its file too?").format(name=path.stem),
         parent=parent,
     )
-    # The path on one line of its own, cut in the middle when long, so the window looks the
-    # same whatever the path; the whole path is in the tooltip.
     bold = QFont(box.font())
     bold.setBold(True)
     shown = QFontMetrics(bold).elidedText(str(path), Qt.TextElideMode.ElideMiddle, PATH_WIDTH)
@@ -75,13 +70,10 @@ def ask_remove(parent: QWidget, path: Path, title: str) -> str | None:
 
 
 class PathLine(Elided):
-    """A file's path on one line, shortened in the middle to fit; a click copies it whole, as
-    the values in the Details panel do."""
-
     def __init__(self) -> None:
         super().__init__(mode=Qt.TextElideMode.ElideMiddle)
         self.setObjectName("copyValue")
-        self.setAttribute(Qt.WidgetAttribute.WA_Hover)  # the stylesheet's :hover
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def _fit(self) -> None:
@@ -97,11 +89,8 @@ class PathLine(Elided):
 
 
 class ListsView(QWidget):
-    """The lists, the one in use in bold and marked, with buttons to add, create or forget.
-    `changed` when they change; `open_requested` to open one now (a double-click, a new list)."""
-
     changed = Signal()
-    open_requested = Signal(object)  # a list's Path
+    open_requested = Signal(object)
 
     def __init__(
         self,
@@ -114,8 +103,6 @@ class ListsView(QWidget):
         hidden: list[Path] | None = None,
         texts: ListTexts,
     ) -> None:
-        """found: the lists in the lists folders, shown with no adding, except the `hidden` ones
-        the user removed here."""
         super().__init__()
         self.texts = texts
         self._default, self._personal, self._document = default_list, personal_list, document
@@ -126,7 +113,7 @@ class ListsView(QWidget):
             if self._kind(p) is ListKind.SHARED and not self._in_folder(p)
         ]  # fmt: skip
 
-        self.tree = grid_table([_("List"), _("Type"), _("Access")])  # the path: tooltip
+        self.tree = grid_table([_("List"), _("Type"), _("Access")])
         self.tree.setColumnWidth(0, 170)
         self.tree.setColumnWidth(1, 105)
         self.new_button = QPushButton(_("&New…"))
@@ -137,8 +124,7 @@ class ListsView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         buttons = [self.new_button, self.add_button, self.remove_button]
         layout.addWidget(with_buttons(self.tree, buttons))
-        row_menu(self.tree, self.fill_row_menu)  # Open, Save a copy and Open folder too
-        # Where the picked list's file is: shortened in the middle, copied whole by a click.
+        row_menu(self.tree, self.fill_row_menu)
         self.path_label = PathLine()
         layout.addWidget(self.path_label)
         layout.addWidget(
@@ -160,7 +146,6 @@ class ListsView(QWidget):
         return Path(items[0].data(0, ROLE_PATH)) if items else None
 
     def can_open(self, path: Path | None) -> bool:
-        """The default and personal lists are created when missing; other lists must exist."""
         if path is None:
             return False
         access = locations.list_access(path, shared=self._kind(path) is ListKind.DEFAULT)
@@ -176,7 +161,6 @@ class ListsView(QWidget):
                 return
 
     def list_opened(self, document: OpenList | None) -> None:
-        """The main window opened a list: it's the one marked in use now."""
         selected = self.selected()
         self._document = document
         self._fill(selected)
@@ -202,7 +186,7 @@ class ListsView(QWidget):
         current = self._document.path if self._document else None
         paths: list[Path] = []
         for path in (self._default, self._personal, *self._found(), *self.added):
-            if not any(locations.same_path(path, p) for p in paths):  # each once
+            if not any(locations.same_path(path, p) for p in paths):
                 paths.append(path)
         names = locations.list_names(paths, default=self._default, personal=self._personal)
         for path, name in zip(paths, names, strict=True):
@@ -229,7 +213,6 @@ class ListsView(QWidget):
         self._selection_changed()
 
     def _type_text(self, path: Path, kind: ListKind) -> str:
-        """Who it's for: shared with everyone on the PC, yours alone, or added from elsewhere."""
         if kind is ListKind.PERSONAL:
             return _("Yours")
         if kind is ListKind.DEFAULT:
@@ -270,7 +253,7 @@ class ListsView(QWidget):
         add_action(menu, _("&Remove"), self._remove, self._removable(path))
 
     def _keep(self, path: Path) -> None:
-        if self._in_folder(path):  # one removed before comes back
+        if self._in_folder(path):
             self.hidden = [p for p in self.hidden if not locations.same_path(p, path)]
         elif self._kind(path) is ListKind.SHARED and not any(
             locations.same_path(path, p) for p in self.added
@@ -288,7 +271,6 @@ class ListsView(QWidget):
             self._keep(Path(name))
 
     def _new(self) -> None:
-        # The default list is in the shared lists folder, the personal one in the user's.
         path = ask_new_list(
             self, shared_dir=self._default.parent, user_dir=self._personal.parent, texts=self.texts
         )
@@ -297,10 +279,9 @@ class ListsView(QWidget):
             path, lambda: OpenList.create(path, replace_existing=path.exists(), kind=kind)
         ):
             self._keep(path)
-            self.open_requested.emit(path)  # made to be used: it opens now
+            self.open_requested.emit(path)
 
     def copy_picked(self) -> None:
-        """A copy of the list picked, as a new file kept in the lists."""
         source = self.selected()
         if source is None:
             return
@@ -325,8 +306,6 @@ class ListsView(QWidget):
             self._keep(path)
 
     def _remove(self) -> None:
-        """Out of the user's lists, and, when they say so, its file into the Recycle Bin, so
-        lists folders don't fill up with lists nobody uses."""
         path = self.selected()
         if path is None or self._kind(path) is not ListKind.SHARED:
             return
@@ -342,13 +321,13 @@ class ListsView(QWidget):
             log.info("Host list moved to the Recycle Bin: %s", path)
             self._all_found = [p for p in self._all_found if not locations.same_path(p, path)]
             self.hidden = [p for p in self.hidden if not locations.same_path(p, path)]
-        elif self._in_folder(path):  # it would show up again by itself: hidden instead
+        elif self._in_folder(path):
             self.hidden.append(path)
         self.added = [p for p in self.added if not locations.same_path(p, path)]
         was_open = self._document is not None and locations.same_path(path, self._document.path)
         self._fill(self._default)
         self.changed.emit()
-        if was_open:  # the default list takes its place
+        if was_open:
             self.open_requested.emit(self._default)
 
     def _can_delete(self, path: Path) -> bool:
@@ -361,7 +340,6 @@ class ListsView(QWidget):
 
     def _ask_path(self, title: str) -> Path | None:
         start = self._document.path.parent if self._document else self._personal.parent
-        # The file dialog already asks before choosing an existing file.
         name, _filter = QFileDialog.getSaveFileName(self, title, str(start), self.texts.file_filter)
         return Path(name) if name else None
 

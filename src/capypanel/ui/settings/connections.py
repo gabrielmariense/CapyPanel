@@ -1,5 +1,3 @@
-"""Settings › Hosts › Connecting: connection profiles, saved passwords and where tools are."""
-
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
@@ -57,8 +55,7 @@ def asked_by_tool(tool: str) -> str:
 
 
 class _RowLabel(QLabel):
-    """A form label as tall as its field: Qt caps a label at 7/4 of its text line, at the
-    row's top, so beside a taller field it would sit above the field's line."""
+    """As tall as its field: Qt caps a form label at 7/4 of its text line, from the row's top."""
 
     def __init__(self, text: str, field: QWidget) -> None:
         super().__init__(text)
@@ -71,9 +68,6 @@ class _RowLabel(QLabel):
 
 
 class ProfileDialog(QDialog):
-    """Add, edit or duplicate a profile: name, tool, login, port, the viewer settings file and
-    the tool's options. Every tool has the same rows in the same places; what it lacks is greyed."""
-
     def __init__(
         self,
         parent: QWidget | None,
@@ -93,7 +87,7 @@ class ProfileDialog(QDialog):
             self.tool.addItem(text.format(tool=tool.name), tool.id)
         wanted = profile.tool if profile else next((t.id for t in tools if t.id in installed), "")
         self.tool.setCurrentIndex(max(self.tool.findData(wanted), 0))
-        self.login = QComboBox()  # as wide as any tool's longest login, so no tool widens it
+        self.login = QComboBox()
         self.login.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
         )
@@ -105,22 +99,20 @@ class ProfileDialog(QDialog):
         self.port.setValue((profile.port or 0) if profile else 0)
         self._first_tool = profile.tool if profile else ""
         self._has_settings = bool(profile and profile.settings_file)
-        self.new_settings: bytes | None = None  # a file chosen here, already cleaned
+        self.new_settings: bytes | None = None
         self.settings_state = QLabel()
         self.choose_settings = QPushButton(_("C&hoose file…"))
         self.default_settings = QPushButton(_("Use &defaults"))
         self.choose_settings.clicked.connect(self._choose_settings)
         self.default_settings.clicked.connect(self._use_default_settings)
-        settings_buttons = QWidget()  # a row of its own, so the label lines up with the state
+        settings_buttons = QWidget()
         buttons_row = QHBoxLayout(settings_buttons)
         buttons_row.setContentsMargins(0, 0, 0, 0)
         buttons_row.addWidget(self.choose_settings)
         buttons_row.addWidget(self.default_settings)
         buttons_row.addStretch(1)
-        # A place for each option of the tool with the most, as tall as a used one while unused
-        # and never widening the window, so switching tools moves no row and keeps its size.
         self._option_places: list[QCheckBox] = []
-        more_options = QWidget()  # the places after the first, in a column that keeps their room
+        more_options = QWidget()
         more_column = QVBoxLayout(more_options)
         more_column.setContentsMargins(0, 0, 0, 0)
         for place in range(max(max((len(t.options) for t in tools), default=0), 1)):
@@ -134,7 +126,7 @@ class ProfileDialog(QDialog):
             self._option_places.append(box)
         self.no_options = QLabel(_("None"))
         self.no_options.setEnabled(False)
-        self.options_area = QStackedWidget()  # the first option or None, on the label's line
+        self.options_area = QStackedWidget()
         self.options_area.addWidget(self._option_places[0])
         self.options_area.addWidget(self.no_options)
         self.options_area.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -166,7 +158,6 @@ class ProfileDialog(QDialog):
         return self._tools.get(self.tool.currentData() or "")
 
     def _tool_changed(self, profile: ConnectionProfile | None) -> None:
-        """Fills the rows for the chosen tool: its logins, port, settings file and options."""
         tool = self._current_tool()
         if tool is None:
             return
@@ -174,7 +165,7 @@ class ProfileDialog(QDialog):
         self.login.clear()
         for login in logins_of(tool):
             text = login_label(login, tool.name)
-            self.login.addItem(text[:1].upper() + text[1:], login)  # keeps the tool's capitals
+            self.login.addItem(text[:1].upper() + text[1:], login)
         self.login.setCurrentIndex(max(self.login.findData(wanted_login), 0))
         self.login.setEnabled(self.login.count() > 1)
         if self.login.count() > 1:
@@ -191,14 +182,14 @@ class ProfileDialog(QDialog):
                 box.setText(tool.option_name(options[index], i18n.language()))
                 box.setChecked(options[index] in ticked)
                 self.option_boxes[options[index]] = box
-            if index:  # the first is the stack's page, shown with it
+            if index:
                 box.setVisible(index < len(options))
         self.options_area.setCurrentIndex(0 if options else 1)
         self.no_options.setToolTip(_("{tool} has no options to set here.").format(tool=tool.name))
         self.port.setSpecialValueText(
             _("Default ({port})").format(port=tool.port) if tool.port else _("Default")
         )
-        if tool.id != self._first_tool:  # another viewer's file wouldn't fit this one
+        if tool.id != self._first_tool:
             self._first_tool, self._has_settings, self.new_settings = tool.id, False, None
         self._show_settings(None)
 
@@ -232,7 +223,6 @@ class ProfileDialog(QDialog):
         self.settings_state.setEnabled(reads)
         self.choose_settings.setEnabled(reads)
         self.default_settings.setEnabled(reads and self._has_settings)
-        # With a settings file, the file decides: the options here would change it.
         for box in self.option_boxes.values():
             if self._has_settings:
                 box.setChecked(False)
@@ -289,8 +279,6 @@ class ProfileDialog(QDialog):
 
 
 def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
-    """The files in a folder that aren't used, and why: hidden when there are none. The full
-    paths and errors are in its tooltip and the log."""
     seen: dict[Path, str] = {}
     for path, reason in problems:
         seen.setdefault(path, reason)
@@ -312,9 +300,6 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
 
 
 class SharedSection(Section):
-    """A part of Connections whose changes go to files shared by everyone on this PC, written
-    at once; `changed` fires after each."""
-
     changed = Signal()
 
     def __init__(self, title: str, catalogs: Catalogs) -> None:
@@ -322,7 +307,6 @@ class SharedSection(Section):
         self.catalogs = catalogs
 
     def _write(self, change: Callable[[], object], failed: str) -> bool:
-        """Runs a change to the shared files; says what went wrong when it can't."""
         try:
             change()
         except (ProfileError, OSError) as e:
@@ -338,23 +322,19 @@ class SharedSection(Section):
 
 
 class ProfilesSection(SharedSection):
-    """The connection profiles everyone on this PC connects with, and this user's saved
-    passwords."""
-
     def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
         super().__init__(_("Connection profiles"), catalogs)
         self.store = catalogs.profiles
         self.document = document
         self.can_edit = self.store.can_edit()
 
-        # The folder is made at start; where this user couldn't, the app's own copies are shown.
         self.builtin_note = notes(
             _("These are the built-in profiles: the folder is created when you change one.")
             if self.can_edit
             else _("These are the built-in profiles: the folder isn't there yet.")
         )
         self._show_folder_state()
-        self.for_everyone(self.can_edit)  # with Hosts with no profile use, under it
+        self.for_everyone(self.can_edit)
         self.list = grid_table([_("Profile"), _("Tool"), _("Signs in with")])
         self.list.setColumnWidth(0, 190)
         self.list.setColumnWidth(1, 150)
@@ -384,8 +364,6 @@ class ProfilesSection(SharedSection):
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
         self.manage_button = QPushButton(_("&Manage…"))
-        # Each login window has "Remember it on this computer": what was ticked is here. The
-        # row's line says how many (Hosts' settings fill it in).
         self.manage_button.setToolTip(
             _("Logins you ticked Remember for: Windows encrypts them for your account, so anyone "
               "using your Windows session can connect with them.")
@@ -399,22 +377,20 @@ class ProfilesSection(SharedSection):
                 self.default,
             ),
         )
-        # The passwords' rows are this user's own, so they sit on a card of their own, under
-        # this one; they stay this section's, which handles them.
         self.passwords_section = Section(_("Passwords"))
         add_rows(self.passwords_section.content, self.saved_row)
 
         self._fill_profiles(select=None)
 
     def _written(self) -> None:
-        self._show_folder_state()  # the first change makes the folder
+        self._show_folder_state()
 
     def _save_failed(self) -> str:
         return _("Couldn't save the connection profiles: {error}")
 
     def _fill_profiles(self, select: str | None) -> None:
         self.list.clear()
-        self.default.blockSignals(True)  # filling it isn't picking a default
+        self.default.blockSignals(True)
         self.default.clear()
         for profile in sorted(self.store.all(), key=lambda p: p.name.casefold()):
             entry = self.catalogs.tools.find(profile.tool)
@@ -422,7 +398,7 @@ class ProfilesSection(SharedSection):
             item = QTreeWidgetItem([profile.name, tool, login_label(profile.login, tool)])
             item.setData(0, Qt.ItemDataRole.UserRole, profile.id)
             for column in range(3):
-                item.setToolTip(column, item.text(column))  # whole, if the column cuts it
+                item.setToolTip(column, item.text(column))
             if profile.login == "none":
                 item.setToolTip(2, asked_by_tool(tool))
             self.list.addTopLevelItem(item)
@@ -487,7 +463,7 @@ class ProfilesSection(SharedSection):
             new = dialog.profile(make_id(dialog.name.text().strip(), self._taken()))
             content = dialog.new_settings
             if content is None and new.settings_file:
-                content = self._settings_content(profile)  # the copy gets its own file
+                content = self._settings_content(profile)
                 if content is None:
                     new = replace(new, settings_file="")
             self._save(new, content)
@@ -513,7 +489,6 @@ class ProfilesSection(SharedSection):
         self._fill_profiles(select=None)
 
     def restore_builtin(self) -> None:
-        """Brings back the built-in profiles that were deleted, after asking."""
         missing = self.store.missing_starters()
         if not missing or not self.can_edit:
             return
@@ -562,17 +537,14 @@ class ProfilesSection(SharedSection):
 
 
 class ToolsSection(SharedSection):
-    """Where each remote tool is on this PC, set once for everyone."""
-
     def __init__(self, catalogs: Catalogs) -> None:
         super().__init__(_("Remote tools"), catalogs)
         self.can_edit_tools = catalogs.tools.can_edit()
         tools_layout = self.content
-        # The same table as the profiles: the buttons act on the tool picked.
         self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
         self.tools.setColumnWidth(0, 190)
         self.tools.setColumnWidth(1, 150)
-        self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
         self.tools.itemDoubleClicked.connect(lambda *_a: self._double_clicked())
         self.locate_button = QPushButton(_("Change path…"))
@@ -582,14 +554,12 @@ class ToolsSection(SharedSection):
         tool_buttons = [self.locate_button, self.download_button]
         row_menu(self.tools, self.fill_row_menu)
         tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
-        self.for_everyone(self.can_edit_tools)  # with Read PC data with, under the table
+        self.for_everyone(self.can_edit_tools)
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
         tools_layout.addWidget(self.tools_skipped)
         tools_layout.addLayout(self._reads_row())
 
         self._fill_tools()
-
-    # ---- how other PCs are read: written at once, for everyone on this PC ----
 
     def _reads_row(self) -> QHBoxLayout:
         self.reads_label = QLabel(_("Read PC data with:"))
@@ -631,7 +601,6 @@ class ToolsSection(SharedSection):
         self._show_reads_note()
 
     def _show_reads_note(self) -> None:
-        """With Automatic, which way it uses now, so nobody needs the log to know."""
         from capypanel.core.remote import wmi
 
         if self.reads.currentData() != "auto":
@@ -639,8 +608,6 @@ class ToolsSection(SharedSection):
             return
         way = _("WMI directly") if wmi.available() else _("WMI through PowerShell")
         self.reads_note.setText(_("in use: {way}").format(way=way))
-
-    # ---- tools: a path chosen here is written at once ----
 
     def _fill_tools(self) -> None:
         picked = self._picked_tool()
@@ -673,7 +640,6 @@ class ToolsSection(SharedSection):
         return entry.item if entry else None
 
     def tool_actions(self, tool_id: str) -> list[str]:
-        """What the buttons can do for a tool, in this state: locate, automatic, download."""
         entry = self.catalogs.tools.find(tool_id)
         if entry is None:
             return []
@@ -693,7 +659,6 @@ class ToolsSection(SharedSection):
                 self.tools.setCurrentItem(item)
 
     def _update_tool_buttons(self) -> None:
-        """Only the actions that make sense for the tool picked, in its state."""
         tool = self._picked_tool()
         actions = self.tool_actions(tool.id) if tool else []
         self.locate_button.setEnabled("locate" in actions and self.can_edit_tools)
@@ -708,7 +673,7 @@ class ToolsSection(SharedSection):
             lambda: self._picked_tool_action("locate"),
             "locate" in actions and self.can_edit_tools,
         )
-        if "automatic" in actions:  # only once a path was chosen
+        if "automatic" in actions:
             add_action(
                 menu,
                 _("Use the &automatic path"),
@@ -719,7 +684,6 @@ class ToolsSection(SharedSection):
             add_action(menu, _("Download"), lambda: self._picked_tool_action("download"))
 
     def _double_clicked(self) -> None:
-        """Like a double-click on a profile edits it: the tool's path is changed."""
         if self.locate_button.isEnabled():
             self._picked_tool_action("locate")
 
@@ -753,9 +717,6 @@ class ToolsSection(SharedSection):
 
 
 class ConnectionsPage(Page):
-    """Settings › Hosts › Connecting: what everyone on this PC shares, the profiles and where
-    their tools are. The profiles' Passwords card is this person's own: it shows on Credentials."""
-
     HELP_PLACE = "settings-hosts-connecting"
 
     def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:

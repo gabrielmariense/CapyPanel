@@ -1,5 +1,3 @@
-"""Tool definitions: the shipped presets and an admin's in the shared tools folder, which win."""
-
 import json
 import logging
 from collections.abc import Mapping
@@ -16,8 +14,8 @@ from capypanel.core.tools.profile_store import UNTRUSTED, ProfileStore
 log = logging.getLogger(__name__)
 SHIPPED_DIR = Path(__file__).resolve().parent / "presets"
 PATHS_FILE = "_paths.json"  # tool id -> .exe; "_" can't start a tool id
-READS_FILE = "_reads.json"  # how CapyPanel reads other PCs, for everyone on this PC
-READS = ("auto", "direct", "powershell")  # as inventory.AUTO, DIRECT, POWERSHELL
+READS_FILE = "_reads.json"
+READS = ("auto", "direct", "powershell")
 
 
 class Layer(StrEnum):
@@ -33,8 +31,7 @@ class Entry:
 
 
 def reads_of(folder: Path) -> str:
-    """The way set in `folder`'s reads file, when an administrator wrote it; "auto" otherwise:
-    another user's file must not change how everyone's account reaches other PCs."""
+    """Only an administrator's file counts: another user's can't change how everyone connects."""
     path = folder / READS_FILE
     if not path.is_file() or not winsec.made_by_trusted(path):
         return "auto"
@@ -63,11 +60,11 @@ class ToolCatalog:
     def reload(self) -> None:
         self.problems = []
         entries: dict[str, Entry] = {}
-        for layer in (Layer.SHIPPED, Layer.COMPANY):  # the company's replaces a shipped one
+        for layer in (Layer.SHIPPED, Layer.COMPANY):
             folder = self.dirs[layer]
             for path in sorted(folder.glob("*.json")) if folder.is_dir() else []:
                 if path.name.startswith("_"):
-                    continue  # the paths file, not a tool
+                    continue
                 if layer is Layer.COMPANY and not self._trusted(path):
                     continue
                 try:
@@ -90,7 +87,6 @@ class ToolCatalog:
         return self._entries.get(tool_id)
 
     def paths(self) -> dict[str, str]:
-        """The paths chosen on this PC; none when the file is missing, broken or untrusted."""
         path = self.folder / PATHS_FILE
         if not path.is_file() or not self._trusted(path):
             return {}
@@ -105,12 +101,9 @@ class ToolCatalog:
         return {k: v for k, v in chosen.items() if isinstance(k, str) and isinstance(v, str) and v}
 
     def can_edit(self) -> bool:
-        """Whether Windows lets this user change the tools folder, so the paths for everyone."""
         return can_create_files(self.folder)
 
     def set_paths(self, changes: Mapping[str, str]) -> None:
-        """Sets where tools are, for everyone on this PC; "" goes back to finding it.
-        Raises OSError."""
         chosen = self.paths()
         for tool_id, executable in changes.items():
             if executable:
@@ -124,11 +117,9 @@ class ToolCatalog:
         self.reload()
 
     def reads(self) -> str:
-        """How CapyPanel reads other PCs here: "auto" unless set for everyone on this PC."""
         return reads_of(self.folder)
 
     def set_reads(self, way: str) -> None:
-        """Sets it for everyone on this PC; "auto" removes the choice. Raises OSError."""
         if way not in READS:
             raise ValueError(way)
         path = self.folder / READS_FILE
@@ -144,7 +135,7 @@ class ToolCatalog:
         # A tool names a program to run: another user's file must not choose it.
         if winsec.made_by_trusted(path):
             return True
-        if not any(p.path == path for p in self.problems):  # paths() runs more than once
+        if not any(p.path == path for p in self.problems):
             self.problems.append(Problem(path, UNTRUSTED))
             log.warning("%s skipped: %s", path, UNTRUSTED)
         return False

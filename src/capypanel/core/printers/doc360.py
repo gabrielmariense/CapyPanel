@@ -1,5 +1,3 @@
-"""Page counters from Doc360 MPS: one login, the "latest counters" CSV export, a logout."""
-
 import contextlib
 import csv
 import io
@@ -16,44 +14,41 @@ log = logging.getLogger(__name__)
 BASE = "https://mps.doc360.com.br"
 TIMEOUT = 30  # seconds per request; the export takes about 3
 MAX_ANSWER = 5 * 1024 * 1024  # bytes: a few hundred printers is about 20 KB
-# The latest-counters export's columns: the serial and the three counters.
 SERIAL, LIFE, MONO, COLOR = "N/S", "Life", "Mono", "Color"
 
 
 class Doc360Error(Exception):
-    """Doc360 couldn't give the counters; the message says why, in a few plain words."""
+    pass
 
 
 class NoAnswer(Doc360Error):
-    """Doc360 didn't answer: no network, or the portal is down."""
+    pass
 
 
 class Refused(Doc360Error):
-    """Doc360 refused the login."""
+    pass
 
 
 class Changed(Doc360Error):
-    """A page wasn't what CapyPanel expects: the portal changed."""
+    pass
 
 
 @dataclass(frozen=True)
 class Account:
-    partner: str  # the company's partner code ("parceiro") on the login page
+    partner: str
     user: str
     password: str
 
 
 @dataclass(frozen=True)
 class Counter:
-    life: int | None  # every page the printer has printed: Details' Total pages
+    life: int | None
     mono: int | None
     color: int | None
 
 
 @dataclass(frozen=True)
 class Latest:
-    """The export's counters and the month they're from: this month's, unless it had none."""
-
     counters: dict[str, Counter]
     year: int
     month: int
@@ -61,13 +56,10 @@ class Latest:
 
 
 def key(serial: str) -> str:
-    """How serials are matched: Doc360's N/S against the list's serial."""
     return serial.strip().casefold()
 
 
 class _Forms(HTMLParser):
-    """Every form on a page: its action and its fields, (name, type, value)."""
-
     def __init__(self) -> None:
         super().__init__()
         self.forms: list[tuple[str, list[tuple[str, str, str]]]] = []
@@ -91,9 +83,6 @@ def _is_login(page: str) -> bool:
 
 
 class _Session:
-    """Its network modules load with the first Doc360 read, not at CapyPanel's start (about
-    50 ms: urllib.request and http.cookiejar)."""
-
     def __init__(self, base: str, timeout: float) -> None:
         import http.cookiejar
         import urllib.request
@@ -149,8 +138,6 @@ def read_counters(
     timeout: float = TIMEOUT,
     today: Callable[[], date] = date.today,
 ) -> Latest:
-    """Every printer's latest counters, by serial (see key()). Raises Doc360Error: Refused
-    for a refused login (no retry), NoAnswer, or Changed when a page isn't as expected."""
     session = _Session(base, timeout)
     _log_in(session, account)
     try:
@@ -187,7 +174,7 @@ def read_counters(
         log.info("Doc360: counters for %d printers, %d/%d", len(counters), month, year)
         return Latest(counters, year, month, (year, month) == (now.year, now.month))
     finally:
-        with contextlib.suppress(Doc360Error):  # the session also ends on its own there
+        with contextlib.suppress(Doc360Error):
             session.ask(LOGOUT)
 
 
@@ -211,8 +198,6 @@ def _log_in(session: _Session, account: Account) -> None:
 
 
 def parse_counters(text: str) -> dict[str, Counter]:
-    """The latest-counters CSV: ";" between cells, a header line first. Raises Changed when
-    it isn't that file (a web page, or its columns changed)."""
     text = text.removeprefix("﻿")
     start = text.lstrip()[:200].lower()
     if start.startswith(("<!doctype", "<html")) or "<form" in start:

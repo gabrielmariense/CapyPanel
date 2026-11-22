@@ -1,4 +1,4 @@
-"""A PC's user profiles, this PC's read for real; a real delete only on CI's throwaway machine."""
+"""A real delete runs only on CI's throwaway machine."""
 
 import _winapi
 import contextlib
@@ -41,13 +41,10 @@ NAMES = {
 
 
 def _here(path: str) -> str:
-    """A path on this PC, in the long form the tool opens the PC's paths in."""
     return "\\\\?\\" + path
 
 
 def _pc(tmp_path: Path, *folders: str) -> Callable[[str], str]:
-    """A folder standing in for a PC's C: drive, with these folders in its Users; and the way
-    to open the PC's paths (C:\\Users\\ana) there."""
     for name in folders:
         (tmp_path / "Users" / name).mkdir(parents=True)
     return lambda path: _here(str(tmp_path / path[3:]))
@@ -75,9 +72,6 @@ def _facts(keys: list[dict[str, Any]], **more: Any) -> dict[str, Any]:
 def _combine(facts: dict[str, Any], opened: Callable[[str], str]) -> dict[str, Profile]:
     found = user_profiles._combine("DESK-01", facts, opened, lambda sid: NAMES.get(sid, ""))
     return {p.path.rpartition("\\")[2] or p.sid: p for p in found.profiles}
-
-
-# ---- reading ----
 
 
 def test_this_pcs_own_profiles_read_over_wmi(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -115,7 +109,7 @@ def test_each_profile_gets_the_first_state_that_applies(tmp_path: Path) -> None:
             _key(f"{DOMAIN}-1101", "ana"),
             _key(f"{DOMAIN}-1102", "rui"),
             _key(f"{DOMAIN}-500", "Administrator"),
-            _key(f"{DOMAIN}-1103", "bia"),  # its folder is gone
+            _key(f"{DOMAIN}-1103", "bia"),
             _key(f"{DOMAIN}-1105.bak", "caio"),
             _key(f"{DOMAIN}-1106", "D:\\Perfis\\dora"),
             _key(ENTRA, "eva"),
@@ -132,12 +126,12 @@ def test_each_profile_gets_the_first_state_that_applies(tmp_path: Path) -> None:
         "bia": (Kind.ENTRY, State.READY),
         "caio": (Kind.BACKUP, State.REVIEW),
         "dora": (Kind.ENTRY, State.OUTSIDE),
-        "eva": (Kind.PROFILE, State.IN_USE),  # Windows' list says so, with no hive seen
+        "eva": (Kind.PROFILE, State.IN_USE),
         "Public": (Kind.FOLDER, State.PROTECTED),
         "Default": (Kind.FOLDER, State.PROTECTED),
     }
     assert (found["ana"].user, found["ana"].known) == ("EXAMPLE\\ana", True)
-    assert (found["bia"].user, found["bia"].known) == ("bia", False)  # the account is gone
+    assert (found["bia"].user, found["bia"].known) == ("bia", False)
     assert found["caio"].key == f"{DOMAIN}-1105.bak" and found["caio"].sid == f"{DOMAIN}-1105"
     assert found["ana"].modified is not None and found["bia"].modified is None
 
@@ -146,13 +140,13 @@ def test_a_folder_no_entry_names_is_a_leftover_unless_someone_signed_in_has_its_
     tmp_path: Path,
 ) -> None:
     opened = _pc(tmp_path, "ana", "old.rui", "eva", "chefe", "TEMP")
-    (tmp_path / "Users" / "desktop.ini").write_text("")  # a file: never a row
+    (tmp_path / "Users" / "desktop.ini").write_text("")
     outside = tmp_path / "elsewhere"
     outside.mkdir()
     _winapi.CreateJunction(str(outside), str(tmp_path / "Users" / "Todos"))
     facts = _facts(
         [_key(f"{DOMAIN}-1101", "ana")],
-        admin="chefe",  # the built-in Administrator, renamed
+        admin="chefe",
         console="EXAMPLE\\eva",
         hives=[{"sid": f"{DOMAIN}-1109", "user": "temp", "folder": "C:\\Users\\TEMP"}],
     )
@@ -163,7 +157,7 @@ def test_a_folder_no_entry_names_is_a_leftover_unless_someone_signed_in_has_its_
         "eva": (Kind.FOLDER, State.IN_USE),
         "TEMP": (Kind.FOLDER, State.IN_USE),
         "chefe": (Kind.FOLDER, State.PROTECTED),
-        "Todos": (Kind.FOLDER, State.PROTECTED),  # a link: its files live somewhere else
+        "Todos": (Kind.FOLDER, State.PROTECTED),
     }
     assert found["old.rui"].sid == "" and not found["old.rui"].known
 
@@ -190,7 +184,7 @@ def test_last_used_is_the_later_of_the_last_sign_in_and_sign_out(tmp_path: Path)
     )
     found = _combine(facts, opened)
     used = found["ana"].last_used
-    assert used == datetime(2025, 10, 31, 17, 30, tzinfo=UTC)  # the sign-out, the later one
+    assert used == datetime(2025, 10, 31, 17, 30, tzinfo=UTC)
     assert found["rui"].last_used is None  # an old Windows that doesn't write them
 
 
@@ -206,7 +200,7 @@ def test_rows_come_sorted_by_name_and_one_profile_alone_is_still_a_list(tmp_path
 
 def test_a_drive_share_that_cant_be_read_stops_the_scan(tmp_path: Path) -> None:
     with pytest.raises(RemoteError) as e:
-        _combine(_facts([_key(f"{DOMAIN}-1101", "ana")]), _pc(tmp_path))  # no Users folder
+        _combine(_facts([_key(f"{DOMAIN}-1101", "ana")]), _pc(tmp_path))
     assert e.value.reason is Reason.OTHER
 
 
@@ -224,9 +218,6 @@ def test_typing_the_pcs_name_confirms_whatever_its_case() -> None:
     assert user_profiles.confirmed(" desk-01 ", "DESK-01")
     assert not user_profiles.confirmed("DESK-0", "DESK-01")
     assert not user_profiles.confirmed("", "")
-
-
-# ---- sizes ----
 
 
 def test_a_folders_size_counts_its_files_and_never_follows_a_link(tmp_path: Path) -> None:
@@ -250,10 +241,7 @@ def test_a_profiles_size_is_read_where_the_pc_keeps_it(tmp_path: Path) -> None:
     found = _combine(_facts([_key(f"{DOMAIN}-1101", "ana"), _key(f"{DOMAIN}-1103", "bia")]), opened)
     scanned = Scan("DESK-01", "C:\\Users", tuple(found.values()))
     assert user_profiles.profile_size(scanned, found["ana"], opened=opened) == 77
-    assert user_profiles.profile_size(scanned, found["bia"], opened=opened) is None  # no folder
-
-
-# ---- deleting ----
+    assert user_profiles.profile_size(scanned, found["bia"], opened=opened) is None
 
 
 def _no_network(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -265,8 +253,6 @@ def _no_network(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _answers(monkeypatch: pytest.MonkeyPatch, answer: object) -> list[tuple[str, dict[str, str]]]:
-    """The PC answers every WMI script with `answer` (raised, if it's an error); the scripts
-    asked and their values are kept."""
     asked: list[tuple[str, dict[str, str]]] = []
 
     def run_cim(script: str, host: str, account: Account | None, **more: Any) -> object:
@@ -359,8 +345,8 @@ def test_an_entry_goes_only_while_its_folder_is_still_gone(
     [(script, values)] = asked
     assert script == user_profiles._DELETE_ENTRY
     assert values == {"key": sid, "sid": sid, "path": "C:\\Users\\bia"}
-    assert '{"Flags":0}' in log_file.read_text(encoding="utf-8")  # what it held, kept
-    (tmp_path / "Users" / "bia").mkdir(parents=True)  # the folder is back: a profile again
+    assert '{"Flags":0}' in log_file.read_text(encoding="utf-8")
+    (tmp_path / "Users" / "bia").mkdir(parents=True)
     done = user_profiles.delete(SCANNED, bia, opened=opened)
     assert (done.outcome, done.why) == (Outcome.SKIPPED, Why.CHANGED)
     assert len(asked) == 1
@@ -405,8 +391,8 @@ def test_a_leftover_folder_is_scanned_again_and_then_removed(
 @pytest.mark.parametrize(
     ("now", "why"),
     [
-        ({"keys": [_key(f"{DOMAIN}-1102", "old.rui")]}, Why.CHANGED),  # an entry names it again
-        ({"console": "EXAMPLE\\old.rui"}, Why.IN_USE),  # someone by that name signed in
+        ({"keys": [_key(f"{DOMAIN}-1102", "old.rui")]}, Why.CHANGED),
+        ({"console": "EXAMPLE\\old.rui"}, Why.IN_USE),
         ({"admin": "old.rui"}, Why.PROTECTED),
     ],
 )
@@ -463,7 +449,7 @@ def test_what_couldnt_be_removed_is_named_and_the_delete_fails(
 ) -> None:
     opened, scanned, old = _leftover(tmp_path)
     _answers(monkeypatch, _facts([_key(f"{DOMAIN}-1101", "ana")]))
-    with (tmp_path / "Users" / "old.rui" / "Desktop" / "a.txt").open("rb"):  # a file in use
+    with (tmp_path / "Users" / "old.rui" / "Desktop" / "a.txt").open("rb"):
         done = _delete_leftover(opened, scanned, old)
     assert (done.outcome, done.why) == (Outcome.FAILED, Why.LEFT)
     assert "a.txt" in done.detail
@@ -538,7 +524,6 @@ def test_a_real_profile_an_entry_and_a_leftover_folder_are_deleted(
         after = {p.ident for p in user_profiles.scan("localhost", opened=_here).profiles}
         assert not after & {real.ident, entry.ident, old.ident}
         assert len(log_file.read_text(encoding="utf-8").splitlines()) == 3
-        # Asked again, each says it's gone instead of failing.
         assert user_profiles.delete(found, real, opened=_here).why is Why.GONE
         assert user_profiles.delete(found, entry, opened=_here).why is Why.GONE
     finally:
@@ -554,7 +539,7 @@ def test_a_folder_count_says_how_far_it_is_after_each_folder(tmp_path: Path) -> 
     (tmp_path / "two.bin").write_bytes(b"x" * 5)
     heard: list[int] = []
     assert user_profiles.folder_size(str(tmp_path), progress=heard.append) == 15
-    assert heard == [5, 15]  # the folder itself, then the one inside it
+    assert heard == [5, 15]
 
 
 def test_a_folder_is_counted_by_several_threads_each_as_the_account(tmp_path: Path) -> None:
@@ -574,11 +559,11 @@ def test_a_folder_is_counted_by_several_threads_each_as_the_account(tmp_path: Pa
 
     counted = user_profiles.folder_size(str(tmp_path), walkers=4, identity=identity)
     assert counted == expected == user_profiles.folder_size(str(tmp_path), walkers=1)
-    assert len(entered) == 4 and threading.get_ident() not in entered  # each thread signs in
+    assert len(entered) == 4 and threading.get_ident() not in entered
 
     seen = 0
 
-    def stop() -> bool:  # stopped part-way: no number, and the threads end
+    def stop() -> bool:
         nonlocal seen
         seen += 1
         return seen > 5
@@ -590,7 +575,7 @@ def test_a_folder_is_counted_by_several_threads_each_as_the_account(tmp_path: Pa
         raise RemoteError(Reason.REJECTED, 1326)
         yield
 
-    with pytest.raises(RemoteError):  # a thread that can't sign in: told, never a hang
+    with pytest.raises(RemoteError):
         user_profiles.folder_size(str(tmp_path), identity=refused)
 
 

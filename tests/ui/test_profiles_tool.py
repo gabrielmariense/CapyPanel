@@ -1,5 +1,3 @@
-"""The Profile cleanup tool; nothing reaches a PC: every answer is written by hand."""
-
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -79,8 +77,6 @@ SIZES = {RUI.ident: 3 * GB, BIA.ident: 6 * GB, MARTA.ident: GB // 2, OLD.ident: 
 
 
 class Pc:
-    """The PCs the tool talks to: what a scan and a size answer, and what was asked."""
-
     def __init__(self) -> None:
         self.answers: dict[str, Scan | BaseException] = {}
         self.scanned: list[tuple[str, Account | None]] = []
@@ -100,8 +96,6 @@ class Pc:
 
 
 class Worker:
-    """The tool's background work: done on the spot, or held until a test lets it end."""
-
     def __init__(self) -> None:
         self.holding = False
         self.held: list[Callable[[], None]] = []
@@ -148,7 +142,7 @@ def window(qapp: QApplication, tmp_path: Path, pc: Pc, worker: Worker) -> Iterat
     hl, clinic = HostList().add_group("Clinic")
     for name, address in (("DESK-10", "192.0.2.20"), ("DESK-03", "192.0.2.13"), ("LAB-02", "")):
         hl, _host = hl.add_host(name, clinic.id, address=address)
-    hl, _host = hl.add_host("Front desk printer room", clinic.id)  # no address, not a PC name
+    hl, _host = hl.add_host("Front desk printer room", clinic.id)
     path = tmp_path / "clinic.json"
     listfile.save(path, hl, expected=None)
     win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
@@ -208,9 +202,6 @@ def _tab_tip(tool: ProfilesTool, page: HostPage) -> str:
     return tool.tabs.bar.tabToolTip(tool.tabs.index_of(page.target.key))
 
 
-# ---- the Hosts tab ----
-
-
 def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     window: CapyWindow, tmp_path: Path
 ) -> None:
@@ -218,7 +209,7 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     assert list(window.tools) == ["hosts", "printers", "profiles", "ssh"]
     assert (tool.tool_name(), tool.ICON) == ("Profile cleanup", "profile-card")
     assert tool.list_picker.text() == "clinic"
-    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # natural order; reachable ones
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
     assert tool.tabs.current() == HOSTS and tool.tabs.pinned.tabText(0) == "Hosts (3)"
     assert tool.hosts_page.box.name.text() == "All hosts"
     assert tool.hosts_page.box.about.text() == "3 hosts"
@@ -227,15 +218,15 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     bar = tool.bar
     assert (bar.scan_button.text().strip(), bar.scan_button.isEnabled()) == ("Scan", False)
     assert not bar.sizes_button.isEnabled() and not bar.delete_button.isEnabled()
-    assert tool.nav.add_group_button.isHidden()  # read only: groups are made in Hosts
+    assert tool.nav.add_group_button.isHidden()
 
     hl, group = HostList().add_group("Lab")
     hl, _host = hl.add_host("LAB-07", group.id, address="198.51.100.7")
     other = tmp_path / "lab.json"
     listfile.save(other, hl, expected=None)
-    window.hosts.open_list(other)  # Hosts opens another list: this tool follows
+    window.hosts.open_list(other)
     assert tool.list_picker.text() == "lab" and _hosts(tool) == ["LAB-07"]
-    tool._pick_list(tmp_path / "clinic.json")  # and its dropdown opens one in Hosts
+    tool._pick_list(tmp_path / "clinic.json")
     assert window.hosts.document is not None and window.hosts.document.path.name == "clinic.json"
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
 
@@ -243,7 +234,6 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
 def test_its_hosts_wait_behind_another_tool_and_fill_when_it_comes_to_the_front(
     window: CapyWindow, tmp_path: Path
 ) -> None:
-    # Rows nobody sees cost a tenth of a second at every start with 480 hosts, SSH's included.
     tool = _tool(window)
     assert window.show_tool("hosts")
     hl, group = HostList().add_group("Lab")
@@ -251,8 +241,8 @@ def test_its_hosts_wait_behind_another_tool_and_fill_when_it_comes_to_the_front(
     other = tmp_path / "lab.json"
     listfile.save(other, hl, expected=None)
     window.hosts.open_list(other)
-    assert tool.list_picker.text() == "lab"  # it follows at once...
-    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # ...but its rows wait
+    assert tool.list_picker.text() == "lab"
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
     assert window.show_tool("profiles") and _hosts(tool) == ["LAB-07"]
 
 
@@ -266,7 +256,6 @@ def test_the_status_column_is_hosts_own_last_check(window: CapyWindow) -> None:
     card = tool.hosts_page.host_card
     assert tool.cards.currentWidget() is card and card.name.text() == "DESK-03"
     assert card.status.text().startswith("Offline · checked by Hosts at ")
-    # Every value copies on a click, as in Hosts' Details: the name to tell someone, say.
     assert card.values()["Address"] == "192.0.2.13"
     QTest.mouseClick(card.name, Qt.MouseButton.LeftButton)
     assert QApplication.clipboard().text() == "DESK-03"
@@ -291,16 +280,15 @@ def test_the_search_looks_through_every_host_and_a_group_narrows_them(
     assert _hosts(tool) == ["DESK-01", "ER-01", "LAB-01", "SPARE"]
     tool.nav.select_group(clinic.id)
     tool.nav.filter_changed.emit()
-    assert _hosts(tool) == ["DESK-01", "LAB-01"]  # the groups inside it too
+    assert _hosts(tool) == ["DESK-01", "LAB-01"]
     assert tool.hosts_page.box.name.text() == "Clinic"
-    tool.hosts_page.search.setText("0.2.4")  # a search: every group
+    tool.hosts_page.search.setText("0.2.4")
     assert _hosts(tool) == ["ER-01"] and tool.hosts_page.box.about.text() == "1 of 4 shown"
     tool.hosts_page.search.clear()
     tool.nav.select_group(NO_GROUP)
     tool.nav.filter_changed.emit()
     assert _hosts(tool) == ["SPARE"]
 
-    # Each list comes back on the group it was left on.
     tool.nav.select_group(er.id)
     tool.nav.filter_changed.emit()
     assert tool.prefs[tool_ui.VIEWS_KEY][str(path)] == ["group", er.id]
@@ -311,11 +299,10 @@ def test_the_search_looks_through_every_host_and_a_group_narrows_them(
 
 
 def _record_checks(window: CapyWindow, monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
-    """Hosts' status check, recorded instead of run: the host names of each call."""
     calls: list[list[str]] = []
 
     def check(hosts: Any, *, status: bool, users: bool) -> None:
-        assert status and not users  # status only: never who's logged on
+        assert status and not users
         calls.append([h.name for h in hosts])
 
     monkeypatch.setattr(window.hosts, "check_hosts", check)
@@ -335,7 +322,7 @@ def test_refresh_checks_the_hosts_shown_or_the_tabs_host_as_hosts_does(
     assert bar.refresh_button.text().strip() == "Refresh host"
     bar.refresh_button.click()
     assert calls[-1] == ["DESK-03"]
-    monkeypatch.setattr(window.hosts, "checking", lambda: True)  # a Refresh is running
+    monkeypatch.setattr(window.hosts, "checking", lambda: True)
     window.hosts.checks_changed.emit()
     assert not bar.refresh_button.isEnabled()
 
@@ -350,16 +337,16 @@ def test_picking_a_group_checks_the_hosts_not_checked_lately(
     window.hosts._status_found[_id(window, "DESK-10")] = (
         Status.OFFLINE, now - timedelta(minutes=30), None,
     )  # fmt: skip
-    tool.nav.filter_changed.emit()  # All hosts: the whole list, too many to check unasked
+    tool.nav.filter_changed.emit()
     assert calls == []
     doc = window.hosts.document
     assert doc is not None
-    tool.nav.select_group(doc.hosts.groups[0].id)  # Clinic, as a click on it
-    assert calls == [["DESK-10", "LAB-02"]]  # DESK-03 was checked a moment ago
-    tool.hosts_page.search.setText("desk")  # a search alone checks nothing
+    tool.nav.select_group(doc.hosts.groups[0].id)
+    assert calls == [["DESK-10", "LAB-02"]]
+    tool.hosts_page.search.setText("desk")
     assert len(calls) == 1
     tool.hosts_page.search.clear()
-    tool.showEvent(QShowEvent())  # opening the tool checks once more what's stale
+    tool.showEvent(QShowEvent())
     assert len(calls) == 2
 
 
@@ -372,13 +359,13 @@ def test_a_refresh_result_updates_one_row_without_refilling_the_table(
     key = _id(window, "DESK-10")
     window.hosts._status_found[key] = (Status.ONLINE, datetime.now(UTC), None)
     window.hosts.host_changed.emit(key)
-    window.hosts.checks_changed.emit()  # Hosts sends it once per host checked
+    window.hosts.checks_changed.emit()
     assert refills == [] and _host_row(tool, "DESK-10")[hosts_page.STATUS] == "Online"
 
 
 def test_the_panels_open_wide_enough_for_long_names(window: CapyWindow) -> None:
     tool = _tool(window)
-    assert tool.prefs.get(tool_ui.PANES_KEY) is None  # nothing saved: the first widths
+    assert tool.prefs.get(tool_ui.PANES_KEY) is None
     assert tool.side.minimumWidth() >= panels.RIGHT
     assert tool.inner.sizes()[1] >= panels.DETAILS or tool.inner.sizes()[1] == 0
     long_name = "Ward A - Corridor · 000000 - a very long host name indeed"
@@ -394,12 +381,12 @@ def test_the_panels_open_wide_enough_for_long_names(window: CapyWindow) -> None:
 
 def test_a_card_never_scrolls_it_counts_what_doesnt_fit(qapp: QApplication) -> None:
     entries = [side.Entry(str(n), f"PC-{n}") for n in range(7)]
-    fixed = side.Lines(4, own_more=False)  # the count takes the last line: no taller
+    fixed = side.Lines(4, own_more=False)
     fixed.show_entries(entries, lambda n: f"and {n} more…")
     assert [name for name, _w in fixed.shown()] == ["PC-0", "PC-1", "PC-2", "and 4 more…"]
     fixed.show_entries(entries[:4], lambda n: f"and {n} more…")
     assert [name for name, _w in fixed.shown()] == ["PC-0", "PC-1", "PC-2", "PC-3"]
-    own = side.Lines(2, own_more=True)  # the count has a line of its own under the others
+    own = side.Lines(2, own_more=True)
     own.show_entries(entries, lambda n: f"and {n} more")
     assert [name for name, _w in own.shown()] == ["PC-0", "PC-1", "and 5 more"]
 
@@ -413,13 +400,13 @@ def test_the_rest_is_a_link_whose_menu_does_what_their_lines_do(
     assert lines.more.text().startswith("<a href") and "and 4 more…</a>" in lines.more.text()
     shown: list[QMenu] = []
     monkeypatch.setattr(side, "popup", lambda menu, _where: shown.append(menu))
-    lines.more.linkActivated.emit("#rest")  # a click on it, or Tab then Enter
+    lines.more.linkActivated.emit("#rest")
     texts = [action.text() for action in shown[0].actions()]
     assert texts == ["PC-3 · queued", "PC-4", "PC-5 · queued", "PC-6"]
     went: list[str] = []
     lines.clicked.connect(went.append)
     shown[0].actions()[2].trigger()
-    assert went == ["5"]  # as a click on PC-5's line would say
+    assert went == ["5"]
     lines.show_entries(entries[:4], lambda n: f"and {n} more…")
     assert lines.more.isHidden() and lines.more.text() == ""
 
@@ -432,23 +419,19 @@ def test_a_group_or_list_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_t
     assert tool.tabs.current() == _id(window, "DESK-03")
     tool.nav.filter_changed.emit()
     assert tool.tabs.current() == HOSTS
-    # A click on the group already picked changes no selection, and still goes back.
     tool.switch(_id(window, "DESK-03"))
     item = tool.nav.everything.topLevelItem(0)
     assert item is not None
     tool.nav.everything.itemClicked.emit(item, 0)
     assert tool.tabs.current() == HOSTS
-    tool.hosts_page.search.setText("desk-10")  # and it ends a search, as picking one does
+    tool.hosts_page.search.setText("desk-10")
     tool.nav.everything.itemClicked.emit(item, 0)
     assert tool.hosts_page.search.text() == "" and len(_hosts(tool)) == 3
-    tool.switch(_id(window, "DESK-03"))  # a list picked in the dropdown
+    tool.switch(_id(window, "DESK-03"))
     lists = tool.list_picker.menu()
-    lists.aboutToShow.emit()  # filled as it opens
-    next(a for a in lists.actions() if a.isChecked()).trigger()  # the list open already
+    lists.aboutToShow.emit()
+    next(a for a in lists.actions() if a.isChecked()).trigger()
     assert tool.tabs.current() == HOSTS
-
-
-# ---- opening hosts ----
 
 
 def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
@@ -468,7 +451,7 @@ def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
     table.select(key)
     QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
                                                  Qt.KeyboardModifier.NoModifier))  # fmt: skip
-    assert tool.tabs.current() == key and len(pc.scanned) == 1  # its tab: never a second read
+    assert tool.tabs.current() == key and len(pc.scanned) == 1
 
 
 def _hosts_menu(win: CapyWindow, *names: str) -> QMenu:
@@ -500,7 +483,7 @@ def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
     assert texts[at - 1] == "Re&fresh 2 hosts" and texts[at + 2] == "Commands run a&s"
     menu.actions()[at].trigger()
     assert window.shown_tool() is tool and tool.tabs.tab_keys() == [key, _id(window, "DESK-10")]
-    assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]  # DESK-03 isn't read again
+    assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]
 
 
 def test_from_hosts_its_first_use_warning_comes_first_and_cancelled_opens_nothing(
@@ -508,13 +491,13 @@ def test_from_hosts_its_first_use_warning_comes_first_and_cancelled_opens_nothin
 ) -> None:
     tool = _tool(window)
     window.show_tool("hosts")
-    monkeypatch.setattr(window_module, "on_screen", lambda _window: True)  # as for a person
+    monkeypatch.setattr(window_module, "on_screen", lambda _window: True)
     answers = iter([QDialog.DialogCode.Rejected, QDialog.DialogCode.Accepted])
     monkeypatch.setattr(first_use, "run_modal", lambda _dialog: next(answers))
     assert tool.first_use_pending()
-    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # Cancel
+    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])
     assert window.shown_tool() is window.hosts and tool.tabs.tab_keys() == [] and not pc.scanned
-    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # ticked and continued
+    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])
     assert window.shown_tool() is tool and tool.tabs.tab_keys() == [_id(window, "DESK-03")]
 
 
@@ -525,7 +508,7 @@ def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc
     QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
                                                  Qt.KeyboardModifier.ControlModifier))  # fmt: skip
     assert tool.tabs.current() == HOSTS and tool.tabs.tab_keys() == [_id(window, "DESK-10")]
-    item = table.tree.topLevelItem(0)  # DESK-03
+    item = table.tree.topLevelItem(0)
     assert item is not None
     where = QPointF(table.tree.visualItemRect(item).center())
     release = QMouseEvent(QEvent.Type.MouseButtonRelease, where, where,
@@ -565,7 +548,7 @@ def test_scan_with_one_host_picked_stays_on_the_hosts_tab(window: CapyWindow, pc
     assert (progress.title.text(), progress.summary.text()) == (
         "1 host in tabs", "0 working · 1 done",
     )  # fmt: skip
-    tool.bar.scan_button.click()  # its tab is open and done: read again, still from here
+    tool.bar.scan_button.click()
     assert tool.tabs.current() == HOSTS and len(pc.scanned) == 2
 
 
@@ -597,7 +580,7 @@ def test_the_typed_host_is_offered_under_the_rows_while_no_row_is_it(
     assert under.text() == "Scan DESK-1" and pc.scanned == []
     under.click()
     assert pc.scanned == [("DESK-1", None)] and tool.tabs.current() == "@DESK-1"
-    for typed in ("desk-10", "192.0.2.13"):  # its name in another case; DESK-03's address
+    for typed in ("desk-10", "192.0.2.13"):
         page.search.setText(typed)
         page.search.returnPressed.emit()
         assert _hosts(tool) and not table.offer_buttons(), typed
@@ -605,9 +588,6 @@ def test_the_typed_host_is_offered_under_the_rows_while_no_row_is_it(
     page.search.returnPressed.emit()
     assert _hosts(tool) == [] and table._empty.isVisibleTo(table)
     assert table.scan_button.isHidden() and not table.offer_buttons()
-
-
-# ---- a host's tab ----
 
 
 def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
@@ -619,7 +599,7 @@ def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
     about = page.box.about.text()
     assert about.startswith("192.0.2.13 · scanned at ") and about.endswith(" · as EXAMPLE\\support")
     assert page.filters.shown.text() == "6 of 7 shown"  # Windows' own is hidden at first
-    assert page.table.texts() == [  # the newest use first; rows with no date last
+    assert page.table.texts() == [
         ["", "EXAMPLE\\ana", "11/10/2026", "", "In use"],
         ["", "EXAMPLE\\rui", "11/03/2026", "", "Can be deleted"],
         ["", "EXAMPLE\\bia", "08/14/2026", "", "Can be deleted"],
@@ -627,7 +607,7 @@ def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
         ["", "pedro  (unknown)", "—", "", "Can be deleted"],
         ["", "temp.joao  (unknown)", "—", "", "Can be deleted"],
     ]
-    titles = page.table.tree.headerItem()  # a profile's kind is in its details window only
+    titles = page.table.tree.headerItem()
     assert [titles.text(c) for c in range(titles.columnCount())] == [
         "", "User", "Last used", "Size", "State"]  # fmt: skip
     assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted"
@@ -635,7 +615,7 @@ def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
     assert bar.scan_button.text().strip() == "Scan again" and bar.scan_button.isEnabled()
     assert "DESK-03" in bar.scan_button.toolTip() and bar.sizes_button.isEnabled()
     assert bar.delete_button.text().strip() == "Delete profiles…"
-    assert page.ticked_card.title.text() == "No profile ticked"  # the right panel's card
+    assert page.ticked_card.title.text() == "No profile ticked"
     row = _host_row(tool, "DESK-03")
     assert row[hosts_page.PROFILES : hosts_page.DELETABLE + 1] == ["7", "5"]
     assert row[hosts_page.SCAN] != "" and _tab_tip(tool, page).startswith("Scanned at ")
@@ -657,9 +637,9 @@ def test_the_filters_narrow_the_rows(window: CapyWindow) -> None:
 def test_unused_for_goes_by_the_last_use_or_else_the_folders_date() -> None:
     now = _day(2026, 11, 10)
     shown = rows.visible(ROWS, Filters(hide_own=False, months=6), now)
-    assert shown == [MARTA, OLD]  # the folder with no entry counts by its own date
+    assert shown == [MARTA, OLD]
     assert rows.visible(ROWS, Filters(hide_own=False, months=1), now) == [BIA, MARTA, OLD]
-    assert GONE not in rows.visible(ROWS, Filters(months=12), now)  # no date: never "older"
+    assert GONE not in rows.visible(ROWS, Filters(months=12), now)
     assert rows.visible(ROWS, Filters(hide_own=False)) == list(ROWS)
     assert rows.visible(ROWS, Filters(leftovers=True)) == [OLD, GONE]
 
@@ -670,7 +650,7 @@ def test_a_click_on_a_column_title_sorts_by_what_the_cells_mean(window: CapyWind
     tree = page.table.tree
     tree.sortByColumn(panels.SIZE, Qt.SortOrder.DescendingOrder)
     assert _users(page)[:3] == ["EXAMPLE\\bia", "EXAMPLE\\rui", "marta.old  (unknown)"]
-    tree.sortByColumn(panels.USED, Qt.SortOrder.AscendingOrder)  # the oldest on top
+    tree.sortByColumn(panels.USED, Qt.SortOrder.AscendingOrder)
     assert _users(page)[2:4] == ["marta.old  (unknown)", "EXAMPLE\\bia"]
     tree.sortByColumn(panels.USER, Qt.SortOrder.AscendingOrder)
     assert _users(page)[:2] == ["EXAMPLE\\ana", "EXAMPLE\\bia"]
@@ -678,7 +658,6 @@ def test_a_click_on_a_column_title_sorts_by_what_the_cells_mean(window: CapyWind
 
 def _windows(monkeypatch: pytest.MonkeyPatch, during: Callable[[Any], None] | None = None,
              ) -> list[Any]:  # fmt: skip
-    """A profile's window opens without waiting for Close; `during` runs while it's open."""
     opened: list[Any] = []
 
     def run(dialog: Any) -> int:
@@ -706,11 +685,10 @@ def test_details_open_in_a_window_and_say_why_a_row_is_in_its_state(
     assert details.shown_value("name") == "marta.old"
     assert details.shown_value("sid") == f"{SID}1147"
     assert details.shown_value("path") == "C:\\Users\\marta.old"
-    assert details.shown_value("account") == ""  # Windows no longer knows it: "Unknown", muted
+    assert details.shown_value("account") == ""
     assert details.shown_value("used") == "03/11/2025"
     assert shown.close_button.isDefault() and shown.tick.isEnabled() and not shown.tick.isChecked()
-    # The (i) at the end of the clicked row opens it too; on another row the click only picks.
-    tree.resize(1100, 446)  # wide enough for every column, as in a real window
+    tree.resize(1100, 446)
     QApplication.processEvents()
     item = tree.currentItem()
     assert item is not None
@@ -719,7 +697,7 @@ def test_details_open_in_a_window_and_say_why_a_row_is_in_its_state(
                   tree.columnWidth(panels.STATE), cell.height())  # fmt: skip
     where = panels.info_rect(state).center()
     QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=where)
-    QApplication.processEvents()  # it opens once the table has had its click
+    QApplication.processEvents()
     assert len(opened) == 2 and opened[-1].windowTitle() == "Profile marta.old on DESK-03"
     other = tree.itemBelow(item) or tree.itemAbove(item)
     assert other is not None
@@ -728,12 +706,11 @@ def test_details_open_in_a_window_and_say_why_a_row_is_in_its_state(
     QApplication.processEvents()
     picked = page.table.selected()
     assert len(opened) == 2 and picked is not None and picked != MARTA
-    # And the row's right-click: Details…
     monkeypatch.setattr(panels, "popup", lambda menu, _where: menu.actions()[0].trigger())
     page.table._menu(tree.visualItemRect(item).center())
     assert len(opened) == 3
 
-    def tick(dialog: Any) -> None:  # its tick is the row's own
+    def tick(dialog: Any) -> None:
         dialog.tick.setChecked(True)
         assert dialog.tick.isChecked() and page.table.is_ticked(MARTA.ident)
 
@@ -741,7 +718,7 @@ def test_details_open_in_a_window_and_say_why_a_row_is_in_its_state(
     page.show_details(MARTA.ident)
     assert page.ticked() == [MARTA]
     opened = _windows(monkeypatch)
-    page.show_details(ANA.ident)  # signed in: no tick to set
+    page.show_details(ANA.ident)
     details = opened[-1].details
     assert details.shown_value("account") == "EXAMPLE\\ana" and not opened[-1].tick.isEnabled()
     assert rows.state_why(ANA, "C:\\Users").startswith("This person is signed in now.")
@@ -752,9 +729,6 @@ def test_details_open_in_a_window_and_say_why_a_row_is_in_its_state(
     assert item is not None and item.toolTip(panels.STATE).startswith("This person is signed")
 
 
-# ---- sizes, and the limit every tab shares ----
-
-
 def test_sizes_are_counted_on_demand_for_the_rows_shown_that_have_a_folder(
     window: CapyWindow, pc: Pc
 ) -> None:
@@ -762,13 +736,13 @@ def test_sizes_are_counted_on_demand_for_the_rows_shown_that_have_a_folder(
     page = _open(window)
     assert pc.sized == [] and tool.bar.sizes_button.text().strip() == "Calculate sizes"
     tool.bar.sizes_button.click()
-    assert "pedro" not in pc.sized and "Public" not in pc.sized  # no folder; hidden
+    assert "pedro" not in pc.sized and "Public" not in pc.sized
     assert len(pc.sized) == 5
     sizes = {row[panels.USER]: row[panels.SIZE] for row in page.table.texts()}
     assert sizes["EXAMPLE\\rui"] == "3.0 GB" and sizes["marta.old  (unknown)"] == "0.5 GB"
     assert sizes["temp.joao  (unknown)"] == "40 MB" and sizes["pedro  (unknown)"] == ""
     assert not page.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
-    page.count_sizes()  # nothing left to count
+    page.count_sizes()
     assert len(pc.sized) == 5
 
 
@@ -783,12 +757,12 @@ def test_counting_can_be_stopped_and_what_was_counted_stays(
     assert tool.bar.sizes_button.text().strip() == "Stop the count"
     assert _tab_tip(tool, page) == "Calculating sizes: 0 of 5"
     assert [row[panels.SIZE] for row in page.table.texts()].count("counting…") == 5
-    worker.end()  # one ends; the next one starts
+    worker.end()
     assert len(worker.held) == 4 and _tab_tip(tool, page) == "Calculating sizes: 1 of 5"
-    tool.bar.sizes_button.click()  # Stop
+    tool.bar.sizes_button.click()
     assert not page.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
     assert "counting…" not in [row[panels.SIZE] for row in page.table.texts()]
-    while worker.held:  # the ones under way end later: dropped
+    while worker.held:
         worker.end()
     assert sum(size is not None for size in page._sizes.values()) == 1
 
@@ -806,29 +780,29 @@ def test_reads_and_counts_share_one_limit_across_every_tab_and_reads_go_first(
     first = _open(window, "PC-0")
     worker.holding = True
     first.count_sizes()
-    assert len(worker.held) == 4  # four folders under way, one waits
+    assert len(worker.held) == 4
     tool.open_hosts([_id(window, f"PC-{n}") for n in range(1, 6)], False)
     pages = [tool.page(_id(window, f"PC-{n}")) for n in range(1, 6)]
     assert all(p is not None and p.stage is Stage.QUEUED for p in pages)
     assert _tab_tip(tool, pages[0]) == "Waiting to scan"  # type: ignore[arg-type]
     assert _host_row(tool, "PC-1")[hosts_page.SCAN] == "queued"
-    worker.end()  # a count ends: the first read takes its place, ahead of the last folder
+    worker.end()
     assert pages[0] is not None and pages[0].stage is Stage.SCANNING
     assert _host_row(tool, "PC-1")[hosts_page.SCAN] == "scanning…"
     assert pc.scanned[-1] == ("192.0.2.50", None) and len(worker.held) == 4
     while worker.held:
         worker.end()
     assert all(p is not None and p.stage is Stage.SCANNED for p in pages)
-    assert len(pc.sized) == 5  # the waiting folder was counted after the reads
+    assert len(pc.sized) == 5
     progress = tool.progress
     assert (progress.title.text(), progress.summary.text()) == (
         "6 hosts in tabs", "0 working · 6 done",
     )  # fmt: skip
-    shown = progress.lines.shown()  # more tabs than lines: three, then the rest as a link
+    shown = progress.lines.shown()
     assert len(shown) == 4 and shown[-1] == ("and 3 more…", "")
     rest = progress.lines.rest_menu().actions()
     assert len(rest) == 3
-    rest[0].trigger()  # its tab comes to the front, as from a line
+    rest[0].trigger()
     assert tool.tabs.current() == _id(window, rest[0].text().partition(" · ")[0])
 
 
@@ -839,16 +813,13 @@ def test_scanning_the_same_host_again_keeps_the_sizes_of_rows_still_there(
     page = _open(window)
     page.count_sizes()
     pc.answers["192.0.2.13"] = Scan("192.0.2.13", "C:\\Users", (ANA, RUI, MARTA))
-    tool.bar.scan_button.click()  # Scan again
+    tool.bar.scan_button.click()
     assert len(pc.scanned) == 2
     sizes = {row[panels.USER]: row[panels.SIZE] for row in page.table.texts()}
     assert sizes == {"EXAMPLE\\ana": "0 MB", "EXAMPLE\\rui": "3.0 GB",
                      "marta.old  (unknown)": "0.5 GB"}  # fmt: skip
-    other = _open(window, "DESK-10")  # another host: its own tab, nothing carried over
+    other = _open(window, "DESK-10")
     assert other.table.texts()[0][panels.SIZE] == ""
-
-
-# ---- a scan that fails ----
 
 
 def test_a_host_that_doesnt_answer_says_so_and_offers_to_try_again(
@@ -857,7 +828,7 @@ def test_a_host_that_doesnt_answer_says_so_and_offers_to_try_again(
     tool = _tool(window)
     pc.answers["192.0.2.13"] = RemoteError(Reason.UNREACHABLE)
     page = _open(window)
-    assert "User profiles scan on DESK-03 failed: RemoteError" in caplog.text  # in the log too
+    assert "User profiles scan on DESK-03 failed: RemoteError" in caplog.text
     card = page.card
     assert card is not None and card.heading.text() == "DESK-03 didn't answer"
     assert card.body.text().endswith("Nothing was read.")
@@ -904,9 +875,6 @@ def test_any_other_failure_names_windows_error(window: CapyWindow, pc: Pc) -> No
     assert "took too long" in said.lines[0] and not said.another_account
 
 
-# ---- how values read, and what's kept ----
-
-
 def test_sizes_read_in_gigabytes_from_a_tenth_up_and_megabytes_under() -> None:
     assert rows.size_text(int(3.44 * GB)) == "3.4 GB"
     assert rows.size_text(250 * GB) == "250 GB"
@@ -923,15 +891,12 @@ def test_the_panels_widths_and_view_choices_are_kept(window: CapyWindow) -> None
     assert tool_ui._two_widths([230, 300]) == (230, 300)
     assert tool_ui._two_widths([0, 300]) is None and tool_ui._two_widths("wide") is None
     assert tool.view_actions() == [[tool.show_groups, tool.show_tags, tool.show_details]]
-    tool.show_tags.setChecked(False)  # as in Hosts: the Tags panel can be hidden
+    tool.show_tags.setChecked(False)
     assert tool.nav.tags.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["tags"] is False
     tool.show_details.setChecked(False)
     assert tool.side.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["details"] is False
     tool.show_groups.setChecked(False)
     assert tool.nav.isHidden()
-
-
-# ---- the tabs ----
 
 
 def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -> None:
@@ -941,18 +906,17 @@ def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -
     assert tool.tabs.tab_keys() == keys and tool.tabs.current() == keys[0]
     tool._step(1)
     assert tool.tabs.current() == keys[1]
-    tool._step(1)  # round to the Hosts tab
+    tool._step(1)
     assert tool.tabs.current() == HOSTS
     tool._step(-1)
     assert tool.tabs.current() == keys[1]
-    assert tool.close_tab(keys[1]) and tool.tabs.current() == keys[0]  # the one on its left
-    assert not tool.close_tab(HOSTS)  # pinned
+    assert tool.close_tab(keys[1]) and tool.tabs.current() == keys[0]
+    assert not tool.close_tab(HOSTS)
     _open(window, "DESK-10", focus=False)
     tool.close_others(keys[0])
     assert tool.tabs.tab_keys() == [keys[0]]
     tool.close_finished()
     assert tool.tabs.tab_keys() == [] and tool.tabs.current() == HOSTS
-    # A closed tab's counts stay on the Hosts tab.
     assert _host_row(tool, "DESK-03")[hosts_page.PROFILES : hosts_page.DELETABLE + 1] == ["7", "5"]
 
 
@@ -992,9 +956,8 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
     found = {b.objectName(): b for b in tool.tabs.bar.findChildren(QToolButton)
              if b.objectName().startswith("Scroll")}  # fmt: skip
     assert set(found) == {"ScrollLeftButton", "ScrollRightButton"}
-    for button in found.values():  # buttons the theme draws: tests/ui/test_tab_strip.py
+    for button in found.values():
         assert not button.icon().isNull()
-        # At the end the bar is already at, its arrow is drawn muted, not just left to the style.
         size = QSize(18, 18)
         normal = button.icon().pixmap(size, QIcon.Mode.Normal).toImage()
         assert button.icon().pixmap(size, QIcon.Mode.Disabled).toImage() != normal
@@ -1004,7 +967,7 @@ def test_the_list_and_the_right_panel_start_on_the_groups_panel_s_top(
     window: CapyWindow,
 ) -> None:
     tool = _tool(window)
-    _open(window, focus=False)  # a host's tab beside the Hosts tab, which stays in front
+    _open(window, focus=False)
     window.resize(1280, 760)
     window.show()
     QApplication.processEvents()
@@ -1013,19 +976,18 @@ def test_the_list_and_the_right_panel_start_on_the_groups_panel_s_top(
         return widget.mapTo(window, QPoint(0, 0)).y()
 
     groups = top(tool.nav._card)
-    assert tool.nav.card_top() == groups - top(tool.nav) > 0  # known before it's shown
+    assert tool.nav.card_top() == groups - top(tool.nav) > 0
     assert top(tool.middle) == groups and top(tool.side) == groups
     assert top(tool.tabs) == top(tool.list_picker)
-    for bar in (tool.tabs.pinned, tool.tabs.bar):  # every tab fills the strip, top to bottom
+    for bar in (tool.tabs.pinned, tool.tabs.bar):
         tab = bar.tabRect(0).translated(bar.mapTo(window, QPoint(0, 0)))
         assert (tab.top(), tab.height()) == (top(tool.list_picker), tool.tabs.height())
-    # The ▾ and the line between the Hosts tab and the hosts' tabs stay in the middle.
     for part in (tool.tabs.more, tool.tabs.line):
         middle = part.mapTo(tool.tabs, part.rect().center()).y()
         assert abs(middle - tool.tabs.rect().center().y()) <= 1
 
-    tool.list_picker.setStyleSheet("QComboBox { min-height: 40px; }")  # a theme's taller one
-    tool.restyle()  # as after every theme switch
+    tool.list_picker.setStyleSheet("QComboBox { min-height: 40px; }")
+    tool.restyle()
     QApplication.processEvents()
     assert top(tool.nav._card) > groups
     assert top(tool.middle) == top(tool.side) == top(tool.nav._card)
@@ -1040,9 +1002,9 @@ def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(
     assert page.stage is Stage.SCANNING and len(worker.held) == 1
     assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == "scanning…"
     assert tool.close_tab(page.target.key)
-    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == ""  # no "scanning…" left on its row
-    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)  # its widgets are gone
-    worker.end()  # the read ends after: dropped, not shown in a deleted tab
+    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == ""
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    worker.end()
     assert tool.tabs.tab_keys() == [] and tool.pool.waiting(page) == 0
 
 
@@ -1051,7 +1013,7 @@ def test_progress_lists_the_hosts_in_tabs_by_where_they_are(
 ) -> None:
     tool = _tool(window)
     progress = tool.progress
-    assert not progress.bar.isVisibleTo(progress)  # nothing open yet
+    assert not progress.bar.isVisibleTo(progress)
     height = progress.height()
     pc.answers["192.0.2.20"] = RemoteError(Reason.UNREACHABLE)
     _open(window, "DESK-10", focus=False)
@@ -1059,10 +1021,9 @@ def test_progress_lists_the_hosts_in_tabs_by_where_they_are(
     page = _open(window, focus=False)
     assert (progress.caption.text(), progress.title.text()) == ("PROGRESS", "2 hosts in tabs")
     assert progress.summary.text() == "1 working · 1 done"
-    # One line per tab, the working ones first, whatever the tabs' order.
     assert progress.lines.shown() == [("DESK-03", "scanning…"), ("DESK-10", "didn't answer")]
-    assert progress.height() == height  # one fixed height: nothing under it jumps
-    tool.switch(page.target.key)  # the same card on a host's tab
+    assert progress.height() == height
+    tool.switch(page.target.key)
     assert progress.isVisibleTo(tool.side) and tool.cards.currentWidget() is page.side
     target = next(line for line in progress.lines.slots if line.name.text() == "DESK-10")
     target.clicked.emit(target.key())
@@ -1089,12 +1050,11 @@ def test_the_right_panel_lists_what_is_ticked_and_deletes_from_its_foot(
     assert card.title.text() == "2 profiles · 3.5 GB"
     assert card.lines.shown() == [("EXAMPLE\\rui", "3.0 GB"), ("marta.old  (unknown)", "0.5 GB")]
     line = card.lines.slots[1]
-    line.clicked.emit(line.key())  # a click on a line shows the profile in the table
+    line.clicked.emit(line.key())
     assert page.table.selected() == MARTA
     assert foot.delete_button.isEnabled()
     assert foot.delete_button.text().strip() == tool.bar.delete_button.text().strip()
     assert foot.delete_button.text().strip() == "Delete 2 profiles…"
-    # The Hosts tab's card says which tabs have ticks waiting; a click goes there.
     host_card = tool.hosts_page.host_card
     tool.switch(HOSTS)
     assert host_card.ticked.shown() == [("DESK-03", "2 profiles · 3.5 GB")]
@@ -1102,9 +1062,9 @@ def test_the_right_panel_lists_what_is_ticked_and_deletes_from_its_foot(
     host_card.ticked.slots[0].clicked.emit(host_card.ticked.slots[0].key())
     assert tool.tabs.current() == page.target.key
     opened = _answer(monkeypatch, _typed("delete"))
-    foot.delete_button.click()  # the same question as the toolbar's
+    foot.delete_button.click()
     assert isinstance(opened[0], DeleteDialog) and deletes.asked == [RUI.user, MARTA.user]
-    assert not host_card.ticked.isVisibleTo(host_card)  # nothing ticked any more
+    assert not host_card.ticked.isVisibleTo(host_card)
 
 
 def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
@@ -1125,9 +1085,9 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
     assert window.statusBar().currentMessage() == "Copied: DESK-03"
     actions[5].trigger()
     assert QApplication.clipboard().text() == "192.0.2.13"
-    actions[1].trigger()  # Scan: behind, as the toolbar's
+    actions[1].trigger()
     assert tool.tabs.current() == HOSTS and tool.tabs.tab_keys() == [key]
-    actions[0].trigger()  # Open: as a double-click
+    actions[0].trigger()
     assert tool.tabs.current() == key and len(pc.scanned) == 1
     tool.switch(HOSTS)
     for index in range(tool.hosts_page.table.tree.topLevelItemCount()):
@@ -1140,12 +1100,7 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
     assert QApplication.clipboard().text().split("\n") == ["DESK-03", "DESK-10", "LAB-02"]
 
 
-# ---- deleting ----
-
-
 class Deletes:
-    """What a host answers to each delete, by user; and what was asked, in order."""
-
     def __init__(self) -> None:
         self.answers: dict[str, tuple[Outcome, Why | None, str]] = {}
         self.asked: list[str] = []
@@ -1167,8 +1122,6 @@ def deletes(monkeypatch: pytest.MonkeyPatch) -> Deletes:
 
 
 def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[Any], bool]) -> list[Any]:
-    """The Delete window (and the quit question) answered by `fill` (True: its action is
-    pressed; False: Cancel); the windows opened are kept."""
     opened: list[Any] = []
 
     def run(dialog: Any) -> int:
@@ -1202,10 +1155,10 @@ def test_only_a_row_that_can_be_deleted_has_a_tick_box(window: CapyWindow) -> No
         item = tree.topLevelItem(index)
         assert item is not None
         boxes[item.text(panels.USER)] = item.data(panels.TICK, Qt.ItemDataRole.CheckStateRole)
-    assert boxes["EXAMPLE\\ana"] is None and boxes["Public  (unknown)"] is None  # in use; Windows'
+    assert boxes["EXAMPLE\\ana"] is None and boxes["Public  (unknown)"] is None
     assert all(boxes[user] is not None for user in ("EXAMPLE\\rui", "pedro  (unknown)"))
     assert not tool.bar.delete_button.isEnabled()
-    page.table.tick(ANA.ident)  # as a click where there's no box: nothing
+    page.table.tick(ANA.ident)
     assert page.ticked() == []
     page.table.tick(RUI.ident)
     page.table.tick(BIA.ident)
@@ -1214,7 +1167,7 @@ def test_only_a_row_that_can_be_deleted_has_a_tick_box(window: CapyWindow) -> No
     assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted · 2 ticked"
     page.count_sizes()
     assert tool.status_label.text().endswith(" · 2 ticked · 9.0 GB")
-    page.filters.leftovers.setChecked(True)  # a tick on a row no longer shown is dropped
+    page.filters.leftovers.setChecked(True)
     assert page.ticked() == [] and not tool.bar.delete_button.isEnabled()
 
 
@@ -1226,7 +1179,7 @@ def test_a_ticked_row_looks_like_something_to_be_careful_with(window: CapyWindow
     rui = next(tree.topLevelItem(i) for i in range(tree.topLevelItemCount())
                if tree.topLevelItem(i).text(panels.USER) == "EXAMPLE\\rui")  # type: ignore[union-attr]  # fmt: skip
     assert rui is not None
-    assert rui.text(panels.STATE) == "Can be deleted" and rui.icon(panels.STATE).isNull()  # no dot
+    assert rui.text(panels.STATE) == "Can be deleted" and rui.icon(panels.STATE).isNull()
     assert not rui.data(panels.USER, panels.CAREFUL_ROLE)
     header = tree.headerItem()
     assert (
@@ -1238,11 +1191,11 @@ def test_a_ticked_row_looks_like_something_to_be_careful_with(window: CapyWindow
     assert rui.text(panels.STATE) == "Will be deleted" and rui.data(
         panels.USER, panels.CAREFUL_ROLE
     )
-    amber = panels.amber()  # the theme's: it reads as text in the light themes too
+    amber = panels.amber()
     assert rui.foreground(panels.STATE).color().name() == amber
     assert rui.foreground(panels.USER).color().name() == amber
     assert page.filters.shown.text() == "1 ticked · 3.0 GB" and page.filters.shown.has_bin()
-    tree.sortByColumn(panels.TICK, Qt.SortOrder.AscendingOrder)  # a click on its title: nothing
+    tree.sortByColumn(panels.TICK, Qt.SortOrder.AscendingOrder)
     assert tree.header().sortIndicatorSection() == panels.USED
     page.table.tick(RUI.ident, on=False)
     assert (
@@ -1255,15 +1208,15 @@ def test_the_count_of_ticks_ends_in_an_ellipsis_rather_than_lose_its_start(
     qapp: QApplication,
 ) -> None:
     row = panels.FilterRow()
-    row.resize(3000, 40)  # room to spare, whatever font an earlier test left
+    row.resize(3000, 40)
     row.show()
     row.show_count("12 of 15 shown", "3 ticked · 12.4 GB")
-    for _turn in range(6):  # the bold font, then the layout's second pass
+    for _turn in range(6):
         qapp.processEvents()
     assert row.shown.shown_text() == "3 ticked · 12.4 GB" and row.shown.toolTip() == ""
     filters = (row.hide_own, row.leftovers, row.since_label, row.since)
-    row.resize(sum(w.sizeHint().width() for w in filters) + 160, 40)  # short of room
-    for _turn in range(6):  # the bold font, then the layout's second pass
+    row.resize(sum(w.sizeHint().width() for w in filters) + 160, 40)
+    for _turn in range(6):
         qapp.processEvents()
     shown = row.shown.shown_text()
     assert shown.endswith("…") and "3 ticked · 12.4 GB".startswith(shown[:-1])
@@ -1293,14 +1246,13 @@ def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
             dialog.word.setText(word)
             states.append(dialog.action.isEnabled())
         seen.append(tuple(states))
-        # Once lit, the amber button has the keyboard and is the default: Enter deletes.
         seen.append((dialog.action.isDefault(), dialog.cancel.isDefault(),
                      dialog.focusWidget() is dialog.action))  # fmt: skip
         dialog.word.clear()
         seen.append((dialog.action.isDefault(), dialog.cancel.isDefault()))
-        dialog.accept()  # Enter with the word missing: nothing
+        dialog.accept()
         seen.append((dialog.result(),))
-        return False  # then Cancel
+        return False
 
     _answer(monkeypatch, look)
     tool.bar.delete_button.click()
@@ -1316,11 +1268,11 @@ def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
         False,
         True,
     )
-    assert seen[1] == (False, False, True, True)  # any case, spaces around it ignored
+    assert seen[1] == (False, False, True, True)
     assert seen[2] == (True, False, True)
-    assert seen[3] == (False, True)  # the word gone: Cancel is the default again
+    assert seen[3] == (False, True)
     assert seen[4] == (0,)
-    assert deletes.asked == [] and page.ticked() == [RUI, MARTA]  # cancelled: as before
+    assert deletes.asked == [] and page.ticked() == [RUI, MARTA]
     assert rows.confirm_word() == "DELETE" and rows.confirms("Delete") and not rows.confirms("")
 
 
@@ -1344,7 +1296,7 @@ def test_ticked_rows_are_deleted_one_at_a_time_and_each_says_how_it_ended(
     assert (states["EXAMPLE\\rui"], states["EXAMPLE\\bia"], states["marta.old  (unknown)"]) == (
         "Deleted", "Skipped", "Failed",
     )  # fmt: skip
-    assert states["temp.joao  (unknown)"] == "Can be deleted"  # not ticked: untouched
+    assert states["temp.joao  (unknown)"] == "Can be deleted"
     assert page.ticked() == [] and not tool.bar.delete_button.isEnabled()
     card, foot = page.run_card, page.foot
     assert page.cards.currentWidget() is card and card.over()
@@ -1356,7 +1308,7 @@ def test_ticked_rows_are_deleted_one_at_a_time_and_each_says_how_it_ended(
         ("EXAMPLE\\rui", "deleted · 3.0 GB"),
         ("EXAMPLE\\bia", "skipped"),
         ("marta.old  (unknown)", "failed"),
-    ]  # a line per profile of the run; why it ended so is in its tooltip
+    ]
     tips = [line.toolTip() for line in card.lines.slots[:3]]
     assert tips[0] == "deleted, 3.0 GB"
     assert tips[1] == "skipped, signed in to the PC since the scan"
@@ -1367,14 +1319,14 @@ def test_ticked_rows_are_deleted_one_at_a_time_and_each_says_how_it_ended(
     assert card.log_button.isVisibleTo(card) and not card.note.isVisibleTo(card)
     assert tool.bar.scan_button.isEnabled()
 
-    card.close_button.click()  # what's ticked shows again
+    card.close_button.click()
     assert page.cards.currentWidget() is page.ticked_card
-    opened = _windows(monkeypatch)  # how a row ended is in its window
+    opened = _windows(monkeypatch)
     page.show_details(MARTA.ident)
     assert opened[-1].details.shown_value("windows") == "Access is denied."
-    assert _states(page)["EXAMPLE\\rui"] == "Deleted"  # results stay until the next scan
+    assert _states(page)["EXAMPLE\\rui"] == "Deleted"
     tool.bar.scan_button.click()
-    assert _states(page)["EXAMPLE\\rui"] == "Can be deleted"  # the fake PC still has it
+    assert _states(page)["EXAMPLE\\rui"] == "Can be deleted"
 
 
 def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
@@ -1396,7 +1348,6 @@ def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
         ("EXAMPLE\\bia", "queued"),
         ("marta.old  (unknown)", "queued"),
     ]
-    # The foot button is a plain Cancel the rest while it runs.
     assert foot.delete_button.isHidden() and not foot.cancel_button.isHidden()
     assert foot.cancel_button.text().strip() == "Cancel the rest"
     assert tool.hosts_page.host_card.ticked.shown() == [("DESK-03", "deleting 1 of 3")]
@@ -1405,7 +1356,6 @@ def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
     assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == "deleting 1 of 3"
     states = _states(page)
     assert (states["EXAMPLE\\rui"], states["EXAMPLE\\bia"]) == ("Deleting…", "Queued")
-    # While it runs: no scan, no tick, no second run, no closing.
     assert not tool.bar.scan_button.isEnabled() and not tool.bar.delete_button.isEnabled()
     assert not tool.bar.sizes_button.isEnabled()
     page.table.tick(BIA.ident, on=False)
@@ -1414,21 +1364,21 @@ def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
     assert window.statusBar().currentMessage().startswith("DESK-03 is deleting profiles")
     tool.close_finished()
     assert tool.tabs.tab_keys() == [page.target.key]
-    page.filters.leftovers.setChecked(True)  # the run's rows show whatever the filters
+    page.filters.leftovers.setChecked(True)
     assert {"EXAMPLE\\rui", "EXAMPLE\\bia", "marta.old  (unknown)"} <= set(_users(page))
 
     foot.cancel_button.click()
     assert not foot.cancel_button.isEnabled() and not card.over()
-    assert card.lines.shown() == [("EXAMPLE\\rui", "deleting…")]  # the queued ones left the run
-    worker.end()  # the current one finishes
-    assert deletes.asked == [RUI.user] and worker.held == []  # and no other starts
+    assert card.lines.shown() == [("EXAMPLE\\rui", "deleting…")]
+    worker.end()
+    assert deletes.asked == [RUI.user] and worker.held == []
     assert card.over() and card.title.text() == "1 deleted"
     assert foot.cancel_button.isHidden() and foot.delete_button.isEnabled()
     assert foot.delete_button.text().strip() == "Delete 2 profiles…"
     page.filters.leftovers.setChecked(False)
     states = _states(page)
     assert states["EXAMPLE\\bia"] == "Will be deleted" and page.ticked() == [BIA, MARTA]
-    assert tool.bar.delete_button.isEnabled()  # the ticks left can be run again
+    assert tool.bar.delete_button.isEnabled()
     assert tool.close_tab(page.target.key)
 
 
@@ -1442,14 +1392,14 @@ def test_quitting_while_a_host_deletes_asks_and_waits_for_the_profile_under_way(
     worker.holding = True
     opened = _answer(monkeypatch, _typed("DELETE"))
     tool.bar.delete_button.click()
-    assert tool.quit_question(window) is False  # Cancel the rest and quit
+    assert tool.quit_question(window) is False
     question = opened[-1]
     assert question.heading.text() == "<b>1 host is still deleting profiles</b>"
     assert question.cancel.text() == "Continue"
     assert deletes.asked == [] and page.deleting
     quits: list[bool] = []
     monkeypatch.setattr(window, "quit_app", lambda: quits.append(True))
-    worker.end()  # the profile under way ends; the queued one never starts
+    worker.end()
     assert deletes.asked == [RUI.user] and quits == [True]
 
 
@@ -1475,15 +1425,12 @@ def test_open_the_history_says_so_when_there_is_none_yet(
     opened: list[Path] = []
     monkeypatch.setattr(host_page.os, "startfile", opened.append, raising=False)
     page.open_log()
-    assert opened == []  # nothing was ever deleted: no file to open
+    assert opened == []
     log_file = window.paths.user_profiles_log_file
     log_file.parent.mkdir(parents=True, exist_ok=True)
     log_file.write_text("a line\n", encoding="utf-8")
     page.open_log()
     assert opened == [log_file]
-
-
-# ---- narrow windows, and the box of the hosts on show ----
 
 
 def test_at_a_narrow_width_the_tables_fit_their_box_and_the_last_column_stays(
@@ -1498,12 +1445,12 @@ def test_at_a_narrow_width_the_tables_fit_their_box_and_the_last_column_stays(
     least = table._scan_least()
     room = least + sum(tree.columnWidth(c) for c in range(hosts_page.SCAN)) - 40
     table.squeeze.apply(room)
-    assert tree.headerItem().text(hosts_page.DELETABLE) == "Deletable"  # one short word
+    assert tree.headerItem().text(hosts_page.DELETABLE) == "Deletable"
     assert tree.headerItem().toolTip(hosts_page.DELETABLE).endswith("can be deleted")
-    assert tree.columnWidth(hosts_page.NAME) <= full  # Name gives up room first
-    assert tree.columnWidth(hosts_page.SCAN) >= least  # where a host stands is never cut
+    assert tree.columnWidth(hosts_page.NAME) <= full
+    assert tree.columnWidth(hosts_page.SCAN) >= least
     widths = sum(tree.columnWidth(c) for c in range(hosts_page.SCAN + 1))
-    assert widths <= room  # nothing to scroll sideways
+    assert widths <= room
     item = tree.topLevelItem(0)
     assert item is not None and item.toolTip(hosts_page.NAME) == item.text(hosts_page.NAME)
 
@@ -1514,7 +1461,7 @@ def test_at_a_narrow_width_the_tables_fit_their_box_and_the_last_column_stays(
     page.table.squeeze.apply(430)
     assert ptree.columnWidth(panels.USER) == 110
     assert ptree.columnWidth(panels.USER) < user
-    assert ptree.columnWidth(panels.TICK) == 34  # the ticks never shrink
+    assert ptree.columnWidth(panels.TICK) == 34
     assert ptree.columnWidth(panels.STATE) >= page.table._state_least()
 
 
@@ -1530,13 +1477,12 @@ def test_the_count_drops_the_size_before_it_ends_in_an_ellipsis(qapp: QApplicati
     assert count.shown_text() == "3 ticked · 12.4 GB"
     count.resize(metrics.horizontalAdvance("3 ticked") + bin_room + 4, 20)
     assert count.shown_text() == "3 ticked" and count.toolTip() == "3 ticked · 12.4 GB"
-    count.resize(bin_room + 20, 20)  # no room for the word: the bin and the number
+    count.resize(bin_room + 20, 20)
     assert count.shown_text() == "3" and count.toolTip() == "3 ticked · 12.4 GB"
-    # The plain count loses "shown" before any word is cut; the whole text in its tooltip.
     count.show_count("12 of 15 shown", False, "12 of 15")
     count.resize(metrics.horizontalAdvance("12 of 15 shown") - 4, 20)
     assert count.shown_text() == "12 of 15" and count.toolTip() == "12 of 15 shown"
-    count.show_count("12 of 15 shown", False)  # nothing shorter to fall back on: "…"
+    count.show_count("12 of 15 shown", False)
     count.resize(40, 20)
     assert count.shown_text().endswith("…")
     count.close()
@@ -1555,17 +1501,17 @@ def test_with_no_single_host_picked_the_box_describes_the_hosts_on_show(
     window.hosts._status_found[_id(window, "DESK-03")] = (Status.ONLINE, now, None)
     window.hosts._status_found[_id(window, "DESK-10")] = (Status.OFFLINE, now, None)
     monkeypatch.setattr(window.hosts, "check_progress", lambda: (2, 3))
-    window.hosts.checks_changed.emit()  # a Refresh under way
+    window.hosts.checks_changed.emit()
     assert card.status.text() == "Refreshing status: 2 of 3…"
     assert [v.text() for v in card._values][:2] == ["1 online · 1 offline", "1"]
     monkeypatch.setattr(window.hosts, "check_progress", lambda: None)
     window.hosts.checks_changed.emit()
     assert card.status.text().startswith("Status checked by Hosts at ")
-    _open(window, focus=False)  # a scan fills the rest
+    _open(window, focus=False)
     assert [v.text() for v in card._values][2:] == ["1 of 3", "5"]
-    tool.hosts_page.table.select(_id(window, "DESK-03"))  # one host picked: its own box
+    tool.hosts_page.table.select(_id(window, "DESK-03"))
     assert card.heading.text() == "SELECTED HOST"
-    tool.hosts_page.search.setText("no such host")  # nothing on show: it says so, no rows
+    tool.hosts_page.search.setText("no such host")
     assert card.heading.text() == "HOSTS SHOWN" and card.status.text() == "No host shown"
     assert all(v.isHidden() for v in card._values)
     tool.hosts_page.search.clear()
@@ -1587,11 +1533,11 @@ def test_a_size_being_counted_shows_its_bytes_so_far(
     worker.holding = True
     page.count_sizes()
     assert tool.status_label.text() == "DESK-03 · calculating sizes: 0 of 5"
-    worker.held.pop(0)()  # rui's count ran to its end: 3 GB
-    worker.held[0]()  # the next one is under way; run it again below to hear from it
+    worker.held.pop(0)()
+    worker.held[0]()
     name = next(user for user in heard if user != RUI.user)
-    heard[name](2 * GB)  # its count reports from its own thread: 2 GB so far
-    page._show_so_far()  # what the ticker does every moment
+    heard[name](2 * GB)
+    page._show_so_far()
     sizes = [row[panels.SIZE] for row in page.table.texts()]
     assert "2.0 GB…" in sizes and "3.0 GB" in sizes
     assert tool.status_label.text().startswith("DESK-03 · calculating sizes: ")
@@ -1607,15 +1553,15 @@ def test_space_and_a_double_click_tick_the_row_the_keyboard_is_on(window: CapyWi
     space = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
     QApplication.sendEvent(tree, space)
     assert page.ticked() == [RUI]
-    QApplication.sendEvent(tree, space)  # again: unticked
+    QApplication.sendEvent(tree, space)
     assert page.ticked() == []
     item = tree.currentItem()
     assert item is not None
     tree.itemDoubleClicked.emit(item, panels.USER)
     assert page.ticked() == [RUI]
-    tree.itemDoubleClicked.emit(item, panels.TICK)  # on the box: its own clicks did it
+    tree.itemDoubleClicked.emit(item, panels.TICK)
     assert page.ticked() == [RUI]
-    _pick_row(page, "EXAMPLE\\ana")  # in use: no box, so nothing to tick
+    _pick_row(page, "EXAMPLE\\ana")
     QApplication.sendEvent(tree, space)
     assert page.ticked() == [RUI]
 
@@ -1627,7 +1573,6 @@ def _row_item(page: HostPage, user: str) -> QTreeWidgetItem:
 
 
 def _box(tree: QTreeWidget, item: QTreeWidgetItem) -> QPoint:
-    """The middle of a row's tick box, as the table's style places it."""
     option = QStyleOptionViewItem()
     option.initFrom(tree)
     row = tree.visualItemRect(item)
@@ -1666,25 +1611,25 @@ def test_space_ticks_every_selected_row_or_unticks_them_when_all_are_ticked(
     page.table.ticked_changed.connect(lambda: heard.append(True))
     _pick_row(page, "EXAMPLE\\rui")
     QTest.keyClick(tree, Qt.Key.Key_Down, Qt.KeyboardModifier.ShiftModifier)
-    assert len(tree.selectedItems()) == 2  # Shift and the arrows pick several rows
-    for user in ("EXAMPLE\\ana", "marta.old  (unknown)"):  # in use, so no box; and one more
+    assert len(tree.selectedItems()) == 2
+    for user in ("EXAMPLE\\ana", "marta.old  (unknown)"):
         _row_item(page, user).setSelected(True)
     space = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
     QApplication.sendEvent(tree, space)
-    assert page.ticked() == [RUI, BIA, MARTA] and heard == [True]  # one signal for the three
+    assert page.ticked() == [RUI, BIA, MARTA] and heard == [True]
     page.table.tick(BIA.ident, False)
-    QApplication.sendEvent(tree, space)  # one of them unticked: all three ticked again
+    QApplication.sendEvent(tree, space)
     assert page.ticked() == [RUI, BIA, MARTA]
-    QApplication.sendEvent(tree, space)  # all ticked: all unticked
+    QApplication.sendEvent(tree, space)
     assert page.ticked() == []
     picked = {item.text(panels.USER) for item in tree.selectedItems()}
     current = page.table.selected()
-    page.filters.hide_own.setChecked(not page.filters.hide_own.isChecked())  # the rows again
+    page.filters.hide_own.setChecked(not page.filters.hide_own.isChecked())
     assert {item.text(panels.USER) for item in tree.selectedItems()} == picked
     assert current is not None and page.table.selected() == current
     control = Qt.KeyboardModifier.ControlModifier
     QApplication.sendEvent(tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, control, " "))
-    assert page.ticked() == []  # Ctrl+Space only takes the row out of the selection
+    assert page.ticked() == []
     assert len(tree.selectedItems()) == len(picked) - 1
 
 
@@ -1700,7 +1645,7 @@ def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc
     assert card is not None and card.heading.text() == "PowerShell couldn't start on your PC"
     assert "An antivirus may block it." in card.body.text()
     assert _tool(window).status_label.text() == "DESK-03 · PowerShell blocked on your PC"
-    assert [b.text() for b in card.buttons] == ["Try again"]  # another account won't help
+    assert [b.text() for b in card.buttons] == ["Try again"]
     assert "antivirus" in facts_error_text(blocked) and "antivirus" in reason_text(blocked)
     assert (
         "on DESK-03 to read" not in card.body.text()
@@ -1712,7 +1657,7 @@ def test_a_date_windows_cant_show_in_local_time_never_breaks_a_view() -> None:
     from capypanel.ui import checks
 
     ancient = datetime(1601, 1, 1, tzinfo=UTC)  # what a zeroed registry time reads as
-    assert checks.local(ancient) == ancient  # left as it is, no crash
+    assert checks.local(ancient) == ancient
     assert rows.date_text(ancient) in ("01/01/1601",)
     assert rows.date_text(datetime(2025, 3, 11, 12, tzinfo=UTC)) == "03/11/2025"
 

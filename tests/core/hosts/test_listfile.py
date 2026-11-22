@@ -50,16 +50,16 @@ def test_round_trip_keeps_everything_including_unknown_keys(tmp_path: Path) -> N
 
 def test_a_list_says_its_kind_and_another_kind_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "printers.json"
-    _write(path, EXAMPLE)  # no kind: from before 0.20, so a host list
+    _write(path, EXAMPLE)
     assert listfile.load(path).kind == "hosts"
     loaded = listfile.load(path)
     listfile.save(path, loaded.hosts, expected=loaded.stamp, kind="printers")
     assert json.loads(path.read_text(encoding="utf-8"))["kind"] == "printers"
     with pytest.raises(HostListKindError) as refused:
-        listfile.load(path)  # a host list is asked for
+        listfile.load(path)
     assert refused.value.kind == "printers"
     assert listfile.load(path, "printers").hosts.host("h7") is not None
-    assert listfile.load(path, None).kind == "printers"  # any kind
+    assert listfile.load(path, None).kind == "printers"
 
 
 def test_file_with_a_bom_opens(tmp_path: Path) -> None:
@@ -73,7 +73,7 @@ def test_file_with_a_bom_opens(tmp_path: Path) -> None:
     [
         "{ not json",
         [1, 2],
-        {"groups": [], "hosts": []},  # no schema
+        {"groups": [], "hosts": []},
         {"schema": "1"},
         {"schema": 1, "hosts": {}},
         {"schema": 1, "groups": [{"id": "g1", "name": "A"}, {"id": "g1", "name": "B"}]},
@@ -118,7 +118,7 @@ def test_save_refuses_when_someone_else_changed_the_file(tmp_path: Path) -> None
     path = tmp_path / "hosts.json"
     _write(path, EXAMPLE)
     mine = listfile.load(path)
-    _write(path, {**EXAMPLE, "hosts": []})  # a colleague saves in the meantime
+    _write(path, {**EXAMPLE, "hosts": []})
     theirs = path.read_bytes()
     with pytest.raises(HostListChangedError):
         listfile.save(path, mine.hosts, expected=mine.stamp)
@@ -137,12 +137,12 @@ def test_saving_leaves_no_temp_files_and_returns_the_new_stamp(tmp_path: Path) -
     stamp = listfile.save(path, HostList(), expected=None)
     assert [p.name for p in path.parent.iterdir()] == ["hosts.json"]
     assert listfile.stamp_of(path) == stamp
-    listfile.save(path, HostList(), expected=stamp)  # saving again with the fresh stamp works
+    listfile.save(path, HostList(), expected=stamp)
 
 
 def test_can_write(tmp_path: Path) -> None:
     path = tmp_path / "hosts.json"
-    assert listfile.can_write(path)  # new file in a writable folder
+    assert listfile.can_write(path)
     _write(path, EXAMPLE)
     os.chmod(path, stat.S_IREAD)  # read-only attribute on Windows
     try:
@@ -172,6 +172,6 @@ def test_hosts_with_no_group_are_saved_and_loaded(tmp_path: Path) -> None:
     listfile.save(path, hl, expected=None)
     assert listfile.load(path).hosts.host(free.id).group == NO_GROUP  # type: ignore[union-attr]
     data = json.loads(path.read_text(encoding="utf-8"))
-    del data["hosts"][0]["group"]  # written by hand, without the field: no group too
+    del data["hosts"][0]["group"]
     path.write_text(json.dumps(data), encoding="utf-8")
     assert listfile.load(path).hosts.hosts[0].group == NO_GROUP

@@ -28,7 +28,7 @@ def test_a_signature_is_checked_against_the_message_with_zeros_in_its_place() ->
     signed = usm.signed(keys, message, 4)
     assert signed != message and len(signed) == len(message)
     assert usm.verified(keys, signed, 4)
-    assert not usm.verified(keys, signed[:-1] + b"X", 4)  # changed in transit
+    assert not usm.verified(keys, signed[:-1] + b"X", 4)
     other = usm.keys(usm.Account("sample", usm.Auth.SHA256, "auth-pass-2"), RFC_ENGINE)
     assert not usm.verified(other, signed, 4)
 

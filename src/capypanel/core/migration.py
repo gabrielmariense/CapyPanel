@@ -1,4 +1,4 @@
-"""One-time copies from older file layouts, never moves: an older version still finds its files."""
+"""Copies, never moves: an older version still finds its files."""
 
 import ctypes
 import logging
@@ -12,12 +12,11 @@ from capypanel.core import files, settings
 from capypanel.core.hosts import locations
 
 log = logging.getLogger(__name__)
-HOSTS = "hosts"  # the Hosts tool's id: every list before 0.20 was a host list
+HOSTS = "hosts"
 
 
 def _lists_into_tool_folders(paths: settings.Paths) -> list[str]:
-    """0.19's lists were all host lists: they're copied once into Hosts' folders, with the settings
-    that name them. A folder this user can't create is left for someone who can."""
+    """0.19's lists were all host lists: copied once into Hosts' folders, settings included."""
     hosts = paths.lists(HOSTS)
     pairs: list[tuple[Path, Path]] = []
     for old_dir, new_dir in (
@@ -39,7 +38,7 @@ def _lists_into_tool_folders(paths: settings.Paths) -> list[str]:
             log.warning("Couldn't copy the lists in %s to %s: %s", old_dir, new_dir, e)
     if pairs and paths.settings_file.exists():
         prefs = settings.load_settings(paths.settings_file)
-        section = settings.tool_prefs(prefs, HOSTS, inherit=True)  # 0.19's keys stay as they were
+        section = settings.tool_prefs(prefs, HOSTS, inherit=True)
         for old, new in pairs:
             _repoint(section, old, new)
         settings.save_settings(paths.settings_file, prefs)
@@ -49,7 +48,6 @@ def _lists_into_tool_folders(paths: settings.Paths) -> list[str]:
 def old_files(
     paths: settings.Paths, env: Mapping[str, str] | None = None, documents: Path | None = None
 ) -> tuple[Path, Path]:
-    """Where 0.1 development builds kept the settings file and the personal list."""
     if paths.portable:
         return paths.root / "settings.json", paths.root / "hosts.json"
     env = os.environ if env is None else env
@@ -63,13 +61,12 @@ def old_files(
 def migrate(
     paths: settings.Paths, env: Mapping[str, str] | None = None, documents: Path | None = None
 ) -> list[str]:
-    """Copies old files the new folder doesn't have yet; returns what was copied, for the log."""
     copied = _lists_into_tool_folders(paths)
     copied += _lists_into_folders(paths)
     old_settings, old_list = old_files(paths, env, documents)
     hosts = paths.lists(HOSTS)
     moves = [(old_settings, paths.settings_file)]
-    if not paths.portable:  # there, the old place is the default list's before 0.19
+    if not paths.portable:
         moves.append((old_list, hosts.personal))
     for old, new in moves:
         if old.is_file() and not new.exists():
@@ -77,7 +74,6 @@ def migrate(
             shutil.copy2(old, new)
             copied.append(f"{old} -> {new}")
     if copied and paths.settings_file.exists():
-        # Recent lists and the start choice may name the old personal list: point them here.
         prefs = settings.load_settings(paths.settings_file)
         recent = [
             hosts.personal if locations.same_path(p, old_list) else p
@@ -92,8 +88,7 @@ def migrate(
 
 
 def _lists_into_folders(paths: settings.Paths) -> list[str]:
-    """Before 0.19 the default and personal lists were hosts.json files beside the lists folders:
-    copied once into Hosts' folders with the settings that name them, unless 0.19 already did."""
+    """Before 0.19, the default and personal lists were hosts.json beside the lists folders."""
     hosts = paths.lists(HOSTS)
     pairs = [
         (paths.root / "hosts.json", hosts.default, paths.lists_dir / "default.json"),
@@ -116,8 +111,6 @@ def _lists_into_folders(paths: settings.Paths) -> list[str]:
 
 
 def _repoint(prefs: dict[str, object], old: Path, new: Path) -> None:
-    """Recent, added and hidden lists, the start choice and what each list shows first: from
-    `old` to `new`."""
     for key in (locations.RECENT_KEY, locations.LISTS_KEY, locations.HIDDEN_KEY):
         value = prefs.get(key)
         if isinstance(value, list):
@@ -137,8 +130,6 @@ def _repoint(prefs: dict[str, object], old: Path, new: Path) -> None:
 
 
 def documents_dir() -> Path:
-    """The real Documents folder, which may be redirected (OneDrive, a server share)."""
-
     class GUID(ctypes.Structure):
         _fields_ = [
             ("Data1", wintypes.DWORD),

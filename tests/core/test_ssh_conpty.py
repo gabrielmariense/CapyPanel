@@ -1,5 +1,3 @@
-"""A pseudo console from each engine, with Windows' cmd.exe and timeout.exe; no network."""
-
 import ctypes
 import json
 import logging
@@ -22,23 +20,21 @@ from capypanel.core.ssh.screen import TermScreen, TermStream
 
 SYSTEM32 = Path(os.environ.get("SYSTEMROOT") or r"C:\Windows") / "System32"
 CMD = str(SYSTEM32 / "cmd.exe")
-CMD_ENV = {**os.environ, "PROMPT": "$P$G"}  # each prompt line ends with ">"
-# Windows' own timeout.exe by its whole path: one earlier on PATH (Git's) refuses /t and ends
+CMD_ENV = {**os.environ, "PROMPT": "$P$G"}
+# Windows' own timeout.exe: Git's, earlier on PATH, refuses /t and ends at once.
 WAIT_A_MINUTE = f'"{SYSTEM32 / "timeout.exe"}" /t 60 /nobreak\r'.encode()
-VERSION = re.compile(r"Windows.*\d+\.\d+\.\d+")  # what ver prints, in any language
+VERSION = re.compile(r"Windows.*\d+\.\d+\.\d+")
 CELLS_CHILD = Path(__file__).resolve().parent.parent / "helpers" / "console_cells.py"
-FLAGS = ["\U0001f1e7", "\U0001f1e7\U0001f1f7\U0001f1e7", "x\U0001f1e7y"]  # halves of flags
+FLAGS = ["\U0001f1e7", "\U0001f1e7\U0001f1f7\U0001f1e7", "x\U0001f1e7y"]
 
 
 def _carried() -> Engine:
     engine = conpty.carried_engine()
-    assert engine is not None  # vendor/conpty comes with CapyPanel
+    assert engine is not None
     return engine
 
 
 class Run:
-    """One program on a pseudo console, its output drawn on a screen on the test's thread."""
-
     def __init__(self, argv: list[str], *, columns: int = 100, rows: int = 30, **kw) -> None:
         self.ended = threading.Event()
         self.screen = TermScreen(columns, rows)
@@ -77,13 +73,12 @@ def engine(request: pytest.FixtureRequest) -> Engine:
 
 @pytest.fixture
 def runs(engine: Engine) -> Iterator[Callable[..., Run]]:
-    """Starts programs on the engine and closes every one at the end, whatever the test found."""
     started: list[Run] = []
 
     def start(argv: list[str], **kw) -> Run:
         run = Run(argv, engine=engine, **kw)
         started.append(run)
-        assert run.console.engine is engine  # it started: nothing took over
+        assert run.console.engine is engine
         return run
 
     yield start
@@ -94,7 +89,7 @@ def runs(engine: Engine) -> Iterator[Callable[..., Run]]:
 def test_typed_keys_reach_cmd_and_its_answer_comes_back(runs: Callable[..., Run]) -> None:
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
-    before = len(run.lines())  # the banner holds a version too
+    before = len(run.lines())
     run.console.write(b"ver\r")
     assert run.until(lambda: any(VERSION.search(line) for line in run.lines()[before:]))
     run.console.write(b"exit\r")
@@ -115,7 +110,7 @@ def test_ctrl_c_stops_what_cmd_runs_and_cmd_carries_on(runs: Callable[..., Run])
     run.console.write(WAIT_A_MINUTE)
     assert run.until(lambda: bool(_children(run.console.pid, "timeout.exe")))
     time.sleep(0.3)  # timeout reads its arguments and starts counting
-    assert _children(run.console.pid, "timeout.exe")  # it counts: nothing stopped it yet
+    assert _children(run.console.pid, "timeout.exe")
     run.console.write(b"\x03")
     assert run.until(
         lambda: not _children(run.console.pid, "timeout.exe") and run.prompts() == 1, seconds=10
@@ -151,7 +146,7 @@ def test_a_flood_waits_for_its_reader(runs: Callable[..., Run]) -> None:
         time.sleep(0.05)
     time.sleep(0.5)  # time for anything the bound would let through
     assert bound <= run.console.pending <= bound + one_read
-    assert not run.ended.is_set()  # cmd waits for the reader
+    assert not run.ended.is_set()
     assert run.until(run.ended.is_set, seconds=60)
     run.console.close()
     assert run.until(lambda: run.console.at_eof, seconds=10)
@@ -213,7 +208,7 @@ def test_a_carried_engine_left_out_or_broken_leaves_windows_own(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     monkeypatch.setattr(conpty, "_windows_build", lambda: 19045)
-    monkeypatch.setattr(conpty, "CARRIED_DIR", tmp_path)  # empty: a build that left it out
+    monkeypatch.setattr(conpty, "CARRIED_DIR", tmp_path)
     monkeypatch.setattr(conpty, "_carried", [])
     with caplog.at_level(logging.WARNING, logger=conpty.__name__):
         assert conpty.default_engine() is conpty.WINDOWS
@@ -293,7 +288,6 @@ _k32.CloseHandle.argtypes = (wt.HANDLE,)
 
 
 def _children(pid: int, name: str) -> list[int]:
-    """The programs called `name` (in lower case) that `pid` started."""
     snapshot = _k32.CreateToolhelp32Snapshot(_SNAPPROCESS, 0)
     found = []
     try:

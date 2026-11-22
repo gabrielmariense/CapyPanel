@@ -1,5 +1,3 @@
-"""Settings › Printers › Warnings and supplies: the Warnings table, one row per reason."""
-
 from PySide6.QtCore import (
     QAbstractItemModel,
     QEvent,
@@ -30,7 +28,7 @@ from capypanel.ui.notes import notes
 from capypanel.ui.printers_tool.status import DEFAULT_REASONS, Reason
 from capypanel.ui.tables import grid_table, with_buttons
 
-HERE, NOTIFY = 1, 2  # the tick columns
+HERE, NOTIFY = 1, 2
 _REASON = Qt.ItemDataRole.UserRole
 
 
@@ -43,9 +41,6 @@ def _tips() -> dict[Reason, str]:
 
 
 class CentredTick(QStyledItemDelegate):
-    """The theme's own tick box in the middle of its cell; a click anywhere on the cell, or
-    Space on it, ticks or unticks it."""
-
     def paint(
         self,
         painter: QPainter,
@@ -97,21 +92,16 @@ class CentredTick(QStyledItemDelegate):
 
 
 class WarningsTable(QWidget):
-    """The note, the table shown whole (fixed choices: the page scrolls, not the table) and
-    Restore default, greyed while the default ticks are what's ticked."""
-
     changed = Signal()
 
     def __init__(self, here: frozenset[Reason], notify: frozenset[Reason]) -> None:
         super().__init__()
         self.table = table = grid_table([_("Reason"), _("In CapyPanel"), _("Windows notification")])
         table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectItems
-        )  # Space ticks a cell
+        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
         head = table.headerItem()
         delegate = CentredTick(table)
-        for column in (HERE, NOTIFY):  # no tips on the titles
+        for column in (HERE, NOTIFY):
             head.setTextAlignment(column, Qt.AlignmentFlag.AlignCenter)
             table.setItemDelegateForColumn(column, delegate)
         words = {reason: reason.words() for reason in Reason}
@@ -125,7 +115,6 @@ class WarningsTable(QWidget):
         self._tick(here, notify, say=False)
         header = table.header()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        # Both tick columns as wide as the wider title, so the ticks sit in two even columns.
         widest = max(header.fontMetrics().horizontalAdvance(head.text(c)) for c in (HERE, NOTIFY))
         for column in (HERE, NOTIFY):
             header.setSectionResizeMode(column, QHeaderView.ResizeMode.Fixed)
@@ -164,7 +153,6 @@ class WarningsTable(QWidget):
         return self._ticked_in(NOTIFY)
 
     def _tick(self, here: frozenset[Reason], notify: frozenset[Reason], say: bool = True) -> None:
-        """Sets every tick, then says it changed once (`say`)."""
         self.table.blockSignals(True)
         for reason, item in self._rows():
             for column, chosen in ((HERE, here), (NOTIFY, notify)):

@@ -17,8 +17,6 @@ def reachable(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)
 def through_powershell(monkeypatch: pytest.MonkeyPatch) -> None:
-    """These tests answer for the PowerShell way (a fake powershell.exe); the direct way has its
-    own, in test_wmi.py."""
     monkeypatch.setattr(inventory, "transport", inventory.POWERSHELL)
 
 
@@ -31,7 +29,7 @@ def test_this_pcs_space_and_last_restart_read_with_the_real_api(reachable: None)
 
 
 def test_this_pcs_facts_read_over_wmi(reachable: None) -> None:
-    facts = inventory.pc_facts("localhost")  # checks the PowerShell script really runs
+    facts = inventory.pc_facts("localhost")
     assert facts.windows.startswith("Windows") and facts.memory > 0
     assert facts.build.split(".")[0].isdigit()
 
@@ -75,13 +73,13 @@ def test_programs_are_cleaned_sorted_and_listed_once(
     entry = {"DisplayName": " Zip tool ", "DisplayVersion": "2.1", "Publisher": "SAMPLE"}
     answer = [
         {**entry, "InstallDate": "20260115"},
-        {**entry, "InstallDate": "15/01/2026"},  # the same, from the 32-bit list
+        {**entry, "InstallDate": "15/01/2026"},
         {"DisplayName": "archive viewer"},
     ]
     monkeypatch.setattr(inventory.subprocess, "run", FakePowerShell(answer))
     assert inventory.installed_programs("192.0.2.10") == [
         inventory.Program("archive viewer", "", "", None),
-        inventory.Program("Zip tool", "2.1", "SAMPLE", None),  # the later one's unreadable date
+        inventory.Program("Zip tool", "2.1", "SAMPLE", None),
     ]
     one = inventory._program({**entry, "InstallDate": "20260115"})
     assert one.installed == date(2026, 1, 15)
@@ -136,5 +134,5 @@ def test_a_wmi_run_that_hangs_gives_up(monkeypatch: pytest.MonkeyPatch, reachabl
 
 def test_an_unreachable_host_is_never_asked() -> None:
     with pytest.raises(RemoteError) as caught:
-        inventory.disk_space("192.0.2.1")  # a documentation address: never a real host
+        inventory.disk_space("192.0.2.1")
     assert caught.value.reason is Reason.UNREACHABLE

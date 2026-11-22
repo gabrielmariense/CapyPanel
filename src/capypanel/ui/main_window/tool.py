@@ -1,5 +1,3 @@
-"""A tool the shell shows (Hosts, Printers…), and what a tool can ask of the shell."""
-
 import functools
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol
 
@@ -21,7 +19,7 @@ if TYPE_CHECKING:
 
 class Shell(Protocol):
     paths: settings.Paths
-    prefs: dict[str, Any]  # every saved setting; save_prefs() writes them
+    prefs: dict[str, Any]
 
     def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]: ...
 
@@ -29,48 +27,28 @@ class Shell(Protocol):
 
     def open_settings(self, page: str | None = None) -> None: ...
 
-    def show_message(self, text: str, timeout: int = 5000) -> None:
-        """A short note in the status bar."""
-        ...
+    def show_message(self, text: str, timeout: int = 5000) -> None: ...
 
-    def kept_logins(self) -> list["KeptLogin"]:
-        """Every tool's."""
-        ...
+    def kept_logins(self) -> list["KeptLogin"]: ...
 
     def open_saved_credentials(self, parent: QWidget | None = None) -> None: ...
 
-    def quit_app(self) -> None:
-        """Quit CapyPanel with no question (a tool that held the quit lets it go on)."""
-        ...
+    def quit_app(self) -> None: ...
 
-    def tool(self, tool_id: str) -> "Tool | None":
-        """Another tool of the window, for a tool that builds on it (Profile cleanup reads Hosts'
-        lists); None when the window has no such tool."""
-        ...
+    def tool(self, tool_id: str) -> "Tool | None": ...
 
-    def show_tool(self, tool_id: str) -> bool:
-        """Show another tool, its first-use warning first: False when that was cancelled."""
-        ...
+    def show_tool(self, tool_id: str) -> bool: ...
 
-    def fills_now(self, tool_id: str) -> bool:
-        """Whether the tool fills its lists now: not while the window is being built, nor while
-        another tool is shown. One that waited fills them in came_to_front()."""
-        ...
+    def fills_now(self, tool_id: str) -> bool: ...
 
 
 class ToolKind(Protocol):
-    """A tool class, as the tool catalog lists it: made from the shell, and able to prepare its
-    files."""
-
     def __call__(self, shell: Shell) -> "Tool": ...
 
     def prepare(self, paths: settings.Paths) -> None: ...
 
 
 class StatusLabel(QLabel):
-    """A tool's text in the status bar. `clicked` lets a tool do something with it: the list
-    tools copy their list's path."""
-
     clicked = Signal()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -81,21 +59,17 @@ class StatusLabel(QLabel):
 
 
 def _take_along(toolbar: ToolBar) -> None:
-    """Connected to a tool's `destroyed`: its toolbar goes with it, at once. A tool built alone (the
-    tests) left it behind otherwise, and the next theme switch read a deleted command's key."""
+    """Its toolbar goes with it: left behind, the next theme switch read a deleted command's key."""
     if shiboken6.isValid(toolbar):
         shiboken6.delete(toolbar)
 
 
 class Tool(QWidget):
-    """What a tool gives the shell: itself, its toolbar, rail icon, View items, status bar text and
-    window title. Its settings are its own section of the settings file (self.prefs)."""
-
-    TOOL_ID: ClassVar[str] = ""  # its settings section and Settings pages are named after it
-    ICON: ClassVar[str] = ""  # a Tabler icon, for the rail
-    HELP_PLACE: ClassVar[str] = ""  # where F1 opens the docs while it's shown (help_links)
-    INHERITS_TOP_LEVEL: ClassVar[bool] = False  # Hosts: 0.19 kept its settings at the top
-    title_changed = Signal(str)  # the window title's first part, or "" for none
+    TOOL_ID: ClassVar[str] = ""
+    ICON: ClassVar[str] = ""
+    HELP_PLACE: ClassVar[str] = ""
+    INHERITS_TOP_LEVEL: ClassVar[bool] = False
+    title_changed = Signal(str)
     badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
     notify_requested = Signal(str, str)  # a Windows notification: its title and text
 
@@ -105,102 +79,80 @@ class Tool(QWidget):
         self.prefs = shell.tool_prefs(self.TOOL_ID, inherit=self.INHERITS_TOP_LEVEL)
         self.toolbar = toolbar
         self.destroyed.connect(functools.partial(_take_along, toolbar))
-        # The shell shows it in its status bar, on the left.
         self.status_label = StatusLabel()
         self.status_label.setContentsMargins(spacing.CONTROLS, 0, spacing.CONTROLS, 0)
 
     @classmethod
     def prepare(cls, paths: settings.Paths) -> None:
-        """At start, before any window: files the tool needs to exist (e.g. its starters)."""
+        pass
 
     def tool_name(self) -> str:
         raise NotImplementedError
 
     def help_place(self) -> str:
-        """Where F1 opens the docs while it's shown: its HELP_PLACE, a place in help_links."""
         return self.HELP_PLACE
 
     def menu_name(self) -> str:
-        """Its name in View, with an access key: "&Hosts"."""
         raise NotImplementedError
 
     def title(self) -> str:
-        """The window title's first part (the open list's name), or "" for none."""
         return ""
 
     def attention_text(self, n: int) -> str:
-        """What its rail count means, "3 printers need attention", for tooltips and the tray."""
         return ""
 
     def show_attention(self) -> None:
-        """Lists just the items that need attention (the tray's menu asks for it)."""
+        pass
 
     def guide(self) -> "Guide | None":
-        """Its first-run guide (ui/guides.py), shown the first time the tool is: its own first
-        steps only, never what Home's guide says about every tool."""
         return None
 
     def first_use_pending(self) -> bool:
         return False
 
     def first_use_warning(self, parent: QWidget) -> bool:
-        """Before the tool is shown for the first time ever: False keeps it closed. A tool
-        that can do harm says so here (Profile cleanup)."""
         return True
 
     def came_to_front(self) -> None:
-        """Shown now: the lists it left unfilled meanwhile (the shell's fills_now) get filled."""
+        pass
 
     def working(self) -> bool:
-        """Whether it's in the middle of something an update must not cut off (a Refresh):
-        "Install and restart" waits for it to end."""
         return False
 
     def works_in_background(self) -> bool:
-        """Whether it does something on its own (Refresh on its own), worth keeping CapyPanel
-        running in the tray for when the window closes."""
         return False
 
     def kept_logins(self) -> list["KeptLogin"]:
-        """The logins it keeps (typed passwords, accounts), for Saved credentials."""
         return []
 
     def status_widgets(self) -> list[QWidget]:
-        """Shown on the right of the status bar while the tool is."""
         return []
 
     def view_actions(self) -> list[list[QAction]]:
-        """The tool's part of the View menu, in groups split by lines."""
         return []
 
     def settings_group(self) -> SettingsGroup | None:
-        """Its part of Settings, under its name in the page list."""
         return None
 
     def key_commands(self) -> list["KeyCommand"]:
-        """The commands of its own a key can run, in menu order, for Settings › Keyboard
-        shortcuts; each with the key it has now as its default."""
         return []
 
     def save_state(self) -> None:
-        """When the window closes."""
+        pass
 
     def quit_question(self, parent: QWidget) -> bool:
-        """Before CapyPanel quits; False keeps it running (the tool is in the middle of
-        something it asked about)."""
         return True
 
     def retranslate(self) -> None:
         pass
 
     def restyle(self) -> None:
-        """After a theme switch."""
         self.toolbar.restyle()
         self.align_toolbar_later()
 
     def align_toolbar_later(self) -> None:
         # Tied to this widget, so a call still pending when it closes is dropped, not run.
-        QTimer.singleShot(0, self, self._align_toolbar)  # once the panels have their sizes
+        QTimer.singleShot(0, self, self._align_toolbar)
 
     def _align_toolbar(self) -> None:
         if self.toolbar.isVisible():
@@ -209,5 +161,4 @@ class Tool(QWidget):
             self.toolbar.align(left - start)
 
     def toolbar_anchor(self) -> QWidget:
-        """The widget the toolbar's first button lines up with."""
         return self

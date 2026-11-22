@@ -1,5 +1,3 @@
-"""Sessions on a PC, read and acted on over WTS: nothing runs there, and any language works."""
-
 import ctypes
 import logging
 from collections.abc import Callable
@@ -16,16 +14,14 @@ log = logging.getLogger(__name__)
 class Session:
     user: str
     domain: str
-    kind: str  # "console", "rdp" or "unknown" (a disconnected session's type is gone)
-    state: str  # "active", "disconnected", …
+    kind: str
+    state: str
     logon_time: datetime | None
-    client: str = ""  # the RDP client's computer name, when there is one
-    session_id: int = -1  # Windows' number for it on that host, for Log off and the like
+    client: str = ""
+    session_id: int = -1
 
 
 def read_sessions(host: str | None, account: Account | None = None) -> list[Session]:
-    """The logged-on sessions of `host` (None: this PC). Sessions with no user (services, the
-    listening RDP stack) aren't logons and are left out. Raises RemoteError."""
     if host is not None:
         check_reachable(host)
     with as_account(account):
@@ -33,21 +29,16 @@ def read_sessions(host: str | None, account: Account | None = None) -> list[Sess
 
 
 def log_off(host: str, session_id: int, account: Account | None = None) -> None:
-    """Signs the session out; its open programs close without saving. Raises RemoteError."""
     _act(host, account, lambda server: _wts.WTSLogoffSession(server, session_id, False))
 
 
 def disconnect(host: str, session_id: int, account: Account | None = None) -> None:
-    """Disconnects the session: its programs keep running and the user can come back to them.
-    Raises RemoteError."""
     _act(host, account, lambda server: _wts.WTSDisconnectSession(server, session_id, False))
 
 
 def send_message(
     host: str, session_id: int, title: str, text: str, account: Account | None = None
 ) -> None:
-    """Pops up `text` in the session, with an OK button; doesn't wait for the user to read it.
-    Raises RemoteError."""
     style = 0x40 | 0x40000  # an information icon, kept above the user's windows
     answer = wintypes.DWORD()
 
@@ -61,7 +52,6 @@ def send_message(
 
 
 def _act(host: str, account: Account | None, call: Callable[[int], bool]) -> None:
-    """Runs `call` with an open handle to `host`'s session API."""
     check_reachable(host)
     with as_account(account):
         server = _wts.WTSOpenServerW(host)
@@ -112,7 +102,6 @@ class _InfoEx1(ctypes.Structure):
 
 
 class _InfoEx(ctypes.Structure):
-    # A DWORD level, a 4-byte gap, then the 8-byte-aligned data.
     _fields_ = [("Level", ctypes.c_int), ("Reserved", ctypes.c_int), ("Data", _InfoEx1)]
 
 
@@ -143,7 +132,9 @@ _wts.WTSSendMessageW.argtypes = [
 
 
 def _enumerate(host: str | None) -> list[Session]:
-    server = _wts.WTSOpenServerW(host) if host else wintypes.HANDLE(0).value  # 0: this PC
+    server = (
+        _wts.WTSOpenServerW(host) if host else wintypes.HANDLE(0).value
+    )  # 0 is WTS_CURRENT_SERVER_HANDLE: this PC
     if host and not server:
         raise last_error()
     try:
@@ -172,7 +163,6 @@ def _enumerate(host: str | None) -> list[Session]:
                         session_id=info.SessionId,
                     )
                 )
-            # Every session Windows listed (no names), to explain a user that didn't show up.
             log.info("Sessions on %s: %s", host or "this PC", " ".join(seen))
             return found
         finally:

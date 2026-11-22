@@ -1,5 +1,3 @@
-"""Restarting or shutting down another PC as `shutdown /m` does: nothing runs there."""
-
 import ctypes
 from ctypes import wintypes
 
@@ -11,26 +9,21 @@ from capypanel.core.remote.access import (
     last_error,
 )
 
-MAX_DELAY = 15 * 60  # seconds: the Restart window's longest wait; longer is better planned
+MAX_DELAY = 15 * 60  # seconds
 # "Other (Planned)": what `shutdown /m` reports when given no reason.
 _PLANNED = 0x80000000
 _IN_PROGRESS, _NONE_PENDING = 1115, 1116
 
 
 def restart(host: str, delay: int = 0, message: str = "", account: Account | None = None) -> None:
-    """Restarts `host` after `delay` seconds, showing `message` to its users meanwhile. Open
-    programs close without saving. Raises RemoteError."""
     _shut_down(host, delay, message, True, account)
 
 
 def shut_down(host: str, delay: int = 0, message: str = "", account: Account | None = None) -> None:
-    """Turns `host` off after `delay` seconds; like restart(). Raises RemoteError."""
     _shut_down(host, delay, message, False, account)
 
 
 def cancel(host: str, account: Account | None = None) -> bool:
-    """Cancels a restart or shutdown still waiting on `host`. False when none was waiting.
-    Raises RemoteError."""
     check_reachable(host)
     with as_account(account):
         if _advapi32.AbortSystemShutdownW(f"\\\\{host}"):
@@ -42,7 +35,6 @@ def cancel(host: str, account: Account | None = None) -> bool:
 
 
 def already_pending(error: RemoteError) -> bool:
-    """Whether a restart or shutdown failed because another one is already on its way."""
     return error.code == _IN_PROGRESS
 
 

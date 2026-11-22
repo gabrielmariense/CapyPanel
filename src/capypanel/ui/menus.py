@@ -1,5 +1,3 @@
-"""Menu helpers: right-click menus, menus that stay open for ticks, and dimmed shortcuts."""
-
 import math
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, Qt
@@ -15,13 +13,12 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QComboBox, QMenu, QWidget
 
-SHORTCUT_GAP = 4  # spaces kept between an item's text and its shortcut
-SHORTCUT_RIGHT = 12  # px from the menu item's right edge, in line with a submenu's arrow
+SHORTCUT_GAP = 4
+SHORTCUT_RIGHT = 12
 
 
 def popup(menu: QMenu, where: QPoint) -> None:
-    """Shows a right-click menu, then frees it: one is made per click, and each would otherwise
-    stay until CapyPanel closes."""
+    """Freed after: a menu made per click would otherwise stay until CapyPanel closes."""
     menu.exec(where)
     menu.deleteLater()
 
@@ -33,18 +30,15 @@ def shortcut_text(action: QAction) -> str:
 
 
 def label(action: QAction) -> str:
-    """An item's text, without the room kept for its shortcut."""
     return action.text().partition("\t")[0]
 
 
 def plain(text: str) -> str:
-    """Menu text as it reads outside a menu: "Hom&e" is "Home", and "&&" one "&"."""
     return text.replace("&&", "\0").replace("&", "").replace("\0", "&")
 
 
 def keep_room_for_shortcut(menu: QMenu, action: QAction) -> None:
-    """Qt draws a shortcut right after the text, in its colour, where it reads as part of the name:
-    the text ends in a tab and blanks instead, keeping room where ShortcutLayer draws it."""
+    """Qt draws a shortcut right after the text, as if part of it: ShortcutLayer draws it."""
     keys = shortcut_text(action)
     name, tab, room = action.text().partition("\t")
     if not keys or (tab and room and not room.strip()):
@@ -55,9 +49,6 @@ def keep_room_for_shortcut(menu: QMenu, action: QAction) -> None:
 
 
 class ShortcutLayer(QWidget):
-    """Over a menu: each item's shortcut, dimmed and against the right edge, as in Windows'
-    own menus. It lets every click through to the menu."""
-
     def __init__(self, menu: QMenu) -> None:
         super().__init__(menu)
         self.setObjectName("shortcutLayer")
@@ -85,7 +76,6 @@ class ShortcutLayer(QWidget):
             return
         painter = QPainter(self)
         painter.setFont(menu.font())
-        # The text's own colour, half see-through: dim on any background, in every theme.
         dim = QColor(menu.palette().color(QPalette.ColorRole.Text))
         dim.setAlphaF(0.55)
         painter.setPen(dim)
@@ -99,9 +89,6 @@ class ShortcutLayer(QWidget):
 
 
 class MenuCombo(QComboBox):
-    """A dropdown that opens a menu instead of a list, so it can hold submenus and commands, and
-    still looks and sizes like the other dropdowns. Its one item is the text shown."""
-
     def __init__(self) -> None:
         super().__init__()
         self._menu = QMenu(self)
@@ -122,9 +109,6 @@ class MenuCombo(QComboBox):
 
 
 class StayOpenMenu(QMenu):
-    """Ticking a checkable item here toggles it without closing the menu, so several can be
-    switched in one go. Other items and submenus behave as usual."""
-
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         action = self.activeAction()
         if action is not None and action.isCheckable() and action.isEnabled():

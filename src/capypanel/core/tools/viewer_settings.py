@@ -1,5 +1,3 @@
-"""Viewer settings files, emptied of the computer they name; a viewer only gets a copy."""
-
 import codecs
 import logging
 import os
@@ -16,19 +14,16 @@ KEEP_COPY_FOR = 60  # seconds; the viewer reads its settings as it starts
 
 
 class SettingsFileError(ValueError):
-    """The file isn't a viewer settings file; the message says why."""
+    pass
 
 
 def read(path: Path, clear: Collection[str]) -> bytes:
-    """The file's content with the `clear` settings emptied. Raises OSError, SettingsFileError."""
     if path.stat().st_size > MAX_SIZE:
         raise SettingsFileError(_("The file is too big to be viewer settings."))
     return clean(path.read_bytes(), clear)
 
 
 def clean(raw: bytes, clear: Collection[str]) -> bytes:
-    """Empties the value of every `key=value` line whose key is in `clear` (any case, any
-    section). The rest is kept byte for byte, in the file's own encoding."""
     text, encoding = _decode(raw)
     cleared = {key.casefold() for key in clear}
     lines, settings = [], 0
@@ -45,7 +40,6 @@ def clean(raw: bytes, clear: Collection[str]) -> bytes:
 
 
 def temp_copy(content: bytes, extension: str) -> Path:
-    """A copy in this user's own temp folder, deleted a minute later. Raises OSError."""
     handle, name = tempfile.mkstemp(prefix="capypanel-", suffix=extension)
     with os.fdopen(handle, "wb") as f:
         f.write(content)
@@ -67,7 +61,6 @@ def _decode(raw: bytes) -> tuple[str, str]:
 
 
 def _key(line: str) -> str | None:
-    """The key of a `key=value` line; None for blank, comment and [section] lines."""
     stripped = line.strip()
     if not stripped or stripped[0] in ";#" or (stripped[0] == "[" and stripped[-1] == "]"):
         return None
@@ -87,5 +80,5 @@ def _with_value(line: str, value: str) -> str:
 def _delete(path: Path) -> None:
     try:
         path.unlink(missing_ok=True)
-    except OSError as e:  # the viewer still has it open
+    except OSError as e:
         log.info("Couldn't delete %s: %s", path, e)

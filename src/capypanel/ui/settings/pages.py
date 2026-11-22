@@ -1,5 +1,3 @@
-"""The Settings pages: each shows the current values and reports a choice as it's made."""
-
 from collections.abc import Sequence
 from pathlib import Path
 from typing import ClassVar
@@ -38,9 +36,6 @@ from capypanel.ui.themes import engine as themes
 
 
 class Page(QWidget):
-    """A settings page: its sections, one under the other; its title shows in the page list only.
-    `changed` fires on each choice. F1 and the ? open the docs at its HELP_PLACE or `place`."""
-
     HELP_PLACE: ClassVar[str] = ""
     changed = Signal()
 
@@ -54,9 +49,6 @@ class Page(QWidget):
 
 
 class _ScopeTag(QWidget):
-    """ "Everyone on this PC" beside a section's title, with a small computer: the mark of the
-    settings shared by everyone who uses CapyPanel on this PC, the same on every page."""
-
     def __init__(self) -> None:
         super().__init__()
         self.icon = QLabel()
@@ -70,28 +62,25 @@ class _ScopeTag(QWidget):
         self._paint()
 
     def _paint(self) -> None:
-        from capypanel.ui.icons import tabler_icon  # here: Settings opens long after the start
+        from capypanel.ui.icons import tabler_icon
 
         color = self.palette().color(QPalette.ColorRole.PlaceholderText)
         self.icon.setPixmap(tabler_icon("device-desktop", color, 14).pixmap(14, 14))
 
     def changeEvent(self, event: QEvent) -> None:
-        if event.type() == QEvent.Type.PaletteChange:  # a theme switch: its colour follows
+        if event.type() == QEvent.Type.PaletteChange:
             self._paint()
         super().changeEvent(event)
 
 
 class Section(QWidget):
-    """A part of a page: its title, then its settings on a soft rounded card. Lay them out in
-    `content`. A section shared by everyone on this PC is marked with `for_everyone`."""
-
     def __init__(self, title: str) -> None:
         super().__init__()
-        self.heading = heading = QLabel(title)  # also its name in the page list
+        self.heading = heading = QLabel(title)
         heading.setObjectName("sectionTitle")
         self.scope_tag = _ScopeTag()
         self.scope_tag.hide()
-        self.scope_line = notes("")  # who can change it, under the title
+        self.scope_line = notes("")
         self.scope_line.hide()
         title_line = QHBoxLayout()
         title_line.setSpacing(spacing.CONTROLS)
@@ -100,7 +89,7 @@ class Section(QWidget):
         title_line.addStretch(1)
         self.inner = QWidget()
         self.inner.setObjectName("sectionCard")
-        self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # draws the card
+        self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
         self.content = QVBoxLayout(self.inner)
         self.content.setContentsMargins(
             spacing.PANEL, spacing.CONTROLS, spacing.PANEL, spacing.PANEL
@@ -114,8 +103,6 @@ class Section(QWidget):
         column.addWidget(self.inner, 1)
 
     def for_everyone(self, can_change: bool, change_line: str = "") -> None:
-        """Marks it shared by everyone on this PC. The line under the title says what a change does
-        (`change_line` to say more), or why it's greyed and who can, to someone who can't."""
         self.scope_tag.show()
         self.scope_line.setText(
             (change_line or _("A change here reaches everyone on this PC."))
@@ -126,9 +113,6 @@ class Section(QWidget):
 
 
 class SettingRow(QWidget):
-    """A setting: its name over a one-line description, its control at the right end. Every
-    row's control has the same width, so controls line up on both edges down the page."""
-
     CONTROL_WIDTH = 240
 
     def __init__(self, name: str, description: str, control: QWidget) -> None:
@@ -136,12 +120,12 @@ class SettingRow(QWidget):
         self.name = QLabel(name)
         self.name.setObjectName("rowName")
         self.name.setBuddy(control)
-        self.description = notes(description)  # the size of the notes under tables
+        self.description = notes(description)
         words = QVBoxLayout()
         words.setSpacing(2)
         words.addWidget(self.name)
         words.addWidget(self.description)
-        if not isinstance(control, QPushButton):  # a button keeps its own width: it's no value
+        if not isinstance(control, QPushButton):
             control.setFixedWidth(self.CONTROL_WIDTH)
         line = QHBoxLayout(self)
         line.setContentsMargins(0, 4, 0, 4)
@@ -151,7 +135,6 @@ class SettingRow(QWidget):
 
 
 def add_rows(layout: QVBoxLayout, *rows: SettingRow) -> None:
-    """Rows one under the other, a faint line between two."""
     for index, row in enumerate(rows):
         if index:
             line = QFrame()
@@ -165,9 +148,6 @@ def open_folder(folder: Path) -> None:
 
 
 class GeneralPage(Page):
-    """CapyPanel's own page: the theme and language (Appearance), then what the window shows
-    at start and what its X does (Startup and closing). Each applies as soon as it's picked."""
-
     HELP_PLACE = "settings-capypanel-general"
 
     def __init__(
@@ -182,9 +162,7 @@ class GeneralPage(Page):
         registry: themes.Registry,
         theme_id: str,
     ) -> None:
-        """tools: (id, name), in the rail's order."""
         super().__init__(_("General"))
-        # The Windows themes, then the app's own. The window shows the theme picked: no preview.
         self.theme = QComboBox()
         previous = None
         for theme in registry.all():
@@ -193,7 +171,6 @@ class GeneralPage(Page):
             previous = theme.engine
             self.theme.addItem(theme.title(), theme.id)
         self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
-        # Each language is named in its own language, so anyone can find theirs.
         self.language = QComboBox()
         for code, name in i18n.LANGUAGES.items():
             self.language.addItem(name, code)
@@ -267,7 +244,6 @@ class GeneralPage(Page):
         return str(self.updates.currentData())
 
     def show_updates(self, how: str) -> None:
-        """Back to what's saved, when saving the choice failed."""
         self.updates.blockSignals(True)
         self.updates.setCurrentIndex(max(self.updates.findData(how), 0))
         self.updates.blockSignals(False)
@@ -286,11 +262,8 @@ class GeneralPage(Page):
 
 
 class FoldersSection(Section):
-    """Where CapyPanel keeps everything, each folder a click away (at the end of About)."""
-
     def __init__(self, paths: settings.Paths) -> None:
         super().__init__(_("Folders"))
-        # Each list folder sits inside its owner's folder, so three rows cover everything.
         folders = (
             (_("Shared"), paths.root,
              _("For everyone on this PC: connection profiles, remote tools, and the shared lists "
@@ -300,13 +273,12 @@ class FoldersSection(Section):
                "folder for each kind of list.")),
             (_("Logs"), paths.log_dir, _("One per user, named after the account.")),
         )  # fmt: skip
-        # The one table design; a double-click opens the folder too.
         self.folders = grid_table([_("Folder"), _("Where")])
         self.folders.setColumnWidth(0, 170)
-        self.folders.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        self.folders.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         for label, folder, holds in folders:
             item = QTreeWidgetItem([label, str(folder)])
-            item.setToolTip(0, holds)  # what it holds: hover the folder's name
+            item.setToolTip(0, holds)
             item.setToolTip(1, str(folder))
             item.setData(0, Qt.ItemDataRole.UserRole, str(folder))
             self.folders.addTopLevelItem(item)
@@ -331,13 +303,7 @@ class FoldersSection(Section):
             open_folder(Path(item.data(0, Qt.ItemDataRole.UserRole)))
 
 
-# ---- a list tool's General page: its lists ----
-
-
 class ListsGeneralPage(Page):
-    """A list tool's General page: its lists (as in the list dropdown; a double-click opens one),
-    then which opens at start and what it shows first. A tool adds its own with add_section()."""
-
     def __init__(
         self,
         *,
@@ -352,8 +318,6 @@ class ListsGeneralPage(Page):
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
     ) -> None:
-        """start_view: the open list's (show, group); None when no list is open. host_list: that
-        list, for its groups."""
         super().__init__(_("General"))
         self.texts = texts
         self.view = ListsView(
@@ -397,8 +361,6 @@ class ListsGeneralPage(Page):
         index = self.start_list.findData(start_list)
         self.start_list.setCurrentIndex(max(index, 0))
         self.start_list.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        # What the open list shows first, each list its own. One button: its menu has All hosts
-        # (in the tool's words), Where I left off, and "A chosen group" with the groups as a tree.
         self._host_list = host_list
         self._first = start_view or (locations.SHOW_ALL, "")
         self.show_first = MenuCombo()
@@ -464,7 +426,6 @@ class ListsGeneralPage(Page):
         self.changed.emit()
 
     def list_opened(self, start_view: tuple[str, str] | None, host_list: HostList | None) -> None:
-        """Another list is open: Show first is now about it."""
         self._host_list, self._first = host_list, start_view or (locations.SHOW_ALL, "")
         self.show_first.setEnabled(start_view is not None)
         self._show_first_text()
@@ -487,25 +448,18 @@ class ListsGeneralPage(Page):
             self.show_first.setText(labels.get(show, self.texts.everything))
 
     def show_first_choice(self) -> tuple[str, str] | None:
-        """(show, group) for the open list; None when no list is open."""
         return self._first if self.show_first.isEnabled() else None
 
 
-# ---- Hosts and SSH: General ----
-
-
 class AutoStatusSection(Section):
-    """Refresh status by itself, on a card of its own: Off, a few common intervals, or Custom….
-    `auto_line` says what the check does, under the setting's name."""
-
     changed = Signal()
-    EVERY = (1, 5, 15, 30)  # minutes offered in the dropdown, besides Custom…
+    EVERY = (1, 5, 15, 30)  # minutes
     CUSTOM = -1
 
     def __init__(self, auto_line: str, auto_status: tuple[bool, int]) -> None:
         super().__init__(_("Refresh"))
         self.auto_every = QComboBox()
-        self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
+        self._auto_minutes = auto_status[1]
         self._shown_minutes = auto_status[1] if auto_status[0] else 0
         self._fill_every(self._shown_minutes)
         self.auto_every.activated.connect(self._every_picked)
@@ -519,7 +473,6 @@ class AutoStatusSection(Section):
         return (minutes > 0, minutes) if minutes else (False, self._auto_minutes)
 
     def _fill_every(self, minutes: int) -> None:
-        """Off, the common intervals, any other interval in use, then Custom…."""
         self.auto_every.clear()
         self.auto_every.addItem(_("Off"), 0)
         offered: set[int] = {*self.EVERY, minutes} if minutes > 0 else set(self.EVERY)
@@ -532,14 +485,13 @@ class AutoStatusSection(Section):
         minutes = self.auto_every.itemData(index)
         if minutes == self.CUSTOM:
             chosen = self._ask_minutes()
-            if chosen is None:  # cancelled: back to what it was
+            if chosen is None:
                 self._fill_every(self._shown_minutes)
                 return
             minutes = chosen
         self.pick_every(minutes)
 
     def pick_every(self, minutes: int) -> None:
-        """Refresh by itself every `minutes`; 0 is off."""
         if minutes > 0:
             self._auto_minutes = minutes
         self._fill_every(minutes)
@@ -551,9 +503,6 @@ class AutoStatusSection(Section):
 
 
 class AutoStatusOnlyPage(Page):
-    """A General page with only Refresh status by itself: SSH's, whose lists are Hosts' and
-    are managed on Hosts' General page."""
-
     def __init__(
         self, *, auto_line: str, auto_status: tuple[bool, int] = (False, 5), place: str = ""
     ) -> None:
@@ -568,14 +517,10 @@ class AutoStatusOnlyPage(Page):
         return self.refresh_section.auto_status_choice()
 
     def pick_every(self, minutes: int) -> None:
-        """Refresh by itself every `minutes`; 0 is off."""
         self.refresh_section.pick_every(minutes)
 
 
 class AutoStatusPage(ListsGeneralPage):
-    """A list tool's General page with Refresh status by itself under its lists: Hosts'.
-    `auto_line` says what the check does, under the setting's name."""
-
     def __init__(
         self,
         *,
@@ -613,15 +558,12 @@ class AutoStatusPage(ListsGeneralPage):
         return self.refresh_section.auto_status_choice()
 
     def pick_every(self, minutes: int) -> None:
-        """Refresh by itself every `minutes`; 0 is off."""
         self.refresh_section.pick_every(minutes)
 
 
 class HostsPage(AutoStatusPage):
-    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
-
     HELP_PLACE = "settings-hosts-general"
-    customize_requested = Signal()  # Quick commands' Choose…
+    customize_requested = Signal()
 
     def __init__(
         self,
@@ -675,7 +617,6 @@ def every_text(minutes: int) -> str:
 
 
 def ask_minutes(parent: QWidget, start: int) -> int | None:
-    """Custom…: how often, in minutes. Neither button is a default one."""
     dialog = QDialog(parent)
     dialog.setWindowTitle(_("Refresh status by itself"))
     minutes = QSpinBox()

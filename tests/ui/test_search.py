@@ -34,7 +34,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     listfile.save(path, hl, expected=None)
     win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(path)
-    win.hosts.nav.select_group(labs.id)  # searching ignores the group picked
+    win.hosts.nav.select_group(labs.id)
     win.hosts._show_items()
     yield win
     win.close()
@@ -42,7 +42,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 
 def _search(win: CapyWindow, text: str) -> None:
     win.hosts.search.setText(text)
-    win.hosts._show_items()  # what the typing pause does
+    win.hosts._show_items()
 
 
 def _rows(win: CapyWindow, column: int = 0) -> list[str]:
@@ -61,8 +61,8 @@ def test_search_finds_hosts_in_every_group_by_name_or_address(window: CapyWindow
     assert _rows(window) == ["TRIAGE-01", "TRIAGE-02"]
     _search(window, " 10.0.4.4 ")
     assert _rows(window) == ["RECEP-04"]
-    assert window.hosts.nav.current_filter().kind == "group"  # kept for when the search ends
-    assert not window.hosts.nav.groups.selectedItems()  # but nothing shows as picked meanwhile
+    assert window.hosts.nav.current_filter().kind == "group"
+    assert not window.hosts.nav.groups.selectedItems()
 
 
 def test_search_finds_logged_on_users_from_the_last_check(window: CapyWindow) -> None:
@@ -75,7 +75,7 @@ def test_search_finds_logged_on_users_from_the_last_check(window: CapyWindow) ->
 def test_a_result_s_group_shows_in_the_details_pane(window: CapyWindow) -> None:
     _search(window, "triage")
     table = window.hosts.table
-    assert table.columnCount() == len(table.COLUMNS)  # no Group column: deep paths read badly
+    assert table.columnCount() == len(table.COLUMNS)
     window.hosts.table.select_ids([_id(window, "TRIAGE-01")])
     assert window.hosts.details.shown_value("group") == "Emergency › Triage"
 
@@ -104,7 +104,7 @@ def test_double_click_connects_during_a_search(
     item = window.hosts.table.topLevelItem(0)
     assert item is not None
     window.hosts.table.itemDoubleClicked.emit(item, 0)
-    assert connected == [True]  # also during a search, like Enter
+    assert connected == [True]
     assert window.hosts.search.text() == "triage-02"
 
 
@@ -112,8 +112,8 @@ def test_clearing_the_search_goes_back_to_the_group_picked_before(window: CapyWi
     _search(window, "triage")
     window.hosts.table.select_ids([_id(window, "TRIAGE-01")])
     window.hosts.search.clear()
-    window.hosts._show_items()  # what the typing pause does
-    assert _rows(window) == ["LAB-01"]  # Labs, as before the search; no jump to Triage
+    window.hosts._show_items()
+    assert _rows(window) == ["LAB-01"]
 
 
 def test_down_in_the_search_box_moves_to_the_first_result(window: CapyWindow) -> None:
@@ -131,12 +131,12 @@ def test_notes_are_always_searched_and_tags_while_their_column_shows(
     lab = next(h for h in doc.hosts.hosts if h.name == "LAB-01")
     noted = replace(lab, notes="Badge printer on USB", tags=("kiosk",))
     window.hosts._commit(doc.hosts.update_host(noted))
-    _search(window, "badge printer")  # notes have no column, but are always searched
+    _search(window, "badge printer")
     assert _rows(window) == ["LAB-01"]
     _search(window, "kiosk")
     assert _rows(window) == ["LAB-01"]
     window.hosts.table._show_column(window.hosts.table.TAGS, False)
-    _search(window, "kiosk")  # Tags hidden: not searched, like Address and User
+    _search(window, "kiosk")
     assert _rows(window) == []
 
 
@@ -165,8 +165,8 @@ def test_refresh_checks_only_the_search_results(
     monkeypatch.setattr(checks, "run", run)
     _search(window, "triage")
     window.hosts.refresh_panel.users_box.setChecked(False)
-    window.hosts.toolbar.refresh_button.click()  # the ticked checks, on the hosts shown
-    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    window.hosts.toolbar.refresh_button.click()
+    deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
         QApplication.processEvents()
         if window.hosts._run is None:
@@ -181,7 +181,7 @@ def test_escape_clears_the_search_wherever_the_focus_is(window: CapyWindow) -> N
     assert window.hosts.search.text() == ""
     _search(window, "triage")
     window.hosts.table.setFocus()
-    window.hosts._end_search()  # the window's Esc shortcut
+    window.hosts._end_search()
     assert window.hosts.search.text() == ""
     assert _rows(window) == ["LAB-01"]
 
@@ -190,10 +190,10 @@ def test_search_covers_only_the_columns_shown(window: CapyWindow) -> None:
     table = window.hosts.table
     _search(window, "10.0.4.4")
     assert _rows(window) == ["RECEP-04"]
-    table._show_column(table.ADDRESS, False)  # what View's column chooser does
-    assert _rows(window) == []  # re-run at once: nothing shown matches any more
+    table._show_column(table.ADDRESS, False)
+    assert _rows(window) == []
     _search(window, "recep")
-    assert _rows(window) == ["RECEP-04"]  # the name always counts
+    assert _rows(window) == ["RECEP-04"]
 
 
 def test_hiding_domains_changes_the_users_shown_and_searched(window: CapyWindow) -> None:
@@ -206,11 +206,11 @@ def test_hiding_domains_changes_the_users_shown_and_searched(window: CapyWindow)
     assert _rows(window) == ["LAB-01"]
     window.hosts.commands.show_domains.setChecked(False)
     try:
-        assert _rows(window) == []  # the domain isn't shown, so it isn't searched
+        assert _rows(window) == []
         _search(window, "")
         assert _rows(window, window.hosts.table.USER) == ["ana"]
     finally:
-        window.hosts.commands.show_domains.setChecked(True)  # module-wide: leave it as found
+        window.hosts.commands.show_domains.setChecked(True)
 
 
 def test_tooltips_keep_the_domain_and_active_users_come_first(window: CapyWindow) -> None:
@@ -243,7 +243,7 @@ def test_search_reads_the_status_column_not_checked_too(
     monkeypatch.setattr(checks, "run", lambda address, wanted: Found(Status.ONLINE))
     lab = [h for h in window.hosts.visible_items() if h.name == "LAB-01"]
     window.hosts.check_hosts(lab, status=True, users=False)
-    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    deadline = time.monotonic() + 10
     while time.monotonic() < deadline:
         QApplication.processEvents()
         if window.hosts._run is None:
@@ -253,7 +253,7 @@ def test_search_reads_the_status_column_not_checked_too(
     _search(window, "not checked")
     assert _rows(window) == ["RECEP-04", "TRIAGE-01", "TRIAGE-02"]
     window.hosts.table._show_column(window.hosts.table.STATUS, False)
-    _search(window, "online")  # Status hidden: not searched, like the other columns
+    _search(window, "online")
     assert _rows(window) == []
 
 
@@ -292,12 +292,12 @@ def test_the_offer_under_the_rows_is_the_list_s_last_line(window: CapyWindow) ->
     assert last is not None
     row, box = table.visualItemRect(last), table.offer.box
     assert box.parent() is table.viewport() and box.isVisible()
-    assert box.y() > row.bottom() and box.x() > row.left()  # under it, at its text
+    assert box.y() > row.bottom() and box.x() > row.left()
     assert table.viewport().rect().contains(box.geometry())
     assert table.viewport().height() == height and table.visualItemRect(last) == row
     table.setFixedHeight(table.height() - table.viewport().height() + row.bottom() + 4)
     QApplication.processEvents()
-    assert not box.isVisible() and table.offer.buttons  # out of sight, still offered
+    assert not box.isVisible() and table.offer.buttons
     table.setMinimumHeight(0)
     table.setMaximumHeight(16777215)
     QApplication.processEvents()

@@ -1,5 +1,3 @@
-"""Translations with gettext. `_()` reads the current catalog, so the language can change live."""
-
 import gettext
 from pathlib import Path
 
@@ -15,7 +13,6 @@ _code = DEFAULT_LANGUAGE
 
 
 def set_language(code: str) -> str:
-    """Switch the catalog; an unknown code falls back to English. Returns the code in use."""
     global _current, _code
     if code not in LANGUAGES:
         code = DEFAULT_LANGUAGE
@@ -37,8 +34,6 @@ def ngettext(singular: str, plural: str, n: int) -> str:
 
 
 def pgettext(context: str, message: str) -> str:
-    """The same English text translated by context, e.g. a word whose gender depends on what
-    it's about ("printers" and "hosts" differ in Portuguese)."""
     return _current.pgettext(context, message)
 
 
@@ -47,7 +42,6 @@ def npgettext(context: str, singular: str, plural: str, n: int) -> str:
 
 
 def in_every_language(message: str) -> list[str]:
-    """The message in each language, e.g. to size something so it never changes on a switch."""
     return [
         gettext.translation(DOMAIN, LOCALE_DIR, [code], fallback=True).gettext(message)
         for code in LANGUAGES
@@ -58,14 +52,11 @@ PORTUGUESE = 0x16  # Windows' primary language id for Portuguese, Brazil's and P
 
 
 def language_for(windows_id: int) -> str:
-    """The app's language for a Windows language id: Portuguese for any Portuguese (Brazil's
-    is the one we have), English for every other."""
     return "pt_BR" if windows_id & 0x3FF == PORTUGUESE else DEFAULT_LANGUAGE
 
 
 def windows_language() -> str:
-    """The app's language for the language this person sees Windows in (the display language,
-    not the region's formats). English where Windows doesn't say."""
+    """Windows' display language, not the region's formats; English where Windows doesn't say."""
     try:
         import ctypes
 
@@ -76,5 +67,4 @@ def windows_language() -> str:
 
 
 def N_(message: str) -> str:
-    """Mark a string for extraction without translating it yet."""
     return message

@@ -1,5 +1,3 @@
-"""The Printers tool's part of Settings: General, Warnings and supplies, and Connecting."""
-
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -52,23 +50,18 @@ if TYPE_CHECKING:
 
 MAX_COMMUNITY = 255
 MAX_V3_USER, MAX_V3_PASSWORD = 32, 255  # RFC 3414's longest user name
-MAX_DOC360 = 255  # the Doc360 MPS partner, user name and password
-SNMP_VERSION = "snmp_version"  # refresh.V2C or refresh.V3
+MAX_DOC360 = 255
+SNMP_VERSION = "snmp_version"
 LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
-TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
+TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"
 AUTO_REFRESH = "auto_refresh"  # minutes between Refreshes on its own; 0 is off
 AUTO_EVERY = (5, 15, 30, 60)
-# The Warnings table's ticks, as lists of status.Reason values: In CapyPanel, and the Windows
-# notification after a Refresh on its own.
 WARN_HERE, WARN_NOTIFY = "warn_here", "warn_notify"
 # Until 0.27 the notification was one choice; it's carried over once (PrintersTool.notify_reasons).
 NOTIFY, NOTIFY_OFF, NOTIFY_LOW = "notify", "off", "low"
 
 
 class _SecretWindow(QDialog):
-    """The frame the Printers' account windows share: a note, their boxes, a Show tick, Save
-    and Cancel. Save keeps what's typed in Windows Credential Manager."""
-
     HELP_PLACE = "printers-checking-set-the-snmp-account"
 
     def __init__(self, parent: QWidget | None, title: str, note: str) -> None:
@@ -81,7 +74,6 @@ class _SecretWindow(QDialog):
 
     @staticmethod
     def _secret_box(longest: int, *, kept: bool) -> QLineEdit:
-        """A password box; one already kept stays empty and keeps it unless typed over."""
         box = QLineEdit()
         box.setEchoMode(QLineEdit.EchoMode.Password)
         box.setMaxLength(longest)
@@ -116,9 +108,6 @@ class _SecretWindow(QDialog):
 
 
 class _LoginWindow[A](_SecretWindow):
-    """An account window with a user name: a password already kept isn't shown, and an empty
-    user name forgets the kept account. Save waits until the account is complete."""
-
     def __init__(self, parent: QWidget | None, kept: A | None, title: str, note: str) -> None:
         super().__init__(parent, title, note)
         self._kept = kept
@@ -129,7 +118,6 @@ class _LoginWindow[A](_SecretWindow):
         raise NotImplementedError
 
     def forgets(self) -> bool:
-        """Save would forget the kept account: its user name was emptied."""
         return self._kept is not None and not self.user.text().strip()
 
     def _problem(self) -> str:
@@ -141,7 +129,6 @@ class _LoginWindow[A](_SecretWindow):
         self.save_button.setEnabled(self.account() is not None or self.forgets())
 
     def _finish(self, show_text: str, secrets: tuple[QLineEdit, ...]) -> None:
-        """Under the window's own boxes: the Show tick, what's still missing, Save and Cancel."""
         self._add_show_box(show_text, secrets)
         self.column.addWidget(self.problem)
         self._add_buttons()
@@ -150,9 +137,6 @@ class _LoginWindow[A](_SecretWindow):
 
 
 class CommunityDialog(_SecretWindow):
-    """The SNMP community string's own small window: Save keeps it in Windows Credential
-    Manager. An empty one goes back to "public"."""
-
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(
             parent,
@@ -170,9 +154,6 @@ class CommunityDialog(_SecretWindow):
 
 
 class V3AccountDialog(_LoginWindow[usm.Account]):
-    """The SNMP v3 account's own window: a kept password isn't shown, and an empty user name
-    forgets the kept account, as an empty community string does."""
-
     def __init__(self, parent: QWidget | None, kept: usm.Account | None) -> None:
         super().__init__(
             parent,
@@ -196,7 +177,7 @@ class V3AccountDialog(_LoginWindow[usm.Account]):
         if kept:
             self.auth.setCurrentIndex(self.auth.findData(kept.auth))
             self.privacy.setCurrentIndex(self.privacy.findData(kept.privacy))
-        else:  # what most printers set up for v3 use
+        else:
             self.auth.setCurrentIndex(self.auth.findData(usm.Auth.SHA))
             self.privacy.setCurrentIndex(self.privacy.findData(usm.Privacy.AES128))
         form = QFormLayout()
@@ -213,7 +194,6 @@ class V3AccountDialog(_LoginWindow[usm.Account]):
         self._finish(_("&Show passwords"), (self.auth_password, self.privacy_password))
 
     def account(self) -> usm.Account | None:
-        """The account as filled in, or None while something's missing."""
         auth: usm.Auth | None = self.auth.currentData()
         privacy: usm.Privacy | None = self.privacy.currentData() if auth else None
         kept = self._kept
@@ -238,7 +218,6 @@ class V3AccountDialog(_LoginWindow[usm.Account]):
         super()._update()
 
     def _problem(self) -> str:
-        """What's still missing, in words; "" when the account is complete."""
         if self.forgets():
             return _("Save forgets the saved account.")
         if not self.user.text().strip():
@@ -258,9 +237,6 @@ class V3AccountDialog(_LoginWindow[usm.Account]):
 
 
 class Doc360AccountDialog(_LoginWindow[doc360.Account]):
-    """The Doc360 MPS login's own window, for printers whose counters come from Doc360; a kept
-    password isn't shown, and an empty user name forgets it."""
-
     HELP_PLACE = "printers-checking-get-page-counts-from-doc360-mps"
 
     def __init__(self, parent: QWidget | None, kept: doc360.Account | None) -> None:
@@ -286,7 +262,6 @@ class Doc360AccountDialog(_LoginWindow[doc360.Account]):
         self._finish(_("&Show password"), (self.password,))
 
     def account(self) -> doc360.Account | None:
-        """The login as filled in, or None while something's missing."""
         partner, user = self.partner.text().strip(), self.user.text().strip()
         password = self.password.text() or (self._kept.password if self._kept else "")
         return doc360.Account(partner, user, password) if partner and user and password else None
@@ -310,9 +285,6 @@ class Doc360AccountDialog(_LoginWindow[doc360.Account]):
 
 
 class BarMarksDialog(QDialog):
-    """The supply bars' marks: the low level's, always there, plus any the user adds, each in
-    the theme's text colour or one picked here. Save keeps them in Settings."""
-
     def __init__(self, parent: QWidget | None, chosen: tuple[Mark, ...]) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Bar marks"))
@@ -396,7 +368,7 @@ class BarMarksDialog(QDialog):
 
     def remove(self) -> None:
         row = self.picked()
-        if row > 0:  # the low mark stays
+        if row > 0:
             del self._marks[row]
             self._fill(min(row, len(self._marks) - 1))
 
@@ -435,9 +407,6 @@ class BarMarksDialog(QDialog):
 
 
 class PrintersPage(ListsGeneralPage):
-    """The Printers tool's General page. It also builds and lays out the other two pages' rows
-    (Warnings and supplies, Connecting); every choice fires this page's `changed`."""
-
     HELP_PLACE = "settings-printers"
 
     def __init__(
@@ -487,7 +456,6 @@ class PrintersPage(ListsGeneralPage):
         self.toner_view.addItem(_("Bar"), BARS)
         self.toner_view.setCurrentIndex(1 if bars else 0)
         self.toner_view.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        # Their ? and F1 open the part of Checking printers that says what each page sets.
         self.warnings_page = Page(
             _("Warnings and supplies"), place="printers-checking-choose-which-problems-warn"
         )
@@ -546,14 +514,12 @@ class PrintersPage(ListsGeneralPage):
 
 
 def marks_text(marks: tuple[Mark, ...]) -> str:
-    """The Bar marks row's line: where the marks are."""
     return _("Lines across the supply bars at {marks}.").format(
         marks=bar_marks.percents_text(marks)
     )
 
 
 def doc360_text() -> str:
-    """The Doc360 MPS account row's line: what's set."""
     account = refresh.doc360_account()
     if account is None:
         return _("Not set. Needed only for printers whose page counters come from Doc360 MPS.")
@@ -563,7 +529,6 @@ def doc360_text() -> str:
 
 
 def account_text(version: str) -> str:
-    """The SNMP account row's line: what's set for the version picked."""
     if version == refresh.V3:
         account = refresh.v3_account()
         if account is None:
@@ -587,8 +552,8 @@ class PrintersSettings(SettingsGroup):
 
     def __init__(self, tool: "PrintersTool") -> None:
         self._tool = tool
-        self._building = False  # pages report changes while they're filled
-        self._chosen: Path | None = None  # the list picked in the lists table, across a rebuild
+        self._building = False
+        self._chosen: Path | None = None
 
     def build(self) -> list[tuple[str, Page]]:
         tool, prefs, doc = self._tool, self._tool.prefs, self._tool.document
@@ -687,7 +652,6 @@ class PrintersSettings(SettingsGroup):
         _kept_by_windows(self.general, dialog.windowTitle(), keep)
 
     def _open(self, path: Path) -> None:
-        """A list opened from the lists table: Settings then shows it as the open one."""
         self._tool.open_list(path)
         doc = self._tool.document
         self.general.view.list_opened(doc)
@@ -695,8 +659,6 @@ class PrintersSettings(SettingsGroup):
 
 
 def change_doc360_account(parent: QWidget) -> bool:
-    """The Doc360 MPS account's window, from Settings or from Details; True when Save kept or
-    forgot the login."""
     dialog = Doc360AccountDialog(parent.window(), refresh.doc360_account())
     return _save_login(parent, dialog, refresh.DOC360_ACCOUNT, refresh.save_doc360_account)
 
@@ -704,8 +666,6 @@ def change_doc360_account(parent: QWidget) -> bool:
 def _save_login[A](
     parent: QWidget, dialog: _LoginWindow[A], name: str, save: Callable[[A], None]
 ) -> bool:
-    """Runs an account window; Save keeps the account, or forgets it when the user name was
-    emptied. True when Windows did."""
     if run_modal(dialog) != QDialog.DialogCode.Accepted:
         return False
     account = dialog.account()
@@ -720,11 +680,9 @@ def _save_login[A](
 
 
 def _kept_by_windows(parent: QWidget, title: str, keep: Callable[[], None]) -> bool:
-    """Runs `keep` against Windows Credential Manager; says so when Windows refused."""
     try:
         keep()
     except (OSError, ValueError) as e:
-        # One Credential Manager write or delete, which changes nothing when it fails.
         text = _("Couldn't save the change in Windows Credential Manager: {error}\n\n"
                  "Nothing was changed.").format(error=e)  # fmt: skip
         help_links.warning(parent, title, text, place="printers-credential-not-saved")

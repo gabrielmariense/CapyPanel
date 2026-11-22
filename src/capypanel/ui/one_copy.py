@@ -1,5 +1,3 @@
-"""One running copy per person (two would overwrite settings); its lock and pipe are theirs."""
-
 import ctypes
 import hashlib
 import logging
@@ -14,12 +12,11 @@ from capypanel.core.i18n import _
 log = logging.getLogger(__name__)
 
 LOCK_NAME = "running.lock"
-WAIT = 2000  # ms for the running copy to answer
+WAIT = 2000  # ms
 SHOWN, ELSEWHERE = b"shown\n", b"elsewhere\n"
 
 
 def _session() -> int:
-    """This process's Windows session: a window shown in another one isn't seen here."""
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     found = wintypes.DWORD()
     if not kernel32.ProcessIdToSessionId(kernel32.GetCurrentProcessId(), ctypes.byref(found)):
@@ -32,9 +29,8 @@ def _this_pc() -> str:
 
 
 def _let_it_come_forward() -> None:
-    """Windows only lets a background app take the foreground when the foreground one (this
-    start, which the person just made) allows it."""
-    ctypes.WinDLL("user32").AllowSetForegroundWindow(-1)  # ASFW_ANY
+    """Windows lets a background app take the foreground only when the foreground one allows it."""
+    ctypes.WinDLL("user32").AllowSetForegroundWindow(-1)
 
 
 def pipe_name(lock: Path) -> str:
@@ -51,8 +47,6 @@ def already_running_text(account: str) -> str:
 
 
 class OneCopy(QObject):
-    """claim() once at start; show_requested fires each time CapyPanel is started again."""
-
     show_requested = Signal()
 
     def __init__(self, folder: Path, parent: QObject | None = None) -> None:
@@ -64,13 +58,10 @@ class OneCopy(QObject):
         self._server: QLocalServer | None = None
 
     def claim(self) -> bool:
-        """True: this copy may run, and it answers later starts. False: another copy is
-        running on this PC with the same settings (see ask_running)."""
         if not self._lock.tryLock(0):
             if self._lock.error() == QLockFile.LockError.LockFailedError and self._held_here():
                 return False
-            # Another PC's lock (a folder on a share) or a folder that can't be written: no
-            # guard this time, rather than a CapyPanel that won't start.
+            # No guard beats a CapyPanel that won't start (another PC's lock, a read-only folder).
             log.warning("Couldn't take %s: starting without it", self._lock.fileName())
         self._listen()
         return True
@@ -107,8 +98,6 @@ class OneCopy(QObject):
         socket.disconnectFromServer()
 
     def ask_running(self) -> bool:
-        """Asks the running copy to show its window. True when it did; False when it's in
-        another Windows session or doesn't answer."""
         _let_it_come_forward()
         socket = QLocalSocket()
         socket.connectToServer(self._name)
@@ -133,7 +122,6 @@ class OneCopy(QObject):
         return bytes(answer) == SHOWN
 
     def release(self) -> None:
-        """At exit: the next start is the only copy again."""
         if self._server is not None:
             self._server.close()
             self._server = None

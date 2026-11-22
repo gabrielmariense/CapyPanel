@@ -1,4 +1,4 @@
-"""Which key runs which command, per person; a command that disturbs a PC never gets one."""
+"""A command that disturbs a PC never gets a key."""
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -10,15 +10,11 @@ from PySide6.QtGui import QAction, QKeySequence
 from capypanel.core.i18n import _
 from capypanel.ui import menus
 
-PREFS_KEY = "shortcuts"  # this person's: {command id: "Ctrl+E", or "" for no key}
+PREFS_KEY = "shortcuts"
 EVERYWHERE = ""  # a command of the window itself (its menu bar), not of one tool
 OLD_SHARED = "list."  # before 0.28's last builds, one id for a command every list tool has
-# Keys no command can take: F1 is help's, Esc closes and ends a search, Ctrl+F searches every list,
-# the Tab keys move around and between tabs, and Ctrl+Shift+W closes the tab in front.
 RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+Shift+W")
-# The window's commands whose keys reach CapyPanel from an SSH terminal, whatever their keys: those
-# that change tools (Home too) and open Settings. Every other key in a terminal goes to the server.
-PAST_TERMINAL = ("app.settings", "go.")  # an id, or the start of the ids
+PAST_TERMINAL = ("app.settings", "go.")
 PORTABLE = QKeySequence.SequenceFormat.PortableText
 NATIVE = QKeySequence.SequenceFormat.NativeText
 DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
@@ -26,30 +22,24 @@ DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
 
 @dataclass(frozen=True)
 class KeyCommand:
-    """A command a key can run: `id` names it in the settings ("hosts.edit"), `where` is a tool's
-    id or EVERYWHERE, `default` its key ("Ctrl+E") or "", and `name` its name on the page."""
-
     id: str
     action: QAction
     where: str
     default: str = ""
     name: Callable[[], str] | None = None
-    fixed: bool = False  # its key never changes: Help for this screen's F1
+    fixed: bool = False
 
 
 @dataclass
 class Row:
-    """One command on the Keyboard shortcuts page: one or more tools' actions for it."""
-
     id: str
     default: str
-    places: list[str] = field(default_factory=list)  # tool ids, or EVERYWHERE
+    places: list[str] = field(default_factory=list)
     actions: list[QAction] = field(default_factory=list)
-    named: Callable[[], str] | None = None  # its fixed name, when its action's text changes
-    fixed: bool = False  # shown with its key, greyed; nobody changes it
+    named: Callable[[], str] | None = None
+    fixed: bool = False
 
     def name(self) -> str:
-        """The command's name as its menus have it, without the access key's &."""
         if self.named is not None:
             text = self.named()
         else:
@@ -57,38 +47,31 @@ class Row:
         return menus.plain(text)
 
     def meets(self, other: "Row") -> bool:
-        """Whether a key could reach both at once: the window's commands meet every tool's."""
         if EVERYWHERE in self.places or EVERYWHERE in other.places:
             return True
         return bool(set(self.places) & set(other.places))
 
 
 def portable(keys: QKeySequence | str) -> str:
-    """A key as the settings file keeps it: "Ctrl+Shift+O", the same in every language."""
     sequence = keys if isinstance(keys, QKeySequence) else QKeySequence(keys)
     return sequence.toString(PORTABLE)
 
 
 def shown(keys: str) -> str:
-    """A key as a person reads it, Windows' way: "Ctrl+Shift+O", "Enter", "Del"."""
     return QKeySequence(keys).toString(NATIVE).replace("Return", "Enter")
 
 
 def key_tip(words: str, action: QAction) -> str:
-    """A tooltip's words and the key `action` has now: "Refresh all (F5)". The words never name the
-    key, so a changed key shows once the tip is set again on `changed`; no key: just the words."""
     keys = menus.shortcut_text(action)
     return f"{words} ({keys})" if keys else words
 
 
 def refused(keys: str) -> str:
-    """Why `keys` can't be a shortcut, or "": a reserved key, or one a person types as text
-    (a letter, a digit, a space) with no Ctrl or Alt, which would fire while typing a name."""
+    """A reserved key, or text typed without Ctrl or Alt: it would fire while typing a name."""
     sequence = QKeySequence(keys)
     if sequence.isEmpty() or sequence.count() != 1:
         return _("Press one key, with Ctrl, Alt or Shift if you like.")
     if portable(sequence) in {portable(r) for r in RESERVED}:
-        # Shown right after the key is pressed, so it isn't named again (F1 would read twice).
         return _("Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches, "
                  "Tab moves between fields and Ctrl+Shift+W closes a tab.")  # fmt: skip
     combo = sequence[0]  # type: ignore[index]  # PySide6 has [], its stubs lack it
@@ -107,13 +90,10 @@ def refused(keys: str) -> str:
 
 
 class Keys:
-    """The keys this person gave the commands, and the rows of the Keyboard shortcuts page.
-    `save` writes the settings file; every change is applied to the actions at once."""
-
     def __init__(self, prefs: dict[str, Any], save: Callable[[], None]) -> None:
         self._prefs, self._save = prefs, save
         self.rows: list[Row] = []
-        self.past_terminal: frozenset[str] = frozenset()  # PAST_TERMINAL's keys now, portable
+        self.past_terminal: frozenset[str] = frozenset()
 
     def _own(self) -> dict[str, str]:
         kept = self._prefs.get(PREFS_KEY)
@@ -122,8 +102,6 @@ class Keys:
         return kept
 
     def load(self, commands: Iterable[KeyCommand]) -> None:
-        """The commands the window and its tools offer, in menu order: one row per id, then
-        each gets its key."""
         rows: dict[str, Row] = {}
         for command in commands:
             row = rows.setdefault(command.id, Row(command.id, portable(command.default)))
@@ -138,8 +116,6 @@ class Keys:
         self.apply()
 
     def _split_old_shared(self, rows: dict[str, Row]) -> bool:
-        """A key kept under an old shared id ("list.edit") goes to each tool's own row
-        ("hosts.edit", "printers.edit"), so nobody loses a key they set. Whether any moved."""
         own = self._own()
         old = [kept for kept in own if kept.startswith(OLD_SHARED) and kept not in rows]
         for kept in old:
@@ -154,12 +130,10 @@ class Keys:
         return next(row for row in self.rows if row.id == row_id)
 
     def key(self, row: Row) -> str:
-        """Its key now, in portable text, or ""."""
         own = None if row.fixed else self._own().get(row.id)
         return own if isinstance(own, str) else row.default
 
     def clash(self, row: Row, keys: str) -> Row | None:
-        """The other command `keys` already runs where `row` runs, if one does."""
         wanted = portable(keys)
         return next(
             (o for o in self.rows if o is not row and wanted and self.key(o) == wanted
@@ -168,7 +142,6 @@ class Keys:
         )  # fmt: skip
 
     def set(self, row: Row, keys: str) -> None:
-        """Gives `row` the key `keys` ("" for none); a command that had it loses it."""
         if row.fixed:
             return
         keys = portable(keys) if keys else ""
@@ -180,7 +153,6 @@ class Keys:
         self.apply()
 
     def restore(self, row: Row) -> None:
-        """Back to today's key; a command that has that key now loses it."""
         self.set(row, row.default)
 
     def _keep(self, row: Row, keys: str) -> None:
@@ -191,13 +163,12 @@ class Keys:
             own[row.id] = keys
 
     def apply(self) -> None:
-        """Every action gets its key. A menu works out the room for its keys when it opens."""
         for row in self.rows:
             sequence = QKeySequence(self.key(row))
             for action in row.actions:
                 if action.shortcut() != sequence:
                     action.setShortcut(sequence)
-                    action.setText(menus.label(action))  # its old key's room goes
+                    action.setText(menus.label(action))
         self.past_terminal = frozenset(
             keys
             for row in self.rows

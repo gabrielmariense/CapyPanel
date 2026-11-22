@@ -1,5 +1,3 @@
-"""Import printers: Import hosts' window plus the printers' columns; nothing contacts a printer."""
-
 from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan
@@ -25,7 +23,7 @@ class ImportPrintersDialog(ImportDialog):
         ("asset_tag", N_("Asset tag")),
         ("counter_source", N_("Page counters")),
     )
-    WIDTH = 1300  # five more columns than Import hosts, after Notes
+    WIDTH = 1300
 
     def add_text(self, n: int) -> str:
         if not n:
@@ -58,8 +56,6 @@ class ImportPrintersDialog(ImportDialog):
 
 
 class PrinterFormats(FormatsDialog):
-    """The lists Import printers reads: name and address, a Report, Windows' printer list."""
-
     HELP_PLACE = "printers-import-many-printers-at-once"
 
     def _formats(self) -> list[tuple[str, QWidget]]:

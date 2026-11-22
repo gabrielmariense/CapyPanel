@@ -1,5 +1,3 @@
-"""The Printers tool's commands: the list workspace's, plus the printers' own."""
-
 from dataclasses import dataclass
 
 from PySide6.QtCore import QObject
@@ -18,14 +16,14 @@ class PrintersActions(ListActions):
     export_printers: QAction
     open_web_page: QAction
     copy_address: QAction
-    refresh_shown: QAction  # the toolbar's Refresh: every printer shown
-    refresh_selected: QAction  # a printer's right-click menu
+    refresh_shown: QAction
+    refresh_selected: QAction
 
 
 SHORTCUTS = {
     **list_actions.SHORTCUTS,
     "add_printer": "Ctrl+N",
-    "open_web_page": "Return",  # only while the printer table has focus (see PrintersTool)
+    "open_web_page": "Return",
     "copy_address": "Ctrl+Shift+C",
     "refresh_shown": "F5",
 }
@@ -44,6 +42,6 @@ def retranslate_actions(a: PrintersActions) -> None:
     a.import_printers.setText(_("&Import printers…"))
     a.export_printers.setText(_("&Report…"))
     a.open_web_page.setText(_("Open &web page"))
-    a.copy_address.setText(_("&Address"))  # in the printer menu's Copy submenu
+    a.copy_address.setText(_("&Address"))
     a.refresh_shown.setText(pgettext("printers", "Refresh all"))  # pt: "todas", not "todos"
-    a.refresh_selected.setText(_("Re&fresh printer"))  # the menu says how many (fill_item_menu)
+    a.refresh_selected.setText(_("Re&fresh printer"))

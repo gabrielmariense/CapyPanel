@@ -1,5 +1,3 @@
-"""The separate window's holder, on a pretend console: no window opens and no program starts."""
-
 import ctypes
 import sys
 from collections.abc import Iterator, Sequence
@@ -17,8 +15,6 @@ STARTED = [("open", False), ("title", SSH[0]), "Ctrl+C", ("run", SSH)]
 
 
 class FakeConsole:
-    """Writes down what the holder asks of Windows; `code` is what the program ends with."""
-
     def __init__(self, code: int | OSError = 0, *, opens: bool = True) -> None:
         self.code, self.opens = code, opens
         self.steps: list[object] = []
@@ -61,7 +57,7 @@ def _run(code: int | OSError, language: str = "en") -> tuple[int, FakeConsole]:
 
 def test_what_capypanel_writes_the_holder_reads_back() -> None:
     args = holder.args_for(SSH, "nas-01", "pt_BR")
-    assert args[0] == holder.FLAG == "--ssh-holder"  # what __main__ looks for
+    assert args[0] == holder.FLAG == "--ssh-holder"
     assert holder.parse(args[1:]) == Request(argv=SSH, host="nas-01", language="pt_BR")
     assert holder.parse([holder.ATTACH, *args[1:]]) == Request(SSH, "nas-01", "pt_BR", True)
 
@@ -74,7 +70,7 @@ def test_without_a_name_the_words_use_the_last_argument() -> None:
 def test_a_start_capypanel_wouldn_t_write_does_nothing(args: list[str]) -> None:
     console = FakeConsole()
     assert holder.run(args, console) == holder.NOT_STARTED_BY_CAPYPANEL
-    assert console.steps == []  # no window, nothing started
+    assert console.steps == []
 
 
 @pytest.mark.parametrize("code", [0, 1, 130, 254, ending.CTRL_C_EXIT])
@@ -131,8 +127,7 @@ def test_a_probe_s_start_keeps_the_console_it_was_given() -> None:
 
 
 def test_a_quick_second_enter_never_closes_the_window_unread() -> None:
-    # At the host key question a bare Enter refuses and ssh.exe ends at once with 255; a second
-    # Enter close behind it must not close the window before the words are read.
+    # A bare Enter at the host key question ends ssh.exe at once: a second mustn't close its words.
     assert holder.KEY_GRACE >= 1.0
 
 
@@ -152,7 +147,6 @@ def test_the_key_wait_drops_what_was_pressed_during_the_grace(
     monkeypatch.setattr(holder, "_k32", FakeKernel())
     monkeypatch.setattr(holder, "time", SimpleNamespace(sleep=lambda s: calls.append(f"sleep {s}")))
     holder.WindowsConsole().wait_for_key(holder.KEY_GRACE)
-    # The grace first, then everything pressed in it dropped, then the wait.
     assert calls == ["sleep 1.0", "FlushConsoleInputBuffer", "GetConsoleMode", "ReadConsoleInputW"]
 
 

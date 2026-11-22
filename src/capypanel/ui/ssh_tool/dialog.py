@@ -1,5 +1,3 @@
-"""An SSH host's dialog: port and Log in as never take a space or a leading "-" (an option)."""
-
 from dataclasses import dataclass
 
 from PySide6.QtCore import QRegularExpression
@@ -54,7 +52,7 @@ class SshHostDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(_("Edit host") if host else _("Add host"))
         info = info_of(host) if host else SshInfo()
-        self._extra = info.extra  # values this version can't read, kept as they are
+        self._extra = info.extra
         self._hosts = hosts
 
         self.name = QLineEdit(host.name if host else "")
@@ -85,12 +83,12 @@ class SshHostDialog(QDialog):
         form.addRow(_("&Address:"), self.address)
         form.addRow(_("&Group:"), self.group)
         tags_label = QLabel(_("&Tags:"))
-        tags_label.setBuddy(self.tags.input)  # Alt+T goes to the text box inside the field
+        tags_label.setBuddy(self.tags.input)
         form.addRow(tags_label, self.tags)
         form.addRow(_("&Port:"), self.port)
         form.addRow(_("&Log in as:"), self.login)
         form.addRow(_("N&otes:"), self.notes)
-        self.buttons = ok_cancel(self, _("Save") if host else _("Add"))  # ends in its verb
+        self.buttons = ok_cancel(self, _("Save") if host else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         self.help_button = help_links.HelpButton("ssh-add-a-host")
@@ -102,7 +100,6 @@ class SshHostDialog(QDialog):
         self.resize(460, self.sizeHint().height())
 
     def _update_login_hint(self) -> None:
-        """Left empty, it takes the picked group's name: the hint says which."""
         group = self.group.currentData()
         login, source = group_login_of(self._hosts, group if isinstance(group, str) else None)
         self.login.setPlaceholderText(empty_text(login, source.name if source else ""))
@@ -112,7 +109,6 @@ class SshHostDialog(QDialog):
         ok.setEnabled(bool(self.name.text().strip()) and self.group.count() > 0)
 
     def values(self) -> SshValues:
-        """An odd value the file had stays as found unless a new one is typed (with_info)."""
         info = SshInfo(self.port.value(), self.login.text().strip(), self._extra)
         return SshValues(
             name=self.name.text().strip(),
@@ -125,24 +121,18 @@ class SshHostDialog(QDialog):
 
 
 def follow_text(login: str, group: str) -> str:
-    """Log in as menus' first choice: the name the group gives (`login`, from `group`), or none,
-    which leaves it to ssh.exe."""
     if login:
         return _("From group “{group}”: {profile}").format(group=group, profile=login)
     return _("None: your SSH config, then your Windows user name")
 
 
 def empty_text(login: str, group: str) -> str:
-    """What a Log in as left empty gives, as its box's hint: the group's name, or ssh.exe's."""
     if login:
         return follow_text(login, group)
     return _("Empty: your SSH config, then your Windows user name")
 
 
 class LoginDialog(QDialog):
-    """Another name… under Log in as: one name, taken as the host window takes it. `about` says
-    whom it is for; `empty` what leaving it empty gives (empty_text): their group's again."""
-
     def __init__(self, parent: QWidget | None, about: str, login: str, empty: str) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Log in as"))
@@ -167,7 +157,6 @@ class LoginDialog(QDialog):
 
 
 def _as_ssh_takes(field: QLineEdit, refused: frozenset[str]) -> QRegularExpressionValidator:
-    """No spaces, no "-" first and none of `refused`: a key that would make one does nothing."""
-    bad = "".join("\\" + c for c in sorted(refused))  # each one escaped, inside a class
+    bad = "".join("\\" + c for c in sorted(refused))
     pattern = QRegularExpression(rf"[^\s{bad}-][^\s{bad}]*")
     return QRegularExpressionValidator(pattern, field)

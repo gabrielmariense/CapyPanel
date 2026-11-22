@@ -1,5 +1,3 @@
-"""What Refresh reads from a printer over SNMP: status, errors, supplies, pages, details."""
-
 import dataclasses
 import re
 from dataclasses import dataclass
@@ -40,12 +38,9 @@ _MAKERS = {
     1347: "KYOCERA", 1602: "CANON", 2435: "BROTHER", 10642: "ZEBRA",
 }  # fmt: skip
 _ENTERPRISES = "1.3.6.1.4.1."
-# A firmware version in a description: "V4.00.02.14" or "V1.11", and "Firmware Ver.Q".
 _VERSION = re.compile(r"\bV\d+(?:\.\d+)+\b")
 _FIRMWARE_VER = re.compile(r"\bFirmware\s+Ver\.?\s*(\w+)", re.IGNORECASE)
 
-# Brands' own data, read only to fill a gap the standard objects leave (a level with no %,
-# an empty serial).
 RICOH_SERIAL = "1.3.6.1.4.1.367.3.2.1.2.1.4.0"  # ricohEngSerialNumber
 RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1.1"  # ricohEngTonerEntry
 _RICOH_COLOUR, _RICOH_LEVEL = 2, 5  # its level: a %, or below 0 for "some left", "unknown"...
@@ -57,12 +52,10 @@ _COLOURS = re.compile(r"\b(black|cyan|magenta|yellow)\b", re.IGNORECASE)
 
 
 class State(StrEnum):
-    """What the printer says it's doing (hrPrinterStatus)."""
-
     IDLE = "idle"
     PRINTING = "printing"
     WARMING_UP = "warming-up"
-    OTHER = "other"  # a state it doesn't name, often an error shown on its panel
+    OTHER = "other"
     UNKNOWN = "unknown"
 
 
@@ -85,8 +78,6 @@ _DEVICES = {1: Device.UNKNOWN, 2: Device.RUNNING, 3: Device.WARNING, 4: Device.T
 
 
 class Problem(IntEnum):
-    """The printer's detected errors (hrPrinterDetectedErrorState), by bit number."""
-
     LOW_PAPER = 0
     NO_PAPER = 1
     LOW_TONER = 2
@@ -109,7 +100,7 @@ class SupplyKind(StrEnum):
     INK = "ink"
     DRUM = "drum"
     WASTE = "waste"
-    OTHER = "other"  # fuser, transfer unit, staples...
+    OTHER = "other"
 
 
 _KINDS = {
@@ -121,14 +112,13 @@ _KINDS = {
 
 @dataclass(frozen=True)
 class Supply:
-    name: str  # as the printer calls it, e.g. "Black Toner Cartridge"
+    name: str
     kind: SupplyKind
     percent: int | None  # what's left, 0 to 100; for a waste box, the room left; None: unknown
-    some_left: bool = False  # no percent, but the printer says it isn't empty
-    receptacle: bool = False  # it fills up (a waste box) instead of running out
+    some_left: bool = False
+    receptacle: bool = False
 
     def low(self, at_or_below: int) -> bool:
-        """Running low (or, for a waste box, nearly full)."""
         return self.percent is not None and self.percent <= at_or_below
 
 
@@ -137,21 +127,20 @@ class Reading:
     state: State = State.UNKNOWN
     device: Device = Device.UNKNOWN
     problems: frozenset[Problem] = frozenset()
-    messages: tuple[str, ...] = ()  # the printer's own words for what's wrong, e.g. "Paper jam"
+    messages: tuple[str, ...] = ()
     supplies: tuple[Supply, ...] = ()
     pages: int | None = None
     brand: str = ""
     model: str = ""
     serial: str = ""
-    mac: str = ""  # "00:1A:2B:3C:4D:5E"
+    mac: str = ""
     firmware: str = ""
 
 
 def snmp_host(address: str) -> str:
-    """The host part of a printer's address: no https://, port, path or IPv6 brackets."""
     text = address.strip()
     bare = text.split("://", 1)[-1]
-    if bare.count(":") > 1 and not bare.startswith("["):  # a bare IPv6 address
+    if bare.count(":") > 1 and not bare.startswith("["):
         return bare.split("/", 1)[0]
     try:
         host = urlsplit(text if "://" in text else f"//{text}").hostname
@@ -163,8 +152,6 @@ def snmp_host(address: str) -> str:
 def read(
     host: str, secret: snmp.Secret, *, port: int = snmp.PORT, timeout: float = snmp.TIMEOUT
 ) -> Reading:
-    """Everything Refresh shows. Raises snmp.NoAnswer when the printer doesn't answer, and
-    snmp.Refused when it refuses a v3 account."""
     with snmp.Session(host, secret, port=port, timeout=timeout) as session:
         top = session.get([SYS_DESCR, SYS_OBJECT_ID])
         printers = session.walk(HR_PRINTER_STATUS)
@@ -222,8 +209,6 @@ def _installed_firmware(rows: list[tuple[str, snmp.Value]]) -> str:
 
 
 def _described_firmware(description: str) -> str:
-    """The version in the printer's system description, when it gives one there ("…;
-    V4.00.02.14 MAY-02-2017;…", "SP 3710DN V1.11 / …", "Firmware Ver.Q ,MID …")."""
     if found := _FIRMWARE_VER.search(description):
         return found[1]
     found = _VERSION.search(description)
@@ -231,7 +216,6 @@ def _described_firmware(description: str) -> str:
 
 
 def _mac(rows: list[tuple[str, snmp.Value]]) -> str:
-    """The first network interface's MAC address; the loopback and others have none."""
     for _oid, value in rows:
         if isinstance(value, bytes) and len(value) == 6 and any(value):
             return ":".join(f"{b:02X}" for b in value)
@@ -267,7 +251,6 @@ def _brand(object_id: snmp.Value, description: str) -> str:
 
 
 def _model(description: str, brand: str) -> str:
-    """The device's description without the brand at its start ("HP LaserJet M404" → the rest)."""
     if brand and description.upper().startswith(brand + " "):
         description = description[len(brand) + 1 :]
     return description.split(";", 1)[0].strip()  # some add ";" and firmware details
@@ -285,7 +268,6 @@ def _problems(value: snmp.Value) -> frozenset[Problem]:
 
 
 def _table(rows: list[tuple[str, snmp.Value]], base: str) -> dict[str, dict[int, snmp.Value]]:
-    """A table's rows by index (what follows the column number), each a {column: value}."""
     table: dict[str, dict[int, snmp.Value]] = {}
     for oid, value in rows:
         column, _, index = oid[len(base) + 1 :].partition(".")
@@ -343,7 +325,6 @@ def _key(supply: Supply) -> str:
 
 
 def _filled(supplies: tuple[Supply, ...], levels: dict[str, int]) -> tuple[Supply, ...]:
-    """Each supply with no % given the brand's own level for it, when there is one."""
     return tuple(
         dataclasses.replace(s, percent=levels[key])
         if s.percent is None and (key := _key(s)) in levels
@@ -353,7 +334,6 @@ def _filled(supplies: tuple[Supply, ...], levels: dict[str, int]) -> tuple[Suppl
 
 
 def _brand_levels(session: snmp.Session, brand: str) -> dict[str, int]:
-    """The % left of each toner (by colour) and the drum, from the brand's own data."""
     levels: dict[str, int] = {}
     if brand == "RICOH":
         for row in _table(session.walk(RICOH_TONER), RICOH_TONER).values():
@@ -372,7 +352,6 @@ def _brand_levels(session: snmp.Session, brand: str) -> dict[str, int]:
 
 
 def _messages(rows: list[tuple[str, snmp.Value]]) -> tuple[str, ...]:
-    """The printer's own words for its current warnings and errors, each once."""
     seen: dict[str, None] = {}
     for row in _table(rows, ALERTS).values():
         if _number(row.get(_SEVERITY)) in _SERIOUS and (text := _text(row.get(_ALERT_TEXT))):

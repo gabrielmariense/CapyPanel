@@ -23,7 +23,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 def test_the_cards_keep_a_gutter_from_the_scroll_bar_and_the_bottom(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     dialog.show()
-    dialog.resize(dialog.width(), 420)  # short enough for Connecting to scroll
+    dialog.resize(dialog.width(), 420)
     page = dialog.group(HostsSettings).connections
     view = page.parentWidget()
     while view is not None and not isinstance(view, QScrollArea):
@@ -36,7 +36,7 @@ def test_the_cards_keep_a_gutter_from_the_scroll_bar_and_the_bottom(window: Capy
     assert holder is not None
     sections = holder.findChildren(Section)
     right = max(s.mapTo(holder, QPoint(s.width(), 0)).x() for s in sections)
-    assert holder.width() - right == GUTTER  # the same as left of them
+    assert holder.width() - right == GUTTER
     view.verticalScrollBar().setValue(view.verticalScrollBar().maximum())
     bottom = max(s.mapTo(holder, QPoint(0, s.height())).y() for s in sections)
     assert holder.height() - bottom >= GUTTER

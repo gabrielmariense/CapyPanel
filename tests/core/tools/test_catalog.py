@@ -29,7 +29,7 @@ def test_the_company_s_definition_wins_for_the_same_tool(tmp_path: Path) -> None
     entry = tools.find("viewer")
     assert entry is not None and entry.item.name == "Company viewer"
     assert entry.layer is Layer.COMPANY
-    assert [e.item.id for e in tools.all()] == ["other", "viewer"]  # by id
+    assert [e.item.id for e in tools.all()] == ["other", "viewer"]
 
 
 def test_a_broken_file_is_reported_and_the_rest_still_load(tmp_path: Path) -> None:
@@ -46,14 +46,13 @@ def test_a_path_is_set_once_for_everyone_and_definitions_keep_their_updates(
     _write(tmp_path / "shipped", "viewer", "Viewer")
     tools = _tools(tmp_path)
     tools.set_paths({"viewer": r"D:\Apps\viewer.exe"})
-    assert (tmp_path / "company" / PATHS_FILE).is_file()  # the PC's folder, not the user's
-    # Later the shipped definition changes: the chosen path stays, and the change arrives.
+    assert (tmp_path / "company" / PATHS_FILE).is_file()
     _write(tmp_path / "shipped", "viewer", "Viewer 2")
     again = _tools(tmp_path)
     entry = again.find("viewer")
     assert entry is not None and entry.item.name == "Viewer 2"
     assert entry.item.executable == r"D:\Apps\viewer.exe"
-    again.set_paths({"viewer": ""})  # find it by itself again
+    again.set_paths({"viewer": ""})
     back = _tools(tmp_path).find("viewer")
     assert back is not None and not back.item.executable
 
@@ -69,7 +68,7 @@ def test_a_company_tool_or_path_another_user_made_is_ignored(
     monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path not in (planted, paths))
     tools = _tools(tmp_path)
     entry = tools.find("viewer")
-    assert entry is not None and entry.layer is Layer.SHIPPED  # never runs the planted program
+    assert entry is not None and entry.layer is Layer.SHIPPED
     assert not entry.item.executable
     assert {p.path for p in tools.problems} == {planted, paths}
 
@@ -78,10 +77,10 @@ def test_how_pcs_are_read_is_set_for_everyone_on_this_pc_and_back_to_automatic(
     tmp_path: Path,
 ) -> None:
     tools = _tools(tmp_path)
-    assert tools.reads() == "auto"  # nothing set: automatic
+    assert tools.reads() == "auto"
     tools.set_reads("direct")
     assert _tools(tmp_path).reads() == "direct" and reads_of(tmp_path / "company") == "direct"
-    tools.set_reads("auto")  # back to automatic: the file goes
+    tools.set_reads("auto")
     assert not (tmp_path / "company" / READS_FILE).exists() and tools.reads() == "auto"
     with pytest.raises(ValueError):
         tools.set_reads("telnet")
@@ -95,7 +94,7 @@ def test_a_reads_file_another_user_made_or_a_broken_one_is_ignored(
     planted = folder / READS_FILE
     planted.write_text(json.dumps({"schema": 1, "reads": "powershell"}), "utf-8")
     monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path != planted)
-    assert reads_of(folder) == "auto"  # another user's file never changes everyone's way
+    assert reads_of(folder) == "auto"
     monkeypatch.setattr(winsec, "made_by_trusted", lambda path: True)
     assert reads_of(folder) == "powershell"
     planted.write_text(json.dumps({"schema": 1, "reads": "carrier pigeon"}), "utf-8")

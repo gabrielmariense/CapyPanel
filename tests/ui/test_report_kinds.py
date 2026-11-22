@@ -6,8 +6,6 @@ from capypanel.ui.export_hosts import ExportDialog, Source
 
 
 class SerialReport(ExportDialog):
-    """A tool's own Report: its columns, nothing to check, its choices kept apart."""
-
     TITLES = {"name": N_("Name"), "serial": N_("Serial number")}
     SECTIONS = ((N_("Printer"), ("name", "serial")),)
     CHECKED = ()
@@ -34,9 +32,9 @@ def test_a_tool_s_own_report_has_its_columns_and_no_refresh(qapp: QApplication) 
         stop=lambda: None,
         progress=lambda: None,
     )
-    assert [n.text() for n in dialog.findChildren(QLabel, "rowName")] == ["Printer"]  # no checks
-    assert dialog.refresh_button.isHidden()  # nothing to check: no Refresh here
-    assert dialog.columns() == ["name"]  # starts on its own For Import
+    assert [n.text() for n in dialog.findChildren(QLabel, "rowName")] == ["Printer"]
+    assert dialog.refresh_button.isHidden()
+    assert dialog.columns() == ["name"]
     dialog.boxes["serial"].setChecked(True)
     assert dialog.header() == ["Name", "Serial number"]
     assert dialog.rows() == [["P1", "SAMPLE1"]]

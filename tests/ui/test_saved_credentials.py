@@ -31,11 +31,8 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 
 
 def _keep_some(win: CapyWindow) -> None:
-    """A saved profile password and an account typed for every PC (in memory only)."""
     profile = win.hosts.connector.choices()[0][0]
-    win.hosts.connector.credentials.remember(
-        profile, Credential("EXAMPLE\\ana", "x"), save=True
-    )  # Remember ticked
+    win.hosts.connector.credentials.remember(profile, Credential("EXAMPLE\\ana", "x"), save=True)
     win.hosts.accounts.use(Link("EXAMPLE\\svc", Scope.ALL), Account("EXAMPLE\\svc", "y"),
                            remember=False)  # fmt: skip
 
@@ -58,11 +55,10 @@ def test_the_window_lists_the_connection_logins_by_what_they_re_used_for(
     assert [r[0] for r in rows] == sorted((r[0] for r in rows), key=str.casefold)
     assert ["Every PC", "Hosts › Accounts", "EXAMPLE\\svc", "Temporary"] in rows
     assert any(r[2:] == ["EXAMPLE\\ana", "Credential Manager"] for r in rows)
-    assert not any("x" in r or "y" in r for r in rows)  # no password
+    assert not any("x" in r or "y" in r for r in rows)
 
 
 def test_printers_snmp_logins_are_not_listed(window: CapyWindow) -> None:
-    # They're set in Settings › Printers › Connecting, not with the connection logins.
     refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
     credstore.save(refresh.COMMUNITY, "s3cret")
     assert window.kept_logins() == []
@@ -127,7 +123,7 @@ def test_settings_counts_what_s_kept_and_opens_the_window(
 
     monkeypatch.setattr(SavedCredentialsDialog, "exec", forget_everything)
     dialog.group(HostsSettings).connections.profiles.manage_button.click()
-    assert row.description.text() == "None kept."  # Settings shows it at once
+    assert row.description.text() == "None kept."
 
 
 def test_the_settings_line_names_both_places() -> None:

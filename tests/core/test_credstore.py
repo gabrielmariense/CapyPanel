@@ -19,17 +19,17 @@ def test_a_secret_is_kept_replaced_and_forgotten(name: str) -> None:
     assert credstore.load(name) is None
     credstore.save(name, "SAMPLE-community")
     assert credstore.load(name) == "SAMPLE-community"
-    credstore.save(name, "çhanged")  # not just ASCII
+    credstore.save(name, "çhanged")
     assert credstore.load(name) == "çhanged"
     credstore.forget(name)
     assert credstore.load(name) is None
-    credstore.forget(name)  # forgetting twice is fine
+    credstore.forget(name)
 
 
 def test_a_secret_keeps_its_user_and_a_folder_lists_its_names() -> None:
     credstore.save("profile/realvnc", "x1", user="CORP\\ana")
     credstore.save("profile/ultravnc", "x2")
-    credstore.save("profiles-other", "x3")  # starts like the folder, isn't in it
+    credstore.save("profiles-other", "x3")
     assert credstore.read("profile/realvnc") == ("CORP\\ana", "x1")
     assert credstore.read("profile/ultravnc") == ("CapyPanel", "x2")
     assert credstore.names("profile/") == ["profile/realvnc", "profile/ultravnc"]
@@ -37,7 +37,7 @@ def test_a_secret_keeps_its_user_and_a_folder_lists_its_names() -> None:
 
 
 def test_tests_never_touch_the_real_entries(monkeypatch: pytest.MonkeyPatch) -> None:
-    def fake_and_test_prefix() -> bool:  # tests/conftest.py
+    def fake_and_test_prefix() -> bool:
         fake = isinstance(credstore._advapi32, FakeCredentialManager)
         return fake and credstore.PREFIX.startswith("CapyPanelTest/")
 

@@ -1,5 +1,3 @@
-"""Comments and docstrings keep the rule: two lines (a file's one, a test's none), no history."""
-
 import ast
 import io
 import re

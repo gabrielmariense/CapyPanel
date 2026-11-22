@@ -1,5 +1,3 @@
-"""Entry point: `python -m capypanel`, or the `capypanel` command."""
-
 import logging
 import sys
 from collections.abc import Callable
@@ -7,8 +5,6 @@ from pathlib import Path
 
 
 def close_splash() -> None:
-    """The splash CapyPanel.exe's launcher shows (ui/branding/splash.png), once there's a window
-    to see, or at once for the self-test, which shows none. From source there is none."""
     try:
         import pyi_splash  # type: ignore[import-not-found]  # only inside CapyPanel.exe
     except ImportError:
@@ -26,7 +22,7 @@ def main() -> int:
         argv = sys.argv
         return _quietly(lambda: _apply_update(Path(argv[2]), int(argv[3]), argv[4], argv[5]))
     if len(sys.argv) > 1 and sys.argv[1] == "--ssh-holder":
-        close_splash()  # CapyPanel starts it with none; a start by hand may have one
+        close_splash()
         args = sys.argv[2:]
         return _quietly(lambda: _ssh_holder(args))
     from capypanel.ui.app import run
@@ -35,8 +31,7 @@ def main() -> int:
 
 
 def _quietly(job: Callable[[], int]) -> int:
-    """`job`, with nothing ever shown on screen: CapyPanel.exe has no console, so an error
-    left uncaught would open a Windows box that waits for someone. It goes to the log."""
+    """No console in CapyPanel.exe: an uncaught error opens a Windows box that waits."""
     try:
         return job()
     except BaseException:  # noqa: BLE001 -- the last word: nothing may reach the screen
@@ -57,13 +52,10 @@ def _self_test(report: Path) -> int:
 
 
 def _apply_update(app_dir: Path, pid: int, old_version: str, new_version: str) -> int:
-    """The new version's exe, run from where its zip was unpacked: swaps it in for the old one once
-    CapyPanel has closed, with "Updating to …" on the splash. It writes to the person's own log."""
     from capypanel.core import applog, i18n, settings, updates
 
     paths = settings.resolve_paths(app_dir)
     applog.setup_logging(paths.log_file)
-    # Its words show on the splash, and in the new start's window when something goes wrong.
     i18n.set_language(settings.language_of(paths.settings_file))
     # Where it runs from: an older version's updater may have unpacked it somewhere else.
     staging = (

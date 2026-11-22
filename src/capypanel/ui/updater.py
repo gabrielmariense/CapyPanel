@@ -1,5 +1,3 @@
-"""Updates in the app: the look at GitHub, and the window with the notes and Install."""
-
 import logging
 import re
 import shutil
@@ -36,23 +34,19 @@ from capypanel.ui.dialogs import run_modal
 log = logging.getLogger(__name__)
 
 PREFS_KEY = "updates"  # this person's: {"last": ISO time, "skip": "0.26.1", "installed": …}
-FIRST_LOOK = 1_000  # ms after the start: the window is drawn first; GitHub answers in a thread
-TICK = 3_600_000  # ms between looks at whether it's time again
+FIRST_LOOK = 1_000  # ms after the start, once the window is drawn
+TICK = 3_600_000  # ms: an hour
 
 
 def packaged() -> bool:
-    """Run as CapyPanel.exe: only that copy updates itself; a source checkout uses git."""
     return bool(getattr(sys, "frozen", False))
 
 
 class Updater(QObject):
-    """Whether there's a newer release, kept as `offer`. Looks on its own only in the exe, as
-    often as this PC's choice says (`folder`): by default after each start, then once a day."""
-
-    changed = Signal()  # `offer` changed: the menu bar's button follows
-    found = Signal()  # a look of its own found a newer release: the window opens for it
-    looked = Signal(object, str)  # after a look: the release or None, and why it failed or ""
-    _answer = Signal(object, str)  # from the thread that asked GitHub
+    changed = Signal()
+    found = Signal()
+    looked = Signal(object, str)
+    _answer = Signal(object, str)
 
     def __init__(
         self, prefs: dict[str, Any], save: Callable[[], None], folder: Path, parent: QObject
@@ -76,16 +70,13 @@ class Updater(QObject):
         return kept
 
     def how_often(self) -> str:
-        """updates.AT_START, DAILY, WEEKLY or OFF, as chosen for this PC."""
         return updates.check_of(self._folder)
 
     def set_how_often(self, how: str) -> None:
-        """For everyone on this PC. Raises OSError where this person can't write it."""
         updates.set_check(self._folder, how)
         log.info("Update checks for this PC: %s", how)
 
     def can_set(self) -> bool:
-        """Whether Windows lets this person change the choice for everyone on this PC."""
         return files.can_create_files(self._folder)
 
     def skipped(self) -> str:
@@ -93,20 +84,17 @@ class Updater(QObject):
         return skip if isinstance(skip, str) else ""
 
     def skip(self, version: str) -> None:
-        """Skip this version: no button for it, until a newer one or a look from Help."""
         self._own()["skip"] = version
         self._save()
         self.offer = None
         self.changed.emit()
 
     def remember_install(self, release: Release) -> None:
-        """Kept through the restart, so the new version can say what it brought."""
         self._own()["installed"] = {"version": release.version, "notes": release.notes,
                                     "page": release.page_url}  # fmt: skip
         self._save()
 
     def take_installed(self) -> dict[str, str]:
-        """What remember_install kept, once: {} when nothing was."""
         kept = self._own().pop("installed", None)
         if kept is not None:
             self._save()
@@ -130,8 +118,6 @@ class Updater(QObject):
             self.look(asked=False)
 
     def look(self, *, asked: bool) -> None:
-        """Ask GitHub, on a thread of its own; `looked` brings the answer. `asked`: from Help or
-        About, so a skipped version is offered again."""
         if self.looking:
             return
         self.looking = True
@@ -166,11 +152,8 @@ class Updater(QObject):
 
 
 class _Job(QObject):
-    """Download, check and unpack, on a thread of its own; `step` brings each step's words
-    and the bytes so far, `ended` the unpacked folder or why it failed."""
-
     step = Signal(str, int, int)
-    ended = Signal(str, str)  # the new version's folder, or ""; why it failed, or ""
+    ended = Signal(str, str)
 
     def __init__(self, release: Release, app_dir: Path) -> None:
         super().__init__()
@@ -204,8 +187,6 @@ class _Job(QObject):
             self.step.emit(_("Unpacking…"), 0, 0)
             new_app = updates.unpack(archive, place.staging)
             archive.unlink(missing_ok=True)
-            # Its self-test now, while CapyPanel is still open: after the restart only the
-            # files' swap is left, a fraction of a second.
             self.step.emit(_("Checking the new version…"), 0, 0)
             if not updates.self_test(new_app / updates.EXE):
                 raise UpdateError(_("The new version didn't pass its self-test"))
@@ -217,25 +198,23 @@ class _Job(QObject):
         self.ended.emit(str(new_app), "")
 
 
-NOTES_HEIGHT = 480  # the most a window grows to show release notes; longer ones scroll
-WIDE, NARROW = 620, 480  # with a list of changes; just a message (nothing new, checking, failed)
-BUSY_WIDTH = 256  # the bar under "Checking for updates…"
-ZERO_WIDTH_SPACE = "​"  # a place a line may break, drawn as nothing
+NOTES_HEIGHT = 480
+WIDE, NARROW = 620, 480
+BUSY_WIDTH = 256
+ZERO_WIDTH_SPACE = "​"
 REASON_MARK = "\x00"  # where a translation puts the reason, so it can start a line
-BODY = (24, 22, 24, 18)  # the body's margins: left, top, right, bottom
+BODY = (24, 22, 24, 18)
 SHORT_BODY = (24, 36, 24, 32)  # just a message: more room above and below, so it sits centred
-GAPS = {"links": 16, "busy": 16}  # above the links, above the busy bar
-SHORT_GAPS = {"links": 10, "busy": 6}  # closer under a centred message (the bar: with no line)
+GAPS = {"links": 16, "busy": 16}
+SHORT_GAPS = {"links": 10, "busy": 6}
 
 _LINK = re.compile(r"\[([^\]]+)\]\((https://[^)\s]+)\)")
 
 
 def changes_and_links(notes: str) -> tuple[list[str], list[tuple[str, str]]]:
-    """A release's notes as the window shows them: one change per bullet (or paragraph), and
-    apart, every line that is only a link (the code-signing policy), as (words, address)."""
     changes: list[str] = []
     links: list[tuple[str, str]] = []
-    open_item = False  # the last line belongs to a change that may go on
+    open_item = False
     for raw in notes.splitlines():
         line = raw.strip()
         only_link = _LINK.fullmatch(line)
@@ -256,7 +235,6 @@ def changes_and_links(notes: str) -> tuple[list[str], list[tuple[str, str]]]:
 
 
 def _inline(text: str) -> str:
-    """A change's words as rich text: escaped, with the notes' links, **bold** and `code`."""
     out, at = [], 0
     for found in _LINK.finditer(text):
         out.append(_marks(text[at : found.start()]))
@@ -277,9 +255,6 @@ def _link(words: str, url: str) -> str:
 
 
 class _Changes(QScrollArea):
-    """The list of changes: as tall as its rows want, so the window grows to show them all,
-    and willing to shrink (and scroll) once the window is at its tallest."""
-
     def __init__(self) -> None:
         super().__init__()
         self.width_for_rows = WIDE - 48
@@ -295,12 +270,9 @@ class _Changes(QScrollArea):
 
 
 class _Frame(QDialog):
-    """The update windows' look, as Windows 11's dialogs: a soft body (icon, title, version chip,
-    line, changes with a ✓ each, links) over a footer of buttons; a lone message sits centred."""
-
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setWindowTitle("CapyPanel")  # the app's name, in every language
+        self.setWindowTitle("CapyPanel")
         self._shown: list[str] = []
         body = QWidget()
         body.setObjectName("updateBody")
@@ -352,7 +324,7 @@ class _Frame(QDialog):
         self._body.addWidget(self.links)
         self._gap_busy = self._spacer(GAPS["busy"])
         self._body.addWidget(self.busy, 0, Qt.AlignmentFlag.AlignHCenter)
-        self._body.addStretch(0)  # the slack, when there are no changes to take it
+        self._body.addStretch(0)
         footer = QWidget()
         footer.setObjectName("updateFooter")
         footer.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
@@ -360,7 +332,7 @@ class _Frame(QDialog):
         self.buttons.setContentsMargins(24, 16, 24, 16)
         self.buttons.setSpacing(8)
         self.help_button = help_links.HelpButton("download-update-capypanel")
-        self.buttons.addWidget(self.help_button)  # first, on the footer's left
+        self.buttons.addWidget(self.help_button)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -373,11 +345,7 @@ class _Frame(QDialog):
         self._body.addWidget(gap)
         return gap
 
-    # ---- what it shows ----
-
     def full(self, heading: str, chip: str, line: str, notes: str, page: str) -> None:
-        """The window with its icon, chip, the notes' changes and links: `page` is the release
-        on GitHub, "" when there's none to link."""
         changes, links = changes_and_links(notes)
         if page.startswith("https://"):
             links.insert(0, (_("Notes on GitHub"), page))
@@ -390,8 +358,6 @@ class _Frame(QDialog):
 
     def short(self, message: str, line: str = "", link: tuple[str, str] | None = None,
               *, busy: bool = False) -> None:  # fmt: skip
-        """Just a message, bigger and in the middle, with a grey line, a link or a busy bar
-        under it."""
         self._set_rows([])
         self._shape(full=False, heading=message, line=line, links=[link] if link else [])
         self.chip.setVisible(False)
@@ -405,7 +371,7 @@ class _Frame(QDialog):
         self.icon.setVisible(full)
         self._body.setContentsMargins(*(BODY if full else SHORT_BODY))
         self._gap_links.setFixedHeight((GAPS if full else SHORT_GAPS)["links"])
-        self.changes.width_for_rows = (WIDE if full else NARROW) - 48  # less the body's margins
+        self.changes.width_for_rows = (WIDE if full else NARROW) - 48
         centre = Qt.AlignmentFlag.AlignHCenter if not full else Qt.AlignmentFlag.AlignLeft
         for label in (self.heading, self.line, self.links):
             label.setAlignment(centre | Qt.AlignmentFlag.AlignVCenter)
@@ -448,12 +414,9 @@ class _Frame(QDialog):
         rows.addStretch(1)
 
     def changes_text(self) -> list[str]:
-        """The changes shown, as the notes word them."""
         return list(self._shown)
 
     def _fit(self) -> None:
-        """Tall enough for the changes it shows, up to NOTES_HEIGHT, past which they scroll;
-        without changes, just its few lines."""
         layout = self.layout()
         if layout is None:
             return
@@ -464,8 +427,6 @@ class _Frame(QDialog):
 
 
 class UpdateWindow(_Frame):
-    """One window for an update: what's new, then the download's progress in its footer."""
-
     def __init__(
         self,
         parent: QWidget,
@@ -480,7 +441,7 @@ class UpdateWindow(_Frame):
         self._working, self._quit_for_update = working, quit_for_update
         self._release: Release | None = None
         self._job: _Job | None = None
-        self.reason = QLabel()  # why this copy can't install it: under the links, in grey
+        self.reason = QLabel()
         self.reason.setObjectName("updateLine")
         self.reason.setWordWrap(True)
         self.reason.setContentsMargins(0, 12, 0, 0)
@@ -498,7 +459,7 @@ class UpdateWindow(_Frame):
         self.install.clicked.connect(self._install)
         self.later.clicked.connect(self._later)
         self.skip.clicked.connect(self._skip)
-        self._going = QWidget()  # the download's words over its bar, in Skip's place
+        self._going = QWidget()
         going = QVBoxLayout(self._going)
         going.setContentsMargins(0, 0, 0, 0)
         going.setSpacing(6)
@@ -519,10 +480,7 @@ class UpdateWindow(_Frame):
         else:
             self._checking()
 
-    # ---- what it shows ----
-
     def _closing_only(self) -> None:
-        """Nothing new, checking, couldn't check: Close at the right, nothing else."""
         self.reason.setVisible(False)
         self.skip.setVisible(False)
         self._going.setVisible(False)
@@ -543,7 +501,7 @@ class UpdateWindow(_Frame):
 
     def _looked(self, release: Release | None, error: str) -> None:
         if self._release is not None:
-            return  # already showing one
+            return
         if release is not None:
             self._show(release)
         elif error:
@@ -561,7 +519,7 @@ class UpdateWindow(_Frame):
                   _("Your settings, lists and saved logins stay as they are."),
                   notes_here(release.notes), release.page_url)  # fmt: skip
         why = self._cannot_install()
-        self.reason.setText(breakable(why))  # a long folder wraps instead of widening it
+        self.reason.setText(breakable(why))
         self.reason.setVisible(bool(why))
         self.skip.setVisible(True)
         self.skip.setEnabled(True)
@@ -583,13 +541,10 @@ class UpdateWindow(_Frame):
         return ""
 
     def _footer_says(self, words: str, *, bar: bool) -> None:
-        """The download's words (and its bar) in the footer's left, where Skip was."""
         self.skip.setVisible(False)
         self._going.setVisible(True)
         self.progress.setVisible(bar)
         self.status.setText(words)
-
-    # ---- buttons ----
 
     def _install(self) -> None:
         release = self._release
@@ -631,19 +586,16 @@ class UpdateWindow(_Frame):
         self._try_restart()
 
     def _stays_open(self, why: str) -> None:
-        """It didn't go ahead: why, in the footer, and Install again."""
         self.install.setEnabled(True)
         self.later.setText(_("&Later"))
         self._default(self.install)
         self._footer_says(why, bar=False)
 
     def _try_restart(self) -> None:
-        """Once nothing is at work (a Refresh), CapyPanel closes and the new version's own exe
-        swaps the folders and starts it."""
         release = self._release
         if release is None:
             return
-        if open_ssh := self._ssh_windows_open():  # one opened while it downloaded
+        if open_ssh := self._ssh_windows_open():
             self._waiting.stop()
             self._say(open_ssh)
             self._stays_open(open_ssh)
@@ -660,7 +612,7 @@ class UpdateWindow(_Frame):
             args = updates.helper_args(self._app_dir, updates.own_pid(), __version__,
                                        release.version)  # fmt: skip
             log.info("Update: handing over to %s", args[0])
-            updates.start(Path(args[0]), *args[1:])  # its splash: "Updating to …"
+            updates.start(Path(args[0]), *args[1:])
 
         self._updater.remember_install(release)
         if not self._quit_for_update(start_helper):
@@ -669,8 +621,8 @@ class UpdateWindow(_Frame):
                                "you're ready."))  # fmt: skip
 
     def _ssh_windows_open(self) -> str:
-        """Separate SSH windows run from CapyPanel's folder and keep its files in use, so the
-        swap couldn't replace them: how many are open, in words; "" when none is."""
+        """SSH windows run from CapyPanel's folder and hold its files: the swap couldn't replace
+        them."""
         n = ssh_launch.open_windows()
         if not n:
             return ""
@@ -683,7 +635,6 @@ class UpdateWindow(_Frame):
         ).format(n=n)
 
     def _say(self, text: str) -> None:
-        """OK is its only button: installing anyway isn't a choice, the swap would roll back."""
         box = QMessageBox(
             QMessageBox.Icon.Information, "CapyPanel", text, QMessageBox.StandardButton.Ok, self
         )
@@ -709,17 +660,10 @@ class UpdateWindow(_Frame):
 
 
 def notes_here(notes: str) -> str:
-    """A release's notes in the language CapyPanel is shown in, when they have that part."""
     return updates.notes_in(notes, i18n.LANGUAGES.get(i18n.language(), ""))
 
 
-# ---- after a restart ----
-
-
 class RestartWindow(_Frame):
-    """After the helper started CapyPanel again: the new version is in, with its changes, or
-    why it didn't go in."""
-
     def __init__(
         self, parent: QWidget, kind: str, version: str, why: str, installed: dict[str, str]
     ) -> None:
@@ -737,7 +681,6 @@ class RestartWindow(_Frame):
                       notes_here(installed.get("notes", "")) if kept else "",
                       installed.get("page", "") if kept else "")  # fmt: skip
         else:
-            # The reason starts its own line: two short sentences, never one word left alone.
             line = _("You still have CapyPanel {current}. {why}.").format(
                 current=__version__, why=REASON_MARK
             )
@@ -748,8 +691,6 @@ class RestartWindow(_Frame):
 
 
 def after_restart(argv: list[str]) -> tuple[str, str, str] | None:
-    """What the helper said when it started CapyPanel again: ("updated", old version, ""),
-    ("failed", new version, why), or None for a plain start."""
     if len(argv) >= 3 and argv[1] == updates.UPDATED_FLAG:
         return "updated", argv[2], ""
     if len(argv) >= 4 and argv[1] == updates.FAILED_FLAG:
@@ -765,14 +706,12 @@ def restart_text(kind: str, version: str, why: str) -> str:
 
 
 def breakable(text: str) -> str:
-    """`text` with a place to break the line after each backslash of a folder: a label wraps
-    only at spaces, so a long path would otherwise widen the window or run past its edge."""
+    """A label wraps only at spaces: a long path would widen the window or run past its edge."""
     return text.replace("\\", "\\" + ZERO_WIDTH_SPACE)
 
 
 def sentence(why: str) -> str:
-    """Why an update failed, as a sentence of its own: a capital first, and no closing period,
-    which the text around it adds (a Windows error can bring its own)."""
+    """No closing period: the text around it adds one, and a Windows error can bring its own."""
     why = why.strip().rstrip(".")
     return why[:1].upper() + why[1:]
 

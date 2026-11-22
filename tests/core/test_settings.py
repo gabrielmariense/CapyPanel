@@ -17,7 +17,7 @@ def test_everything_is_in_one_folder_per_computer(tmp_path: Path) -> None:
     root = Path(r"C:\ProgramData\CapyPanel")
     assert not paths.portable and paths.root == root
     assert paths.settings_file == root / "users" / "ana@CORP" / "settings.json"
-    hosts = paths.lists("hosts")  # a folder per tool, shared and the user's own
+    hosts = paths.lists("hosts")
     assert hosts.personal == root / "users" / "ana@CORP" / "lists" / "hosts" / "personal.json"
     assert paths.log_file == root / "logs" / "ana@CORP.log"
     assert hosts.default == root / "lists" / "hosts" / "default.json"
@@ -56,7 +56,7 @@ def test_first_run_creates_only_a_private_user_folder(tmp_path: Path) -> None:
     [dacl] = [line for line in sddl.splitlines() if line.startswith("D:")]
     assert dacl.startswith("D:P")
     aces = re.findall(r"\(A;OICI;FA;;;([^)]+)\)", dacl)
-    assert dacl.count("(") == len(aces) == 3  # full access for exactly three accounts, nothing else
+    assert dacl.count("(") == len(aces) == 3
     # Windows writes some accounts in short form ("LA" = the built-in Administrator, as on CI).
     assert {_long_sid(a) for a in aces} == {
         winsec.SYSTEM,
@@ -66,7 +66,6 @@ def test_first_run_creates_only_a_private_user_folder(tmp_path: Path) -> None:
 
 
 def _long_sid(text: str) -> str:
-    # "S-1-5-18" for "SY", and so on; long forms come back unchanged.
     advapi32 = ctypes.WinDLL("advapi32")
     advapi32.ConvertStringSidToSidW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_void_p)]
     advapi32.ConvertSidToStringSidW.argtypes = [
@@ -120,9 +119,9 @@ def test_non_object_json_is_set_aside(tmp_path: Path) -> None:
 def test_each_tool_has_its_own_section_and_hosts_starts_from_0_19s_settings() -> None:
     prefs = {"schema": 1, "theme": "graphite", "recent_lists": ["a.json"], "view": {"tags": False}}
     hosts = settings.tool_prefs(prefs, "hosts", inherit=True)
-    assert hosts == {"recent_lists": ["a.json"], "view": {"tags": False}}  # not the shell's own
+    assert hosts == {"recent_lists": ["a.json"], "view": {"tags": False}}
     hosts["recent_lists"].append("b.json")
-    assert prefs["recent_lists"] == ["a.json"]  # a copy: 0.19 still reads what it kept
-    assert settings.tool_prefs(prefs, "hosts", inherit=True) is hosts  # made once
-    assert settings.tool_prefs(prefs, "printers") == {}  # a new tool starts empty
+    assert prefs["recent_lists"] == ["a.json"]
+    assert settings.tool_prefs(prefs, "hosts", inherit=True) is hosts
+    assert settings.tool_prefs(prefs, "printers") == {}
     assert set(prefs["tools"]) == {"hosts", "printers"}

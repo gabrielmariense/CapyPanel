@@ -1,5 +1,3 @@
-"""`CapyPanel.exe --self-test`: the check the packaged exe runs on itself."""
-
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -14,7 +12,7 @@ from capypanel.ui.themes import engine as themes
 
 @pytest.fixture
 def as_before(qapp: QApplication) -> Iterator[None]:
-    yield  # it goes through every theme and language
+    yield
     themes.apply(themes.DEFAULT_THEME)
     language.apply(i18n.DEFAULT_LANGUAGE)
 
@@ -35,13 +33,13 @@ def test_it_passes_from_source_and_says_what_it_checked(
     assert "themes 7" in window and "languages 2" in window
     assert passed[-2].startswith("ok    the SSH terminal: pseudo console, screen, drawing")
     assert passed[-1] == "ok    Windows 10's console engine: cmd.exe, its notices"
-    assert not own.exists()  # the folder it worked in is gone
+    assert not own.exists()
 
 
 def test_a_missing_part_fails_it_and_the_report_says_which(
     as_before: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(themes, "THEMES_DIR", tmp_path)  # as a build that left the themes out
+    monkeypatch.setattr(themes, "THEMES_DIR", tmp_path)
     monkeypatch.setattr(selftest, "_whole_window", lambda root: ["skipped here"])
     report = tmp_path / "report.txt"
     assert selftest.run(report) == 1
