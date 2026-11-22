@@ -102,7 +102,7 @@ def _shown(targets: Targets, window: QWidget) -> list[QWidget]:
 
 
 class _Shade(QWidget):
-    """Dims the window round the steps's controls and outlines them. It takes every click and
+    """Dims the window round the step's controls and outlines them. It takes every click and
     wheel turn on the window, except on a control the step asks you to click."""
 
     def __init__(self, window: QWidget) -> None:

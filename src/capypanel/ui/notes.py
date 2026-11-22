@@ -14,7 +14,6 @@ def escape(text: str) -> str:
 
 
 def divider() -> QFrame:
-    """A thin line across, between two parts of a panel."""
     line = QFrame()
     line.setObjectName("divider")
     line.setFixedHeight(1)

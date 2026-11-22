@@ -46,7 +46,7 @@ def grid_table(headers: list[str]) -> QTreeWidget:
     table.setHeaderLabels(headers)
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     header = table.header()
-    header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
+    header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
     header.setStretchLastSection(False)  # _fit_width gives the last column what's left
     table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     refit = _Refit(table)
