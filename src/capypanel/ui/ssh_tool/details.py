@@ -24,7 +24,7 @@ from capypanel.ui.themes import engine as themes
 class SshDetails:
     host: Host
     group: str  # its full path
-    checked: Checked | None = None  # its last check
+    checked: Checked | None = None
     reachable: bool = True  # it has an address, or a name ssh.exe can take
     hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
     login: str = ""  # the name it logs in with: its own, or its group's

@@ -404,7 +404,6 @@ class TerminalView(QAbstractScrollArea):
 
     @property
     def closed_by_us(self) -> bool:
-        """The connection ended because CapyPanel closed it, not by itself."""
         return self._closed_by_us
 
     @property

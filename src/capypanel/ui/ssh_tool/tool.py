@@ -120,7 +120,7 @@ class SshTool(TabbedListWorkspace):
         self._connect_typed.triggered.connect(self._connect_to_typed)
         self.table.set_cells(self._cell)
         self.table.set_logins(self._login_shown)
-        self.settings_pages = SshSettings(self)  # its part of Settings
+        self.settings_pages = SshSettings(self)
         self._fill_inventory()
         self._connect()
         self.restore_layout()
