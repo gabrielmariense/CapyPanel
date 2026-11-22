@@ -3,6 +3,15 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.30.1 <a id="whats-new-0301"></a>
+
+- No SSH e na Limpeza de perfis, a linha curta ao lado da aba da lista agora é um traço fino na
+  cor das bordas do tema, como os da barra de ferramentas, então não parece mais um cursor de
+  texto.
+- Numa aba do SSH, uma linha longa demais para a aba, que continua na fileira seguinte, agora é
+  copiada como uma linha só e colada inteira. Antes, a cópia tinha uma quebra de linha onde ela
+  continuava.
+
 ## 0.30.0 <a id="whats-new-0300"></a>
 
 - A F1, o **Ajuda > Ajuda desta tela** ou o novo **?** embaixo na barra lateral abre estas páginas

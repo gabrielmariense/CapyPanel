@@ -151,6 +151,8 @@ Select text with the mouse to copy it. A right-click opens **Copy**, **Paste**, 
       installed; line, block and Powerline characters are drawn by CapyPanel, so boxes join with
       no gaps.
     - The text size is one for every tab, and it's kept for next time.
+    - A line too long for the tab goes on to the next row, and copies as one line, so it pastes
+      whole.
     - Each tab keeps the last 10,000 lines. Nothing you type, paste or see is logged or saved, and
       nothing of a connection outlives CapyPanel but the text size.
 

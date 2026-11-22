@@ -3,6 +3,13 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.30.1 <a id="whats-new-0301"></a>
+
+- In SSH and Profile cleanup, the short line beside the list's tab is now a thin line in the
+  theme's border colour, like the toolbar's, so it no longer looks like a text cursor.
+- In an SSH tab, a line too long for the tab, which goes on to the next row, now copies as one
+  line and pastes whole. Before, the copy had a line break where it wrapped.
+
 ## 0.30.0 <a id="whats-new-0300"></a>
 
 - F1, **Help > Help for this screen** or the new **?** at the bottom of the sidebar opens these
