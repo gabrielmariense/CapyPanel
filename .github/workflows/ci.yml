@@ -31,7 +31,7 @@ jobs:
         run: uv run pytest -n auto --dist loadgroup
 
   help-links:
-    # Every place the app's help opens is on its docs page, in both languages. A job of its own:
+    # Help's places are on their docs pages, and the pages quote the app's words. A job of its own:
     # docs lines come after the code freeze, so it can be red while the checks above are green.
     runs-on: windows-latest
     steps:
@@ -41,5 +41,5 @@ jobs:
           enable-cache: true
       - name: Install (exactly the versions in uv.lock)
         run: uv sync --locked
-      - name: Help links
+      - name: Help links and quoted messages
         run: uv run pytest tests/docs -m docs_links
