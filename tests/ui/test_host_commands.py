@@ -28,6 +28,7 @@ from capypanel.ui.hosts_tool.command_windows import (
     PrintersDialog,
     ProgramsDialog,
 )
+from capypanel.ui.hosts_tool.details import MENU_MARK
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.icons import TABLER_DIR
 from capypanel.ui.menus import label
@@ -161,8 +162,8 @@ def test_details_shows_a_grid_of_worded_buttons(window: CapyWindow) -> None:
         "quick:c-share", "quick:user-folder", "quick:computer-management", "quick:message",
     ]  # fmt: skip
     words = [b.text() for b in buttons.values()]
-    assert words == ["Refresh", "Commands", "Users ▾", "Power ▾", "C$", "Folder", "Manage",
-                     "Message"]  # fmt: skip
+    assert words == ["Refresh", "Commands", f"Users {MENU_MARK}", f"Power {MENU_MARK}", "C$",
+                     "Folder", "Manage", "Message"]  # fmt: skip
     assert len({b.size().toTuple() for b in buttons.values()}) == 1
     assert buttons["quick:computer-management"].toolTip() == "Computer Management"
     assert not buttons["users"].isEnabled()

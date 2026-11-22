@@ -36,6 +36,7 @@ NOBODY_FOR = timedelta(minutes=10)
 ICON = 18
 PICKER_HEIGHT = 28
 GB = 1024**3
+MENU_MARK = "\u02c5"  # ˅, in Segoe UI: for ▾ Windows searches its fonts, 0.7 s on a slow PC
 
 
 @dataclass(frozen=True)
@@ -149,13 +150,13 @@ class HostDetailsPanel(DetailsPanel):
                                 _("Every command for this PC, in the Commands window"))  # fmt: skip
         commands.clicked.connect(self.commands_requested)
         people = _people(details)
-        users = self.word_button("user-x", amber, f"{fixed['users']} ▾",
+        users = self.word_button("user-x", amber, f"{fixed['users']} {MENU_MARK}",
                              _("Log off or disconnect someone"), risky=True)  # fmt: skip
         users.setMenu(self.users_menu)
         users.setEnabled(reachable and bool(people))
         if reachable and not people:
             users.setToolTip(_("No one is signed in, or no one was checked: use Refresh"))
-        power = self.word_button("power", amber, f"{fixed['power']} ▾",
+        power = self.word_button("power", amber, f"{fixed['power']} {MENU_MARK}",
                              _("Restart or shut down"), risky=True)  # fmt: skip
         power.setMenu(self.power_menu)
         for button in (refresh, commands, power):
@@ -192,7 +193,7 @@ class HostDetailsPanel(DetailsPanel):
 
     def _button_width(self) -> int:
         fixed = quick.fixed_labels()
-        words = [f"{fixed[k]} ▾" if k in ("users", "power") else fixed[k] for k in fixed]
+        words = [f"{fixed[k]} {MENU_MARK}" if k in ("users", "power") else fixed[k] for k in fixed]
         return self.grid_width([*words, *quick.short_labels().values()])
 
     def minimum_width(self) -> int:
