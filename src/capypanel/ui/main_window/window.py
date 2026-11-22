@@ -38,6 +38,7 @@ from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.main_window.tray import Tray, ask_closing
 from capypanel.ui.menus import StayOpenMenu, label, plain
 from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
+from capypanel.ui.settings.pages import open_folder
 from capypanel.ui.settings.window import HEIGHT as SETTINGS_HEIGHT
 from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
@@ -632,9 +633,24 @@ class MainWindow(QMainWindow):
                        "again brings every guide back, and Documentation opens the step-by-step "
                        "pages."),
                      lambda: None, lambda: home, area=help_title),
+                *([self._portable_step()] if self.paths.portable else []),
             ]  # fmt: skip
 
-        return Guide("home", steps, docs="getting-started/", mascot=True)
+        docs = "getting-started/"
+        if self.paths.portable:
+            docs = "settings-and-files/#settings-portable-mode"
+        return Guide("home", steps, docs=docs, mascot=True)
+
+    def _portable_step(self) -> Step:
+        folder = self.paths.root
+        text = _("This copy keeps everything it saves (settings, lists, connection profiles and "
+                 "logs) in the userdata folder beside CapyPanel.exe. Passwords you save stay in "
+                 "Windows on this PC, so they don't travel with the folder. Lists and settings "
+                 "from another copy of CapyPanel aren't brought in: click the list's name on top "
+                 "of the Groups panel and use Open list…, or copy their files into the userdata "
+                 "folder.")  # fmt: skip
+        opens = (_("Open the userdata folder"), lambda: open_folder(folder))
+        return Step(_("A portable copy"), text, lambda: None, action=opens)
 
     def tools_working(self) -> bool:
         return any(tool.working() for tool in self.tools.values())

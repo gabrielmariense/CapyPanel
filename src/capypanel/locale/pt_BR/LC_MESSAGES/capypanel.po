@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 17:50-0300\n"
+"POT-Creation-Date: 2026-11-22 17:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -558,6 +558,9 @@ msgstr "Saiu uma versão mais nova do CapyPanel: veja o que mudou"
 
 msgid "A pop-up on the screen of everyone signed in."
 msgstr "Um aviso na tela de todos que estão conectados."
+
+msgid "A portable copy"
+msgstr "Uma cópia portátil"
 
 #, python-brace-format
 msgid "A preset named “{name}” already exists. Replace it?"
@@ -2750,6 +2753,9 @@ msgstr "Abrir o histórico"
 msgid "Open the selected printers' web pages"
 msgstr "Abre a página web das impressoras selecionadas"
 
+msgid "Open the userdata folder"
+msgstr "Abrir a pasta userdata"
+
 msgid "Open web page"
 msgstr "Abrir página web"
 
@@ -4320,6 +4326,9 @@ msgstr "Este cartão mostra em que ponto está cada PC que você abriu."
 
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
+
+msgid "This copy keeps everything it saves (settings, lists, connection profiles and logs) in the userdata folder beside CapyPanel.exe. Passwords you save stay in Windows on this PC, so they don't travel with the folder. Lists and settings from another copy of CapyPanel aren't brought in: click the list's name on top of the Groups panel and use Open list…, or copy their files into the userdata folder."
+msgstr "Esta cópia guarda tudo o que salva (configurações, listas, perfis de conexão e logs) na pasta userdata, ao lado do CapyPanel.exe. As senhas que você salva ficam no Windows deste PC, então não vão junto com a pasta. Listas e configurações de outra cópia do CapyPanel não são trazidas: clique no nome da lista no topo do painel Grupos e use Abrir lista…, ou copie os arquivos delas para a pasta userdata."
 
 msgid "This copy runs from source: update it with git, or download the zip from the release page."
 msgstr "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão."

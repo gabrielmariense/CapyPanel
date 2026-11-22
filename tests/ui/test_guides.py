@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -54,7 +55,10 @@ def test_someone_new_gets_every_guide_and_someone_upgrading_none_of_them() -> No
     assert guides.seen_from(kept) == ["home"]
 
 
-def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> None:
+def test_home_s_guide_steps_through_and_is_kept_as_seen(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window, "paths", replace(window.paths, portable=False))
     runner = window.guides
     runner.show(window._home_guide())
     _settle()
@@ -91,6 +95,28 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     card.next_button.click()
     assert runner.running == "" and card.isHidden() and runner.seen("home")
     assert window.prefs["guides"] == ["home"]
+
+
+def test_a_portable_copy_s_home_guide_ends_with_where_it_keeps_everything(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[Path] = []
+    monkeypatch.setattr(window_module, "open_folder", opened.append)
+    runner = window.guides
+    runner.show(window._home_guide())
+    _settle()
+    card = runner.card
+    assert card.dots.text() == "● ○ ○ ○ ○"
+    for _card in range(4):
+        card.next_button.click()
+    assert card.title.text() == "A portable copy" and card.next_button.text() == "Done"
+    text = card.text.text()
+    assert "userdata folder" in text and "settings-and-files/#settings-portable-mode" in text
+    assert not card.action.isHidden() and card.action.text() == "Open the userdata folder"
+    card.action.click()
+    assert opened == [window.paths.root]
+    card.next_button.click()
+    assert runner.running == "" and runner.seen("home")
 
 
 def test_skip_counts_as_seen_and_leaving_the_screen_doesn_t(window: CapyWindow) -> None:
