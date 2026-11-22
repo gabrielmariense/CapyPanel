@@ -1,27 +1,4 @@
-r"""One program on one Windows pseudo console (ConPTY), inside a job object: how the terminal
-runs ssh.exe out of sight. Qt-free, so it lives in core.
-
-Its threads never touch a widget: the reader thread fills a bounded buffer and calls `on_ready`
-when the buffer goes from empty to not empty; the window takes the bytes with `take()` on its
-own thread. A full buffer stops the reader, so a flood waits for the screen instead of piling up
-in memory, and Ctrl+C takes effect at once.
-
-Two engines can make the pseudo console. Windows 11's own works. Windows 10's never asks for
-keys as key events and, once ssh.exe logs in, takes no key at all (the Windows 10 test of build
-633), so before Windows 11 the terminal starts the engine CapyPanel carries in vendor/conpty:
-Windows Terminal's, Microsoft's own build, as VS Code does. When that one won't start, Windows'
-own takes over.
-
-What it relies on, each measured on the pseudo console:
-- STARTF_USESTDHANDLES with empty handles: otherwise a program started from a process whose own
-  std handles are redirected writes there instead of into the pseudo console;
-- no PSEUDOCONSOLE_INHERIT_CURSOR flag, or the console asks for the cursor position at start;
-- SetConsoleCtrlHandler(NULL, FALSE) before CreateProcess, or an inherited "ignore Ctrl+C" flag
-  keeps Ctrl+C from stopping a program that reads processed input;
-- started suspended, put in a job that ends its programs when closed, then resumed, so closing
-  a tab never leaves ssh.exe running.
-
-Never anything typed or printed in a log: all this module logs is which engine it uses."""
+"""One program on a Windows pseudo console, in a job object; nothing typed or printed is logged."""
 
 from __future__ import annotations
 
@@ -252,8 +229,7 @@ _carried: list[Engine | None] = []  # loaded once, by the first pseudo console t
 
 
 def carried_engine() -> Engine | None:
-    """The engine in vendor/conpty, loaded on first use; None when it isn't there or won't
-    load."""
+    """The engine in vendor/conpty, loaded on first use; None when it isn't there or won't load."""
     if not _carried:
         _carried.append(_load_carried())
     return _carried[0]
@@ -289,8 +265,8 @@ def _windows_build() -> int:
 
 
 def default_engine() -> Engine:
-    """Windows before 11 gets the carried engine; Windows 11, or a carried engine that won't
-    load, Windows' own."""
+    """Windows before 11 gets the carried engine: Windows 10's own takes no key once ssh.exe logs
+    in. Windows 11, or a carried engine that won't load, gets Windows' own."""
     if _windows_build() < WINDOWS_11:
         carried = carried_engine()
         if carried is not None:
@@ -316,8 +292,8 @@ class PseudoConsole:
         flags: int = 0,
         engine: Engine | None = None,
     ) -> None:
-        """`flags` go to the engine as they are (0 by default), with its own added. `engine`:
-        default_engine()'s, unless given."""
+        """`flags` go to the engine, with its own added (not INHERIT_CURSOR: it asks for the cursor
+        position at start). `engine`: default_engine()'s, unless given."""
         self.argv = list(argv)
         self.engine = engine or default_engine()
         self._on_ready = on_ready
@@ -379,9 +355,11 @@ class PseudoConsole:
             raise ctypes.WinError(error)
         si = STARTUPINFOEXW()
         si.StartupInfo.cb = ctypes.sizeof(STARTUPINFOEXW)
-        si.StartupInfo.dwFlags = _STARTF_USESTDHANDLES  # empty std handles: see the module text
+        # Empty std handles: otherwise a program started from redirected ones writes there.
+        si.StartupInfo.dwFlags = _STARTF_USESTDHANDLES
         si.lpAttributeList = ctypes.cast(self._attrs, ctypes.c_void_p)
         self._pi = PROCESS_INFORMATION()
+        # Suspended until it's in the job that ends it on close: no ssh.exe outlives its tab.
         flags = _EXTENDED_STARTUPINFO_PRESENT | _CREATE_UNICODE_ENVIRONMENT | _CREATE_SUSPENDED
         env_block = _environment_block(env) if env is not None else None
         cmdline = ctypes.create_unicode_buffer(subprocess.list2cmdline(self.argv))
@@ -441,6 +419,7 @@ class PseudoConsole:
         while k32.ReadFile(self._out, buf, 65536, ctypes.byref(got), None) and got.value:
             chunk = buf.raw[: got.value]
             with self._cond:
+                # Full: the reader waits, so a flood waits for the screen and Ctrl+C acts at once.
                 while len(self._pending) >= self._max_pending and not self._closing:
                     self._cond.wait(0.1)
                 was_empty = not self._pending

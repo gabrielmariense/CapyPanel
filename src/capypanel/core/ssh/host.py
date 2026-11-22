@@ -1,11 +1,4 @@
-"""An SSH host's own details: the port and the name to log in as.
-
-They live in the host entry under one key, "ssh", in the host lists Hosts and Profile cleanup
-show too: Hosts keeps the key as found when it saves. A group can give its hosts a name to log in
-as under the same key; a host's own name wins, and the nearest group's applies to a host without
-one. Odd values are read as the defaults and the original is kept as found, so opening and saving
-a list never loses anything. Nothing secret is kept: Windows' ssh.exe asks for the password, or
-uses a key, itself."""
+"""An SSH host's port and login name, under its entry's "ssh" key; no secret: ssh.exe asks."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
@@ -25,8 +18,7 @@ REFUSED_IN_LOGIN = frozenset("\"&'();<>`{|}")
 @dataclass(frozen=True)
 class SshInfo:
     port: int = DEFAULT_PORT
-    login: str = ""  # the name ssh.exe logs in with; "" leaves it to ssh.exe: its config, then
-    # the Windows user name
+    login: str = ""  # "": ssh.exe's config decides, then the Windows user name
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys this version doesn't know
 
 
@@ -114,9 +106,8 @@ def connect_info(hosts: HostList, host: Host) -> SshInfo:
 
 
 def with_group_login(hosts: HostList, group_id: str, login: str) -> HostList:
-    """The list with the group's own name to log in as; "" follows its parent again. Anything
-    else under the group's "ssh" key stays as found; a key that isn't a mapping is replaced, as
-    a host's is (with_info)."""
+    """The list with the group's own name to log in as; "" follows its parent again. The rest of
+    the group's "ssh" key stays as found; a non-mapping one is replaced, as with_info does."""
 
     def changed(group: Group) -> Group:
         if group.id != group_id:

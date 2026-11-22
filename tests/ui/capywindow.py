@@ -1,5 +1,4 @@
-"""The window as CapyPanel makes it (every tool), for the UI tests, with typed access to its
-tools. It opens on Hosts unless the settings say otherwise: most tests start there."""
+"""The window as CapyPanel makes it, with typed access to its tools; it opens on Hosts."""
 
 from typing import Any
 

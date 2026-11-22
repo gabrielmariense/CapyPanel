@@ -1,9 +1,4 @@
-"""The Settings window: a search and the page list on the left, the page on the right. No
-buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The
-page list names each group (CapyPanel, then each tool) with its pages under it, and About at the
-very bottom; a click shows that one page, which scrolls on its own when it's taller than the
-window. A tool's pages apply their choices through the tool (see SettingsGroup). The ? under
-the page list, and F1, open the docs at the part about the page shown."""
+"""The Settings window: search, the page list and the page; each choice applies as it's made."""
 
 from collections.abc import Sequence
 
@@ -39,10 +34,8 @@ from capypanel.ui.tool_catalog import ToolInfo
 APP_GROUP = ("CapyPanel", ("general",))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
-# As it opens the first time: room for a table row such as a domain account, its PC and where
-# it's kept, and in Windows' own themes, whose rows are taller, for every page in the list with
-# About apart from the last one, under which the ? takes its own line (700 until 0.30). From
-# there the size is the person's: any size, and a page too large for it scrolls.
+# The first opening's size: room for a table row like a domain account, its PC and where it's
+# kept, and in Windows' themes, with taller rows, for every page listed. Then it's the person's.
 WIDTH, HEIGHT = 960, 740
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 GUTTER = 16  # right of the pages and under the last one: the columns' gap left of them
@@ -83,7 +76,7 @@ class SettingsDialog(QDialog):
         self._groups = list(groups)
         self._keys, self._place_names = keys, dict(place_names or {})
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
-        # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
+        # holding a list can crash Qt after a theme switch.
         self._old: list[QWidget] = []
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)  # the contents' own margin, which the ? uses
@@ -146,7 +139,6 @@ class SettingsDialog(QDialog):
         self.page_list.setObjectName("pageList")
         # No setUniformItemSizes: it caches a row height measured before the theme reaches the
         # list, and the rows then overlap (13 px rows for 27 px of text).
-        # Each group: its label (not picked), then its pages.
         self._rows: list[str | None] = []
         for group, ids in self._layout_groups:
             label = QListWidgetItem(_(group))
@@ -203,11 +195,11 @@ class SettingsDialog(QDialog):
         side.addWidget(self.search)
         side.addWidget(self.page_list, 1)
         side.addWidget(self.pinned_list)
-        # Help on its own line under the pages, at the search's left edge (topic-030).
+        # Help on its own line under the pages, at the search's left edge.
         self.help_button = help_links.HelpButton(self.help_place)
         side.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignLeft)
         columns.addLayout(side)
-        divider = QFrame()  # a thin line between the page list and the pages
+        divider = QFrame()
         divider.setObjectName("pagesDivider")
         divider.setFixedWidth(1)
         columns.addWidget(divider)
@@ -226,7 +218,6 @@ class SettingsDialog(QDialog):
         self.stack.addWidget(area)
 
     def group[G: SettingsGroup](self, kind: type[G]) -> G:
-        """A tool's group of pages, by its kind."""
         return next(g for g in self._groups if isinstance(g, kind))
 
     def credentials_changed(self) -> None:
@@ -296,8 +287,6 @@ class SettingsDialog(QDialog):
             button.setAutoDefault(False)
             button.setDefault(False)
 
-    # ---- picking ----
-
     def _row_picked(self, row: int) -> None:
         page_id = self._rows[row] if 0 <= row < len(self._rows) else None
         if page_id is None:
@@ -338,8 +327,6 @@ class SettingsDialog(QDialog):
         frame = 2 * self.pinned_list.frameWidth()
         self.pinned_list.setFixedHeight(rows + frame + 2)
 
-    # ---- search ----
-
     def _place_name(self, page_id: str) -> str:
         """Where a page is, as the search's results name it: "Hosts › Connecting", "About"."""
         page = self.pages[page_id]
@@ -349,10 +336,8 @@ class SettingsDialog(QDialog):
         return f"{_(group)} › {page.title}"
 
     def _filter_pages(self, text: str) -> None:
-        """From SEARCH_FROM letters on: every section that mentions `text` at the start of a
-        word, from every page, on one results page, each page's under its name, to change right
-        there, with each match marked. The page list keeps only the pages with a match. Fewer
-        letters: back to the page as it was."""
+        """From SEARCH_FROM letters: the sections with `text` at a word's start, under their page's
+        name on one page, each match marked; only pages with a match stay listed."""
         page = self._shown_page()
         self._end_search()
         wanted = text.strip().casefold()
@@ -360,7 +345,7 @@ class SettingsDialog(QDialog):
             self.show_page(page)
             return
         found: list[Section] = []
-        matched: set[str] = set()  # the pages with a match
+        matched: set[str] = set()
         layout = self._results.body
         for page_id, source in self.pages.items():
             sections = [s for s in _sections(source) if search.mentions(s, wanted)]
@@ -416,8 +401,6 @@ class SettingsDialog(QDialog):
             for row in range(pages.count()):
                 pages.setRowHidden(row, False)
 
-    # ---- which page ----
-
     def _shown_page(self) -> str:
         """The page shown, or the one shown before the search."""
         current = self.current_page()
@@ -438,7 +421,6 @@ class SettingsDialog(QDialog):
         return (shown.place if shown is not None else "") or "settings-and-files/"
 
     def row_of(self, page_id: str) -> int:
-        """The page's row in the page list."""
         return self._rows.index(page_id)
 
     def current_page(self) -> str:
@@ -454,7 +436,7 @@ class SettingsDialog(QDialog):
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
         if event.type() == QEvent.Type.PaletteChange and hasattr(self, "page_list"):
-            self._paint_labels()  # a theme switch
+            self._paint_labels()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -492,9 +474,8 @@ class _PageArea(QScrollArea):
 
 
 def _scrolling(widget: QWidget) -> _PageArea:
-    """A page that scrolls when it's larger than the window, with no frame of its own. A
-    gutter keeps the cards off the scroll bar and the bottom edge, as wide as the gap left of
-    them."""
+    """A page that scrolls when it's larger than the window, with no frame of its own. A gutter
+    as wide as the gap left of the cards keeps them off the scroll bar and the bottom edge."""
     area = _PageArea()
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.Shape.NoFrame)

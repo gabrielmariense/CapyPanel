@@ -1,4 +1,12 @@
-"""Try Refresh's reading on one real printer, from a terminal, before the window shows it:
+"""Tries Refresh's reading on one real printer, from a terminal."""
+
+import getpass
+import re
+import sys
+
+from capypanel.core.printers import reading, snmp, usm
+
+USAGE = """Try Refresh's reading on one real printer, from a terminal, before the window shows it:
 
     uv run python scripts/read_printer.py 192.0.2.5
     uv run python scripts/read_printer.py --public 192.0.2.5
@@ -22,13 +30,7 @@ number per line, to find which one matches the version on the printer's web page
 which number matches: the lines are printed as the printer gives them (its own serial number is
 replaced by <serial>), so keep them on this PC."""
 
-import getpass
-import re
-import sys
-
-from capypanel.core.printers import reading, snmp, usm
-
-# Brand data areas checked by --brand-data (the brand's own objects, outside the standard ones).
+# For --brand-data: each brand's own objects, outside the standard ones.
 RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1"  # ricohEngTonerTable, every column
 RICOH_SERIAL = reading.RICOH_SERIAL
 BROTHER_MAINTENANCE = reading.BROTHER_MAINTENANCE.removesuffix(".0")  # and anything beside it
@@ -55,7 +57,7 @@ def main() -> int:
     firmware = "--firmware" in args
     args = [a for a in args if a not in ("--public", "--brand-data", "--v3", "--firmware")]
     if len(args) != 1:
-        print(__doc__)
+        print(USAGE)
         return 2
     host = reading.snmp_host(args[0])
     secret: snmp.Secret
@@ -112,7 +114,6 @@ def main() -> int:
 
 
 def ask_account() -> usm.Account:
-    """The v3 account, typed in the terminal; passwords aren't shown."""
     user = input("User name: ").strip()
     auths = {a.label.upper(): a for a in usm.Auth}
     named = input(f"Authentication ({', '.join(a.label for a in usm.Auth)}, or none): ")

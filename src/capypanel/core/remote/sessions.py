@@ -1,7 +1,4 @@
-"""Who is logged on to a computer, and logging them off, disconnecting them or sending them a
-message: the Windows session API (WTS) over its own RPC channel, called from here. Nothing is
-installed or run on the target, and it reads typed fields, so it works whatever the target's
-display language. Another account goes through `access.as_account`."""
+"""Sessions on a PC, read and acted on over WTS: nothing runs there, and any language works."""
 
 import ctypes
 import logging
@@ -76,8 +73,6 @@ def _act(host: str, account: Account | None, call: Callable[[int], bool]) -> Non
         finally:
             _wts.WTSCloseServer(server)
 
-
-# ---- the Windows API ----
 
 _STATES = {
     0: "active", 1: "connected", 2: "connectquery", 3: "shadow", 4: "disconnected",

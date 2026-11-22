@@ -1,5 +1,4 @@
-"""The Home page: what the window shows when no tool is. The mascot, the app's name and tagline,
-then a tile per tool (a click opens it), all centred."""
+"""The Home page, shown when no tool is: the mascot, name and tagline, and a tile per tool."""
 
 import math
 from collections.abc import Sequence
@@ -29,8 +28,6 @@ ICON_SIZE = 24
 
 
 class ToolTile(QFrame):
-    """A tool on the Home page: its icon on a tint, its name, one line, its shortcut."""
-
     clicked = Signal()
 
     def __init__(self, tool: ToolInfo, shortcut: str) -> None:
@@ -145,10 +142,8 @@ class HomePage(QWidget):
             tile.restyle()  # each also redraws on its own colour change
 
     def _place_tiles(self, fit: int) -> None:
-        """`fit`: how many tiles the width has room for side by side. Up to three tools share one
-        row; from four on they take two even rows, so four go two by two (his pick, 2026-11-18:
-        three and one left SSH alone on its row). A narrower window wraps them into more rows,
-        as even as they go."""
+        """`fit`: tiles that fit side by side. Up to three share a row, four or more two even rows;
+        a narrower window wraps them into more rows, as even as they go."""
         count = len(self.tiles)
         if not count:
             return

@@ -1,11 +1,4 @@
-"""WMI from Python itself, over DCOM through Windows' own scripting objects: no PowerShell and no
-other program is started on this PC to read another. Some antivirus programs refuse to let
-PowerShell start with a script and an account in it, which looks to them like an attack; this
-way there's no command line for them to judge.
-
-Each read runs whole on a thread of its own, with COM set up for it, so a PC that stops
-answering can't hold anything but that thread: the caller gets a TimeoutError, as with the
-PowerShell way."""
+"""WMI from Python itself, over DCOM: no program started, so no antivirus judges a command line."""
 
 import contextlib
 import logging
@@ -60,7 +53,6 @@ def error_of(error: BaseException) -> RemoteError:
 
 
 def message_of(error: BaseException) -> str:
-    """What WMI said, for a log line or a failed delete."""
     args = getattr(error, "args", ())
     if len(args) >= 3 and isinstance(args[2], tuple) and len(args[2]) >= 3 and args[2][2]:
         return str(args[2][2]).strip()
@@ -105,10 +97,7 @@ class Wmi:
         services.Security_.AuthenticationLevel = _PACKET_PRIVACY
         return services
 
-    # ---- classes ----
-
     def rows(self, wql: str) -> list[Any]:
-        """Every instance a WQL query finds."""
         import pywintypes
 
         try:
@@ -132,8 +121,6 @@ class Wmi:
             return target.ExecMethod_(method, given)
         except pywintypes.com_error as e:
             raise error_of(e) from e
-
-    # ---- the registry ----
 
     def reg(self, method: str, hive: int, key: str, name: str | None = None) -> Any:
         """One StdRegProv call; its answer has ReturnValue and the method's own values."""
@@ -171,8 +158,7 @@ class Wmi:
 
     def dword(self, hive: int, key: str, name: str) -> int | None:
         """A DWORD as the unsigned number it is: COM hands one of 2**31 or more over as negative,
-        and half the profiles then had no "last used" (the low half of a time is such a number
-        about half the time)."""
+        as a FILETIME's low half is about half the time."""
         value = self.reg("GetDWORDValue", hive, key, name).uValue
         return None if value is None else int(value) & 0xFFFF_FFFF
 
@@ -184,9 +170,8 @@ def read(
     values: Mapping[str, str],
     timeout: float,
 ) -> Any:
-    """`reader` with a connection to `host`, on a thread of its own with COM set up. Its answer
-    must be plain data (no COM object outlives the thread). Raises what it raises, RemoteError,
-    Unavailable, or TimeoutError when it isn't done in `timeout` seconds."""
+    """`reader` connected to `host`, on its own thread with COM set up: plain data only comes back.
+    Raises what it raises, RemoteError, Unavailable, or TimeoutError after `timeout` seconds."""
     box: dict[str, Any] = {}
 
     def run() -> None:

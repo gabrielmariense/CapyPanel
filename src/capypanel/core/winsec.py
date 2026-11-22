@@ -1,5 +1,4 @@
-"""Windows accounts and folder permissions: who the user is, who owns a file, making a folder
-private to its user or shared read-only. Reads the real logon token, never environment variables."""
+"""Windows accounts and folder permissions, from the real logon token, never the environment."""
 
 import ctypes
 from collections.abc import Iterator

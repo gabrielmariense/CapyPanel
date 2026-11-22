@@ -66,7 +66,7 @@ def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication)
     texts = [label.text() for label in page.findChildren(QLabel)]
     assert page.version.text() == __version__ and page.version.copy_text() == BUILD
     assert '© 2026 Gabriel "GMErebos" Mariense' in texts
-    assert COMPONENTS[0].notice == '© 2026 Gabriel "GMErebos" Mariense'  # the same name
+    assert COMPONENTS[0].notice == '© 2026 Gabriel "GMErebos" Mariense'
     notice = next(t for t in texts if "with no warranty" in t)  # the GPL's notices
     assert "GPL-3.0" in notice and 'href="#licenses"' in notice
     assert any(t.endswith("portable mode") for t in texts)  # only what applies
@@ -106,8 +106,6 @@ def test_every_library_cryptography_brings_has_a_license_row() -> None:
 
 
 def test_every_library_carried_in_vendor_has_a_license_row_with_its_version() -> None:
-    """Carried code has no package metadata to read a version from: each folder's
-    CHANGES-CAPYPANEL.txt names the release it holds, and About must name the same."""
     rows = {(c.name.casefold(), c.version) for c in COMPONENTS}
     carried = [p for p in VENDOR_DIR.iterdir() if p.is_dir() and p.name != "__pycache__"]
     assert {p.name for p in carried} >= {"pyte", "conpty"}  # code, and the console engine

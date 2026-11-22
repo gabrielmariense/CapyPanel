@@ -1,10 +1,4 @@
-"""What every call to another PC shares: the reasons Windows refuses one, a quick check that the PC
-answers at all, and calling as another account.
-
-Another account (an admin, when the user's daily one isn't) goes through a "new credentials"
-logon, like `runas /netonly`: only the network identity of this thread changes, for the call.
-Windows doesn't check that password here; each target does, so callers must stop at the first
-rejection instead of trying the same password on every host (account lockout)."""
+"""What every call to another PC shares: why Windows refuses one, and another account's logon."""
 
 import ctypes
 import socket
@@ -53,7 +47,6 @@ def reason_of(code: int) -> Reason:
 
 
 def last_error() -> RemoteError:
-    """The error Windows left for this thread's last failed call."""
     code = ctypes.get_last_error()
     return RemoteError(reason_of(code), code)
 
@@ -96,15 +89,14 @@ def as_account(account: Account | None) -> Iterator[None]:
 def network_identity(
     account: Account | None,
 ) -> Iterator[Callable[[], AbstractContextManager[None]]]:
-    """Logs `account` on once, for the network only; each `with identity():` block inside then
-    uses it on this thread. One logon means one connection to each PC for all the blocks, and
-    programs started between them run as the user, as usual."""
+    """Logs `account` on once, for the network only, for every `with identity():` block on this
+    thread: one connection per PC for them all; programs started between run as the user."""
     if account is None:
         yield nullcontext
         return
     domain, _sep, name = account.user.rpartition("\\")  # "DOMAIN\\name", or a UPN
     token = wintypes.HANDLE()
-    new_credentials, provider_winnt50 = 9, 3
+    new_credentials, provider_winnt50 = 9, 3  # each PC checks the password, not this one
     if not _advapi32.LogonUserW(
         name, domain or None, account.password, new_credentials, provider_winnt50,
         ctypes.byref(token),

@@ -1,5 +1,4 @@
-"""The host Details panel: the host's name and status, a row of command buttons, a waiting
-restart, then Connection, Logged on, PC facts, Tags and Notes."""
+"""The host Details panel: status, command buttons, Connection, Logged on, PC facts, Tags, Notes."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -50,7 +49,7 @@ class HostDetails:
     # The last logged-on users check: sessions (None when it failed), its error, and when.
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
     facts: Facts | None = None
-    pending: PendingPower | None = None  # a restart or shutdown CapyPanel asked for
+    pending: PendingPower | None = None
     # Commands run as: the account, whether this PC overrides its group (its own Accounts row),
     # and the tooltip saying why that one.
     commands_as: tuple[str, bool, str] = ("", False, "")
@@ -144,10 +143,8 @@ class HostDetailsPanel(DetailsPanel):
     # ---- the command buttons ----
 
     def _command_grid(self, details: HostDetails) -> QWidget:
-        """Four columns of equal buttons, an icon over its word. The fixed row first: Refresh
-        (this PC), Commands (the Commands window), Users ▾ and Power ▾ in amber. Under it the
-        admin's quick commands in rows of four, in their order; a row that isn't full keeps its
-        buttons on the left, and with none picked only the fixed row shows."""
+        """Four columns of equal buttons: the fixed row (Refresh, Commands, Users ▾, Power ▾), then
+        the admin's quick commands in rows of four, in order; a short row keeps to the left."""
         widget = QWidget()
         column = QVBoxLayout(widget)
         column.setContentsMargins(0, 0, 0, 0)
@@ -384,10 +381,8 @@ class HostDetailsPanel(DetailsPanel):
         button: bool = True,
         said: bool = False,
     ) -> None:
-        """PC facts: read once when the host is opened here, with Read again (`button`). While
-        the slow part is still on its way, its rows read "Reading…". When nothing could be
-        read for one reason, it's said once, not on every row; and not at all when the panel
-        already says the PC didn't answer (`said`)."""
+        """PC facts, read once the host opens here; "Reading…" while the slow part comes. A reason
+        nothing could be read for is said once, not at all when the panel did (`said`)."""
         if facts is None:
             self.section(layout, _("PC facts"))
             layout.addWidget(self.muted(_("Not read yet")))
@@ -553,9 +548,8 @@ def facts_error_text(error: BaseException) -> str:
 
 
 class ValuePicker(QPushButton):
-    """A value you can change in Details: a flat button filling the value column, the value on
-    the left, small marks (key, pin) and one chevron at its right edge. A click opens its menu;
-    the tooltip says what the marks mean."""
+    """A value you can change in Details: a flat button filling the value column, the value on the
+    left, marks (key, pin) and a chevron at the right; its tooltip says what the marks mean."""
 
     def __init__(self, text: str, marks: Sequence[str], tip: str) -> None:
         super().__init__()

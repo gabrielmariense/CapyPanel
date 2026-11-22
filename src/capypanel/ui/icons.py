@@ -1,5 +1,4 @@
-"""Icons from Tabler Icons (MIT, see tabler/LICENSE), drawn in the theme's colour, and the
-status dots."""
+"""Tabler Icons (MIT, tabler/LICENSE) in the theme's colour, and the status dots."""
 
 from functools import cache, lru_cache
 from pathlib import Path
@@ -21,9 +20,8 @@ def _pixmap(px: int) -> QPixmap:
 
 
 def tabler_icon(name: str, color: QColor, px: int = 16) -> QIcon:
-    """A Tabler outline icon (tabler/<name>.svg): its strokes use currentColor. Each one is
-    drawn once per colour and size: a theme switch redraws every icon, and reading and drawing
-    them all again made the switch slower."""
+    """A Tabler outline icon (tabler/<name>.svg), its strokes in currentColor, drawn once per colour
+    and size: a theme switch redraws every icon, and reading and drawing each again slows it."""
     screen = QGuiApplication.primaryScreen()
     ratio = screen.devicePixelRatio() if screen else 1.0
     return QIcon(_drawn(name, color.name(), px, ratio))

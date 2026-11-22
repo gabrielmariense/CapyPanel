@@ -132,7 +132,7 @@ def test_language_is_remembered(window: CapyWindow) -> None:
 
 def test_the_language_dropdown_in_appearance_switches_at_once(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
-    assert "language" not in dialog.pages  # just a dropdown on General now
+    assert "language" not in dialog.pages  # a dropdown on General, not a page
     dialog.language_picked.connect(window.set_language)
     combo = dialog.general.language
     combo.setCurrentIndex(combo.findData("pt_BR"))  # no Save needed

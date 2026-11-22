@@ -1,10 +1,4 @@
-"""Viewer settings files, such as UltraVNC's .vnc: a profile can carry one saved from the viewer,
-so every viewer option is available without CapyPanel rebuilding them. The file is used exactly
-as saved, except settings naming the computer it was saved for (host), which are emptied: the
-address always comes from the host being opened.
-
-The viewer gets a temporary copy, never the shared file: a viewer that saves its settings on
-exit can't change it."""
+"""Viewer settings files, emptied of the computer they name; a viewer only gets a copy."""
 
 import codecs
 import logging

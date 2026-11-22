@@ -1,9 +1,4 @@
-"""The Commands window: every command for one PC, from Commands ▾ › All commands… (the selected
-host) or Manual connection (an address typed on the spot). The host or address, its profile and
-Connect on top; the groups on the left, a click jumping to one; the commands in the middle, one
-line each, the picked one grown to show its description and Run (Enter runs it, the arrow keys
-move, typing searches); on the right, what the picked command found, in the Details panel's
-parts and with no buttons. Commands that need typing open their small window over this one."""
+"""The Commands window: every command for one PC, in groups, with what one found beside them."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -251,7 +246,6 @@ class Results(HostDetailsPanel):
         fit, fill = header.ResizeMode.ResizeToContents, header.ResizeMode.Stretch
         for column in range(table.columnCount()):
             header.setSectionResizeMode(column, fill if column == stretch else fit)
-        # Every row shows, up to MOST_TABLE; a longer list scrolls inside the table.
         count = table.topLevelItemCount()
         row_height = table.sizeHintForRow(0) if count else TABLE_ROW
         rows = max(count, 1) * max(row_height, 1)
@@ -341,7 +335,7 @@ class CommandRow(QFrame):
         self.name.setObjectName("commandName")
         self.name.setWordWrap(True)  # a long name wraps rather than widen the list
         self.name.setProperty("risky", command.risky)
-        self.keys = QLabel(shortcut)  # its shortcut, when it has one
+        self.keys = QLabel(shortcut)
         self.keys.setObjectName("hint")
         self.keys.setVisible(bool(shortcut))
         self.run = QPushButton(_("&Run"))
@@ -402,7 +396,7 @@ class CommandsWindow(QDialog):
         self._typed = target is None  # opened as Manual connection: nothing picked yet
         self._shown_key = target.key if target else ""  # whose profile the dropdown shows
         self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
-        self._lists: dict[tuple[str, str], Listed] = {}  # printers and programs, as read
+        self._lists: dict[tuple[str, str], Listed] = {}
 
         # ---- the top line: the PC, typed or picked from what the Hosts panel shows; the arrows
         # go host by host. Then the addresses typed here before. ----
@@ -437,7 +431,7 @@ class CommandsWindow(QDialog):
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
         # Where the profiles are made, beside the one picked: a square button, its name in
-        # the tooltip (Dante's redo, Gabriel, 2026-11-16).
+        # the tooltip.
         profiles_name = _("Connection &profiles…").replace("&", "")
         self.profiles_button = QPushButton()
         self.profiles_button.setAutoDefault(False)
@@ -447,8 +441,7 @@ class CommandsWindow(QDialog):
         side = self.profile.sizeHint().height()
         self.profiles_button.setFixedSize(side, side)
         self.connect_button.setFixedHeight(side)  # the Windows themes pad the main button more
-        # One line: the PC, how to connect, Connect (Gabriel, 2026-11-16: "holy that
-        # connection 1 is amazing, please do that"). Connect ends where the command list ends.
+        # One line: the PC, how to connect, and Connect, which ends where the command list ends.
         top = QHBoxLayout()
         top.setSpacing(spacing.CONTROLS)
         top.addWidget(address_label)
@@ -595,9 +588,8 @@ class CommandsWindow(QDialog):
             self.address.setEditText(target.name)
 
     def switch_to(self, target: HostTarget | None, profile: str, typed: str = "") -> None:
-        """All commands… or Details' Commands asked for another PC while the window is open:
-        it turns to that PC and keeps every answer it already has (they're kept per PC, so
-        going back shows them again). None: Manual connection, with `typed` in Host."""
+        """Another PC asked for while the window is open: it turns to that PC, keeping every answer
+        it has, per PC. None: Manual connection, with `typed` in Host."""
         self._typed = target is None
         self._put_target(target, typed)  # the Host field changing shows the PC and its answers
         if target is not None and (index := self.profile.findData(profile)) >= 0:
@@ -653,8 +645,8 @@ class CommandsWindow(QDialog):
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
         for row in self.rows:
             row.run.setEnabled(target is not None)
-        # Enabled while it waits for a host too: a click then goes to Host. Greyed, it was
-        # missed (Gabriel, 2026-11-16: a coworker couldn't find it).
+        # Enabled while it waits for a host too: a click then goes to Host. Greyed, it goes
+        # unnoticed.
         self.connect_button.setEnabled(self.profile.count() > 0)
         self._style_connect(waiting=target is None)
         self._update_add()
@@ -662,9 +654,8 @@ class CommandsWindow(QDialog):
         self._show_results()
 
     def _update_add(self) -> None:
-        """Add to host list… keeps its place, greyed when there's nothing to add, and its tooltip
-        then says why: for a PC the list has, where it already is. Hidden, the window looked like
-        it was missing something (Gabriel, 2026-11-04, kept 2026-11-17)."""
+        """Add to host list… stays, greyed with nothing to add and its tooltip saying why: for a PC
+        the list has, where it is. Hidden, the window seems to lack something."""
         target = self.target()
         why = self._tool.why_not_add(target.name, target.address) if target else ""
         self.add_button.setEnabled(target is not None and not why)

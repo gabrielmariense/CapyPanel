@@ -1,7 +1,4 @@
-"""What the update's helper shows while it swaps the files: CapyPanel's splash picture with
-"Updating to 0.26.4…" where the version usually is, from its first moment until the new
-CapyPanel's own splash takes over. Without it the screen stayed empty for several seconds and
-it looked as if CapyPanel hadn't come back."""
+"""The splash the update's helper shows while it swaps files: "Updating to" and the version."""
 
 import logging
 import threading

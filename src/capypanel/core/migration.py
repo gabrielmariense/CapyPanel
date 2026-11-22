@@ -1,5 +1,4 @@
-"""One-time copies from older file layouts, so an update never loses a user's settings or list.
-The old files are copied, never moved or deleted: going back to an older version still works."""
+"""One-time copies from older file layouts, never moves: an older version still finds its files."""
 
 import ctypes
 import logging
@@ -17,10 +16,8 @@ HOSTS = "hosts"  # the Hosts tool's id: every list before 0.20 was a host list
 
 
 def _lists_into_tool_folders(paths: settings.Paths) -> list[str]:
-    """From 0.20 each tool keeps its lists in a folder of its own. 0.19's lists were all host
-    lists: they're copied into lists\\hosts\\ (shared and the user's own) the first time that
-    folder doesn't exist, and the Hosts settings that name them follow. A folder this user
-    can't create is left for someone who can."""
+    """0.19's lists were all host lists: they're copied once into Hosts' folders, with the settings
+    that name them. A folder this user can't create is left for someone who can."""
     hosts = paths.lists(HOSTS)
     pairs: list[tuple[Path, Path]] = []
     for old_dir, new_dir in (
@@ -32,7 +29,7 @@ def _lists_into_tool_folders(paths: settings.Paths) -> list[str]:
             continue
         try:
             if new_dir == hosts.shared_dir:
-                files.make_shared_folder(new_dir)  # everyone reads it, only its maker changes it
+                files.make_shared_folder(new_dir)
             else:
                 new_dir.mkdir(parents=True)
             for old in old_lists:
@@ -95,9 +92,8 @@ def migrate(
 
 
 def _lists_into_folders(paths: settings.Paths) -> list[str]:
-    """Before 0.19 the default and personal lists were hosts.json files beside the lists
-    folders; they're copied in once, straight into Hosts' folders, and the settings that name
-    them follow. Where 0.19 already copied one (lists\\default.json), it's left alone."""
+    """Before 0.19 the default and personal lists were hosts.json files beside the lists folders:
+    copied once into Hosts' folders with the settings that name them, unless 0.19 already did."""
     hosts = paths.lists(HOSTS)
     pairs = [
         (paths.root / "hosts.json", hosts.default, paths.lists_dir / "default.json"),
@@ -107,7 +103,7 @@ def _lists_into_folders(paths: settings.Paths) -> list[str]:
     for old, new, in_0_19 in pairs:
         if old.is_file() and not new.exists() and not in_0_19.exists():
             if new == hosts.default and not new.parent.exists():
-                files.make_shared_folder(new.parent)  # everyone reads it, only admins change it
+                files.make_shared_folder(new.parent)
             new.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(old, new)
             copied.append(f"{old} -> {new}")

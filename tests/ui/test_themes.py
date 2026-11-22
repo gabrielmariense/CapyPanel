@@ -82,9 +82,8 @@ CUSTOM = [t for t in themes.Registry().all() if t.engine == "custom"]
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_text_is_readable_in_every_custom_theme(theme: themes.Theme) -> None:
-    # WCAG AA: at least 4.5:1 for normal text, on every surface it's drawn on.
-    # Selected rows always use the main text colour. The hint grey (text3) is drawn on panes;
-    # its one label on the window's own background gets a darker step.
+    # WCAG AA, 4.5:1 for normal text on every surface it's on; selected rows use the main text
+    # colour. The hint grey (text3) is for panes; its one label on the window is a step darker.
     pairs = [(t, s) for t in ("text", "text2") for s in ("bg", "card", "chrome")]
     for text, surface in [*pairs, ("text", "sel_solid"), ("text3", "card")]:
         ratio = themes.contrast_ratio(theme.colors[text], theme.colors[surface])
@@ -127,9 +126,6 @@ def _surfaces() -> list[tuple[str, str, str, str, dict[str, str]]]:
 def test_status_colours_read_in_every_built_in_theme(
     surface: tuple[str, str, str, str, dict[str, str]],
 ) -> None:
-    """Amber, green, red, grey and blue as each theme has them: words on the pane (4.5:1) and
-    at least a dot on a selected row (3:1); amber is a whole row's text, so 4.5:1 there too.
-    The picked colours pass as written: the fallback doesn't have to move any of them."""
     theme_id, card, selection, text, status = surface
     for key, color in status.items():
         on_pane, on_selection = themes.status_floors(key)
@@ -356,7 +352,7 @@ def test_picking_a_theme_applies_and_remembers_it(qapp: QApplication, tmp_path: 
 
 
 def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -> None:
-    # Windows drew a focus box around the clicked row, which looked broken on the selection tint.
+    # Windows draws a focus box around the clicked row, which looks broken on the selection tint.
     # A box edge shows up as a line where nearly the whole row is dark (in Windows light).
     (tmp_path / settings.PORTABLE_MARKER).touch()
     window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
@@ -389,7 +385,7 @@ def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) ->
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_dialog_buttons_never_cut_their_text(qapp: QApplication, theme: themes.Theme) -> None:
-    # A fixed minimum width in the stylesheet let message boxes squeeze long button labels.
+    # A fixed minimum width in the stylesheet would make message boxes squeeze long button labels.
     themes.apply(theme)
     box = QMessageBox(QMessageBox.Icon.Question, "Remove group", "What should happen to them?")
     buttons = [box.addButton(text, QMessageBox.ButtonRole.AcceptRole) for text in (
@@ -434,7 +430,7 @@ def test_menus_with_ticks_line_up_with_other_menus(qapp: QApplication) -> None:
     plain, ticks, mixed = QMenu(), QMenu(), QMenu()
     plain.addAction("Status bar")
     ticks.addAction("Status bar").setCheckable(True)
-    # Unmarked it was 18 px wider; Qt sizes it 4 px wider than it draws the text.
+    # Unmarked, it would be 18 px wider; Qt sizes it 4 px wider than it draws the text.
     assert ticks.sizeHint().width() - plain.sizeHint().width() == 4
     mixed.addMenu("Language")  # a submenu title beside a ticked item: marked too
     tick = mixed.addAction("Status bar")
@@ -445,7 +441,7 @@ def test_menus_with_ticks_line_up_with_other_menus(qapp: QApplication) -> None:
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme) -> None:
-    # Styling a spin box drops Fusion's arrows: the buttons were empty squares.
+    # Styling a spin box drops Fusion's arrows, which would leave empty squares for buttons.
     themes.apply(theme)
     box = QSpinBox()
     box.resize(120, 32)
@@ -464,7 +460,7 @@ def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme)
 
 
 def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
-    # Windows' "slide open" made a long dropdown list roll open in visible steps.
+    # Windows' "slide open" makes a long dropdown list roll open in visible steps.
     QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, True)  # as on a PC with it on
     for theme in themes.Registry().all():
         themes.apply(theme)
@@ -475,8 +471,7 @@ def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
 def test_a_switch_sets_the_theme_s_stylesheet_only_once(
     qapp: QApplication, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Each stylesheet set restyles every widget, the slow part of a switch: from a Windows
-    # theme it was set twice.
+    # Each stylesheet set restyles every widget: the slow part of a switch.
     sheets: list[str] = []
     set_sheet = QApplication.setStyleSheet
 
@@ -495,7 +490,6 @@ def test_a_switch_sets_the_theme_s_stylesheet_only_once(
 
 
 def test_home_tiles_take_the_new_theme_s_icon_colour(qapp: QApplication, tmp_path: Path) -> None:
-    # Switching between two custom themes left the tiles' icons in the previous theme's colour.
     (tmp_path / settings.PORTABLE_MARKER).touch()
     window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     window.set_theme("capypanel-dark")
@@ -561,9 +555,6 @@ def test_corners_come_in_two_sizes_from_the_theme(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.Theme) -> None:
-    """Tags, badges, the update windows' version chip, the radio button and the scroll bar
-    stay round; a tick box keeps its small corner. Everything else takes one of the theme's
-    two sizes."""
     odd = themes.Theme("odd", "custom", theme.scheme, colors=theme.colors, radius=17,
                        control_radius=13)  # fmt: skip
     sheet = re.sub(r"/\*.*?\*/", "", themes.stylesheet(odd), flags=re.DOTALL)
@@ -592,9 +583,6 @@ def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
 def test_a_ticked_box_in_a_list_keeps_its_box_in_the_windows_themes(
     qapp: QApplication, scheme: str
 ) -> None:
-    """With the Windows themes' own rules on rows, the Windows style drew a ticked box in a
-    list (Profile cleanup, the quick commands) as a bare tick, white on white in light: the
-    stylesheet draws it, filled in a shade of the accent that white reads on."""
     themes.apply(themes.Registry().find(f"windows-{scheme}"))
     tokens = themes.native_tokens(QColor("#ffb900"))  # Windows' yellow accent
     sheet = themes._NATIVE_QSS % {**tokens, **themes._status_tokens(themes.status_colors())}
@@ -616,7 +604,6 @@ def test_row_lines_are_softer_than_the_table_s_frame(theme: themes.Theme) -> Non
 
 
 def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> None:
-    """The rows have no lines between columns, so the titles show where a column ends."""
     theme = themes.Registry().find("capypanel-dark")
     themes.apply(theme)
     table = QTreeWidget()

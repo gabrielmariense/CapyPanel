@@ -1,7 +1,4 @@
-"""The Hosts toolbar: Connect, Refresh and Commands, Inventory, Report. Refresh always checks
-every host the table shows (the group picked on the left); one host is checked from its own
-right-click menu. A click runs the checks ticked in the panel a right-click opens (as F5 does), as
-Printers' Refresh does. Commands lists the selected host's commands by group."""
+"""The Hosts toolbar; Refresh checks every host shown, with the checks ticked in its panel."""
 
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QPalette
@@ -143,7 +140,7 @@ class HostsToolBar(ToolBar):
 
     def restyle(self) -> None:
         """Icons in the theme's text colour."""
-        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
+        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)
         self.connect_button.setIcon(tabler_icon("plug-connected", color))
         self.refresh_button.setIcon(tabler_icon("refresh", color))
         self.commands_button.setIcon(tabler_icon("bolt", color))

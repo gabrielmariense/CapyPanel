@@ -1,11 +1,4 @@
-"""A connection's screen: draws what core/ssh/screen.py keeps, sends keys as Windows key events,
-and runs ssh.exe on a pseudo console (core/ssh/conpty.py).
-
-Threads: the pseudo console's threads only signal. Output is parsed here, on the window's
-thread, in chunks of about 1 ms that give way to any thread waiting between them, so typing and
-painting keep their turn during a flood and a Refresh running beside it keeps its pace.
-
-Typed keys and the screen's text never reach a log or a file: this module logs nothing."""
+"""A connection's screen, keys and ssh.exe; typed keys and screen text never reach a log."""
 
 import functools
 import math
@@ -76,9 +69,8 @@ INVISIBLE = frozenset({VS16, "\ufe0e", "\u200d", "\u200c", "\u200b", "\u2060"})
 MIN_PT, MAX_PT, DEFAULT_PT = 8, 20, 10
 PAD = 8  # px of the terminal's own background around the cells
 DRAIN_BUDGET_S = 0.008  # one drain parses this long at most, then the window gets its turn
-# Each chunk is sized to parse in about 1 ms, and the drain gives way to any thread waiting for
-# Python's lock between chunks: a Refresh is many short round trips, each waiting for that lock,
-# and one spinning thread made a refresh of 50 printers 6.6 times as long.
+# Each chunk parses in about 1 ms, and the drain gives way between chunks to any thread waiting
+# for Python's lock: a Refresh is many short round trips, each waiting for that lock.
 CHUNK = 1024  # the first chunk; each next one is resized towards CHUNK_TARGET_S
 CHUNK_MIN, CHUNK_MAX = 128, 16384
 CHUNK_TARGET_S = 0.001
@@ -88,9 +80,8 @@ CHUNK_LOG = 10_000  # the last chunks' parse times kept: a tab left on tail -f f
 MAX_CACHED = 16_384
 MAX_PENDING = 131072  # bytes the reader holds before ssh.exe waits: Ctrl+C shows at once
 COPY_PASTE = (int(Qt.Key.Key_C), int(Qt.Key.Key_V))  # with Ctrl+Shift
-# Keys that only hold others down or switch a lock. As key events they still reach the program,
-# as every key does, but keep the selection and the scroll: Ctrl goes down before the C of
-# Ctrl+C. As text they send nothing.
+# Keys that only hold others down or switch a lock: as key events they reach the program but keep
+# the selection and the scroll (Ctrl goes down before Ctrl+C's C); as text they send nothing.
 HELD_KEYS = frozenset(
     int(k)
     for k in (
@@ -128,9 +119,8 @@ def pick_family(families: Sequence[str] = FONT_FAMILIES) -> str:
 
 
 class _Bridge(QObject):
-    """Carries the pseudo console's thread calls over to the window's thread, each with the
-    number of the start it belongs to, so whatever an earlier connection still had queued is
-    dropped: Reconnect while connected never ends the new connection."""
+    """Carries the pseudo console's thread calls to the window's thread with their start's number,
+    so what an earlier connection still had queued is dropped: Reconnect never ends the new one."""
 
     ready = Signal(int)
     exited = Signal(int, object)  # object: exit codes like 0xC000013A don't fit a C int
@@ -151,9 +141,8 @@ def _close_left(live: _Live) -> None:
 
 
 class PasteQuestion(Question):
-    """Before text with a line break is pasted into a program that didn't ask for bracketed
-    paste: each line may run as it lands. The house question, as for closing a connection, with
-    the first three lines under its words; Cancel is the default, so Enter pastes nothing."""
+    """Before text with a line break goes to a program not asking for bracketed paste, where each
+    line may run as it lands: the first three lines under the question; Cancel is the default."""
 
     def __init__(self, parent: QWidget | None, lines: Sequence[str], host: str) -> None:
         n = len(lines)
@@ -186,10 +175,8 @@ def ask_paste(parent: QWidget, lines: Sequence[str], host: str) -> bool:
 
 
 class TerminalView(QAbstractScrollArea):
-    """One connection's screen. `started` comes each time a connection starts, by any route (the
-    tab's start, Reconnect, Enter on an ended tab); `ended(code)` comes once the program has
-    ended and its last output is drawn; `size_picked(points)` when Ctrl+= or Ctrl+- changed the
-    text size."""
+    """One connection's screen. `started`: a connection started, by any route; `ended(code)`: the
+    program ended and its last output is drawn; `size_picked(points)`: Ctrl+= or Ctrl+-."""
 
     started = Signal()
     ended = Signal(object)  # the exit code; object, as 0xC000013A doesn't fit a C int
@@ -416,7 +403,6 @@ class TerminalView(QAbstractScrollArea):
 
     @property
     def closed_by_us(self) -> bool:
-        """The connection ended because CapyPanel closed it, not by itself."""
         return self._closed_by_us
 
     @property
@@ -431,10 +417,8 @@ class TerminalView(QAbstractScrollArea):
         if number != self._start_number:
             return  # an earlier connection's, closed already
         self._exit_code = code
-        # Closing the pseudo console makes it hand over its last frame; the reader drains it,
-        # and _drain sends `ended` once everything is drawn. After a close of ours the reader
-        # may have reached the end before this exit came (two threads, either order), and it
-        # signals no more: the drain after the close sends `ended` then.
+        # Closing the pseudo console hands over its last frame; once it's drawn, `_drain` sends
+        # `ended`. A reader that ended before this exit (two threads) leaves it to the next drain.
         session = self.session
         if session is not None:
             QTimer.singleShot(0, session.close)
@@ -569,9 +553,8 @@ class TerminalView(QAbstractScrollArea):
         return self.paste_text(QGuiApplication.clipboard().text())
 
     def paste_text(self, text: str) -> bool:
-        """Sends pasted text. Every ESC goes first, so no end marker hidden in the text can close
-        the bracket early. Without bracketed paste, a text with a line break asks first, since
-        each line may run as it lands."""
+        """Pasted text, its ESCs removed so no hidden end marker closes the bracket early. Without
+        bracketed paste, text with a line break asks first: each line may run as it lands."""
         if not text or self.session is None or not self.session.running:
             return False
         text = text.replace("\x1b", "").replace("\r\n", "\r").replace("\n", "\r")
@@ -652,12 +635,8 @@ class TerminalView(QAbstractScrollArea):
         return super().event(e)
 
     def leaves(self, e: QKeyEvent) -> bool:
-        """The keys the tool and the window take: Ctrl+Tab and Ctrl+Shift+Tab (the tabs),
-        Ctrl+Shift+W (close the tab), and the keys that change tools (Home too) and open
-        Settings, as Settings › Keyboard shortcuts has them now (Ctrl+0 to Ctrl+4 and Ctrl+,
-        unless someone changed them). Every other key goes to the program: Ctrl+W (bash deletes
-        a word), Ctrl+Q (micro quits), F5 (mc copies). AltGr is Ctrl+Alt on Windows, so AltGr+2
-        (² on ABNT2) still reaches it."""
+        """Keys the tool and window take: the tabs' Ctrl+Tab and Ctrl+Shift+Tab, Ctrl+Shift+W, and
+        the keys set now for tools and Settings; every other key goes to the program."""
         combo = e.keyCombination()
         mods = combo.keyboardModifiers() & ~Qt.KeyboardModifier.KeypadModifier
         ctrl = Qt.KeyboardModifier.ControlModifier
@@ -674,9 +653,8 @@ class TerminalView(QAbstractScrollArea):
 
     @staticmethod
     def is_ours(e: QKeyEvent) -> bool:
-        """The terminal's own keys: Ctrl+Shift+C and Ctrl+Shift+V copy and paste, Ctrl+= (or
-        Ctrl++) and Ctrl+- change the text size. Never with Alt: AltGr is Ctrl+Alt, and AltGr
-        with + types ~ on a German keyboard, as AltGr with = types § on ABNT2."""
+        """The terminal's own keys: Ctrl+Shift+C and V, Ctrl+= (or Ctrl++) and Ctrl+- for the size.
+        Never with Alt: AltGr is Ctrl+Alt, and AltGr with + or = types ~ or § on some keyboards."""
         mods = e.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
         ctrl = Qt.KeyboardModifier.ControlModifier
         shift = Qt.KeyboardModifier.ShiftModifier
@@ -872,10 +850,8 @@ class TerminalView(QAbstractScrollArea):
     def _draw_cell_text(
         self, p: QPainter, text: str, x: int, y: int, st: Style, color: QColor, cells: int
     ) -> None:
-        """One cell's character, or a wide one's two cells: line, block and Powerline characters
-        drawn by our code; anything else from the font, scaled down if it's wider than its cells
-        (a lone ⚠) and centred in them (the fullwidth Ａ), and with VS16 in the colour emoji font
-        (❤️). The fit is worked out once per character and style."""
+        """A cell's character (a wide one's two cells): our own lines, blocks and Powerline shapes,
+        the rest from the font, fitted and centred (VS16's in colour), each fit worked out once."""
         cw = self.cell_w
         if glyphs.is_builtin(text):
             glyphs.draw(p, text, x * cw, y, self._glyph_metrics, color)
@@ -903,10 +879,8 @@ class TerminalView(QAbstractScrollArea):
         p.restore()
 
     def _fit_text(self, text: str, st: Style, cells: int) -> tuple[float, float, float, QFont]:
-        """Scale and offsets that put a character in its cells: centred by its advance, as the
-        font means it, and smaller when wider than the cells (a lone ⚠). Where its ink would
-        still reach past the cells (a fallback font's arrow, an accent on its own, a tall
-        emoji), the ink itself is fitted and centred, so nothing lands on a neighbour's cells."""
+        """Scale and offsets for a character in its cells: centred by advance, smaller if wider.
+        Ink still reaching past them (a fallback's arrow, a tall emoji) is fitted on its own."""
         font = self._fonts[(st.bold, st.italics)]
         metrics = self._plain[(st.bold, st.italics)]
         symbol = False
@@ -915,9 +889,8 @@ class TerminalView(QAbstractScrollArea):
             font.setFamilies([EMOJI_FAMILY, self._family])
             metrics = QFontMetricsF(font)
         elif cells == 1 and not all(self._raw.supportsCharacter(ord(c)) for c in text):
-            # One cell the terminal's font can't draw, such as ⚠ or ❤ without VS16, which
-            # Unicode shows as text: Segoe UI Symbol first, in the text's own colour. Windows'
-            # own fallback took Segoe UI Emoji for ⚠: orange, a third of the height.
+            # A cell the font lacks (⚠, ❤ without VS16): Segoe UI Symbol, in the text's colour;
+            # Windows' own fallback takes Segoe UI Emoji for ⚠: orange, a third of the height.
             font = QFont(font)
             font.setFamilies([self._family, SYMBOL_FAMILY])
             metrics = QFontMetricsF(font)
@@ -958,9 +931,8 @@ class TerminalView(QAbstractScrollArea):
         return scale, dx, dy, font
 
     def _ink_by_pixels(self, text: str, font: QFont) -> QRectF | None:
-        """Where drawing `text` leaves ink, from the pen's place on the baseline: drawn once
-        into a small transparent image and read back. Only for what the font's metrics can't
-        measure, so it runs once per such character."""
+        """Where drawing `text` leaves ink, from the pen on the baseline: drawn into a small image
+        and read back, only for what the font's metrics can't measure (once per character)."""
         w, h = self.cell_w * 8, self.cell_h * 3
         ox, oy = self.cell_w * 3, self.cell_h + self._ascent
         img = QImage(w, h, QImage.Format.Format_ARGB32_Premultiplied)

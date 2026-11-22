@@ -1,8 +1,4 @@
-"""One program on a pseudo console (core/ssh/conpty.py), from each engine: Windows' own and the
-one CapyPanel carries for Windows 10. What it prints comes back, typed keys reach it, Ctrl+C
-stops what it runs, closing ends it and everything it started, and a flood waits for the
-reader. Windows' own cmd.exe and timeout.exe, cmd started with /d (no AutoRun) and the standard
-prompt, and this Python measuring the console's cells; nothing reaches the network."""
+"""A pseudo console from each engine, with Windows' cmd.exe and timeout.exe; no network."""
 
 import ctypes
 import json
@@ -114,8 +110,6 @@ def test_the_programs_exit_code_comes_through(runs: Callable[..., Run], code: in
 
 
 def test_ctrl_c_stops_what_cmd_runs_and_cmd_carries_on(runs: Callable[..., Run]) -> None:
-    """An "ignore Ctrl+C" flag inherited from whatever started the tests would keep Ctrl+C from
-    stopping the program: the pseudo console clears it first."""
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
     run.console.write(WAIT_A_MINUTE)
@@ -132,7 +126,6 @@ def test_ctrl_c_stops_what_cmd_runs_and_cmd_carries_on(runs: Callable[..., Run])
 def test_closing_ends_the_program_and_everything_it_started(
     runs: Callable[..., Run], engine: Engine
 ) -> None:
-    """The carried engine's own OpenConsole.exe, which runs beside CapyPanel, ends too."""
     hosts_before = set(_children(os.getpid(), "openconsole.exe"))
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
@@ -150,9 +143,6 @@ def test_closing_ends_the_program_and_everything_it_started(
 
 
 def test_a_flood_waits_for_its_reader(runs: Callable[..., Run]) -> None:
-    """While nothing is taken the reader stops at its bound, so cmd waits instead of filling
-    memory; then every line comes through, in order. The pseudo console keeps its output open
-    after the program ends, until it is closed: closing it is what brings the end of it."""
     bound, one_read = 16_384, 65_536  # the reader may hold one read past its bound
     flood = "for /L %i in (1,1,20000) do @echo line %i"  # about 250 KB
     run = runs([CMD, "/d", "/c", flood], max_pending=bound)
@@ -181,8 +171,6 @@ def test_a_resize_reaches_the_program(runs: Callable[..., Run]) -> None:
 
 
 def test_the_carried_engine_takes_ctrl_c_as_key_events() -> None:
-    """It asks for keys as key events first thing, as Windows 11's own does, so the terminal
-    sends Ctrl+C as Ctrl down, C down and up, Ctrl up (ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _)."""
     ctrl_c = b"\x1b[17;29;0;1;8;1_\x1b[67;46;3;1;8;1_\x1b[67;46;3;0;8;1_\x1b[17;29;0;0;0;1_"
     run = Run([CMD, "/d"], env=CMD_ENV, engine=_carried())
     try:
@@ -198,9 +186,6 @@ def test_the_carried_engine_takes_ctrl_c_as_key_events() -> None:
         )
     finally:
         run.console.close()
-
-
-# ---- which engine ----
 
 
 def test_windows_before_11_gets_the_carried_engine_and_windows_11_its_own(
@@ -230,7 +215,6 @@ def test_a_carried_engine_left_out_or_broken_leaves_windows_own(
 def test_an_engine_that_wont_start_hands_over_to_windows_own(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """As when something on a company PC stops OpenConsole.exe: the terminal still runs."""
     e_fail = -0x7FFFBFFB  # 0x80004005 as the signed number ctypes returns
     broken = replace(_carried(), name="a broken engine", create=lambda *_args: e_fail)
     with caplog.at_level(logging.INFO, logger=conpty.__name__):
@@ -245,13 +229,7 @@ def test_an_engine_that_wont_start_hands_over_to_windows_own(
     assert "Pseudo console from Windows' own engine" in caplog.text
 
 
-# ---- cells ----
-
-
 def test_the_carried_engine_counts_cells_as_the_screen_does_on_it(tmp_path: Path) -> None:
-    """Every sample takes the cells Windows' own console gives it, measured on Windows 11
-    (test_ssh_screen.py), except half a flag: one cell here, which the engine tells the
-    screen. Measured live, as the console itself counts them."""
     carried = _carried()
     samples = [sample for sample, _cells in CONSOLE_CELLS] + FLAGS
     (tmp_path / "samples.json").write_text(json.dumps(samples), encoding="utf-8")
@@ -274,8 +252,6 @@ def test_the_carried_engine_counts_cells_as_the_screen_does_on_it(tmp_path: Path
     flag = samples.index("\U0001f1e7\U0001f1f7")
     assert measured[flag] == 2 and dict(CONSOLE_CELLS)[samples[flag]] == 4  # 4 on Windows' own
 
-
-# ---- Windows' list of processes ----
 
 _k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 _SNAPPROCESS, _SYNCHRONIZE, _TIMEOUT = 0x2, 0x00100000, 0x102

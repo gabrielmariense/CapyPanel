@@ -1,5 +1,4 @@
-"""Mapped drives: its rows and its window. Every call to another PC is replaced: nothing here
-reaches the network."""
+"""Mapped drives: rows and window; every call to another PC is replaced, so no network."""
 
 import time
 from collections.abc import Iterator

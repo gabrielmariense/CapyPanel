@@ -1,5 +1,4 @@
-"""The commands every list tool has: lists, groups, editing, and its panels in View. A tool's own
-actions extend these (a dataclass with more fields)."""
+"""The commands every list tool has; a tool's own actions extend these with more fields."""
 
 from dataclasses import dataclass
 

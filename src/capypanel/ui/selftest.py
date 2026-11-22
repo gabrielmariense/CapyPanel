@@ -1,12 +1,4 @@
-"""`CapyPanel.exe --self-test <report file>`: does this copy of CapyPanel work at all?
-
-A packaged build brings its own Python, Qt and libraries, and a file left out of it only shows
-when the part that needs it runs. This loads every bundled folder, the libraries that come as
-compiled code, Qt's own parts, and the whole window with every tool, theme and language. Its
-windows are made for real but never put on the screen, and it works in a folder of its own that
-it removes: nothing of the person's is read or written, and nothing reaches the network. It
-writes what it found to the report file and ends with 0 when all of it worked. The build runs
-it on the build server before a zip is made."""
+"""`--self-test <report>`: every bundled part loads, offscreen, touching no settings or network."""
 
 import shutil
 import sys
@@ -87,9 +79,8 @@ def _compiled_libraries() -> list[str]:
 
 
 def _qt_parts() -> list[str]:
-    """Qt's plugins and translations, which a build can leave out without any error: the
-    Windows look, the image formats the icons come in, and Qt's own words (OK, Cancel) in each
-    language CapyPanel has."""
+    """Qt's plugins and translations, which a build can leave out without any error: the Windows
+    look, the icons' image formats, and Qt's words (OK, Cancel) in CapyPanel's languages."""
     from PySide6.QtCore import QLibraryInfo, QTranslator
     from PySide6.QtGui import QGuiApplication, QImageReader
     from PySide6.QtWidgets import QApplication, QStyleFactory
@@ -165,9 +156,8 @@ def _whole_window(root: Path) -> list[str]:
 
 
 def _terminal(root: Path) -> list[str]:
-    """The SSH tool's terminal in a tab of its own: Windows' pseudo console runs cmd.exe (never
-    ssh.exe, which would reach the network), our copy of pyte keeps what it wrote, and the tab
-    draws it, line and block characters and the strip after the end included."""
+    """The SSH terminal in a tab: Windows' pseudo console runs cmd.exe (never ssh.exe, which would
+    reach the network), our pyte keeps its output, and the tab draws it, the end strip too."""
     import os
     import time
 

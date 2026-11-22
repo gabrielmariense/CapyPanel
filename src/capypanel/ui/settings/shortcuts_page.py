@@ -1,9 +1,4 @@
-"""Settings › CapyPanel › Keyboard shortcuts: every command a key can run, with its key. A
-double-click (or Enter) on a command waits for its new key; Clear and Restore default under the
-list act on the picked command. A key another command runs is moved only after a question.
-The commands sit under headings, the menu bar's menus first, then each tool, each in the order
-you meet it on screen: ORDER (Gabriel, 2026-11-16: "go with 1 app order"), never A–Z. The page
-has no card: the list fills it (Dante's redo, 2026-11-16)."""
+"""Settings › Keyboard shortcuts: every command a key can run, in the order met on screen."""
 
 from typing import cast
 
@@ -62,7 +57,7 @@ COMMAND, KEY = range(2)  # the table's columns
 ROW_ROLE = Qt.ItemDataRole.UserRole  # the row's command id; a heading has none
 KEY_WIDTH = 120  # the Key column at least; wider when "Ctrl+Shift+O (in the list)" needs it
 LINE_EDIT_MARGIN = 2  # Qt keeps this much inside a field's contents on each side
-HEADING_GAP = 20  # empty space above each heading but the first (Gabriel: "add some empty space")
+HEADING_GAP = 20  # empty space above each heading but the first
 HEADING_PADDING = 8  # above and under a heading's text
 GAP_ROLE = Qt.ItemDataRole.UserRole + 1  # a heading's: whether it has the gap above
 FIXED_ROLE = Qt.ItemDataRole.UserRole + 2  # shown, never changed: the terminal's keys and F1's
@@ -76,7 +71,7 @@ HELD = (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
 
 def lead(text: str) -> QLabel:
     """The page's one instruction: this page is only the list, so its line reads as body text,
-    one point up from the app's font, not as a grey hint (Dante, 2026-11-16)."""
+    one point up from the app's font, not as a grey hint."""
     label = QLabel(text)
     label.setObjectName("lead")
     label.setWordWrap(True)
@@ -86,11 +81,8 @@ def lead(text: str) -> QLabel:
     return label
 
 
-# Every command on the page, in the order you meet it: the menu bar's menus as they read top to
-# bottom; then each tool's screen, top to bottom and left to right: its toolbar button by button
-# (a dropdown's items in its menu's order), its item right-click menu, its part of View, its
-# list dropdown, and for Hosts the host commands in the Commands window's order. A command on
-# two of its screens sits at the first. A test fails when a command has no place here.
+# Every command, in the order you meet it: the menu bar's menus top to bottom, then each tool's
+# screen top to bottom and left to right. A test fails when a command has no place here.
 ORDER = (
     # File
     "app.settings", "app.exit",
@@ -140,7 +132,7 @@ def reserved_line() -> str:
 
 
 def terminal_line() -> str:
-    """Under the SSH terminal's heading (Satya's words, ssh-words.md)."""
+    """Under the SSH terminal's heading."""
     return _(
         "Inside a terminal, every key goes to the server except the ones below and the keys "
         "that change tools or open Settings."
@@ -148,8 +140,8 @@ def terminal_line() -> str:
 
 
 def terminal_keys() -> list[tuple[str, str]]:
-    """The SSH terminal's own keys, which nobody changes (topic-027): each one's name in the
-    language shown now, and its key in portable text."""
+    """The SSH terminal's own keys, which nobody changes: each one's name in the language shown
+    now, and its key in portable text."""
     return [
         (plain(_("&Copy")), "Ctrl+Shift+C"),
         (_("Copy, with text selected"), "Ctrl+C"),
@@ -163,9 +155,8 @@ def terminal_keys() -> list[tuple[str, str]]:
 
 
 def top_menu(action: QAction) -> tuple[int, QMenu] | None:
-    """The menu bar's menu `action` is in (through a submenu too) and its place on the bar,
-    or None. A menu elsewhere, the tray's, doesn't count. Qt's own class names, not Python's
-    isinstance, so a QMenu subclass made anywhere still counts."""
+    """The menu bar's menu holding `action`, even in a submenu, and its place on the bar; None for
+    a menu elsewhere (the tray's). Qt's class names, not isinstance: any QMenu subclass counts."""
     for menu in action.associatedObjects():
         while isinstance(menu, QWidget) and menu.inherits("QMenu"):
             owners = cast(QMenu, menu).menuAction().associatedObjects()
@@ -216,10 +207,8 @@ class KeyCatcher(QLineEdit):
         self._room: QMargins | None = None  # its words' room while it waited, once refused
 
     def refuse(self) -> None:
-        """A key it can't take: red, saying so, and waiting for another (Gabriel's pick, Luna
-        Q1: the error shows where you're looking, and the next key just works). Its words stay
-        where they waited: a theme may style the red field alone, with less padding (the
-        Windows themes, where they moved to 1 px from the red edge: Dante, 0.28.1)."""
+        """A key it can't take: red, saying so, and waiting for another. Its words stay where they
+        waited, though a theme may give the red field less padding (the Windows themes do)."""
         self._done = False
         if self._room is None:
             words = self.words_rect()
@@ -244,10 +233,8 @@ class KeyCatcher(QLineEdit):
         return super().event(event)
 
     def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 -- Qt's name
-        """The frame as the theme draws it, then the words with their capitals in the middle.
-        Qt centres a line's whole height, with the room over capitals kept for accents, in a
-        field no taller than a row's text, so the words sat low: 4 px over them, 1 px under
-        (Dante, 0.28.1). Nothing is typed here; text that got in some other way is Qt's."""
+        """The frame, then the words with their capitals in the middle: Qt centres them low.
+        Nothing is typed here; text that got in some other way is Qt's."""
         if self.text():
             super().paintEvent(event)
             return
@@ -259,14 +246,13 @@ class KeyCatcher(QLineEdit):
         elide = Qt.TextElideMode.ElideRight
         words = metrics.elidedText(self.placeholderText(), elide, room.width())
         baseline = caps_baseline(room, metrics.tightBoundingRect("H"))
-        painter.setClipRect(room.adjusted(-LINE_EDIT_MARGIN, 0, LINE_EDIT_MARGIN, 0))  # inside
+        painter.setClipRect(room.adjusted(-LINE_EDIT_MARGIN, 0, LINE_EDIT_MARGIN, 0))
         painter.setPen(self.palette().color(QPalette.ColorRole.PlaceholderText))
         painter.drawText(QPoint(room.left(), baseline), words)
 
     def words_rect(self) -> QRect:
-        """Where its words go, as in Qt's own fields: inside the frame and padding, less the
-        margin Qt keeps on each side. The Key column is measured for them to fit here. Once a
-        key is refused, the same room as while it waited."""
+        """Where its words go, as in Qt's fields: inside frame and padding, less Qt's side margins.
+        The Key column is measured to fit them. Once a key is refused, the room it had waiting."""
         if self._room is not None:
             return self.rect().marginsRemoved(self._room)
         frame = QStyleOptionFrame()
@@ -310,7 +296,7 @@ class ShortcutsPage(Page):
         self.keys = keys
         self._names = place_names
         # A Section, so Settings' search still finds the page, drawn with no card and no title:
-        # the page list names the page, and the list fills it (Dante's redo).
+        # the page list names the page, and the list fills it.
         self.section = Section(_("Command keys"))
         self.section.heading.hide()
         self.section.inner.setObjectName("")
@@ -366,8 +352,8 @@ class ShortcutsPage(Page):
         return (1, tools.index(tool) if tool in tools else len(tools)), self._names.get(tool, tool)
 
     def name(self, row: Row) -> str:
-        """A command's name on this page: as its menu has it, but the Copy submenu's Address
-        is "Copy address", which out of its menu reads like a column title (Debora)."""
+        """A command's name on this page: as its menu has it, but the Copy submenu's Address is
+        "Copy address", which out of its menu reads like a column title."""
         if row.id.endswith(".copy_address"):
             return plain(ngettext("Copy &address", "Copy &addresses", 1))
         return row.name()
@@ -395,7 +381,7 @@ class ShortcutsPage(Page):
                 self._show_key(item)
             if any(TERMINAL_TOOL in row.places for row in rows):
                 self._add_terminal_keys()
-        # The key in a narrow column at the right edge, the commands taking the rest (Dante).
+        # The key in a narrow column at the right edge, the commands taking the rest.
         fit_rows(self.table, 0, stretch=COMMAND, least={KEY: self._key_width()})
         self._enable()
 
@@ -412,9 +398,8 @@ class ShortcutsPage(Page):
         self._style_heading(item)
 
     def _add_terminal_keys(self) -> None:
-        """The SSH terminal's own keys under a heading of their own, after the SSH tool's
-        commands, with the line that says where every other key goes. Greyed, as nobody
-        changes them, and the tip says so."""
+        """The SSH terminal's own keys under their own heading, after SSH's commands, with the line
+        saying where every other key goes; greyed, as nobody changes them, and the tip says so."""
         self._add_heading(_("SSH terminal"), gap=True)
         line = QTreeWidgetItem()
         line.setFlags(Qt.ItemFlag.NoItemFlags)
@@ -478,7 +463,7 @@ class ShortcutsPage(Page):
 
     def _key_width(self) -> int:
         """KEY_WIDTH, or wider for a key with "(in the list)" after it, or for the waiting
-        field's "Press the new key…" in this language, so neither is ever cut (Dante)."""
+        field's "Press the new key…" in this language, so neither is ever cut."""
         cells = (self.table.itemWidget(i, KEY) for i in self._items())
         return max([KEY_WIDTH, self._catcher_width(),
                     *(c.sizeHint().width() + 12 for c in cells if c is not None)])  # fmt: skip
@@ -521,7 +506,7 @@ class ShortcutsPage(Page):
 
     def _show_key(self, item: QTreeWidgetItem) -> None:
         """Its key, and after it "(in the list)" for a command whose key works only while its
-        list has the focus (Connect, Open web page), whatever key that is (Debora)."""
+        list has the focus (Connect, Open web page), whatever key that is."""
         row = self._row(item)
         keys = self.keys.key(row)
         shown = shortcuts.shown(keys) if keys else ""
@@ -593,9 +578,8 @@ class ShortcutsPage(Page):
         self.table.setFocus()
 
     def _show_catching(self) -> None:
-        """The row waiting for its key, scrolled into view whole. A refused key's reason may
-        take two lines in a narrow Settings window, and the list loses their height: a field
-        on the last row showing was cut in half (Dante, 0.28.1)."""
+        """The row waiting for its key, scrolled into view whole: a refusal's reason may take two
+        lines in a narrow window, and the list loses their height: a last row's field is cut."""
         if self._catching is None:
             return
         # By the row's place, not scrollToItem's own check: scrolling a row at a time, Qt

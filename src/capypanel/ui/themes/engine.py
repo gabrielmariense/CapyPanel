@@ -1,24 +1,4 @@
-"""Themes: the native Windows look, the CapyPanel look, and extra looks shipped as data files.
-
-Only shipped themes exist; users can't add their own. A theme changes only the look.
-
-Two engines:
-- native: Qt's windows11 style. Follows Windows (accent colour); only dark/light is picked.
-- custom: Fusion + a palette + a stylesheet generated from colour tokens (QSS has no variables).
-
-Shipped theme files (this folder, *.json) override some tokens of a base:
-    {"name": "Graphite", "base": "dark", "colors": {"accent": "#14b8a6"},
-     "font": {"family": "Georgia", "size": 10.5}, "radius": 6, "control_radius": 4}
-
-Corners come in two sizes, both the theme's: "radius" for containers (panels, cards, menus,
-strips) and "control_radius" for what you click or type in (buttons, fields, rows that light
-up). A file with only "radius" gets controls 2 px tighter. Tags and badges stay fully round.
-
-Status colours (online, offline, attention, stopped, working) and the ink colours of Printers'
-supply bars are the theme's too: one hand-picked set for dark themes and one for light ones,
-which a file may override. A status colour the file doesn't set is checked against the file's
-own pane and selection and moved toward its text colour if it would be hard to read there.
-"""
+"""Themes: the native Windows look, the CapyPanel look and the shipped *.json looks over them."""
 
 import ctypes
 import json
@@ -197,9 +177,8 @@ _switches: _Switches | None = None
 
 
 def switches() -> _Switches:
-    """Its `switched` fires after every theme switch, the one Windows starts under "follow
-    system" too. Connect what is drawn once in the theme's colours (status dots, coloured
-    icons), so it's drawn again."""
+    """Its `switched` fires after every theme switch, by Windows under "follow system" too. Connect
+    what's drawn once in the theme's colours (status dots, coloured icons), to draw it again."""
     global _switches
     if _switches is None:
         _switches = _Switches()
@@ -222,7 +201,6 @@ def generation() -> int:
 
 
 def apply(theme: Theme) -> None:
-    """Switches the whole app's look, live. The comments mark workarounds found in the UI spike."""
     global _current, _applied_once, _native_font, _generation
     app = QApplication.instance()
     if not isinstance(app, QApplication):
@@ -291,10 +269,8 @@ def _switch(
     font.setFeature(QFont.Tag("lnum"), 1)
     QGuiApplication.styleHints().setColorScheme(scheme)
     if engine_changed:
-        # Widgets keep the font they had when a stylesheet first reached them, to go back to
-        # it: give them the native one under an empty stylesheet, which restyles them quickly.
-        # The theme's own stylesheet is then set once, below; setting it here too doubled the
-        # time of a switch from a Windows theme.
+        # Widgets keep the font a stylesheet first found them with: give them the native one under
+        # an empty stylesheet, quick to restyle. The theme's own is set once, below, never here too.
         app.setFont(_native_font)
         app.setStyleSheet("QWidget { }")
         app.setStyle("Fusion")
@@ -331,8 +307,8 @@ def selection_tint(accent: QColor, card: str, text: str) -> str:
 
 
 def readable_on(accent: QColor, card: str, text: str) -> str:
-    """The accent as text on the pane (4.5:1), moved toward the text colour as far as needed: a
-    deep purple accent was unreadable as a heading on a dark pane."""
+    """The accent as text on the pane (4.5:1), moved toward the text colour as far as needed, so
+    a dark accent still reads as a heading on a dark pane."""
     for step in range(0, 101, 5):
         tint = _mix(QColor(text), accent, step / 100)
         if contrast_ratio(tint, card) >= 4.5:
@@ -341,8 +317,7 @@ def readable_on(accent: QColor, card: str, text: str) -> str:
 
 
 def button_fill(accent: QColor) -> str:
-    """The default button's colour: the accent, darkened as far as white text needs (4.5:1).
-    Graphite's light teal left its OK button's text hard to read."""
+    """The default button's colour: the accent, darkened as far as white text needs (4.5:1)."""
     for step in range(0, 101, 5):
         fill = _mix(QColor("#000000"), accent, step / 100)
         if contrast_ratio("#ffffff", fill) >= 4.5:
@@ -351,9 +326,8 @@ def button_fill(accent: QColor) -> str:
 
 
 def mark_tint(accent: QColor, card: str, text: str) -> str:
-    """A tint of the accent that marks one row of a menu: as plain as Graphite's teal (1.6:1
-    against the menu), text still readable on it (4.5:1). A dark accent on a dark menu, like a
-    deep purple, can't get there, so it's lifted toward the text colour first."""
+    """A tint of the accent that marks one menu row, as plain as Graphite's teal (1.6:1 against the
+    menu), text readable on it (4.5:1). A dark accent on a dark menu is lifted toward the text."""
     for lift in (0.0, 0.2, 0.4, 0.6):
         base = QColor(_mix(QColor(text), accent, lift))
         for step in range(10, 92, 2):
@@ -374,9 +348,8 @@ def menu_mark() -> QColor:
 
 
 def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
-    """Settings' cards: between the window and a pane, a faint edge, and the line beside the
-    page list; and the line under a table's row, softer than the table's frame. Worked out
-    from each theme's own colours."""
+    """Settings' cards between the window and a pane, a faint edge, the line beside the page list,
+    and a table's row line, softer than its frame: each from the theme's own colours."""
     bg = QColor(colors["bg"])
     return {
         "section": _mix(QColor(colors["card"]), bg, 0.6),
@@ -390,16 +363,14 @@ def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
 
 
 def status_floors(key: str) -> tuple[float, float]:
-    """The contrast a status colour needs on the pane and on a selected row. All of them are
-    words on the pane and at least a dot on a selected row; amber is also a whole row's text
-    (a profile ticked to delete, a low toner), which stays amber when the row is picked."""
+    """The contrast a status colour needs on the pane and a selected row: all are words on the pane
+    and dots on a selected row; amber is also a whole row's text, kept amber when it's picked."""
     return TEXT_CONTRAST, TEXT_CONTRAST if key == "attention" else MARK_CONTRAST
 
 
 def fit_status(key: str, color: str, card: str, selection: str, text: str) -> str:
-    """`color` as it is when it reads on this pane and selection, else moved toward the text
-    colour as far as it needs: the net under a theme that brings no status colours of its own,
-    and under the Windows themes, whose selection is a tint of any accent the person picked."""
+    """`color` when it reads on this pane and selection, else moved toward the text colour as far
+    as it needs: for themes without status colours of their own, and any accent's selection."""
     pane, picked = status_floors(key)
     for step in range(0, 101, 5):
         fitted = _mix(QColor(text), QColor(color), step / 100)
@@ -492,11 +463,8 @@ _ACTION_EVENTS = (QEvent.Type.ActionAdded, QEvent.Type.ActionChanged, QEvent.Typ
 
 
 class _Watcher(QObject):
-    """Fixes the themes need on every widget, wherever it's made:
-    - lists and trees can place their rows before the theme's row padding reaches them, then
-      keep those places (rows drew on top of each other): each one places them again when shown;
-    - menus with ticks are marked, so the stylesheet can line their text up with other menus;
-    - menus draw shortcuts dimmed at their right edge (menus.ShortcutLayer)."""
+    """Fixes every widget needs, wherever made: lists and trees place their rows again when shown
+    (the theme's padding came late); menus with ticks are marked and show dimmed shortcuts."""
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         kind = event.type()
@@ -526,9 +494,8 @@ def _watch_widgets(app: QApplication) -> "_Watcher":
 
 
 def installed(families: Sequence[str]) -> list[str]:
-    """The first of `families` this PC has, alone: the look is the same, and Qt isn't left to
-    walk a list of fallbacks the first time it measures text, which took up to 2.6 s at the
-    start on a PC with many fonts. The whole list when it has none of them."""
+    """The first of `families` this PC has, alone: Qt then needn't walk a list of fallbacks when it
+    first measures text (up to 2.6 s with many fonts). The whole list when it has none of them."""
     have = {family.casefold() for family in QFontDatabase.families()}
     first = next((family for family in families if family.casefold() in have), None)
     return [first] if first is not None else list(families)
@@ -585,7 +552,7 @@ def _palette(t: dict[str, str]) -> QPalette:
 
 
 # Tree rows use padding, never a fixed "height:": a stylesheet height draws rows taller than
-# the view spaces them, which made rows overlap in the spike's settings window.
+# the view spaces them, and they overlap.
 _QSS = """
 QMainWindow, QDialog { background: %(bg)s; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; padding: 4px 8px 2px 8px; }

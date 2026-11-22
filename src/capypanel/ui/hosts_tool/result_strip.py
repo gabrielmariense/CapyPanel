@@ -1,8 +1,4 @@
-"""The strip above the host table with a command's answer, in the look of Printers' attention
-strip: a green edge when it worked, closing by itself after a few seconds; a red edge when it
-failed, staying until closed, with the reason, "What does this mean?" when the docs explain it,
-and "Try another account…" when another account might do. Its icon sits on the middle of the
-text's first line (IconBesideText), as in the SSH tool's strip."""
+"""A command's answer over the host table: green and closing, or red with the reason, staying."""
 
 from collections.abc import Callable
 
@@ -21,9 +17,8 @@ ICON = 16
 
 
 class IconBesideText(QWidget):
-    """A strip's icon and its text as one block, the icon on the middle of the text's first
-    line. Set in its row with AlignVCenter: beside taller buttons a one-line text sits in the
-    middle and its icon comes down with it; a text that wraps keeps the icon on its first line."""
+    """A strip's icon and text as one block, the icon on the middle of the text's first line. In
+    its row with AlignVCenter, a one-line text centres beside taller buttons, its icon with it."""
 
     def __init__(self, icon: QLabel, text: QLabel) -> None:
         super().__init__()

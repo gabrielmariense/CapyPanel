@@ -1,8 +1,4 @@
-"""The Profile cleanup tool: the Windows profiles on the hosts of Hosts' open list, which can be
-deleted, how big they are. Hosts' Groups panel on the left (read only); in the middle and on the
-right, tabs: the pinned Hosts tab lists the group's hosts, and each host opened gets its own tab,
-so several hosts are read, counted and cleaned at once. It keeps no list of its own, and the
-account that signs in to a host is the one Hosts' Accounts give it. Scanning only reads."""
+"""Profile cleanup: the profiles on Hosts' open list, a tab per host; scanning only reads."""
 
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
@@ -420,9 +416,8 @@ class ProfilesTool(Tool):
     # ---- a sample while the Hosts tab's guide runs ----
 
     def show_sample(self) -> None:
-        """Hosts' sample PC in the table, and a tab for it with two made-up profiles, so the
-        guide's cards have something to point at. Nothing is read from or deleted on any PC;
-        both go when the guide ends."""
+        """Hosts' sample PC in the table and a tab with two made-up profiles, for the guide.
+        Nothing is read from or deleted on any PC; both go when the guide ends."""
         if self._hosts is None or SAMPLE_ID in self._pages:
             return
         self._hosts.show_sample()
@@ -489,7 +484,7 @@ class ProfilesTool(Tool):
 
     def _fit_tabs(self) -> None:
         """The tabs as tall as the list dropdown and the gap under it, so the list and the
-        right panel start on the Groups panel's top line: they sat 9 px higher (Dante)."""
+        right panel start on the Groups panel's top line."""
         self.tabs.set_height(self.nav.card_top())
 
     def restyle(self) -> None:
@@ -581,14 +576,13 @@ class ProfilesTool(Tool):
         self._check(hosts)
 
     def check_stale(self) -> None:
-        """The hosts shown that Hosts hasn't checked lately (Hosts' own Refresh-on-its-own
-        interval, 5 minutes unless changed): picking a group shows where they stand without a
-        click. A host checked lately isn't asked again."""
+        """The hosts shown that Hosts hasn't checked within its Refresh interval (5 minutes unless
+        changed), so picking a group shows where they stand without a click."""
         hosts = self._hosts
         if hosts is None or hosts.checking() or self.tabs.current() != HOSTS:
             return
         if self.nav.current_filter().kind == "all":
-            return  # every host of the list is too many to check unasked: Atualizar todos does
+            return  # every host of the list is too many to check unasked: Refresh all does
         minutes = hosts.auto_status()[1]
         now = datetime.now(UTC)
         stale = [
@@ -832,9 +826,8 @@ class ProfilesTool(Tool):
         )
 
     def _checks_changed(self) -> None:
-        """Once per host a Refresh checks, and when it starts and ends: only the toolbar and
-        the box of the hosts on show (each row follows by host_changed). Refilling the table
-        each time froze the window on 460 hosts."""
+        """Once per host a Refresh checks, and at its start and end: only the toolbar and the hosts
+        box (rows follow host_changed): refilling the table each time freezes it on 460 hosts."""
         self._update()
         if len(self.hosts_page.table.selected_ids()) != 1:
             self._show_side()

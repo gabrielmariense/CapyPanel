@@ -1,5 +1,4 @@
-"""Menu helpers: right-click menus, a menu that stays open while its boxes
-are ticked, and shortcuts drawn dimmed at a menu's right edge."""
+"""Menu helpers: right-click menus, menus that stay open for ticks, and dimmed shortcuts."""
 
 import math
 
@@ -44,9 +43,8 @@ def plain(text: str) -> str:
 
 
 def keep_room_for_shortcut(menu: QMenu, action: QAction) -> None:
-    """Qt draws a shortcut right after the text, in the text's colour, where it reads as part of
-    the name. Its text ends in a tab and blank space instead: Qt keeps the room, and the menu's
-    ShortcutLayer draws the shortcut there."""
+    """Qt draws a shortcut right after the text, in its colour, where it reads as part of the name:
+    the text ends in a tab and blanks instead, keeping room where ShortcutLayer draws it."""
     keys = shortcut_text(action)
     name, tab, room = action.text().partition("\t")
     if not keys or (tab and room and not room.strip()):

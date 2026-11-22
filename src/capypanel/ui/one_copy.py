@@ -1,10 +1,4 @@
-"""One running copy of CapyPanel per person: started again, it brings the running window
-forward (out of the tray too) and ends. Two copies would each write the whole settings file,
-the last one over the other's changes.
-
-The lock is a file in the person's own folder, beside the settings it protects, so it follows
-them whoever starts the app and from wherever. The second start talks to the first over a local
-pipe that only the same Windows user can open."""
+"""One running copy per person (two would overwrite settings); its lock and pipe are theirs."""
 
 import ctypes
 import hashlib

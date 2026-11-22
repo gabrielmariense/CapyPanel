@@ -86,7 +86,7 @@ def test_passwords_are_kept_in_memory_only_unless_remember_is_ticked(
     window: CapyWindow, launched: list[Credential | None], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     profiles = _profiles(window)
-    assert not hasattr(profiles, "passwords")  # no Kept in setting any more
+    assert not hasattr(profiles, "passwords")  # no Kept in setting on this page
     asked: list[str] = []
     _type(monkeypatch, asked)
     _connect(window)
@@ -133,8 +133,6 @@ def test_every_login_window_has_remember_unticked(window: CapyWindow) -> None:
 
 
 def test_typing_a_remembered_password_again_keeps_it_remembered(window: CapyWindow) -> None:
-    """A PC rejected the account: its window starts with Remember ticked when Windows
-    already keeps that password, so typing it again doesn't delete the saved one."""
     hosts = window.hosts
     admin = Account("CORP\\admin", "old")
     hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=True)

@@ -69,7 +69,7 @@ class HostsSettings(SettingsGroup):
             lambda: tool.customize_details(0, parent=self.general.window())
         )
         self.connections = ConnectionsPage(tool.connector.catalogs, doc)
-        self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
+        self.accounts = AccountsSection(tool.accounts)
         self.accounts_page = Page(_("Credentials"), place="settings-hosts-credentials")
         for section in (self.accounts, self.connections.profiles.passwords_section):
             self.accounts_page.body.addWidget(section)

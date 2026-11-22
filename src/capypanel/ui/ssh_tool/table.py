@@ -1,6 +1,4 @@
-"""The SSH host table: name, address, the name to log in as (its own or its group's), Status and
-tags; Port can be shown from the column titles' right-click menu. Status comes from Refresh; it's
-kept in memory, never in the list file."""
+"""The SSH host table; Status comes from Refresh, kept in memory only."""
 
 from collections.abc import Callable, Sequence
 

@@ -57,7 +57,6 @@ class ProfilePicker:
 
 
 def list_file_filter() -> str:
-    """The file-type filter for choosing host list files in file dialogs."""
     return _("Host lists (*.json);;All files (*)")
 
 
@@ -195,8 +194,6 @@ def confirm(parent: QWidget, title: str, text: str, action: str, details: str = 
     box.exec()
     return box.clickedButton() is yes
 
-
-# ---- tag field ----
 
 SEPARATORS = ",;"
 
@@ -401,7 +398,7 @@ class FlowLayout(QLayout):
             if x + hint.width() > area.right() + 1 and line_height:
                 x, y, line_height = area.x(), y + line_height + self.spacing(), 0
             width = hint.width()
-            if index == last and self._stretch_last:  # the text box takes the rest
+            if index == last and self._stretch_last:
                 width = max(hint.width(), area.right() + 1 - x)
             if move:
                 item.setGeometry(QRect(QPoint(x, y), QSize(width, hint.height())))

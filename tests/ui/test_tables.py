@@ -1,5 +1,4 @@
-"""The one table design for lists in windows: whole text, a sideways scroll only when needed,
-and Fit columns to content on the column titles' right-click."""
+"""The one table design for lists in windows: whole text, and a sideways scroll only if needed."""
 
 from typing import Any
 

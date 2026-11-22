@@ -1,5 +1,4 @@
-"""Mapped drives, a Users command: the drives saved for each person signed in. The Commands
-window shows them on its right side with the same rows (drive_rows)."""
+"""Mapped drives, a Users command: the drives saved for each person signed in to a PC."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass

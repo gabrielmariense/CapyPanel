@@ -1,17 +1,4 @@
-"""The Windows user profiles on a PC: which are there, how big they are, and deleting the ones
-nobody uses any more.
-
-A shared PC keeps a profile (a folder in C:\\Users plus its registry entry) for everyone who ever
-signed in, until the disk is full. Everything here is read from your PC: Windows' own list
-(Win32_UserProfile) and the registry's ProfileList over WMI, the folders over the PC's drive
-share. Nothing is installed or run on the PC.
-
-Deleting is final: with local profiles the person's desktop and documents go too. So only a
-profile that's READY can be deleted (not signed in, not one of Windows' own, inside the Users
-folder), each delete checks the PC again right before it happens, and each one is written to a
-log. A normal profile is removed by Windows itself (deleting its Win32_UserProfile, which takes
-the folder and the registry entries together and refuses a profile in use). Two leftovers are
-handled apart: a registry entry whose folder is gone, and a folder no registry entry names."""
+"""A PC's user profiles: which, how big, and deleting a READY one, checked again right before."""
 
 import contextlib
 import ctypes
@@ -384,9 +371,8 @@ def profile_size(
     opened: Opened | None = None,
     progress: Callable[[int], None] | None = None,
 ) -> int | None:
-    """The bytes in `profile`'s folder, read over the PC's drive share; None when `stop` said
-    so first, or when it has no folder. `progress` hears the bytes counted so far, folder by
-    folder (from the threads that read them). Reads only. Raises RemoteError."""
+    """The bytes in `profile`'s folder, None when `stop` said so first or it has none. `progress`
+    hears the count so far, from the threads that read it. Reads only. Raises RemoteError."""
     if not profile.path or profile.kind is Kind.ENTRY:
         return None
     opened = opened or (lambda path: share_path(scanned.host, path))
@@ -408,14 +394,8 @@ def folder_size(
     walkers: int = WALKERS,
     identity: Callable[[], AbstractContextManager[None]] = nullcontext,
 ) -> int | None:
-    """The bytes in the files under `folder`; None when `stop` said so. Links are never followed
-    (AppData has several, and the count would leave the profile), and a folder inside that can't
-    be read counts as empty. Raises OSError when `folder` itself can't be read.
-
-    A profile is tens of thousands of folders, and over the network each one is a wait: read
-    one after another, a profile took minutes. So `walkers` threads read folders at the same
-    time, each inside `identity()` (the account that signs in applies per thread). `progress`
-    hears the bytes so far after each folder, from whichever thread read it."""
+    """Bytes under `folder`, None when `stop` said so. Links aren't followed; an unreadable folder
+    inside counts as empty. `walkers` threads read at once, each in `identity()`. Raises OSError."""
     total, inside = _listed(folder)  # the folder itself, here: its error is the caller's
     if progress is not None:
         progress(total)
@@ -499,9 +479,8 @@ def delete(
     opened: Opened | None = None,
     name_of: NameOf | None = None,
 ) -> Deleted:
-    """Deletes one profile or leftover of `scanned`'s PC, after checking it again there, and
-    writes what happened to `log_file`. Never raises for what the PC answers: a refusal or a
-    failure is the outcome."""
+    """Deletes a profile or leftover of `scanned`'s PC, checked there again first, and writes what
+    happened to `log_file`. Never raises for what the PC answers: a refusal is the outcome."""
     host = scanned.host
     opened = opened or (lambda path: share_path(host, path))
     if not profile.ready:
@@ -642,7 +621,6 @@ _WHYS = {
 
 
 def _answered(profile: Profile, answer: object) -> Deleted:
-    """What a delete script said."""
     said = answer if isinstance(answer, dict) else {}
     outcome = str(said.get("outcome") or "")
     if outcome == "deleted":
@@ -684,9 +662,8 @@ _DELETED_ACCOUNT, _UNKNOWN_ACCOUNT = 6, 8  # what kind of name came back
 
 
 def account_of(host: str, sid: str) -> str:
-    """The account `host` knows `sid` by, "EXAMPLE\\ana", or "" when it knows none: the account
-    was deleted, or its domain can't be asked. `host` answers, so its own local accounts get
-    their names too."""
+    """The account `host` knows `sid` by ("EXAMPLE\\ana"), or "" when none: deleted, or its domain
+    can't be asked. `host` answers, so its own local accounts get their names too."""
     binary = ctypes.c_void_p()
     if not _advapi32.ConvertStringSidToSidW(sid, ctypes.byref(binary)):
         return ""
@@ -925,9 +902,8 @@ _STRINGS, _BINARY, _DWORD, _MULTI, _QWORD = (1, 2), 3, 4, 7, 11  # registry valu
 
 @inventory.reads(_DELETE_ENTRY)
 def _delete_entry_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
-    """The entry's values are read first and sent back, for the log. The PC's GUID index loses
-    the SID's line only when no twin entry (the SID beside its .bak) still stands for that
-    person."""
+    """The entry's values are read first and sent back, for the log. The GUID index loses the SID's
+    line only when no twin entry (the SID beside its .bak) still stands for that person."""
     from capypanel.core.remote.wmi import HKLM
 
     key, sid = f"{_LIST}\\{values['key']}", values["sid"]

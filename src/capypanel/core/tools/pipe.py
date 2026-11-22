@@ -1,5 +1,4 @@
-"""Handing a secret to a program through a named pipe instead of a file: it never touches disk.
-Only this Windows account can open the pipe, once, and the secret is written a single time."""
+"""A secret handed to a program through a named pipe only this account can open, once: no file."""
 
 import ctypes
 import logging

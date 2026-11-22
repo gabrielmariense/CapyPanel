@@ -1,6 +1,4 @@
-"""The lists a user works with in one tool: the default list, their personal list, the lists
-in the tool's lists folders and every list they added (e.g. on a network share). Shown in
-Settings (Host lists, for Hosts)."""
+"""Every list a user works with in one tool: default, personal, in its folders, or added."""
 
 import html
 import logging
@@ -99,9 +97,8 @@ class PathLine(Elided):
 
 
 class ListsView(QWidget):
-    """The lists, with the one in use in bold and marked, and buttons to add, create or forget.
-    `changed` fires when the lists change; `open_requested` asks to open one now: a double-click,
-    a new list, or the default list when the open one is removed."""
+    """The lists, the one in use in bold and marked, with buttons to add, create or forget.
+    `changed` when they change; `open_requested` to open one now (a double-click, a new list)."""
 
     changed = Signal()
     open_requested = Signal(object)  # a list's Path
@@ -158,8 +155,6 @@ class ListsView(QWidget):
         self.tree.itemDoubleClicked.connect(lambda *_a: self.open_picked())
         self._fill(document.path if document else personal_list)
 
-    # ---- reading ----
-
     def selected(self) -> Path | None:
         items = self.tree.selectedItems()
         return Path(items[0].data(0, ROLE_PATH)) if items else None
@@ -198,8 +193,6 @@ class ListsView(QWidget):
             help_links.warning(self, "CapyPanel", message, place="hosts-list-cant-open")
             return
         self.open_requested.emit(path)
-
-    # ---- building ----
 
     def _kind(self, path: Path) -> ListKind:
         return locations.list_kind(path, default=self._default, personal=self._personal)
@@ -275,8 +268,6 @@ class ListsView(QWidget):
         )
         menu.addSeparator()
         add_action(menu, _("&Remove"), self._remove, self._removable(path))
-
-    # ---- changing ----
 
     def _keep(self, path: Path) -> None:
         if self._in_folder(path):  # one removed before comes back

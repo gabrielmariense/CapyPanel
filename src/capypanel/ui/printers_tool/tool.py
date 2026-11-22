@@ -1,6 +1,4 @@
-"""The Printers tool: the list workspace with printers, each with its brand, model, serial number,
-asset tag and where its page counters come from, plus opening their web pages and Refresh, which
-reads each printer's status, supplies and page counter over SNMP."""
+"""The Printers tool: printer lists, their web pages, and Refresh over SNMP."""
 
 import logging
 from collections.abc import Callable, Collection, Sequence
@@ -140,7 +138,7 @@ class PrintersTool(ListWorkspace):
         self._apply_auto_refresh()
         self.table.set_cells(self._cells)
         self.table.bars, self.table.marks = self.toner_bars(), self.bar_marks()
-        self.settings_pages = PrintersSettings(self)  # its part of Settings
+        self.settings_pages = PrintersSettings(self)
         self._fill_inventory()
         self._connect()
         self.restore_layout()
@@ -277,10 +275,8 @@ class PrintersTool(ListWorkspace):
         super().retranslate()
 
     def guide(self) -> Guide:
-        """Its whole guide, every time, with a sample printer to point at: lists, tags, adding,
-        the table and Details, Refresh, what Status and Toner say, the warnings, Refresh on its
-        own and the SNMP account for when nothing shows up (the window adds View last). No step
-        asks for a click."""
+        """Its whole guide, every time, with a sample printer to point at; the window adds View
+        last. No step asks for a click."""
         bar, table = self.toolbar, self.table
 
         def status_and_toner() -> QRect | None:  # both columns, titles and cells, as one box
@@ -354,9 +350,8 @@ class PrintersTool(ListWorkspace):
                      cleanup=self.hide_sample)  # fmt: skip
 
     def sample_items(self, group: str) -> list[Host]:
-        """The guides' sample printers, one per status: working, needing attention, stopped
-        and not answering. Documentation addresses (192.0.2.x) that never answer, and never
-        asked: Refresh and Open web page leave every sample out (is_sample)."""
+        """The guides' sample printers, one per status, at documentation addresses (192.0.2.x):
+        Refresh and Open web page leave every sample out (is_sample)."""
         name, tags, notes = _("PRN-SAMPLE"), (sample_tag(),), _("Shown only while a guide is open.")
         return [
             Host(id=SAMPLE_ID if n == 1 else f"{SAMPLE_ID}-{n}", name=name if n == 1 else

@@ -87,10 +87,8 @@ def pane_title(text: str, label: QLabel | None = None) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """One card, like the other panels: "All hosts" (or the tool's own word) pinned on top, then
-    the groups (in the list's own order, rearranged by dragging) and the tags, each under a small
-    heading and split by thin lines. A group (or All hosts, or No group) picks where to look;
-    tags, any number of them, then keep only the items that have them all."""
+    """One card: "All hosts" (or the tool's word) on top, then the groups (in the list's order) and
+    the tags. A group (All hosts, No group) picks where to look; tags keep items with them all."""
 
     filter_changed = Signal()
 
@@ -207,9 +205,8 @@ class NavigationPane(QWidget):
         return max([card, *above])
 
     def card_top(self) -> int:
-        """How far below the pane's top its card starts, as the layout places it: what's above
-        the card (the list dropdown), each with the layout's gap under it. Known before the
-        pane is shown, so a panel beside it can line up with the card from the start."""
+        """How far below the pane's top its card starts: what's above (the list dropdown) and the
+        layout's gap under each, known before it shows, so a panel beside it lines up at once."""
         layout = self.layout()
         assert isinstance(layout, QVBoxLayout)
         top = 0
@@ -331,9 +328,8 @@ class NavigationPane(QWidget):
             self.split.setChildrenCollapsible(False)  # restoring turns collapsing back on
 
     def _fit_everything(self) -> None:
-        """Exactly as tall as its two rows, whatever padding the theme gives rows and frames, and
-        never narrower than "All hosts (N)": the pane can't be dragged past it. Group names don't
-        count, so a long one can't make the pane huge (they show a tooltip)."""
+        """As tall as its two rows, whatever the padding, and never narrower than "All hosts (N)":
+        the pane can't be dragged past it. Group names don't count: a long one shows a tooltip."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
@@ -535,9 +531,8 @@ def is_sample(item_id: object) -> bool:
 
 
 class SortedRow(QTreeWidgetItem):
-    """A table row that sorts naturally (A–Z or Z–A by the clicked column), ties by its name,
-    A–Z either way. A cell with nothing in it, or marked ROLE_NOTHING, goes last either way.
-    A guide's sample stays on top whatever the order, where the guide's card can find it."""
+    """A row sorting naturally by the clicked column, ties by name A–Z either way. An empty cell
+    or one marked ROLE_NOTHING goes last either way; a guide's sample stays on top."""
 
     def sort_text(self, column: int) -> str:
         return "" if self.data(column, ROLE_NOTHING) else self.text(column)
@@ -572,10 +567,8 @@ def _tree_width(tree: QTreeWidget) -> int:
 
 
 def offers_typed(typed: str, rows: Iterable[Host]) -> bool:
-    """Whether a search offers to reach the PC typed (Hosts' Connect to {host}…, Profile
-    cleanup's Scan {host}): while no row is it, by its name or address in any case. A typed
-    PC-01 among PC-010's rows still offers it; a text with a space (a group, a note) can't be a
-    PC's name or address."""
+    """Whether a search offers the PC typed (Connect to {host}…, Scan {host}): while no row is it,
+    by name or address in any case; a text with a space (a group, a note) can't be a PC."""
     wanted = typed.strip().casefold()
     if not wanted or any(c.isspace() for c in wanted):
         return False
@@ -583,10 +576,8 @@ def offers_typed(typed: str, rows: Iterable[Host]) -> bool:
 
 
 class RowsOffer(QObject):
-    """Buttons as a table's own last line, under its rows and lined up with their text: what a
-    search offers while it has rows but none is what was typed. They scroll with the rows and
-    never take height from the table or move them, so they can come and go as you type; past a
-    full table they're out of sight, and show once the rows are fewer."""
+    """Buttons as a table's last line, under its rows and lined up with their text: what a search
+    offers while no row is what was typed; they scroll with the rows and take no table height."""
 
     GAP = 6  # px between the last row and the buttons
 
@@ -660,9 +651,8 @@ class RowsOffer(QObject):
 
 
 class ItemTable(QTreeWidget):
-    """A list tool's items as a table. A QTreeView-based widget: it selects whole rows in
-    Windows 11. A tool says its columns (COLUMNS, saved by those keys; the first always shows),
-    their titles (retranslate) and each row's texts (row_texts)."""
+    """A list tool's items as a table, a QTreeView that selects whole rows in Windows 11. A tool
+    gives its COLUMNS (saved by those keys; the first always shows), retranslate and row_texts."""
 
     COLUMNS: tuple[str, ...] = ()
     SEARCHED: frozenset[int] = frozenset({0})  # columns where a search's text is marked
@@ -723,7 +713,6 @@ class ItemTable(QTreeWidget):
         """The column titles, in the current language."""
 
     def row_texts(self, item: Host) -> list[str]:
-        """What each column shows for an item."""
         raise NotImplementedError
 
     def decorate(self, row: QTreeWidgetItem, item: Host) -> None:
@@ -752,9 +741,8 @@ class ItemTable(QTreeWidget):
         keep = set(self.selected_ids())
         current = self.currentItem()
         current_id = current.data(0, ROLE_ID) if current is not None else None
-        # An edit, add or delete refills the table, and clear() would jump to the top: the same
-        # rows give or take the ones changed stay where they were. Another group or search
-        # starts at the top.
+        # A refill after an edit, add or delete keeps the rows where they were (clear() would jump
+        # to the top); another group or search starts at the top.
         before, after = set(self._rows), {item.id for item in items}
         same = bool(before) and len(before ^ after) <= max(1, len(keep))
         down = self.verticalScrollBar().value() if same else 0
@@ -828,9 +816,8 @@ class ItemTable(QTreeWidget):
         self._place_empty()
 
     def show_offer(self, actions: Sequence[QAction]) -> None:
-        """A button for each action as the table's last line, under its rows: what a search
-        offers while it has rows but none is what was typed. With no rows, the note carries
-        them (show_note). () hides them."""
+        """A button per action as the table's last line, when no row of a search is what was typed;
+        with no rows, the note carries them (show_note). () hides them."""
         self.offer.show_actions(actions if self.topLevelItemCount() else ())
 
     def _place_empty(self) -> None:

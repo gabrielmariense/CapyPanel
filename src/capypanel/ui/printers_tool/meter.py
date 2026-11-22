@@ -1,6 +1,4 @@
-"""A supply's level as a bar with its marks (the low level's, and any added in Settings): in
-Details, and in the Toner column when Settings asks for bars. One drawing, so both look the
-same."""
+"""A supply's level as a bar with its marks, one drawing for Details and the Toner column."""
 
 from collections.abc import Sequence
 
@@ -22,10 +20,8 @@ ROOM = REACH + OUTLINE  # px to leave above and below the bar
 def draw_meter(
     painter: QPainter, bar: QRectF, supply: Supply, marks: Sequence[Mark], text: QColor
 ) -> None:
-    """The bar in `bar`, its track tinted from the text colour, so it reads in every theme.
-    Each mark is in its own colour (the text colour unless one was picked), outlined in black,
-    and sticks out past the bar. Leave ROOM px above and below `bar` for them. "Some left"
-    fills half; an unknown level, none."""
+    """The bar in `bar`, its track tinted from the text colour; marks outlined in black stick
+    out ROOM px past it. "Some left" fills half; an unknown level, none."""
     painter.save()
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     track = QColor(text)

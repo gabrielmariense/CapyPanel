@@ -1,8 +1,4 @@
-"""No right-click menu on hosts gives one access key to two items, in either language: Alt and
-that letter would only ever reach the first. Hosts, SSH, Printers and Profile cleanup's Hosts
-tab, with one host picked and with two, and Hosts', SSH's and Printers' group menus, each with
-the menus inside it (Satya's keys, build 618: Re&fresh, At&ualizar, Commands run a&s, To&dos,
-Sho&w, en&dereço)."""
+"""No host or group menu gives one access key to two items, in either language."""
 
 import re
 from collections.abc import Iterator

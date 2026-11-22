@@ -21,7 +21,6 @@ def own_app_data(monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempP
 
 @pytest.fixture(autouse=True)
 def own_credentials() -> None:
-    """Every test starts with an empty Credential Manager of its own, in memory
-    (tests/helpers/fake_credman.py): the suite never reads or writes the passwords of whoever
-    runs it, and tests side by side never see each other's."""
+    """Every test gets an empty Credential Manager of its own, in memory (helpers/fake_credman.py):
+    the suite never touches the passwords of whoever runs it, and tests never see each other's."""
     credstore._advapi32 = cast(ctypes.WinDLL, FakeCredentialManager())

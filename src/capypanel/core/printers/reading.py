@@ -1,11 +1,4 @@
-"""What Refresh reads from a printer over SNMP: its status and the printer's own error
-messages, each supply's level, the page counter, its brand, model and serial number, and its
-MAC address and firmware version.
-
-It comes from the standard objects (Host Resources, Printer MIB, Entity MIB and IF-MIB), which
-printers of every brand answer. Only where those leave a gap (a level with no %, an empty
-serial) does it also read a brand's own data, for the brands in _BRAND_DATA, each checked
-against a real printer's web page first. What a printer doesn't answer is left empty."""
+"""What Refresh reads from a printer over SNMP: status, errors, supplies, pages, details."""
 
 import dataclasses
 import re
@@ -51,7 +44,8 @@ _ENTERPRISES = "1.3.6.1.4.1."
 _VERSION = re.compile(r"\bV\d+(?:\.\d+)+\b")
 _FIRMWARE_VER = re.compile(r"\bFirmware\s+Ver\.?\s*(\w+)", re.IGNORECASE)
 
-# Brands' own data, read only to fill a gap the standard objects leave.
+# Brands' own data, read only to fill a gap the standard objects leave (a level with no %,
+# an empty serial).
 RICOH_SERIAL = "1.3.6.1.4.1.367.3.2.1.2.1.4.0"  # ricohEngSerialNumber
 RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1.1"  # ricohEngTonerEntry
 _RICOH_COLOUR, _RICOH_LEVEL = 2, 5  # its level: a %, or below 0 for "some left", "unknown"...
@@ -114,7 +108,7 @@ class SupplyKind(StrEnum):
     TONER = "toner"
     INK = "ink"
     DRUM = "drum"
-    WASTE = "waste"  # a waste toner or ink box
+    WASTE = "waste"
     OTHER = "other"  # fuser, transfer unit, staples...
 
 
@@ -145,7 +139,7 @@ class Reading:
     problems: frozenset[Problem] = frozenset()
     messages: tuple[str, ...] = ()  # the printer's own words for what's wrong, e.g. "Paper jam"
     supplies: tuple[Supply, ...] = ()
-    pages: int | None = None  # the total page counter
+    pages: int | None = None
     brand: str = ""
     model: str = ""
     serial: str = ""

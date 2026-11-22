@@ -1,15 +1,4 @@
-"""What a PC is and what's installed on it, read only.
-
-Free space and the last restart come over file sharing, as Refresh's checks do, in a few tens of
-milliseconds. The rest (Windows' version, maker, model, serial, BIOS, memory, and the installed
-programs) comes from WMI over DCOM, Windows' own management service, through PowerShell: about
-2 to 5 seconds for a first connection. The registry is read through WMI's registry provider, so
-the Remote Registry service (off by default) isn't needed. Nothing is installed or run on the
-PC, and programs are read from the uninstall list, never through Win32_Product (which makes
-Windows check, and sometimes repair, every MSI program it lists).
-
-Installed programs are those installed for every user of the PC; a program someone installed
-only for themselves is in their own profile and isn't listed."""
+"""What a PC is and what's installed, read over file sharing and WMI only: nothing runs there."""
 
 import base64
 import ctypes
@@ -39,7 +28,7 @@ log = logging.getLogger(__name__)
 # How reads reach a PC's WMI (over DCOM; WinRM always goes through PowerShell):
 AUTO = "auto"  # WMI straight from CapyPanel; PowerShell only when that can't be used here
 DIRECT = "direct"  # only WMI straight from CapyPanel
-POWERSHELL = "powershell"  # only a PowerShell started on this PC, as before 0.24
+POWERSHELL = "powershell"  # only a PowerShell started on this PC
 transport = AUTO  # set from Settings
 powershell_blocked = False  # Windows refused to start it here this session
 
@@ -147,6 +136,7 @@ def pc_facts(host: str, account: Account | None = None) -> PcFacts:
     )  # fmt: skip
 
 
+# Never Win32_Product: reading it makes Windows check every MSI program it lists.
 def installed_programs(host: str, account: Account | None = None) -> list[Program]:
     """The programs installed for every user of `host`, by name, without Windows' own parts and
     updates. Raises RemoteError, TimeoutError."""
@@ -180,10 +170,8 @@ def run_cim(
     values: Mapping[str, str] | None = None,
     timeout: float = WMI_TIMEOUT,
 ) -> Any:
-    """Reads `host` with `script`, or with its twin over WMI directly when it has one (the twin
-    starts no program, so no antivirus has a command line to judge). PowerShell is the way when
-    WMI can't be used from this PC at all. Raises RemoteError, TimeoutError, or
-    PowerShellBlocked when PowerShell was needed and Windows wouldn't start it."""
+    """Reads `host` with `script`, or with its twin over WMI directly when it has one (no program
+    started for an antivirus to judge). Raises RemoteError, TimeoutError or PowerShellBlocked."""
     from capypanel.core.remote import wmi
 
     reader = _READERS.get(script)
@@ -204,10 +192,8 @@ def _powershell(
     values: Mapping[str, str] | None,
     timeout: float,
 ) -> Any:
-    """Runs a PowerShell script that uses `$session`, a CIM session to `host` over WMI (DCOM),
-    and answers with Send. The host, the account and `values` (as `$in.<name>`) go in through
-    standard input, never on the command line, so they can't change the script and the
-    password isn't visible to other programs."""
+    """Runs a PowerShell script with `$session`, a CIM session to `host`, which answers with Send.
+    Input comes on stdin, never the command line: it can't alter the script or show a password."""
     data = {**(values or {}), "host": host, "user": "", "password": ""}
     if account:
         data["user"], data["password"] = account.user, account.password
@@ -247,9 +233,8 @@ def wmi_error(code: int) -> RemoteError:
     return RemoteError(Reason.OTHER, code)
 
 
-# Shared by every CIM script: read the input, open one session, send back base64'd UTF-8 JSON
-# (so names in any language survive the console), and turn a failure into its HRESULT. Reg
-# reads the PC's own registry keys, UReg those of the people signed in.
+# Shared by every CIM script: the input, one session, base64'd UTF-8 JSON back (any language
+# survives the console), failures as HRESULTs. Reg reads the PC's registry, UReg its people's.
 _COMMON = r"""
 $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
 function Send($value) {
@@ -325,8 +310,6 @@ try {
 finally { Remove-CimSession $session }
 """
 
-
-# ---- the same reads over WMI directly ----
 
 _VERSION_KEY = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
 

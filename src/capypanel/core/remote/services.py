@@ -1,7 +1,4 @@
-"""Restarting a Windows service on another PC (the Print Spooler, for a stuck queue), and
-whether it's running: Windows' service manager over its own remote call, as `sc \\\\PC query`,
-`stop` and `start` do. Nothing is installed or run on the target; the account needs admin rights
-there."""
+"""Restarting a service on another PC (the Print Spooler, say) as `sc` does: nothing runs there."""
 
 import ctypes
 import time
@@ -57,8 +54,7 @@ def restart_service(
 
 
 def service_state(host: str, name: str, account: Account | None = None) -> str:
-    """Whether service `name` on `host` runs: "running", "stopped"… (STATES). Raises
-    RemoteError."""
+    """Whether service `name` on `host` runs: "running", "stopped"… (STATES). Raises RemoteError."""
     check_reachable(host)
     with as_account(account):
         manager = _advapi32.OpenSCManagerW(host, None, _CONNECT)

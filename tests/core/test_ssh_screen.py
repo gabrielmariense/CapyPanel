@@ -1,6 +1,4 @@
-"""The terminal's screen (core/ssh/screen.py) on our copy of pyte: Windows' console's widths,
-colours kept as palette numbers, the alternate screen, the scrollback, and what the server may
-not do."""
+"""The terminal's screen on our pyte, and what a server may not do to it."""
 
 import pytest
 from console_cells import CONSOLE_CELLS  # as Windows' own console counted them
@@ -31,8 +29,6 @@ def test_each_sample_takes_the_cells_the_console_gives_it(sample: str, cells: in
 
 
 def test_half_a_flag_takes_the_cells_its_console_engine_gives_it() -> None:
-    """2 in Windows' own console, 1 in the engine CapyPanel carries for Windows 10, which the
-    terminal tells its screen (test_ssh_conpty.py measures both)."""
     for cells, flag_cells in ((2, 4), (1, 2)):
         screen, stream = screen_and_stream()
         screen.regional_indicator_cells = cells
@@ -62,7 +58,6 @@ def test_a_wide_character_that_no_longer_fits_goes_whole_to_the_next_row() -> No
 
 
 def test_writing_over_half_of_a_wide_character_blanks_its_other_half() -> None:
-    """As Windows' console does; pyte leaves the half behind."""
     screen, stream = screen_and_stream()
     stream.feed("中文\r\n中文".encode())
     stream.feed(b"\x1b[1;2HX")  # over the right half of the first
@@ -72,8 +67,6 @@ def test_writing_over_half_of_a_wide_character_blanks_its_other_half() -> None:
 
 
 def test_a_private_sgr_costs_nothing_after_it() -> None:
-    """vim asks ESC[?4m at start; in pyte it raised and the rest of the read, vim's whole first
-    frame, was lost."""
     screen, stream = screen_and_stream()
     stream.feed(b"\x1b[?4mvim's first frame")
     assert screen.row_text(0) == "vim's first frame"
@@ -164,8 +157,6 @@ def test_a_packed_line_comes_back_as_it_was() -> None:
 
 
 def test_shrinking_keeps_a_message_on_the_first_row() -> None:
-    """pyte's resize deleted lines from the top wherever the cursor was: a failed connection's
-    message went when the ended strip took room."""
     screen, stream = screen_and_stream(lines=10)
     stream.feed(b"ssh: connect to host port 22: Connection refused\r\n")
     screen.resize(lines=7)

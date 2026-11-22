@@ -1,6 +1,4 @@
-"""Work off the main thread for the Profile cleanup tool. Reads and size counts share one limit
-across every tab, so many hosts open at once never walk a whole ward of PCs together; reads go
-before counts. Deletes don't wait here: each host deletes one profile at a time on its own."""
+"""Profile cleanup's work off the main thread, under one limit across tabs; deletes one by one."""
 
 from collections.abc import Callable
 from dataclasses import dataclass

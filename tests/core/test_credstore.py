@@ -42,8 +42,8 @@ def test_tests_never_touch_the_real_entries(monkeypatch: pytest.MonkeyPatch) -> 
         return fake and credstore.PREFIX.startswith("CapyPanelTest/")
 
     assert fake_and_test_prefix()
-    # A test that undoes its monkeypatches once put the real prefix back, and the cleanup after
-    # it then deleted the saved passwords of whoever ran the tests.
+    # Undoing a test's monkeypatches must keep the test prefix: with the real one back, the
+    # cleanup after it would delete the saved passwords of whoever runs the tests.
     monkeypatch.undo()
     assert fake_and_test_prefix()
 

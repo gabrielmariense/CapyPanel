@@ -113,7 +113,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
 
 
 def test_page_list_rows_never_overlap(window: CapyWindow) -> None:
-    # The list once kept row positions from before the theme's padding arrived.
+    # Rows placed before the theme's padding arrives would overlap once it does.
     window.show()
     window.set_theme("windows-light")
     window.set_theme("capypanel-dark")

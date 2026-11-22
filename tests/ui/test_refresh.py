@@ -103,8 +103,6 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
 def test_status_never_connects_to_a_vnc_port(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """UltraVNC up to 1.6.1 counts a connection that doesn't log in as a wrong password and
-    turns this PC away after six, so Refresh would lock people out of the PCs it checks."""
     asked: list[tuple[int, ...]] = []
     monkeypatch.setattr(
         checks, "run", lambda _address, wanted: asked.append(wanted.ports) or Found(Status.ONLINE)
@@ -273,9 +271,8 @@ def test_a_host_refusing_a_proven_account_never_stops_the_others(
 def test_a_host_that_refused_goes_last_next_time(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # PC-1 comes first and refuses the account before any host has accepted it: as a wrong
-    # password would, it stops the run. The next Refresh tries it last, after PC-2 has proven
-    # the account, so it no longer stops anything.
+    # PC-1 refuses the account before any host accepted it: as a wrong password would, it stops the
+    # run. The next Refresh tries it last, after PC-2 proved the account, so nothing stops then.
     admin = Account("CORP\\admin", "right")
     window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=False)
     answers["10.0.0.1"] = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 5))
@@ -370,7 +367,7 @@ def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: CapyWindow) -> 
         assert (
             abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
         )
-        above = connect.mapTo(window.hosts.toolbar, QPoint(0, 0)).y()  # T1: 6 px above and below
+        above = connect.mapTo(window.hosts.toolbar, QPoint(0, 0)).y()  # 6 px above and below
         assert above == 6 and window.hosts.toolbar.height() - above - connect.height() == 6
     window.set_theme(themes.DEFAULT_THEME.id)  # as the other tests expect
 

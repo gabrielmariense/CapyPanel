@@ -1,7 +1,4 @@
-"""The user profiles on a PC. The read runs here for real (this PC's own profiles over WMI); the
-rules that sort profiles into states run on a folder that stands in for a PC's drive, with the
-WMI answer written by hand. Deleting a real profile only ever happens on CI's throwaway machine,
-on an account the test makes for it."""
+"""A PC's user profiles, this PC's read for real; a real delete only on CI's throwaway machine."""
 
 import _winapi
 import contextlib
@@ -101,8 +98,6 @@ def test_this_pcs_own_profiles_read_over_wmi(monkeypatch: pytest.MonkeyPatch) ->
 def test_asking_this_pc_to_delete_what_isnt_there_says_gone(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The two delete scripts run for real against this PC, on a SID nobody has: they read,
-    find nothing, and stop."""
     monkeypatch.setattr(user_profiles, "check_reachable", lambda host: None)
     sid = f"S-1-5-21-1111111111-222222222-333333333-{secrets.randbelow(80000) + 10000}"
     scanned = Scan("localhost", "C:\\Users", ())
@@ -600,8 +595,6 @@ def test_a_folder_is_counted_by_several_threads_each_as_the_account(tmp_path: Pa
 
 
 def test_a_time_no_profile_can_have_is_unknown_not_a_date(tmp_path: Path) -> None:
-    """A half-written registry value reads as 1601 or the far future, and a date before 1970
-    can't even be shown in local time on Windows: both read as unknown ("—")."""
     opened = _pc(tmp_path, "ana", "rui", "eva")
     old = {"load_high": 0, "load_low": 5}  # a few ticks after 1601
     future = _stamp("load", datetime.now(UTC) + timedelta(days=400))

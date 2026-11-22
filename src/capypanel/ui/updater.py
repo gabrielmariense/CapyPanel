@@ -1,10 +1,4 @@
-"""Updates in the app: a look at GitHub at every start by default (Settings › CapyPanel ›
-General › Updates: at every start, once a day, once a week or off, one choice for the whole
-PC) and from Help › Check for updates; one window with the notes (in the app's language),
-Install and restart, Later and Skip this version, where the download's progress shows too,
-opened on its own when a look finds a newer release, and an "Update 0.26.1" button at the
-right of the menu bar for later; after the restart, a window saying it's installed or why
-not. The download and the swap are core/updates.py's."""
+"""Updates in the app: the look at GitHub, and the window with the notes and Install."""
 
 import logging
 import re
@@ -53,8 +47,7 @@ def packaged() -> bool:
 
 class Updater(QObject):
     """Whether there's a newer release, kept as `offer`. Looks on its own only in the exe, as
-    often as this PC's choice says (`folder` holds it): by default soon after every start, then
-    once a day while CapyPanel stays open."""
+    often as this PC's choice says (`folder`): by default after each start, then once a day."""
 
     changed = Signal()  # `offer` changed: the menu bar's button follows
     found = Signal()  # a look of its own found a newer release: the window opens for it
@@ -302,10 +295,8 @@ class _Changes(QScrollArea):
 
 
 class _Frame(QDialog):
-    """The update windows' shared look, Windows 11's dialogs: a soft body (the app icon, a
-    title, a version chip, a grey line, the changes with a ✓ each, links) over a footer band
-    with the buttons. A window with only a message (nothing new, checking, couldn't check)
-    has no icon or chip: the message bigger, in the middle, and a narrower window."""
+    """The update windows' look, as Windows 11's dialogs: a soft body (icon, title, version chip,
+    line, changes with a ✓ each, links) over a footer of buttons; a lone message sits centred."""
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)

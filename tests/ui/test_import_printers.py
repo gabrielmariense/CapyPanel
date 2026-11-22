@@ -37,8 +37,8 @@ def test_a_report_comes_back_with_the_printers_columns(qapp: QApplication) -> No
     dialog.set_text(REPORT)
     assert dialog.windowTitle() == "Import printers"
     header = dialog.table.headerItem()
-    # Import hosts' seven columns slot by slot, Warning right after Address so it's never off to
-    # the side; the printers' own after Notes, so a narrow window cuts one of them (Dante).
+    # Import hosts' seven columns slot by slot, Warning right after Address so it's never off
+    # to the side; the printers' own after Notes, so a narrow window cuts one of them.
     assert [header.text(i) for i in range(dialog.table.columnCount())] == [
         "", "Name", "Address", "Warning", "Group", "Tags", "Notes", "Brand", "Model",
         "Serial number", "Asset tag", "Page counters",

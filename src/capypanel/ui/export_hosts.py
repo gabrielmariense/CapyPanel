@@ -1,9 +1,4 @@
-"""The toolbar's Report: pick the items and the columns, see every row, then save a CSV
-file or copy the rows for Excel. The checks' columns (for hosts: status and logged-on users) come
-from the last Refresh, which can be run again from here.
-
-ExportDialog is the Hosts tool's Report. Another tool's Report subclasses it and overrides its
-columns (TITLES, SECTIONS, CHECKED, FOR_IMPORT), where its choices are kept, and its texts."""
+"""The toolbar's Report: pick items and columns, then save a CSV or copy the rows for Excel."""
 
 import re
 import subprocess
@@ -122,9 +117,8 @@ class ExportDialog(QDialog):
         progress: Callable[[], tuple[int, int] | None],
         checked_at: Callable[[str], Sequence[datetime | None]] | None = None,
     ) -> None:
-        """results: an item's texts for the CHECKED columns, in order ("" when not checked);
-        checked_at: when each was read (None when not). refresh(items, *wanted) and stop run the
-        tool's Refresh, one flag per CHECKED column; progress is (done, total) while one runs."""
+        """results: an item's texts for the CHECKED columns, "" when not checked; checked_at: when
+        each was read. refresh(items, *wanted) and stop run Refresh; progress: (done, total)."""
         super().__init__(parent)
         self.setWindowTitle(_("Report"))
         self._hosts = host_list
@@ -158,12 +152,8 @@ class ExportDialog(QDialog):
         preset_label.setBuddy(self.preset)
         top.addRow(preset_label, presets)
 
-        # Three boxes side by side, equal widths and heights (the tallest sets it): one tick per
-        # line at a fixed height, so the ticks line up inside and across the boxes. Each title
-        # has All · None. With CHECKED, the last box is the checks from Refresh: its time and
-        # Refresh (Stop while one runs) on its title line, and under its ticks the names note
-        # (while that tick is on), how many weren't checked yet and the progress. A window too
-        # narrow for three puts that box under the other two, full width.
+        # Three boxes side by side, of equal size, one tick per line at a fixed height so the ticks
+        # line up across them; too narrow for three, the checks' box goes under, full width.
         self.boxes: dict[str, QCheckBox] = {}
         self._section_boxes: list[QFrame] = []
         self.checks_box: QLabel | None = None
@@ -174,7 +164,7 @@ class ExportDialog(QDialog):
         self.checking = hint()
         color = self.palette().color(QPalette.ColorRole.Text)
         # Refresh is a plain button at the foot of Last check, saying how many it reads; Stop
-        # takes its place while a check runs. Exportar stays the window's one main button.
+        # takes its place while a check runs. Export stays the window's one main button.
         self.refresh_button = _plain_button("refresh", color)
         self.stop_button = _plain_button("x", color)
         self.stop_button.setText(" " + _("Stop"))
@@ -395,9 +385,8 @@ class ExportDialog(QDialog):
         return self._sources[self.source.currentIndex()].hosts
 
     def rows(self, between_tags: str = ";", *, on_screen: bool = False) -> list[list[str]]:
-        """The picked items' cells, in the preview's order. A Status not read yet is an empty
-        cell in a file or a copy; `on_screen` (the preview) says "Not checked" there, as the
-        main table does. Either way it sorts last."""
+        """The picked items' cells in the preview's order. A Status not read yet is empty in a file
+        or copy, "Not checked" `on_screen` (the preview) as in the main table; it sorts last."""
         columns = self.columns()
         rows = []
         for host in self.hosts():

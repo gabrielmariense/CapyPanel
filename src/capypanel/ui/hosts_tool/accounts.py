@@ -1,10 +1,4 @@
-"""Which account signs in to which PCs: the links (core.hosts.accounts) in the person's own
-settings, the passwords typed for them, and their table in Settings › Hosts › Accounts and
-passwords.
-
-A password is kept in memory once typed, and in Windows Credential Manager when "Remember it on
-this computer" is ticked; a link whose password isn't known yet asks for it the first time it's
-needed, once per session."""
+"""Which account signs in to which PCs, and its password, kept in memory or Credential Manager."""
 
 import getpass
 import logging
@@ -177,9 +171,8 @@ class Accounts(QObject):
     def account_for(
         self, target: "HostTarget", parent: QWidget | None
     ) -> tuple[bool, Account | None]:
-        """(go on, the account; None is the Windows account). With no password typed yet for
-        the PC's account, asks for it over `parent`; (False, None) when cancelled, or with no
-        `parent` to ask over."""
+        """(go on, the account; None is the Windows account). A password not typed yet for the PC's
+        account is asked over `parent`; (False, None) when cancelled or with no `parent`."""
         link = self.link_for(target)
         if link is None or link.user == WINDOWS:
             return True, None

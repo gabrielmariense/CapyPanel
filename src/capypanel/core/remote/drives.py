@@ -1,7 +1,4 @@
-"""The network drives of the people signed in to a PC.
-
-They're read from your PC over WMI's registry provider: each signed-in person's Network key,
-the drives that come back at every sign-in, with nothing run on the PC."""
+"""People's network drives on a PC, read over WMI's registry provider: nothing runs there."""
 
 import re
 from collections.abc import Mapping
@@ -77,8 +74,6 @@ try {
 finally { Remove-CimSession $session }
 """
 
-
-# ---- the person's session ----
 
 _PERSON_HIVE = re.compile(r"S-1-5-21-[\d-]+")
 

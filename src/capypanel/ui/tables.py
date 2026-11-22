@@ -1,6 +1,4 @@
-"""The one table design for lists in windows like Settings: a line under each row as in the
-host table, a header, a few rows before it scrolls, the full width of the page, its main
-actions in a row of buttons under it, and every action of a row on its right-click."""
+"""The one table design for lists in windows like Settings, its actions in buttons under it."""
 
 from collections.abc import Callable
 
@@ -47,7 +45,7 @@ def grid_table(headers: list[str]) -> QTreeWidget:
     table.setHeaderLabels(headers)
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     header = table.header()
-    header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
+    header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
     header.setStretchLastSection(False)  # _fit_width gives the last column what's left
     table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     refit = _Refit(table)
@@ -86,10 +84,8 @@ def fit_rows(
     stretch: int = -1,
     least: dict[int, int] | None = None,
 ) -> None:
-    """As tall as its rows, between FEWEST_ROWS and `most`: no empty space under a short
-    list, a scroll bar on a long one (`most` 0: as tall as its layout makes it). Each column
-    fits its text (up to WIDEST, and at least its `least` width), the `stretch` one (the last
-    by default) taking the room left. Call it after filling the table."""
+    """As tall as its rows, FEWEST_ROWS to `most` (0: as its layout makes it); each column fits
+    its text, from `least` to WIDEST; `stretch` (the last) takes the rest. Call it once filled."""
     fits = []
     for column in range(table.columnCount()):
         table.resizeColumnToContents(column)

@@ -1,5 +1,4 @@
-"""The words on Details' command buttons: one short word under each icon, nine letters at most
-in every language, where menus and windows use the command's full name."""
+"""The words on Details' command buttons: one short word, nine letters at most in any language."""
 
 from capypanel.core.i18n import pgettext
 

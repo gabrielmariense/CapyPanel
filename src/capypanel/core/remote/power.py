@@ -1,7 +1,4 @@
-"""Restarting or shutting down another PC, and cancelling a restart that's still waiting: Windows'
-remote shutdown call (the InitShutdown pipe over file sharing), as `shutdown /m` does. Nothing is
-installed or run on the target; the account needs the right to shut it down remotely, which
-admins have."""
+"""Restarting or shutting down another PC as `shutdown /m` does: nothing runs there."""
 
 import ctypes
 from ctypes import wintypes

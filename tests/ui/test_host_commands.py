@@ -1,5 +1,4 @@
-"""The host commands: menus, the Details panel's buttons, the small windows and the answers in the
-result strip. Every call to another PC is replaced: nothing here reaches the network."""
+"""The host commands; every call to another PC is replaced: nothing reaches the network."""
 
 import time
 from collections.abc import Callable, Iterator

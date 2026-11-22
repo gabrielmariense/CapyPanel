@@ -1,5 +1,4 @@
-"""Printers' warnings: which printers need attention, the strip above the table with Show and
-Show all, and the red count on the Printers rail icon. Invented printers only."""
+"""Printers' warnings: the strip over the table and the rail's red count; invented printers."""
 
 from collections.abc import Iterator
 from datetime import datetime
@@ -200,8 +199,7 @@ def test_settings_keeps_the_when_closing_choice(window: CapyWindow) -> None:
     closing.setCurrentIndex(closing.findData(settings.CLOSE_QUIT))
     assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_QUIT
     dialog.close()
-    # Opened again, it shows what's saved, and going back to "Ask each time" is saved too
-    # (it showed "Ask" whatever was saved, so picking it changed nothing).
+    # Opened again, it shows what's saved, and going back to "Ask each time" is saved too.
     dialog = window.settings_dialog()
     closing = dialog.general.closing
     assert closing.currentData() == settings.CLOSE_QUIT
@@ -242,7 +240,7 @@ def test_windows_shutting_down_quits_without_asking(
     monkeypatch.setattr(window.tray, "available", lambda: True)
     asked: list[object] = []
     monkeypatch.setattr(window_module, "ask_closing", lambda parent: asked.append(parent))
-    for tool in window.tools.values():  # as an open SSH connection would (Debora, build 618)
+    for tool in window.tools.values():  # as an open SSH connection would
         monkeypatch.setattr(tool, "quit_question", lambda parent: asked.append(parent) or False)
     window.prefs[settings.CLOSE_KEY] = settings.CLOSE_TRAY  # even with the tray picked
     _printers(window).set_auto_refresh(15)

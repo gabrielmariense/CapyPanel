@@ -281,8 +281,6 @@ def test_manual_connection_uses_the_chosen_profile(
 def test_manual_connection_s_questions_show_over_it_so_it_stays_in_front(
     window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Manual connection is a window of its own. A box owned by the main window brought the main
-    window over it, and it had to be found again on the taskbar after every one."""
     window.hosts.commands.manual_connect.trigger()
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow)
@@ -418,8 +416,6 @@ def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
 def test_each_server_is_asked_its_login_types_once_per_run(
     window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """UltraVNC up to 1.6.1 counts each asking as a failed login and turns this PC away after
-    six. One that couldn't be asked is asked again the next time."""
     probed: list[str] = []
     down = {"PC-B"}
 
@@ -480,7 +476,7 @@ def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: Ca
 
 
 def test_profile_rows_never_overlap(window: CapyWindow) -> None:
-    # Like the page list once did: rows kept positions from before the theme's padding arrived.
+    # Rows placed before the theme's padding arrives would overlap once it does.
     window.show()
     for theme in ("paper", "capypanel-dark"):
         window.set_theme(theme)

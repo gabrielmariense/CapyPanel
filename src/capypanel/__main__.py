@@ -20,12 +20,12 @@ def close_splash() -> None:
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--self-test":
         close_splash()
-    if len(sys.argv) == 3 and sys.argv[1] == "--self-test":  # see ui/selftest.py
+    if len(sys.argv) == 3 and sys.argv[1] == "--self-test":
         return _quietly(lambda: _self_test(Path(sys.argv[2])))
-    if len(sys.argv) == 6 and sys.argv[1] == "--apply-update":  # see core/updates.py
+    if len(sys.argv) == 6 and sys.argv[1] == "--apply-update":
         argv = sys.argv
         return _quietly(lambda: _apply_update(Path(argv[2]), int(argv[3]), argv[4], argv[5]))
-    if len(sys.argv) > 1 and sys.argv[1] == "--ssh-holder":  # see core/ssh/holder.py
+    if len(sys.argv) > 1 and sys.argv[1] == "--ssh-holder":
         close_splash()  # CapyPanel starts it with none; a start by hand may have one
         args = sys.argv[2:]
         return _quietly(lambda: _ssh_holder(args))
@@ -57,9 +57,8 @@ def _self_test(report: Path) -> int:
 
 
 def _apply_update(app_dir: Path, pid: int, old_version: str, new_version: str) -> int:
-    """The new version's exe, run from where its zip was unpacked: swaps it in for the old
-    one once CapyPanel has closed, with the splash and "Updating to …" on screen meanwhile. It
-    writes to the person's own log."""
+    """The new version's exe, run from where its zip was unpacked: swaps it in for the old one once
+    CapyPanel has closed, with "Updating to …" on the splash. It writes to the person's own log."""
     from capypanel.core import applog, i18n, settings, updates
 
     paths = settings.resolve_paths(app_dir)

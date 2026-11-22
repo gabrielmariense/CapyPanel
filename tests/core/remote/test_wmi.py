@@ -1,6 +1,4 @@
-"""The two ways reads reach a PC's WMI: straight from CapyPanel over COM, and through a
-PowerShell started on this PC. On a real PC (this one) both must give the very same answers,
-and each falls back or fails the way its setting says. Nothing here reaches another PC."""
+"""WMI over COM and over PowerShell, on this PC: the same answers; nothing reaches another PC."""
 
 import secrets
 import subprocess
@@ -99,15 +97,10 @@ def test_both_delete_ways_find_nothing_to_delete_for_a_sid_nobody_has() -> None:
 
 
 def test_an_account_is_left_out_when_the_pc_is_this_one() -> None:
-    """Windows takes no account for a connection to itself: the read goes on with this one."""
-
     def reader(found: wmi.Wmi, _values: Any) -> str:
         return str(found.first("SELECT BuildNumber FROM Win32_OperatingSystem").BuildNumber)
 
     assert wmi.read(reader, "localhost", Account("EXAMPLE\\nobody", "x"), {}, 60).isdigit()
-
-
-# ---- choosing the way ----
 
 
 def test_auto_falls_back_to_powershell_only_when_wmi_cant_be_used_here(

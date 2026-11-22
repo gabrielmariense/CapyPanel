@@ -1,5 +1,4 @@
-"""The SSH tool's commands: the list workspace's, plus adding hosts, Connect (in a tab, or in a
-separate window), copying the address and Refresh, which checks the SSH port only."""
+"""The SSH tool's commands: the list workspace's, plus adding hosts, Connect and Refresh."""
 
 from dataclasses import dataclass
 

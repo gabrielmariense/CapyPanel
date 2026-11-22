@@ -1,7 +1,4 @@
-"""Is a computer up? A ping and the ports it's given (checks.tool_ports), all at once: many
-Windows PCs block ping, and a port that answers, even with a refusal, proves the PC is on.
-Every address the name has is tried (a PC on cable and Wi-Fi has two). No account is used and
-nothing runs on the target."""
+"""Is a PC up? A ping and its ports at once, on every address: many PCs block ping. No account."""
 
 import ctypes
 import logging
@@ -112,9 +109,8 @@ def _any_port_answers(
 
 
 def port_state(host: str, port: int) -> tuple[PortState, str | None]:
-    """Whether `port` takes a connection on any of the computer's addresses, and the address
-    that answered. No ping: only the port counts. It connects and closes at once, sending
-    nothing, so the program on that port is never spoken to."""
+    """Whether `port` takes a connection on any of the computer's addresses, and which answered.
+    No ping. It connects and closes at once, sending nothing to the program on that port."""
     try:
         addresses = _resolve(host)
     except OSError:
@@ -161,7 +157,7 @@ def _port_answers(addresses: list[tuple[int, str]], port: int) -> tuple[PortStat
             sock.close()
 
 
-# ---- ping (IcmpSendEcho: no administrator rights needed, unlike raw sockets) ----
+# Ping through IcmpSendEcho: no administrator rights needed, unlike raw sockets.
 
 _iphlpapi = ctypes.WinDLL("iphlpapi", use_last_error=True)
 _iphlpapi.IcmpCreateFile.restype = wintypes.HANDLE

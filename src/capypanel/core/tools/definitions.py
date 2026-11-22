@@ -1,23 +1,4 @@
-"""A tool definition: how to find and start one external program. One JSON file per tool:
-
-    {"schema": 1, "id": "ultravnc", "name": "UltraVNC Viewer", "kind": "vnc", "port": 5900,
-     "credentials": "arguments",
-     "options": {"securevnc": "SecureVNC plugin"},
-     "arguments": [["{address}::{port}"],
-                   {"option": "securevnc", "arguments": ["-dsmplugin", "SecureVNCPlugin64.dsm"]},
-                   ["-user", "{user}"], ["-password", "{password}"]],
-     "detect": {"installed_as": ["UltraVNC"], "exe": "vncviewer.exe", "paths": ["..."]}}
-
-An option's name is a text, or one per language ({"en": "Full screen", "pt_BR": "Tela
-cheia"}) when it isn't a product name.
-
-`arguments` is a list of groups. A group is left out when any placeholder in it is empty, so
-one template serves servers that want a user name and servers that don't. A group tied to an
-option is used only when the connection profile switches that option on.
-
-A tool that reads a settings file (UltraVNC's -config) describes it with "settings_file": its
-extension and the settings that name a computer, emptied ("clear"); see viewer_settings.
-"website" is where the tool can be downloaded."""
+"""A tool definition: how to find and start one external program, one JSON file per tool."""
 
 import json
 import re
@@ -30,7 +11,7 @@ from typing import Any
 from capypanel.core.i18n import _
 
 SCHEMA = 1
-KINDS = ("vnc", "rdp")  # grows with the features: ssh…
+KINDS = ("vnc", "rdp")
 PLACEHOLDERS = ("address", "port", "user", "password", "password_file", "settings_file")
 SECRET = "password"
 PASSWORD_FILE = "password_file"
@@ -75,9 +56,8 @@ class ToolDefinition:
     port: int | None = None
     options: Mapping[str, str] = field(default_factory=dict)  # option id -> name in English
     option_names: Mapping[str, Mapping[str, str]] = field(default_factory=dict)  # by language
-    # VNC login types (RFB security types) that ask for a user and password. When set, an
-    # account profile first checks the server offers one, so a Windows password never goes to
-    # a server that only wants a VNC password.
+    # VNC login types (RFB security types) that ask for a user and password: an account profile
+    # first checks the server offers one, so a Windows password never goes to a VNC-only server.
     account_types: tuple[int, ...] = ()
     max_password: Mapping[str, int] = field(default_factory=dict)  # login -> longest password
     settings_file: SettingsFile | None = None  # the tool reads a settings file a profile can carry
@@ -131,8 +111,6 @@ def redacted(argv: Sequence[str], secrets: Sequence[str]) -> list[str]:
         out.append(arg)
     return out
 
-
-# ---- JSON <-> records ----
 
 _KEYS = (
     "schema", "id", "name", "kind", "arguments", "credentials", "port", "options", "executable",

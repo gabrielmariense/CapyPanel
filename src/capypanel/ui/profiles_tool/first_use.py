@@ -1,7 +1,4 @@
-"""Profile cleanup, the first time it's opened: a real warning naming what it deletes, with
-Continue greyed until "I understand…" is ticked and Cancel the default (a tick has to be read to
-be clicked, where a countdown gets waited out). Then its guide: pick a PC, scan, delete. The
-delete keeps its own safety: typing DELETE, and each PC checked again before anything goes."""
+"""Profile cleanup's first-use warning: Continue only once "I understand…" is ticked."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
@@ -44,6 +41,7 @@ class FirstUseWarning(QDialog):
             )
         )
         words.setWordWrap(True)
+        # A tick, not a countdown: a tick is read, a countdown only waited out.
         self.understood = QCheckBox(_("I understand it deletes user profiles on the PCs I pick"))
         self.go_on = QPushButton(_("&Continue"))
         self.go_on.setObjectName("risky")

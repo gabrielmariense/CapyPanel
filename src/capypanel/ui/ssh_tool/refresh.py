@@ -1,6 +1,4 @@
-"""Refresh on SSH hosts: one check of each host's SSH port, a few at a time on a background
-thread. It connects and closes at once, sending nothing, so nothing ever logs in. `found`
-arrives once per host on the UI thread, through Qt's queued signals."""
+"""Refresh on SSH hosts: their SSH port, connected and closed at once, sending nothing."""
 
 import threading
 from collections.abc import Sequence

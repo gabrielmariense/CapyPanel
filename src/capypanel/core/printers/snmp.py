@@ -1,9 +1,4 @@
-"""A small SNMP client that only reads, over v2c or v3. It sends Get, GetNext and GetBulk
-requests and has no Set request at all, so it can't change anything on a printer. The community
-string and the v3 passwords go only into the request packets (v3's as keys), never into a log.
-
-Answers come over UDP from the network, so every length and count in them is checked before
-it's used: a malformed or oversized answer raises SnmpError, never a crash or a huge loop."""
+"""A small SNMP client that only reads, over v2c or v3: Get, GetNext, GetBulk, and no Set."""
 
 import secrets
 import socket
@@ -40,7 +35,7 @@ _REQUESTS = {GET, GET_NEXT, GET_BULK}
 _ANSWERS = {RESPONSE, REPORT}
 
 Value = int | bytes | str | None  # INTEGER and counters, OCTET STRING, an OID, nothing
-Secret = str | usm.Account  # a v2c community string, or a v3 account
+Secret = str | usm.Account  # a v2c community string, or a v3 account; never logged
 
 # v3's Report answers: what the printer refused (RFC 3414's usmStats counters).
 _USM_STATS = "1.3.6.1.6.3.15.1.1."
@@ -280,7 +275,6 @@ def _random_id() -> int:
 
 
 def _refusal(bindings: list[Binding]) -> str:
-    """What a v3 Report says was wrong."""
     for binding in bindings:
         if binding.oid.startswith(_USM_STATS):
             return _REFUSALS.get(binding.oid[len(_USM_STATS) :].split(".")[0], "report")
@@ -420,6 +414,7 @@ def _arcs(oid: str) -> tuple[int, ...]:
 
 
 # ---- decoding ----
+# Answers come from the network: every length and count is checked before it's used.
 
 
 @dataclass(frozen=True)
@@ -505,7 +500,6 @@ def parse_v3(data: bytes) -> Header:
 
 
 def open_v3(header: Header, keys: usm.Keys) -> Answer:
-    """A v3 message's contents, decrypted if they were encrypted."""
     payload = header.payload
     if header.flags & _PRIVACY:
         tag, s, end = _read(payload, 0, len(payload))

@@ -1,5 +1,4 @@
-"""The SSH toolbar, slot for slot like Printers': Connect and Refresh, then Inventory. Refresh is a
-plain button: an SSH host has one check, its port, so there's nothing to pick."""
+"""The SSH toolbar, slot for slot like Printers'; Refresh has no checks to pick, only the port."""
 
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QMenu

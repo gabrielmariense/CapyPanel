@@ -1,5 +1,4 @@
-"""The window for an error nothing caught: one window however many errors, the same one counted
-instead of shown again, and details big enough to read."""
+"""The window for errors nothing caught: one however many, a repeat counted, not shown again."""
 
 from collections.abc import Iterator
 
@@ -38,7 +37,7 @@ def test_the_details_show_at_once_in_a_box_big_enough_to_read() -> None:
     window = error_window.show(FIRST)
     assert not window.details.isHidden() and window.details.isReadOnly()
     assert window.width() >= 800 and window.height() >= 500
-    assert window.details.height() >= 350  # the old box showed about five lines
+    assert window.details.height() >= 350  # enough lines to read a traceback
     assert window.isSizeGripEnabled()
 
 

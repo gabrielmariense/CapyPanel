@@ -61,7 +61,7 @@ def test_a_table_lined_up_with_spaces_imports_by_its_columns() -> None:
         ("LAB-08", "", "Ward B"),
         ("Reception-workstation-01", "192.0.2.49", "Ward C"),
     ]
-    # Without a header row, two-space gaps are part of the name, as before.
+    # Without a header row, two-space gaps are part of the name.
     assert parse("Lab 07    192.0.2.47\n").rows[0].name == "Lab 07    192.0.2.47"
 
 

@@ -52,7 +52,7 @@ def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: Ca
     assert hosts.details.profile_button.value_text() == "Pis"
     menu.aboutToShow.emit()
     [follow] = [a for a in menu.actions() if a.text().startswith("From group")]
-    follow.trigger()  # back to following the group
+    follow.trigger()
     doc = hosts.document
     assert doc is not None and doc.hosts.host(host_id).profile == ""  # type: ignore[union-attr]
 
@@ -60,8 +60,6 @@ def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: Ca
 def test_the_arrow_ends_with_connection_profiles_which_opens_settings(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """His idea from the 0.28 test (topic-0281-ideas, B1): the Connect menu's own command, with
-    its words, under a line and never ticked, so it doesn't read as one more profile."""
     hosts = window.hosts
     host_id = _pick(window)
     opened: list[str | None] = []

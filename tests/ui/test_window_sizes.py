@@ -1,7 +1,4 @@
-"""No window grows by accident: each one's height as recorded when the spacing scale came in
-(4 px between an icon and its word, 8 between controls on a line, 12 inside a panel or card, 16
-around a window and between sections). A change that makes one taller fails here, and is then
-either fixed or recorded on purpose."""
+"""No window grows by accident: each one's height as recorded with the spacing scale."""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -41,7 +38,7 @@ RECORDED = {
     "send a message": 242,
     "saved credentials": 335,
     "commands": 620,
-    "settings": 346,  # 336 until 0.30's ? under the page list, on a line of its own
+    "settings": 346,  # with the ? on a line of its own under the page list
 }
 
 
@@ -107,10 +104,6 @@ def test_no_window_is_taller_than_when_the_spacing_scale_came_in(window: CapyWin
 
 
 def test_settings_opens_wide_enough_for_its_tables(window: CapyWindow) -> None:
-    """960 px: a row with a domain account, a PC by name and address and "Gerenciador de
-    Credenciais" shows whole, with nothing to scroll sideways (measured in the dark theme with
-    its own font; the test font is twice as wide). That's how it opens; from there it can be
-    made any size, smaller too."""
     dialog = window.settings_dialog()
     assert (dialog.width(), dialog.height()) == (WIDTH, HEIGHT) == (960, 740)
     dialog.resize(1100, 800)

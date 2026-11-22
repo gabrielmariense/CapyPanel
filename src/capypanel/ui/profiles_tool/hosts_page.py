@@ -1,6 +1,4 @@
-"""The Profile cleanup tool's pinned Hosts tab: the hosts of the group picked on the left and what
-each scan found so far; on the right, its card (side.HostCard): the host picked, or the hosts on
-show. It never scans by itself: a double-click, Enter or Scan opens a host."""
+"""Profile cleanup's Hosts tab: the group's hosts and their scans, never started by itself."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -33,7 +31,7 @@ from capypanel.ui.profiles_tool.panels import Squeeze, TabBox, hint
 from capypanel.ui.profiles_tool.side import GroupFacts, HostCard, HostFacts
 from capypanel.ui.tables import grid_table
 
-NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)  # the table's columns
+NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)
 ID_ROLE = Qt.ItemDataRole.UserRole  # the row's host
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1
 RIGHT_ALIGNED = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -194,9 +192,8 @@ class HostsTable(QWidget):
             self._fill(item, facts)
 
     def show_typed(self, typed: str, offer: bool) -> None:
-        """What a search says and offers for the text typed. With no rows, the note ("No host
-        of the list with …") and, when `offer`, Scan {host}; with rows, Scan {host} alone as
-        the list's last line, when `offer` (no row is that host). "" hides both."""
+        """With no rows, the note ("No host of the list with …") and, if `offer`, Scan {host}; with
+        rows, Scan {host} alone as the list's last line, if `offer`. "" hides both."""
         self._typed, self._offered = typed, offer
         offer = offer and bool(typed)
         rows = self.tree.topLevelItemCount() > 0

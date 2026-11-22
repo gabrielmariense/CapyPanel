@@ -1,6 +1,4 @@
-"""The build label testers compare against: the version, the build number, which only grows,
-and the commit; from a source checkout and in the packaged exe. And what the packaged exe
-needs besides: its settings outside its own folder, and its Windows version info."""
+"""The build label (version, an ever-growing build number, commit) and the exe's version info."""
 
 import importlib.util
 import re
@@ -61,8 +59,6 @@ def test_a_packaged_build_carries_its_version_build_number_and_commit(tmp_path: 
 def test_the_packaged_exe_keeps_settings_out_of_its_own_folder(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """An update swaps the exe's folder: settings, lists and the log must not be in it. Only a
-    copy made portable on purpose (the marker file) keeps them beside the exe."""
     app, data = tmp_path / "Apps" / "CapyPanel", tmp_path / "ProgramData"
     app.mkdir(parents=True)
     monkeypatch.setattr(sys, "frozen", True, raising=False)

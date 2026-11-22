@@ -1,7 +1,4 @@
-"""Tool definitions, from two layers: the company's (C:\\ProgramData\\CapyPanel\\tools, placed by an
-administrator) and the shipped presets; the company's wins for the same id. Where each tool is
-installed is set once per PC, for everyone, in tools\\_paths.json. Connection profiles live
-elsewhere: see profile_store."""
+"""Tool definitions: the shipped presets and an admin's in the shared tools folder, which win."""
 
 import json
 import logging
@@ -112,7 +109,7 @@ class ToolCatalog:
         return can_create_files(self.folder)
 
     def set_paths(self, changes: Mapping[str, str]) -> None:
-        """Sets where tools are, for everyone on this PC; "" goes back to finding it by itself.
+        """Sets where tools are, for everyone on this PC; "" goes back to finding it.
         Raises OSError."""
         chosen = self.paths()
         for tool_id, executable in changes.items():

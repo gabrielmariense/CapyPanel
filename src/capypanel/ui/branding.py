@@ -1,5 +1,4 @@
-"""The app's icon and its mascot. Early artwork: the final versions replace the files in
-branding/ under the same names."""
+"""The app's icon and its mascot, from the files in branding/."""
 
 import ctypes
 import logging
@@ -40,9 +39,8 @@ def mascot(height: int, pixel_ratio: float = 1.0) -> QPixmap:
 
 
 def use_own_taskbar_icon() -> None:
-    """Run from Python, Windows groups the app under python.exe and shows Python's icon on the
-    taskbar; its own app id makes it show CapyPanel's. CapyPanel.exe keeps Windows' own id
-    (the exe's), so it opens on its pinned taskbar button instead of beside it."""
+    """Run from Python, Windows groups the app under python.exe with Python's icon; its own app id
+    shows CapyPanel's; CapyPanel.exe keeps the exe's own, so it opens on its pinned button."""
     if getattr(sys, "frozen", False):
         return
     _set_app_id(APP_ID)

@@ -1,23 +1,4 @@
-"""The terminal's colours, built from the app theme's own roles, so a terminal follows the theme.
-
-- The 16 colours as text: red the stopped colour, green online, yellow attention, blue working,
-  magenta and cyan Printers' toner inks; the bright ones 25 % toward white in dark themes and
-  toward black in light ones; black and white from the theme's three text colours.
-- The 16 as backgrounds have shades of their own. Light themes: each hue 22 % over the card,
-  black the text colour, white the window's background. Dark themes: each hue itself, except
-  blue and magenta at 40 % over the card so text reads on them; black the window's background,
-  white the second text colour. Bright backgrounds follow the same rules.
-- A cell whose pair reads under 4.5:1 swaps its text for the theme's text or card colour,
-  whichever reads, except where the two colours are the same, and only when both are among the
-  16 or the defaults: a colour from the 256 table or 24-bit was picked on purpose. Where neither
-  reads (magenta at full strength as a reversed cell's background, in three themes), black or
-  white does: one of the two always reaches 4.58:1.
-- The cursor is the accent while it shows on the background (3:1, WCAG's for a graphic), the
-  text colour otherwise: the Windows themes take the PC's own accent, and a dark one read 1.37:1
-  in Windows dark.
-
-Cells keep palette numbers (core/ssh/screen.py), so switching the palette recolours everything
-already printed, the scrollback too."""
+"""The terminal's colours, from the theme's roles, so a switch recolours the scrollback too."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -104,7 +85,8 @@ class TermPalette:
     def cell_colors(
         self, fg: int | str, bg: int | str, *, bold: bool = False, reverse: bool = False
     ) -> tuple[str, str]:
-        """A cell's text and background colours, the text swapped when it wouldn't read."""
+        """A cell's text and background colours, the text swapped when it wouldn't read: not for a
+        colour from the 256 table or 24-bit, which was picked on purpose."""
         f = self.color(fg, foreground=True, bold=bold)
         b = self.color(bg, foreground=False)
         if reverse:
@@ -127,8 +109,8 @@ def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
         back = [
             r["bg"],
             *hues[:3],
-            mix(hues[3], r["card"], 0.40),  # blue
-            mix(hues[4], r["card"], 0.40),  # magenta
+            mix(hues[3], r["card"], 0.40),  # blue: 40 % over the card, so text reads on it
+            mix(hues[4], r["card"], 0.40),  # magenta: 40 % over the card, so text reads on it
             hues[5],
             r["text2"],
             ansi[8],
@@ -160,9 +142,8 @@ def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
 
 
 def current() -> TermPalette:
-    """The app's theme now, from the engine's live values: a custom theme's own colours; for a
-    Windows theme, the dark or light it resolves to, with this PC's accent and the status
-    colours fitted to it."""
+    """The app's theme now, from the engine's live values: a custom theme's own colours, or for a
+    Windows theme its dark or light, with this PC's accent and the status colours fitted to it."""
     theme = engine.current()
     if theme.engine == "custom":
         roles = {**theme.colors, "sel": theme.colors["sel_solid"]}

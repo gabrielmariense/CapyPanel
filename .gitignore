@@ -1,12 +1,10 @@
-# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
 
-# Environments (uv creates .venv; uv.lock IS committed)
+# uv's environment (uv.lock is committed)
 .venv/
 
-# Tool caches
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
@@ -23,7 +21,6 @@ capypanel.portable
 userdata/
 /data/
 
-# Editors and OS
 .vscode/
 .idea/
 *.swp
@@ -31,7 +28,6 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Claude Code personal settings
 .claude/settings.local.json
 
 # The documentation website, built by mkdocs

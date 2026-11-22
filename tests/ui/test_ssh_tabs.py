@@ -1,8 +1,4 @@
-"""The SSH tool's connections as tabs (topic-027): each opens in a tab of its own named after its
-server, in front; an open one asks before it closes, and quitting asks once for all of them;
-the text size is kept for every tab and after a restart, and nothing else of a connection is.
-The pseudo console is a stand-in the test drives (tests/helpers/fake_console.py), except in the
-last test, where Windows' own cmd.exe stands in for ssh.exe (tests/ui/conftest.py)."""
+"""The SSH tool's connections as tabs, on a stand-in console (cmd.exe in the last test)."""
 
 import json
 import time
@@ -180,8 +176,6 @@ def test_closing_an_open_connection_asks_and_cancel_keeps_it(
 
 
 def test_a_pick_on_the_left_brings_the_list_forward_over_a_connection(ssh: SshTool) -> None:
-    """Groups and the list dropdown stay beside a connection: what they pick shows at once, the
-    group already picked and Ctrl+F's search box too (Dante, build 618; as in Profile cleanup)."""
     _connect(ssh, "nas-01")
     doc = ssh.document
     assert doc is not None and ssh.tabs.current() == "connection-1"
@@ -216,9 +210,6 @@ def test_a_pick_on_the_left_brings_the_list_forward_over_a_connection(ssh: SshTo
 def test_a_question_is_as_tall_as_its_words_at_its_own_width(
     qapp: QApplication, heading: str, text: str
 ) -> None:
-    """Qt measured the height at the wrapped line's own narrow width, then widened the window to
-    WIDE: the lines too many stayed as a gap (the question for two open tabs, 17 px in English
-    and 34 in pt-BR at 460; Dante saw pt-BR's, build 618)."""
     themes.apply(themes.DEFAULT_THEME)  # the theme's fonts, as in the app
     question = Question(None, "Close", heading, text, "&Close")
     question.adjustSize()  # as showing it does
@@ -378,7 +369,6 @@ def test_a_tab_s_mark_says_whether_it_is_open_or_how_it_ended(
 def test_connect_runs_the_program_in_its_tab_and_closing_the_tab_ends_it(
     qapp: QApplication, shell: FakeShell, servers: Path, answers: Answers
 ) -> None:
-    """The real pseudo console, with Windows' own cmd.exe standing in for ssh.exe."""
     tool = SshTool(shell)
     try:
         assert tool.open_list(servers)

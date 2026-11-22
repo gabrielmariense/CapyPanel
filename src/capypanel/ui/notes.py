@@ -1,6 +1,4 @@
-"""Small pieces every screen uses: short help under a control (a quieter line of text, or a few
-bullets in a smaller font, since long paragraphs go unread), a thin line between parts, and text
-made safe to show as rich text."""
+"""Small pieces every screen uses: short help under a control, a thin line, safe rich text."""
 
 import html
 
@@ -15,7 +13,6 @@ def escape(text: str) -> str:
 
 
 def divider() -> QFrame:
-    """A thin line across, between two parts of a panel."""
     line = QFrame()
     line.setObjectName("divider")
     line.setFixedHeight(1)

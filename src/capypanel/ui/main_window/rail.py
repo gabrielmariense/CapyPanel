@@ -1,5 +1,4 @@
-"""The rail on the window's left edge: Home on top, one icon per tool, and at the bottom the ?
-for help, then Settings."""
+"""The rail on the window's left edge: Home, an icon per tool, then help's ? and Settings."""
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
@@ -13,9 +12,8 @@ BADGE = 16  # px: the count's height, and its narrowest width
 
 
 class ToolRail(QWidget):
-    """Icons only, each with a tooltip, which the window sets: it has their commands and keys.
-    The tool shown, or Home, has a tinted square behind its icon. A tool with items needing
-    attention shows their count on its icon, in red."""
+    """Icons only, with tooltips the window sets. The tool shown, or Home, has a tinted square
+    behind its icon; a tool with items needing attention shows their count on it, in red."""
 
     home_requested = Signal()
     settings_requested = Signal()
@@ -40,7 +38,7 @@ class ToolRail(QWidget):
         line.setObjectName("toolDivider")
         line.setFixedSize(28, 1)
         # Help for what's shown: an action like the gear, never a place, so it takes no tile. It
-        # sits where every other window has its ?, at the bottom left (topic-030-help).
+        # sits where every other window has its ?, at the bottom left.
         self.help_button = _button(checkable=False)
         self.help_button.setObjectName("railHelp")
         self.settings_button = _button(checkable=False)
@@ -56,7 +54,6 @@ class ToolRail(QWidget):
         self.restyle()
 
     def add_tool(self, tool_id: str, icon: str) -> QToolButton:
-        """A tool's button, below the ones before it."""
         button = _button(checkable=True)
         self.buttons[tool_id] = button
         self._icons[tool_id] = icon
@@ -65,7 +62,7 @@ class ToolRail(QWidget):
         self._layout.insertWidget(len(self.buttons) + 1, button, 0, Qt.AlignmentFlag.AlignHCenter)
         button.clicked.connect(lambda: self.tool_picked.emit(tool_id))
         button.toggled.connect(lambda _on: self.restyle())
-        badge = QLabel(button)  # on the icon's top right corner, over the button
+        badge = QLabel(button)
         badge.setObjectName("railBadge")  # red, white number: the theme's stylesheet
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # the button's tip

@@ -1,11 +1,4 @@
-"""Where the app keeps its files, portable mode, and the settings file.
-
-Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
-portable). Shared by everyone on the PC: lists\\ (a folder per tool, e.g. lists\\hosts\\, with its
-default list and any shared list), profiles\\ and tools\\ (the company's tool definitions and where
-each tool is installed). users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (again a
-folder per tool, with the personal list and their own lists), private to that user and
-administrators; logs\\<user@DOMAIN>.log, one per user."""
+"""Where the app keeps its files: a folder the PC's users share, and a private one per user."""
 
 import copy
 import json
@@ -41,8 +34,6 @@ def app_dir() -> Path:
 
 @dataclass(frozen=True)
 class ListPlaces:
-    """Where one tool keeps its lists."""
-
     shared_dir: Path  # lists saved here show up for everyone on the PC, with no adding
     user_dir: Path  # this user's own: lists saved here show up for them only
 
@@ -122,9 +113,8 @@ def resolve_paths(
 
 
 def ensure_dirs(paths: Paths) -> None:
-    """Create the user's folder, private to them. Its tools subfolder is created
-    only when something is first saved there. Raises UserFolderError if someone else made
-    the folder first."""
+    """Creates the user's folder, private to them; its tools subfolder comes with the first save.
+    Raises UserFolderError if someone else made the folder first."""
     paths.log_dir.mkdir(parents=True, exist_ok=True)
     paths.user_dir.mkdir(parents=True, exist_ok=True)
     me = winsec.current_user_sid()
@@ -195,8 +185,7 @@ def language_of(settings_file: Path) -> str:
 
 def tool_prefs(prefs: dict[str, Any], tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
     """A tool's own section of the settings, made the first time it's asked for. With `inherit`
-    (Hosts), a new section starts from what 0.19 kept at the top level, which stays there too, so
-    an older version still reads it."""
+    (Hosts), a new one starts from 0.19's top-level keys, kept there for older versions."""
     tools = prefs.get(TOOLS_KEY)
     if not isinstance(tools, dict):
         tools = prefs[TOOLS_KEY] = {}

@@ -1,10 +1,4 @@
-"""Help's links against the docs: every place the app opens is on its page in English and
-Portuguese, each page carries the same ids in both, and every "Messages you may see" row has
-one. It reads the docs source as text: no build, no network.
-
-It runs as its own CI job (help-links), outside the main tests: a new message's docs line is
-written at the docs step, after the code freeze, so this can be red while the build is green,
-and a merge waits for both. Locally: uv run pytest tests/docs -m docs_links"""
+"""Every place help opens is on its docs page in both languages; CI's help-links job runs it."""
 
 import re
 from pathlib import Path
@@ -72,8 +66,6 @@ def test_an_id_is_used_once_across_the_site() -> None:
 
 
 def test_every_messages_row_has_an_id() -> None:
-    """Rows of the tables under each page's "Messages you may see" (its older-versions table
-    too), in both languages: a later CapyPanel can then link any of them."""
     bare = []
     for path in sorted(DOCS.rglob("*.md")):
         in_messages, row_before = False, False

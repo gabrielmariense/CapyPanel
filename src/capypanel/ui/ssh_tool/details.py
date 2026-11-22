@@ -1,7 +1,4 @@
-"""The SSH host Details panel: its status, two buttons (Connect first, then Refresh), then
-Connection (address, port, the name to log in as, group), Tags and Notes; each part can be
-hidden. Labels sit beside their values, as in Hosts and Printers. Log in as is a picker, as
-Hosts' Commands run as is: a click opens its menu, which the tool fills."""
+"""The SSH host Details panel: status, Connect, Refresh, Connection, Tags and Notes."""
 
 from dataclasses import dataclass
 
@@ -26,7 +23,7 @@ from capypanel.ui.themes import engine as themes
 class SshDetails:
     host: Host
     group: str  # its full path
-    checked: Checked | None = None  # its last check
+    checked: Checked | None = None
     reachable: bool = True  # it has an address, or a name ssh.exe can take
     hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
     login: str = ""  # the name it logs in with: its own, or its group's

@@ -140,9 +140,6 @@ def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
 def test_a_dialog_grows_to_its_wrapped_text_as_it_shows_and_as_its_rows_change(
     qapp: QApplication,
 ) -> None:
-    """Qt counts wrapped lines only when a window's edge is dragged: until then a dialog that
-    opened short, gained a row or got a longer text squeezed its rows."""
-
     def window() -> tuple[QDialog, QLabel, QLabel]:
         dialog = QDialog()
         layout = QVBoxLayout(dialog)

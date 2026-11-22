@@ -1,5 +1,4 @@
-"""Every command, defined once and reused by menus, right-click menus and shortcuts. The shell has
-its own; each tool has its own (see the list workspace and the tools)."""
+"""The window's own commands, defined once for menus, right-click menus and shortcuts."""
 
 from dataclasses import dataclass, fields
 
@@ -54,7 +53,6 @@ def create_actions(parent: QObject) -> ShellActions:
 
 
 def retranslate_actions(a: ShellActions) -> None:
-    """Sets every command's text in the current language; runs again when it changes."""
     a.settings.setText(_("&Settings…"))
     a.exit.setText(_("E&xit"))
     a.documentation.setText(_("&Documentation"))

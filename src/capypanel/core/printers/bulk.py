@@ -1,13 +1,4 @@
-"""Many printers at once: what Import hosts reads, plus the printers' own columns (brand, model,
-serial number, asset tag, page counters), and Windows' own printer export.
-
-A Printers Report saved with the "All details" or "For Import" columns reads back as it was
-written, in English or Portuguese. Windows' export is what `Get-Printer | Export-Csv` writes in
-Windows PowerShell 5.1: a "#TYPE …" line, then 40 quoted columns. Of those, Name is the name,
-PortName the address (its "IP_" prefix dropped), and Location and Comment go into the notes. A
-port that isn't an address (WSD-…, USB001, TS001, PORTPROMPT:, nul:) comes in with no address,
-marked so in the preview, to be typed there. Nothing here contacts a printer: the first Refresh
-does."""
+"""Many printers at once: a Printers Report, Import hosts' formats or Windows' export."""
 
 import csv
 import io
@@ -48,11 +39,9 @@ def parse(text: str, *, file: bool = False) -> Parsed:
     return bulk.parse(text, file=file, more=MORE)
 
 
-# ---- Windows' export ----
-
-
 def read_windows_export(text: str) -> Parsed | None:
-    """The rows of `Get-Printer | Export-Csv`; None when the text isn't one."""
+    """The rows of Windows PowerShell's `Get-Printer | Export-Csv` (a #TYPE line, then
+    40 quoted columns); None when the text isn't one."""
     lines = [line for line in text.splitlines() if line.strip()]
     if lines and lines[0].lstrip("﻿").startswith(_WINDOWS_TYPE):
         lines = lines[1:]
@@ -81,10 +70,8 @@ def read_windows_export(text: str) -> Parsed | None:
 
 
 def _port_address(port: str) -> str:
-    """The address a Windows printer port names. "IP_192.0.2.10", "192.0.2.10" and
-    "IP_192.0.2.10_1" (Windows' second port to the same printer) are 192.0.2.10; a port named
-    after the printer's network name is that name. WSD-…, USB001, TS001, LPT1:, COM1:, FILE:,
-    PORTPROMPT:, nul: and other names ending in ":" are no address."""
+    """The address a Windows port names ("IP_192.0.2.10_1" is 192.0.2.10); "" for a
+    port that isn't one: WSD-…, USB001, TS001 and names ending in ":" such as LPT1: or nul:."""
     address = _IP_PORT.sub("", port.strip())
     numbered = _NUMBERED_IP.match(address)
     if numbered:
@@ -94,19 +81,15 @@ def _port_address(port: str) -> str:
     return address
 
 
-# ---- planning ----
-
-
 def problem(row: ImportRow) -> str | None:
-    """A printer row's own check, run by bulk.plan in place of the hosts' one: an address may
-    start with https:// (for the printer's web page), and a Windows port that isn't an address
-    is said as such. None: the hosts' own check applies."""
+    """A printer row's own check, in place of the hosts' one: an address may start with
+    https://, and a Windows port that isn't an address says so. None: the hosts' check applies."""
     port = dict(row.more).get(PORT, "")
     name, address = row.name.strip(), row.address.strip()
     if not name:
         return None
     if not address and port:
-        # The action first: a long WSD port name runs past the column's edge (Satya).
+        # The action first: a long WSD port name runs past the column's edge.
         return _("No address: type the printer's address. Its Windows port, {port}, isn't one.") \
             .format(port=port)  # fmt: skip
     if not address and not is_hostname(name):

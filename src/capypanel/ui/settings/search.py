@@ -1,5 +1,4 @@
-"""The Settings search: which sections mention what's typed, at the start of a word, and marks on
-every match, in the host table search's see-through yellow."""
+"""The Settings search: sections with a word starting with what's typed, each match marked."""
 
 import html
 import re
@@ -64,9 +63,8 @@ def mentions(widget: QWidget, needle: str) -> bool:
 
 
 class SearchMarks(QWidget):
-    """Over the results page: labels get their matching words marked in their text; buttons,
-    ticks, dropdowns and table headers get a mark painted over the words. A dropdown whose
-    match is in its list, not the item shown, gets the mark on its arrow."""
+    """Over the results page: labels get their matching words marked; buttons, ticks, dropdowns and
+    table headers get a painted mark, on a dropdown's arrow when the match is only in its list."""
 
     def __init__(self, page: QWidget) -> None:
         super().__init__(page)

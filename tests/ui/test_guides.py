@@ -1,6 +1,4 @@
-"""First-run guides: the cards beside real controls, when they show, and the Profile cleanup
-warning before its first use. Tests have no screen, so nothing shows on its own here: each
-test starts what it checks."""
+"""First-run guides and Profile cleanup's first-use warning, each started by its test."""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -53,7 +51,7 @@ def test_someone_new_gets_every_guide_and_someone_upgrading_none_of_them() -> No
     assert guides.seen_from({"schema": 1}) == []
     upgrading = {"schema": 1, "window_geometry": "AAA"}  # CapyPanel ran here before
     assert guides.seen_from(upgrading) == list(guides.FIRST_STEPS)
-    assert upgrading["guides"] == list(guides.FIRST_STEPS)  # kept
+    assert upgrading["guides"] == list(guides.FIRST_STEPS)
     kept = {"guides": ["home"], "window_geometry": "AAA"}
     assert guides.seen_from(kept) == ["home"]
 
@@ -380,9 +378,6 @@ def test_the_ssh_guide_shows_a_sample_server_that_is_never_connected_or_checked(
 
 
 def test_the_guide_card_s_buttons_follow_a_language_switch(window: CapyWindow) -> None:
-    """The card is made with the window, in its language then; a switch in Settings later must
-    reach Skip and Back as it reaches Next (Skip and Back stayed English until a restart,
-    0.26.0 to build 618; Kerrigan found it in the SSH guide's shots)."""
     window.set_language("pt_BR")
     try:
         window.commands.show_guide.trigger()
@@ -400,7 +395,6 @@ def test_the_guide_card_s_buttons_follow_a_language_switch(window: CapyWindow) -
 def test_the_ssh_guide_says_to_type_yes_in_english_in_portuguese_too(
     window: CapyWindow,
 ) -> None:
-    """ssh.exe asks in English, so the answer stays "yes" in every language (Satya)."""
     window.set_language("pt_BR")
     try:
         window.show_tool("ssh")

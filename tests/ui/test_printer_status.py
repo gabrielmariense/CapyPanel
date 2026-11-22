@@ -1,5 +1,4 @@
-"""Refresh on printers: the Status and Toner cells, Details, Settings' Refresh section, against
-a pretend printer on 127.0.0.1 with invented data."""
+"""Refresh on printers, against a pretend printer on 127.0.0.1 with invented data."""
 
 import time
 from collections.abc import Iterator
@@ -143,8 +142,6 @@ def _panes() -> list[tuple[str, str, str, dict[str, str]]]:
 
 @pytest.mark.parametrize("pane", _panes(), ids=lambda p: p[0])
 def test_supply_colours_read_in_every_built_in_theme(pane: tuple[str, str, str, dict]) -> None:
-    """A bar or swatch shows on the pane and on a selected row (3:1). Yellow is too pale for a
-    light pane by nature: there its darker edge carries it, so the edge is what's measured."""
     theme_id, card, selection, c = pane
     for key in ("black", "cyan", "magenta", "other"):
         for back in (card, selection):
@@ -243,7 +240,7 @@ def test_refresh_reads_each_printer_and_fills_status_toner_and_details(
     assert not printers.working()
     table = printers.table
     lab = _row(printers, "3F-LAB-01")
-    assert lab.text(table.STATUS) == "Toner low"  # cyan at 8 %, as the mockup shows
+    assert lab.text(table.STATUS) == "Toner low"  # cyan at 8 %
     assert lab.text(table.TONER) == "Cyan 8 % · low"
     assert _row(printers, "NO-ANSWER").text(table.STATUS) == "Offline"
     assert printers.commands.refresh_shown.isEnabled()

@@ -1,19 +1,4 @@
-"""The separate window's holder (topic-029 E): CapyPanel's own exe, started with FLAG, runs
-ssh.exe in a console window of its own. When ssh.exe ends with an error the window stays open
-under ssh.exe's message until a key is pressed, so the message can be read; after a normal end
-it closes, as ssh.exe's own window did.
-
-- Its console: it lets go of any console it was started with and opens its own, so a run from
-  source shows the same window as the built exe. Started with ATTACH, a probe's flag, it keeps
-  the console it was started with, or takes its parent's, so nothing shows on screen.
-- ssh.exe starts suspended, goes into a job object that ends it whenever the holder ends
-  (closing the window ends both), and only then runs.
-- Ctrl+C is ssh.exe's: the holder's own handler keeps the holder alive through it. It never
-  sets "ignore Ctrl+C" for itself, which ssh.exe would inherit (then Ctrl+C couldn't cancel a
-  hanging connection), and it clears one it was started with.
-
-The exe reads FLAG before Qt is imported (__main__), so this start skips the single-instance
-check and the tray. It writes no settings and no log."""
+"""The separate SSH window: the exe, run with FLAG, runs ssh.exe and writes no settings or log."""
 
 import ctypes
 import subprocess
@@ -34,10 +19,8 @@ LANGUAGE, HOST = "--lang=", "--host="
 # The holder's own exit codes. After ssh.exe's end, and after the key, it's always 0: Windows
 # Terminal closes a tab whose program ends with 0, and keeps one open that ends otherwise.
 DONE, NOT_STARTED_BY_CAPYPANEL, NO_CONSOLE = 0, 2, 3
-# Seconds after the words show in which a key doesn't close the window. At the host key
-# question a bare Enter refuses and ssh.exe ends at once, so a quick second Enter, pressed
-# because nothing seemed to happen, would close it before "Host key verification failed." was
-# read (Kerrigan).
+# Seconds after the words show in which a key doesn't close the window: a quick second Enter at
+# the host key question would close it before "Host key verification failed." was read.
 KEY_GRACE = 1.0
 
 
@@ -112,8 +95,6 @@ def _say_and_wait(console: Console, line: str) -> None:
     console.write(f"\r\n{line}\r\n{_('Press any key to close this window.')}\r\n")
     console.wait_for_key(KEY_GRACE)
 
-
-# ---- Windows ----
 
 _k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 _ATTACH_PARENT_PROCESS = 0xFFFFFFFF  # (DWORD)-1
@@ -296,7 +277,7 @@ class WindowsConsole:
         self._in: int | None = None
         self._out: int | None = None
         self._job: int | None = None  # kept open while the holder runs: ssh.exe ends with it
-        self._handler: object = None  # kept: Windows calls it
+        self._handler: object = None  # Ctrl+C is ssh.exe's: this keeps the holder alive
 
     def open(self, *, attach: bool) -> bool:
         if attach:
@@ -399,9 +380,8 @@ class WindowsConsole:
         _k32.WriteConsoleW(self._out, buffer, len(buffer) - 1, ctypes.byref(written), None)
 
     def wait_for_key(self, grace: float) -> None:
-        """Until a key is pressed, `grace` seconds on: keys pressed before then are dropped.
-        Shift, Ctrl, Alt, Windows and the lock keys alone don't count, and Ctrl+C counts as a
-        key here."""
+        """Until a key is pressed `grace` seconds on (earlier ones are dropped). Shift, Ctrl, Alt,
+        Windows and the lock keys alone don't count; Ctrl+C counts as a key here."""
         time.sleep(grace)
         _k32.FlushConsoleInputBuffer(self._in)
         mode = wt.DWORD()

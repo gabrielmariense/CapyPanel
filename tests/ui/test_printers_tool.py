@@ -24,8 +24,6 @@ from capypanel.ui.printers_tool.tool import PrintersTool, web_page
 
 
 class FakeShell:
-    """What a tool asks of the shell, without the window."""
-
     def __init__(self, paths: settings.Paths) -> None:
         self.paths = paths
         self.prefs: dict[str, Any] = {"schema": 1}

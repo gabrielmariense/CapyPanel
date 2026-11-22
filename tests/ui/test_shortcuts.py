@@ -1,5 +1,4 @@
-"""Settings › CapyPanel › Keyboard shortcuts: every command a key can run, today's keys as the
-defaults, a person's changes kept and applied at once, and the keys no command may take."""
+"""Keyboard shortcuts: the defaults, a person's changes, and the keys no command may take."""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -86,7 +85,7 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     for never in ("restart", "shut-down", "cancel-restart", "spooler"):  # disturb the PC's user
         assert f"command.{never}" not in ids
     hosts_edit, printers_edit = keys.row("hosts.edit"), keys.row("printers.edit")
-    # Each tool's own row, even for a command both have (Gabriel, 2026-11-16).
+    # Each tool's own row, even for a command both have.
     assert hosts_edit.places == ["hosts"] and printers_edit.places == ["printers"]
     assert keys.key(hosts_edit) == keys.key(printers_edit) == "F2"
     assert keys.row("hosts.add_host").places == ["hosts"]
@@ -103,7 +102,7 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert [w.text() for w in cell.findChildren(QLabel)] == ["Enter", "(in the list)"]
     assert page.item_of("hosts.add_host").text(KEY) == "Ctrl+N"  # the others: just the key
     assert page.table.itemWidget(page.item_of("hosts.add_host"), KEY) is None
-    # No card and no fixed height: the list fills the page, which never scrolls (Dante's redo).
+    # No card and no fixed height: the list fills the page, which never scrolls.
     assert page.section.heading.isHidden() and page.section.inner.objectName() == ""
     assert page.table.maximumHeight() == 16777215
     # Each tool's row runs that tool's own action, so it has its own word ("Atualizar todas"
@@ -145,9 +144,6 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
 
 
 def test_no_waiting_field_is_left_in_the_list_when_the_page_opens(window: CapyWindow) -> None:
-    """The Key column's width is measured on a waiting field; it must be gone at once, since
-    Settings runs in its own loop (exec) where a deleteLater never comes, and the field showed
-    across the list's top row (Gabriel's test of build 576)."""
     page = _page(window)  # no events run between building the page and this check
     assert page.table.viewport().findChildren(KeyCatcher) == []
 
@@ -253,8 +249,6 @@ def test_the_terminal_s_line_is_as_tall_as_its_words_at_the_list_s_width(
 
 
 def test_a_command_whose_menu_text_changes_keeps_its_plain_name(window: CapyWindow) -> None:
-    """The right-click menu counts the printers ("Refresh 3 printers") and the host menu names
-    who's signed in; the page names the command, never what was last picked."""
     keys = window.keys
     refresh = keys.row("printers.refresh_selected")
     refresh.actions[0].setText("&Refresh 3 printers")
@@ -357,8 +351,6 @@ def _ink_rows(widget: QWidget, ink: QColor, inside: QRect) -> list[int]:
     ],
 )
 def test_the_waiting_field_s_capitals_sit_in_its_middle(inside: QRect, caps: QRect) -> None:
-    """As much room over the capitals as under them. Qt centres a line's whole height: with
-    Segoe UI in the list's field that left 4 px over them and 1 px under (Dante, 0.28.1)."""
     baseline = shortcuts_page.caps_baseline(inside, caps)
     top, bottom = baseline + caps.top(), baseline + caps.top() + caps.height() - 1  # its rows
     over, under = top - inside.top(), inside.bottom() - bottom
@@ -381,14 +373,11 @@ def test_the_waiting_field_draws_its_words_inside_its_edges(window: CapyWindow) 
     assert _ink_rows(catcher, ink, inside)  # drawn, in the refusal's red
     room, metrics = catcher.words_rect().width(), catcher.fontMetrics()
     for words in (shortcuts_page.waiting_text(), shortcuts_page.refused_text()):
-        assert metrics.horizontalAdvance(words) <= room, words  # in full, never cut (Dante)
+        assert metrics.horizontalAdvance(words) <= room, words  # in full, never cut
     dialog.close()
 
 
 def test_a_refused_key_s_words_stay_where_they_waited(qapp: QApplication) -> None:
-    """A theme may style the refused field alone: the Windows themes draw the waiting field
-    natively and give the refused one its red edge from the stylesheet, with less padding, so
-    the words moved to 1 px from the red edge (Dante, 0.28.1). They keep the room they had."""
     catcher = KeyCatcher()
     catcher.setStyleSheet(
         'QLineEdit { padding: 0 6px; } QLineEdit[refused="true"] { border: 1px solid red;'
@@ -410,9 +399,6 @@ def test_a_refused_key_s_words_stay_where_they_waited(qapp: QApplication) -> Non
 
 
 def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) -> None:
-    """A refusal's reason can take more lines than the line it replaces, and the list gets
-    shorter: the waiting row on the list's last line scrolls back into view (Dante, 0.28.1).
-    How many lines depends on the fonts, so the list is made shorter here by the window."""
     dialog = window.settings_dialog()
     dialog.show_page("shortcuts")
     dialog.resize(dialog.minimumSizeHint().width(), 600)
@@ -484,7 +470,7 @@ def test_a_tool_s_key_meets_the_window_s_but_not_another_tool_s(window: CapyWind
 def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) -> None:
     page = _page(window)
     for key, mods in (
-        (Qt.Key.Key_F1, Qt.KeyboardModifier.NoModifier),  # help, in 0.30
+        (Qt.Key.Key_F1, Qt.KeyboardModifier.NoModifier),  # help's
         (Qt.Key.Key_F, Qt.KeyboardModifier.ControlModifier),  # search
         (Qt.Key.Key_A, Qt.KeyboardModifier.ShiftModifier),  # typed in a name
     ):
@@ -496,7 +482,7 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
         == "Shift+A is for typing in names and searches: use it with Ctrl or Alt."
     )
     # A refused key is an error where you're looking: the field stays, red, saying so, and the
-    # reason shows under the list in red with its icon (Gabriel's pick, Luna Q1).
+    # reason shows under the list in red with its icon.
     services = page.item_of("command.services")
     catcher = page.table.itemWidget(services, KEY)
     assert isinstance(catcher, KeyCatcher) and catcher.property("refused") is True

@@ -1,7 +1,4 @@
-"""Inventory > Import printers…: Import hosts' window with the printers' columns (brand, model,
-serial number, asset tag, page counters). It reads a Printers Report back, and Windows' own
-printer list (`Get-Printer | Export-Csv`). Nothing changes until "Add N printers" is clicked,
-and nothing contacts a printer: the first Refresh does."""
+"""Import printers: Import hosts' window plus the printers' columns; nothing contacts a printer."""
 
 from PySide6.QtWidgets import QDialog, QWidget
 
@@ -12,7 +9,7 @@ from capypanel.ui.import_hosts import FormatsDialog, ImportDialog, needs_header_
 
 
 class ImportPrintersDialog(ImportDialog):
-    HELP_PLACE = "printers-import-many-printers-at-once"  # its ? and F1
+    HELP_PLACE = "printers-import-many-printers-at-once"
     TITLE = N_("Import printers")
     GROUP_LABEL = N_("Printers with no group &go to:")
     PLACEHOLDER = N_("For example:\nname,address,brand\nReception,192.0.2.10,HP")
@@ -38,7 +35,7 @@ class ImportPrintersDialog(ImportDialog):
     def adding_text(self, n: int) -> str:
         return ngettext("{n} printer will be added.", "{n} printers will be added.", n).format(n=n)
 
-    # Printers' own context: pt-BR words them for "impressoras" (Dante, Satya).
+    # Printers' own context: pt-BR words them for "impressoras".
     def skipped_text(self, n: int) -> str:
         return npgettext("printers", "{n} skipped.", "{n} skipped.", n).format(n=n)
 
@@ -63,7 +60,7 @@ class ImportPrintersDialog(ImportDialog):
 class PrinterFormats(FormatsDialog):
     """The lists Import printers reads: name and address, a Report, Windows' printer list."""
 
-    HELP_PLACE = "printers-import-many-printers-at-once"  # its ? and F1
+    HELP_PLACE = "printers-import-many-printers-at-once"
 
     def _formats(self) -> list[tuple[str, QWidget]]:
         titles = [_("Name"), _("Address"), _("Group"), _("Brand"), _("Model"), _("Serial number")]

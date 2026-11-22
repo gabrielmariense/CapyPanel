@@ -1,8 +1,4 @@
-"""Which account signs in to which PCs. Each link says "use this account for" one PC, a group,
-a tag or every PC, and lives in the person's own settings, never in the shared host list: each
-admin has their own accounts. Passwords never go in here (Credential Manager, or typed once per
-session). A PC's own link wins over its group's (the nearest group first), a group's over a
-tag's, and those over "every PC"; with none, the Windows account signs in."""
+"""Which account signs in to which PCs: links in the person's settings, never the shared list."""
 
 import os
 from collections.abc import Iterable, Mapping, Sequence
@@ -36,15 +32,12 @@ class Link:
     name: str = ""  # PC: the host's name; GROUP: its path, both as they were when linked
 
     def same_place(self, other: "Link") -> bool:
-        """Both are for the same PCs, whatever the account."""
         return (self.scope, _fold(self.value), _same_file(self.list)) == (
             other.scope, _fold(other.value), _same_file(other.list))  # fmt: skip
 
 
 @dataclass(frozen=True)
 class Place:
-    """Where a PC sits, to pick its link: its address, and in a list its groups and tags."""
-
     address: str
     list: str = ""  # the host list file; "" for an address typed on the spot
     groups: tuple[str, ...] = ()  # its group's id, then each parent's
@@ -60,7 +53,6 @@ def _same_file(path: str) -> str:
 
 
 def same_file(a: str, b: str) -> bool:
-    """The same list file, whatever its spelling."""
     return bool(a) and _same_file(a) == _same_file(b)
 
 

@@ -1,7 +1,4 @@
-"""The SSH tool's terminal (topic-029): keys as Windows key events, the colours in every shipped
-theme, the line and block characters CapyPanel draws itself, the strip after a connection ends,
-and the view, on a stand-in pseudo console the test drives (tests/helpers/fake_console.py) and
-on Windows' own cmd.exe. Nothing here reaches the network."""
+"""The SSH tool's terminal, on a stand-in console and on cmd.exe; nothing reaches the network."""
 
 import ctypes
 import logging
@@ -21,7 +18,7 @@ from fake_console import FakeConsole
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QAction, QColor, QGuiApplication, QImage, QKeyEvent, QPainter
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
-from test_themes import ACCENTS  # every Windows accent, and the dark purple of Dante's PC
+from test_themes import ACCENTS  # every Windows accent, a dark purple included
 
 from capypanel.core.ssh import conpty
 from capypanel.core.ssh.screen import TermScreen, TermStream
@@ -96,8 +93,6 @@ def test_a_key_goes_to_the_server_down_and_up_as_a_windows_key_event() -> None:
 
 
 def test_altgr_text_loses_ctrl_and_alt_and_alt_alone_keeps_its_bit() -> None:
-    """AltGr is Ctrl+Alt to Windows: AltGr+Q's "/" on ABNT2 must not reach the program as
-    Ctrl+Alt+/. Alt+B moves back a word in bash: its bit stays, so the console sends ESC b."""
     altgr = keys.Q_CTRL_L | keys.Q_ALT_R
     slash = _key(K.Key_Q, 0x51, 0x10, native=altgr, text="/", mods=CTRL | ALT)
     assert keys.encode(slash, True) == b"\x1b[81;16;47;1;0;1_"
@@ -128,8 +123,6 @@ def test_text_a_key_event_has_no_room_for_goes_as_text() -> None:
 
 
 def test_without_key_events_a_key_goes_as_its_text() -> None:
-    """For a console that never asked for key events, as Windows 10's: text, and the control
-    characters xterm sends. Alt sends ESC first; AltGr's text goes as it is."""
     text = keys.encode_text
     assert text(_key(K.Key_Y, 0x59, 0x15, text="y")) == b"y"
     assert text(_key(K.Key_A, 0x41, 0x1E, text="ã")) == "ã".encode()  # after a dead tilde
@@ -221,8 +214,8 @@ def view(qapp: QApplication, consoles: list[FakeConsole]) -> Iterator[TerminalVi
 
 
 def _asks_for_key_events(view: TerminalView, console: FakeConsole) -> None:
-    """The console asks for keys as key events, as Windows 11's does first thing (the trial's
-    probe of it, 18 Nov). Windows 10's never asks."""
+    """The console asks for keys as key events, as Windows 11's does first thing; Windows 10's
+    never asks."""
     console.prints(b"\x1b[?9001h\x1b[?1004h")
     _until(lambda: view.term.win32_input)
 
@@ -346,8 +339,6 @@ def test_ctrl_c_copies_a_selection_and_the_next_one_reaches_the_program(
 def test_ctrl_and_shift_going_down_first_keep_the_selection_for_the_copy(
     view: TerminalView, consoles: list[FakeConsole]
 ) -> None:
-    """As a hand types them: Ctrl, and Shift, go down before the C, each a key of its own that
-    reaches the program. They used to drop the selection, so neither copy key copied anything."""
     view.start(["ssh.exe"])
     console = consoles[-1]
     _asks_for_key_events(view, console)
@@ -395,7 +386,6 @@ def test_ctrl_equals_and_ctrl_minus_change_the_text_size_and_send_nothing(
 def test_altgr_plus_types_its_tilde_and_leaves_the_text_size_alone(
     view: TerminalView, consoles: list[FakeConsole]
 ) -> None:
-    """A German keyboard types ~ with AltGr and +, and AltGr is Ctrl+Alt: never Ctrl++."""
     view.start(["ssh.exe"])
     console = consoles[-1]
     _asks_for_key_events(view, console)
@@ -411,8 +401,6 @@ def test_altgr_plus_types_its_tilde_and_leaves_the_text_size_alone(
 def test_a_console_that_never_asks_for_key_events_gets_each_key_as_text(
     view: TerminalView, consoles: list[FakeConsole]
 ) -> None:
-    """Windows 10's console never asks, and drops a key event it gets: ssh.exe's "(yes/no)?"
-    took nothing typed there (his Windows 10 test, build 631)."""
     view.start(["ssh.exe"])
     console = consoles[-1]
     console.prints(b"Continue connecting (yes/no)? ")
@@ -528,8 +516,6 @@ def test_enter_on_an_ended_connection_connects_again(
 def test_a_connection_capypanel_closes_ends_grey_whichever_way_windows_reports_it(
     qapp: QApplication, consoles: list[FakeConsole]
 ) -> None:
-    """The output's end and the program's exit come from two threads, either first. Here the
-    end comes first, and the exit after it: the tab still ends, with the grey strip."""
     tab = TerminalTab(host="web-01")
     _shown(tab)
     tab.start(["ssh.exe"])
@@ -592,9 +578,8 @@ def test_a_server_s_bad_sequence_never_reaches_the_error_window_or_the_log(
 def test_a_flood_of_colours_and_characters_keeps_each_cache_within_its_limit(
     view: TerminalView, consoles: list[FakeConsole], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Each cell its own 24-bit colour on a background of its own, and a character of its own:
-    # the colours, pairs and fits a tab keeps start over when full, instead of growing for as
-    # long as the tab is open.
+    # Each cell its own 24-bit colour, background and character: a tab's colours, pairs and fits
+    # start over when full instead of growing for as long as the tab is open.
     monkeypatch.setattr(view_module, "MAX_CACHED", 50)
     view.start(["ssh.exe"])
     last = chr(0x4E00 + 199)
@@ -685,7 +670,6 @@ def test_typed_keys_reach_cmd_and_its_answer_is_drawn(cmd: TerminalView) -> None
 
 
 def test_keys_as_text_reach_cmd_on_a_real_pseudo_console(cmd: TerminalView) -> None:
-    """The form a console that never asks for key events gets, as Windows 10's own."""
     cmd.term.win32_input = False  # as a console that never asked
     _typed(cmd, "echo capy 43\r")
     _until(lambda: "capy 43" in cmd.term.screen_text())
@@ -694,7 +678,6 @@ def test_keys_as_text_reach_cmd_on_a_real_pseudo_console(cmd: TerminalView) -> N
 
 @pytest.mark.parametrize("cmd", ["carried"], indirect=True)
 def test_the_carried_engine_asks_for_key_events_first_thing(cmd: TerminalView) -> None:
-    """So on Windows 10 too, keys go as key events: the form ssh.exe reads after the login."""
     assert cmd.session is not None and cmd.session.engine is conpty.carried_engine()
     _until(lambda: cmd.term.win32_input)
     assert cmd.term.regional_indicator_cells == 1  # its count for half a flag
@@ -730,7 +713,6 @@ def test_enter_on_an_ended_cmd_runs_it_again(cmd: TerminalView) -> None:
 
 
 def test_a_long_pasted_line_reaches_the_program_whole(cmd: TerminalView) -> None:
-    """Read across the rows it wraps over, as the program got it, never one row."""
     long = "0123456789" * 15
     assert len(long) > cmd.term.columns  # it wraps
     assert cmd.paste_text("echo " + long)  # one line: no question
@@ -772,9 +754,6 @@ print(sorted(m for m in sys.modules if m.startswith(late)))
 def test_opening_every_tool_and_settings_page_loads_none_of_the_terminal(
     tmp_path: Path,
 ) -> None:
-    """The terminal's modules load with the first connection, never before: not when CapyPanel
-    starts, nor when Hosts, Printers, Profile cleanup, SSH or any Settings page opens (Kerrigan's
-    line 18). Its own process: this one has loaded them all by now."""
     helpers = Path(__file__).resolve().parent.parent / "helpers"
     env = {**os.environ, "LOCALAPPDATA": str(tmp_path)}
     found = subprocess.run(  # noqa: S603 -- this Python, with a probe of our own
@@ -793,8 +772,6 @@ OURS: list[int | str] = [*range(16), "default"]
 def test_in_every_shipped_theme_the_16_and_the_defaults_read_on_each_other(
     default_theme_after: None,
 ) -> None:
-    """Every pair reads at 4.5:1 or better, bold and reversed too, except a colour on itself,
-    which a program asks for to hide text."""
     for theme in themes.Registry().all():
         themes.apply(theme)
         pal = palette.current()
@@ -836,9 +813,6 @@ def test_a_terminal_follows_the_theme_unless_given_colours_of_its_own(
 @pytest.mark.parametrize("scheme", ["light", "dark"])
 @pytest.mark.parametrize("accent", ACCENTS)
 def test_the_cursor_shows_on_the_terminal_with_any_accent(scheme: str, accent: str) -> None:
-    """The accent while it shows on the terminal's background (3:1, WCAG's for a graphic), the
-    text colour otherwise: the Windows themes take the PC's own accent, and a dark purple read
-    1.37:1 in Windows dark (Dante, build 619)."""
     roles = {**themes.TOKENS[scheme], **themes.NATIVE_TOKENS[scheme], "accent": accent}
     pal = palette.from_roles(f"windows-{scheme}", {**roles, "sel": accent}, scheme == "dark")
     assert palette.contrast(pal.cursor, pal.background) >= palette.SHOWS
@@ -1002,9 +976,8 @@ def _edge(m: glyphs.Metrics, weight: int, horizontal: bool) -> set[int]:
 
 
 def _problems(text: str, cw: int, ch: int) -> list[str]:
-    """What's wrong with one box-drawing character at one cell size: where its arms leave the
-    cell, how many pieces its strokes make (4-neighbour, so a join made only by a corner is a
-    gap), and how many regions they cut the cell into (8-neighbour background)."""
+    """What's wrong with one box-drawing character at one size: arms leaving the cell, its strokes'
+    pieces (4-neighbour: a corner-only join is a gap), and the regions they cut (8-neighbour)."""
     m = glyphs.Metrics(cw, ch)
     match glyphs.box_shape(text):
         case ("arms", arms):

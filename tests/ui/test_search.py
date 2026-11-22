@@ -257,15 +257,9 @@ def test_search_reads_the_status_column_not_checked_too(
     assert _rows(window) == []
 
 
-# ---- a PC that isn't in the list: Connect to {host}… (his idea from the 0.28 test) ----
-
-
 def test_a_search_offers_to_connect_to_the_pc_typed_while_no_row_is_it(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """In the empty table, under its note; with rows that aren't it (TRIAGE-0 among TRIAGE-01
-    and -02), as the list's last line. A row that is it, by name or address in any case,
-    offers nothing, and neither does a text with a space: no PC is named so."""
     hosts, table = window.hosts, window.hosts.table
     opened: list[str] = []
     monkeypatch.setattr(hosts, "manual_connect_to", opened.append)
@@ -287,8 +281,6 @@ def test_a_search_offers_to_connect_to_the_pc_typed_while_no_row_is_it(
 
 
 def test_the_offer_under_the_rows_is_the_list_s_last_line(window: CapyWindow) -> None:
-    """Under the last row, inside the table: it never takes height from it or moves the rows,
-    and past a full table it's out of sight until the rows are fewer."""
     table = window.hosts.table
     window.resize(1280, 760)
     window.show()

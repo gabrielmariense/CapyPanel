@@ -1,7 +1,4 @@
-"""One host's tab in the Profile cleanup tool: its box (the name, the filters, the profiles table),
-and on the right its card (the profiles ticked, or the delete run) with the Delete button at the
-foot. A profile's details open in a window. Each tab keeps its own scan, sizes and delete run, so
-several hosts can be read, counted and cleaned at once."""
+"""One host's tab in Profile cleanup, with its own scan, sizes and delete run."""
 
 import os
 from collections.abc import Callable, Mapping
@@ -54,8 +51,8 @@ class Mark:
     color: str
     tip: str  # "Deleting the 2nd of 3 profiles…"
     short: str  # "deleting 2 of 3"
-    busy: bool  # it's working: Andamento's "In progress"
-    bad: bool = False  # it ended badly: red in Andamento
+    busy: bool  # it's working: Progress's "In progress"
+    bad: bool = False  # it ended badly: red in Progress
 
 
 # A run's line on the card: each profile's words on the right, and their colour: one of
@@ -102,7 +99,7 @@ class HostPage(QObject):
         self._sizes: dict[str, int | None] = {}  # bytes per row; None while it's counted
         self._counting: object | None = None  # the size count under way: the pool's owner
         self._count_total = 0
-        self._count_left = 0  # counts not ended yet
+        self._count_left = 0
         self._uncounted = 0
         self._so_far: dict[str, int] = {}  # bytes counted up to now, written by the counts
         self._ticker = QTimer(self)  # shows them moving, so a long count isn't taken for stuck
@@ -117,7 +114,7 @@ class HostPage(QObject):
         self._began = datetime.now().astimezone()
         self._ended = self._began  # when the last run was over
         self._run_shown = False  # the card shows a delete run, under way or just over
-        self._window: ProfileWindow | None = None  # a profile's details, while it's open
+        self._window: ProfileWindow | None = None
         self._window_ident = ""
         self._freed = 0
         self._jobs: set[Job] = set()

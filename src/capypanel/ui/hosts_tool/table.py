@@ -1,5 +1,4 @@
-"""The host table: name, address, Status, User and tags. Status and User come from Refresh; they're
-kept in memory, never in the list file."""
+"""The host table; Status and User come from Refresh, in memory only, never in the list file."""
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass

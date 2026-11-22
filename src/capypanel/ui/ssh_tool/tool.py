@@ -1,10 +1,4 @@
-"""The SSH tool: the list workspace on the host list open in Hosts, the same one Hosts and Profile
-cleanup show, each host with its port and the name to log in as: its own, or its group's, picked
-in Details or from the right-click menus. Refresh checks each one's SSH port. Connect opens
-Windows' ssh.exe on it in a tab
-beside the list, its terminal drawn by CapyPanel (ui/ssh_tool/terminal); Connect in a separate
-window opens it in a console window of its own. CapyPanel never sees a password: ssh.exe asks
-for it, or uses a key."""
+"""The SSH tool on Hosts' open list, connecting with ssh.exe: CapyPanel never sees a password."""
 
 import logging
 from collections.abc import Callable, Sequence
@@ -87,7 +81,7 @@ class SshTool(TabbedListWorkspace):
     ICON = "terminal-2"
     HELP_PLACE = "ssh/ssh/"
     TABS_ICON = "server-2"  # the list's tab
-    LISTS_FROM = listfile.HOSTS  # Hosts' open list: one list for every host (his words, 2026-11-18)
+    LISTS_FROM = listfile.HOSTS  # Hosts' open list: one list for every host
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
@@ -125,7 +119,7 @@ class SshTool(TabbedListWorkspace):
         self._connect_typed.triggered.connect(self._connect_to_typed)
         self.table.set_cells(self._cell)
         self.table.set_logins(self._login_shown)
-        self.settings_pages = SshSettings(self)  # its part of Settings
+        self.settings_pages = SshSettings(self)
         self._fill_inventory()
         self._connect()
         self.restore_layout()
@@ -369,9 +363,8 @@ class SshTool(TabbedListWorkspace):
     # ---- the guide ----
 
     def guide(self) -> Guide:
-        """Its own first steps: lists, adding hosts, the table, Connect with what the first
-        connection asks, Refresh all and a separate window (the window adds View last). No step
-        asks for a click, and the sample is never connected or checked (is_sample)."""
+        """First steps: lists, adding hosts, the table, Connect, Refresh all, a separate window. No
+        step asks for a click, and the sample is never connected or checked (is_sample)."""
         bar = self.toolbar
 
         def steps() -> list[Step]:
@@ -379,7 +372,7 @@ class SshTool(TabbedListWorkspace):
                 "Connects to the host you picked, in a tab of its own beside the list. "
                 "The first time, ssh.exe asks whether you trust the server."
             )
-            # Satya's line on its own, after it: ssh.exe asks in English (ssh-words.md).
+            # A line of its own, after it: ssh.exe asks in English.
             type_yes = _("Type yes, then press Enter.")
             return [
                 Step(_("Your lists"),  # Profile cleanup's words: the same lists, Hosts'
@@ -591,8 +584,8 @@ class SshTool(TabbedListWorkspace):
                 self._drop(key)
 
     def _close_asked(self, live: Sequence["TerminalTab"]) -> bool:
-        """Before closing open connections: what runs on the server from them may stop. The
-        words are Satya's (ssh-words.md); the title is the action's, as Hosts' Log off."""
+        """Before closing open connections: what runs on the server from them may stop. The title is
+        the action's, as Hosts' Log off."""
         n = len(live)
         if n == 1:
             heading = _("Close the connection to {host}?").format(host=live[0].host)
@@ -601,7 +594,7 @@ class SshTool(TabbedListWorkspace):
                 "Close {n} open connection?", "Close {n} open connections?", n
             ).format(n=n)
         # One ngettext for both: a language whose singular covers more than 1 (21 in some) still
-        # gets "it on the server" with "{n} open connection" (Satya, build 618).
+        # gets "it on the server" with "{n} open connection".
         text = ngettext(
             "Anything still running in it on the server may stop.",
             "Anything still running in them on the servers may stop.",
@@ -795,13 +788,13 @@ class SshTool(TabbedListWorkspace):
 
     def fill_group_menu(self, menu: QMenu, group: Group) -> None:
         """Log in as, then Refresh group under its own line, as Hosts has Commands run as then
-        Refresh group (Dante's check of build 630): its hosts, its subgroups' too."""
+        Refresh group: its hosts, its subgroups' too."""
         assert self._doc is not None
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
         self._fill_group_login_menu(menu.addMenu(_("&Log in as")), group)
         menu.addSeparator()
-        refresh = menu.addAction(_("Re&fresh group"))  # R is Remove's (Satya)
+        refresh = menu.addAction(_("Re&fresh group"))  # R is Remove's
         refresh.setEnabled(bool(hosts) and self._run is None)
         refresh.triggered.connect(lambda: self.check_hosts(hosts))
 

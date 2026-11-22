@@ -1,5 +1,4 @@
-"""The Printers tool's commands: the list workspace's, plus adding printers, their web pages,
-Refresh and Report."""
+"""The Printers tool's commands: the list workspace's, plus the printers' own."""
 
 from dataclasses import dataclass
 

@@ -1,6 +1,4 @@
-"""The scrambled form of a VNC password that viewers read from password files (RealVNC's
-PasswordFile, .vnc files): DES with a key every VNC program shares. It hides the password from a
-glance, not from anyone who wants it, so it's never written to disk."""
+"""VNC's scrambled password, DES with a key every viewer shares: so it's never written to disk."""
 
 import ctypes
 from ctypes import wintypes

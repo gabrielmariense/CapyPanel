@@ -1,12 +1,4 @@
-"""Windows Credential Manager for the tests: the five advapi32 calls credstore makes, kept in
-memory, so no test reads or writes the real one.
-
-The real one is shared by every process of the user, and when several write at once (the
-suite's workers, a second suite run beside it) it loses updates: a deleted entry comes back, a
-saved one is missing from the next list. Tests that used it failed now and then for that.
-
-The fake takes and gives the same structures the real calls do, so credstore's own code runs
-as it does in CapyPanel: a pointer filled in by a read or a list, freed with CredFree."""
+"""Credential Manager in memory for the tests, so no test reads or writes the real one."""
 
 import ctypes
 from dataclasses import dataclass
@@ -34,8 +26,6 @@ class FakeCredentialManager:
     def __init__(self) -> None:
         self.entries: dict[str, Entry] = {}  # by target, folded
         self._handed_out: dict[int, list[Any]] = {}  # what CredFree frees, by address
-
-    # ---- the calls credstore makes ----
 
     def CredWriteW(self, credential: Any, flags: int) -> bool:
         written: credstore._Credential = credential._obj  # passed with ctypes.byref
@@ -82,13 +72,9 @@ class FakeCredentialManager:
         assert address in self._handed_out, "CredFree of something no call handed out"
         del self._handed_out[address]
 
-    # ---- for the tests ----
-
     def unfreed(self) -> int:
         """How many results credstore hasn't freed yet."""
         return len(self._handed_out)
-
-    # ----
 
     @staticmethod
     def _fail(error: int) -> bool:

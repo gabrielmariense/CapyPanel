@@ -1,6 +1,4 @@
-"""The Hosts tool: the list workspace with hosts, plus connecting, connection profiles, Refresh
-(status and logged-on users), the host commands (opening a PC's folders, messaging or logging off
-its users, restarting it, its printers and facts, scripts), importing and Report."""
+"""The Hosts tool: the list workspace with hosts, connecting, Refresh and the host commands."""
 
 import html
 import logging
@@ -134,7 +132,7 @@ class HostsTool(ListWorkspace):
             str, tuple[tuple[Session, ...] | None, RemoteError | None, datetime]
         ] = {}
         self._run: CheckRun | None = None
-        self.accounts = Accounts(self)  # which account signs in to which PC
+        self.accounts = Accounts(self)
         self.accounts.changed.connect(self._accounts_changed)
         self._refused: list[str] = []  # hosts this run that didn't let the account read users
         self._reported: set[str] = set()
@@ -142,7 +140,7 @@ class HostsTool(ListWorkspace):
 
         # Host commands: what they found (in memory only), the runner and its answers.
         self._facts: dict[str, Facts] = {}
-        self._pending: dict[str, PendingPower] = {}  # restarts and shutdowns CapyPanel asked for
+        self._pending: dict[str, PendingPower] = {}
         self._probing: set[str] = set()  # restarting PCs being checked right now
         self._back_online: str | None = None  # the host the last notification was about
         self.runner = Runner(self)
@@ -175,7 +173,7 @@ class HostsTool(ListWorkspace):
         self._fill_inventory()
         self._connect()
         self.restore_layout()
-        self.settings_pages = HostsSettings(self)  # its part of Settings
+        self.settings_pages = HostsSettings(self)
         self._auto_timer = QTimer(self)  # Settings: Status by itself, if switched on
         self._auto_timer.timeout.connect(self._auto_status_check)
         self._apply_auto_status()
@@ -362,9 +360,8 @@ class HostsTool(ListWorkspace):
         self._selection_changed()
 
     def guide(self) -> Guide:
-        """Its own first steps: lists, tags, adding hosts, Details with the sample's row,
-        Connect, Refresh, the command buttons (when a picked host shows them) and Commands.
-        No step asks for a click."""
+        """Its own first steps: lists, tags, adding hosts, Details with the sample's row, Connect,
+        Refresh, the command buttons (when shown) and Commands. No step asks for a click."""
         bar = self.toolbar
 
         def buttons() -> list[QWidget]:  # the picked host's command buttons, every row
@@ -903,10 +900,8 @@ class HostsTool(ListWorkspace):
         self.table.show_hosts(items, {h.id: self._cells(h.id) for h in items})
 
     def matches(self, item: Host, needle: str) -> bool:
-        """The name, plus the address, status, users and tags when their columns show: only
-        what can be seen. Notes are the exception: they have no column, so they're always
-        searched. Status ("Not checked" too) and users come from the last Refresh (memory
-        only)."""
+        """The name, plus the address, status, users and tags when their columns show: what can be
+        seen. Notes, with no column, are always searched. Status and users: the last Refresh's."""
         table = self.table
         if super().matches(item, needle):
             return True
@@ -1084,9 +1079,8 @@ class HostsTool(ListWorkspace):
         line.triggered.connect(lambda: self.open_in_profile_cleanup(ids))
 
     def open_in_profile_cleanup(self, ids: Sequence[str]) -> None:
-        """Profile cleanup, then each host in a tab of its own there, scanned (a scan only reads;
-        a host with a tab already isn't read again). Its first-use warning comes first, and
-        cancelled, nothing opens."""
+        """Profile cleanup, each host in its own tab there, scanned (a scan only reads; a host with
+        a tab isn't read again). Its first-use warning comes first; cancelled, nothing opens."""
         tool = self._shell.tool(PROFILE_CLEANUP)
         if isinstance(tool, OpensHosts) and self._shell.show_tool(PROFILE_CLEANUP):
             tool.open_hosts(ids, True)
@@ -1313,9 +1307,8 @@ class HostsTool(ListWorkspace):
             self._ask_account(run)
 
     def _ask_account(self, run: CheckRun) -> None:
-        """Once the run is over, hosts that didn't let their account read who is logged on: one
-        question for all of them, naming them, with another account and the PCs to use it
-        for."""
+        """After the run, hosts whose account couldn't read who is logged on: one question for all,
+        naming them, with another account and the PCs to use it for."""
         rejected = run.rejected[-1] if run.rejected else None
         account = rejected or next((a for a in map(run.account_of, self._refused) if a), None)
         first = self._name_of(self._refused[-1]) if self._refused else ""
@@ -1656,9 +1649,8 @@ class HostsTool(ListWorkspace):
         self._save_prefs()
 
     def why_not_add(self, name: str, address: str) -> str:
-        """Why Add to host list… can't add the PC in the Commands window, "" when it can: no list
-        is open, the list has hosts at that address (each with where it sits, a line each), or
-        the list is read-only."""
+        """Why Add to host list… can't add the PC in Commands, "" when it can: no list is open, the
+        list has hosts at that address (where each sits, a line each), or it's read-only."""
         doc = self._doc
         if doc is None:
             return _("No host list is open.")

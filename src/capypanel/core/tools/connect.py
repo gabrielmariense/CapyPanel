@@ -1,5 +1,4 @@
-"""Starting a remote tool for one target, and the passwords typed for it (in memory, or saved
-in Windows Credential Manager when the user chose so)."""
+"""Starting a remote tool for one target, with its password from memory or Credential Manager."""
 
 import logging
 import subprocess
@@ -32,9 +31,8 @@ SAVED = "profile/"  # saved passwords: CapyPanel/profile/<profile id> in Credent
 
 
 class SessionCredentials:
-    """Passwords typed while the app runs, one per connection profile: in memory until the app
-    closes, and also in Windows Credential Manager when "Remember it on this computer" was ticked
-    as it was typed. Per profile, so the Windows-account password never reaches the Pis."""
+    """Passwords typed while the app runs, one per profile, kept in memory until it closes (and in
+    Credential Manager when chosen): one profile's password never reaches another's hosts."""
 
     def __init__(self) -> None:
         self._by_profile: dict[str, Credential] = {}

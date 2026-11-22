@@ -1,6 +1,4 @@
-"""What the Profile cleanup page says about a profile, with no window involved: the names of
-kinds and states, why a row can or can't be deleted, the filters above the table, and how dates
-and sizes read."""
+"""What Profile cleanup says about a profile, no window involved: its state, and why it can go."""
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -106,9 +104,6 @@ def months_text(months: int) -> str:
     return ngettext("{n} month", "{n} months", months).format(n=months)
 
 
-# ---- the filters ----
-
-
 @dataclass(frozen=True)
 class Filters:
     hide_own: bool = True  # Windows' own (Public, Default…): about half the rows, never deletable
@@ -149,9 +144,6 @@ def _months_before(now: datetime, months: int) -> datetime:
     return now.replace(year=year, month=month + 1, day=day)
 
 
-# ---- how values read ----
-
-
 def date_text(when: datetime | None) -> str:
     """A day as the table shows it, in this PC's time: 10/11/2026 (11/10/2026 in English)."""
     if when is None:
@@ -169,9 +161,6 @@ def size_text(size: int) -> str:
         value = size / GB
         return _("{n} GB").format(n=locale.toString(value, "f", 1 if value < 100 else 0))
     return _("{n} MB").format(n=locale.toString(max(1, round(size / MB)) if size else 0))
-
-
-# ---- the status bar ----
 
 
 def status_text(scanned: Scan, name: str, ticked: Sequence[Profile], sizes: dict[str, int]) -> str:
@@ -199,9 +188,6 @@ def shown_text(shown: int, total: int) -> str:
 def shown_short(shown: int, total: int) -> str:
     """The same, where "shown" doesn't fit: "12 of 15"."""
     return _("{n} of {total}").format(n=shown, total=total)
-
-
-# ---- a scan that failed ----
 
 
 @dataclass(frozen=True)
@@ -265,9 +251,6 @@ def failure(error: BaseException, name: str, address: str, account: str) -> Fail
         _("{host} · couldn't be read").format(host=name),
         another_account=isinstance(error, RemoteError),
     )
-
-
-# ---- deleting ----
 
 
 class Result(StrEnum):

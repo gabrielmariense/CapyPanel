@@ -72,8 +72,6 @@ class HostList:
     hosts: tuple[Host, ...] = ()
     extra: Mapping[str, Any] = field(default_factory=dict)
 
-    # ---- lookups ----
-
     def group(self, group_id: str) -> Group | None:
         return next((g for g in self.groups if g.id == group_id), None)
 
@@ -84,7 +82,6 @@ class HostList:
         return tuple(g for g in self.groups if g.parent == group_id)
 
     def subtree(self, group_id: str) -> set[str]:
-        """The group and every group nested under it, at any depth."""
         found = {group_id}
         frontier = [group_id]
         while frontier:
@@ -101,9 +98,8 @@ class HostList:
     def profile_of(
         self, host: Host, exists: Callable[[str], bool] = lambda _id: True
     ) -> tuple[str, Group | None]:
-        """The host's connection profile id and the group it comes from (None: the host's own).
-        A profile that doesn't `exist` is skipped, so the nearest group's applies instead.
-        ("", None) when neither the host nor any group around it sets one that exists."""
+        """The host's profile id and the group it comes from (None: its own), skipping those
+        that don't `exist`; ("", None) when nothing around the host sets one that exists."""
         if host.profile and exists(host.profile):
             return host.profile, None
         return self.group_profile(host.group, exists)
@@ -128,8 +124,6 @@ class HostList:
             for tag in host.tags:
                 counts[tag] = counts.get(tag, 0) + 1
         return counts
-
-    # ---- edits (each returns a new list) ----
 
     def new_id(self, prefix: str) -> str:
         taken = {g.id for g in self.groups} | {h.id for h in self.hosts}
@@ -217,10 +211,8 @@ class HostList:
     def remove_group(
         self, group_id: str, *, keep_contents: bool = False, into: str | None = None
     ) -> "HostList":
-        """Removes the group. keep_contents moves what's inside it: its groups and hosts go
-        `into` that group, or with into=None up a level, into its parent. into=NO_GROUP sends
-        them to the top level, where its hosts have no group. Otherwise the groups nested in it
-        and their hosts go too."""
+        """Removes the group. keep_contents moves its groups and hosts `into` that group (None: up a
+        level; NO_GROUP: the top level, with no group); otherwise they go too."""
         self._require_group(group_id)
         if keep_contents:
             group = self.group(group_id)

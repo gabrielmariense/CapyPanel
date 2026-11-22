@@ -135,7 +135,7 @@ def remember_list(prefs: dict[str, Any], path: Path) -> None:
 def added_lists(prefs: dict[str, Any]) -> list[Path]:
     value = prefs.get(LISTS_KEY)
     if value is None:
-        value = prefs.get(RECENT_KEY)  # before the Host lists window, the recent ones
+        value = prefs.get(RECENT_KEY)  # older settings: the recent lists were the added ones
     if not isinstance(value, list):
         return []
     return [Path(p) for p in value if isinstance(p, str) and p]

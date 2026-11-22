@@ -1,8 +1,4 @@
-"""A tool's tab bar: the pinned tab first (the list), then a gap with a short line, then a tab
-per thing opened (a host in Profile cleanup, a connection in SSH), which scroll when they don't
-fit while the pinned tab stays. The line parts the pinned tab from the others, so it shows only
-while one is open. A ▾ at the end lists every tab. Tabs never reorder themselves: a new one opens
-at the right end."""
+"""A tool's tab bar: the pinned list, then a tab per thing opened, never reordered."""
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPainter, QPaintEvent, QPalette
@@ -213,9 +209,8 @@ class TabStrip(QWidget):
         self.restyle()
 
     def set_height(self, height: int) -> None:
-        """As tall as `height`, its tabs filling it. The tool gives it the list dropdown's
-        height and the gap under it: a tab's top meets the dropdown's, and the panels under the
-        tabs start where the Groups panel does (Dante Q1, Gabriel's pick 1, 2026-11-16)."""
+        """As tall as `height` (the list dropdown's, plus the gap under it), its tabs filling it,
+        so the panels under the tabs start where the Groups panel does."""
         for bar in (self.pinned, self.bar):
             bar.set_tab_height(height)
         self.more.setFixedHeight(height)
@@ -232,8 +227,6 @@ class TabStrip(QWidget):
             button = self.bar.tabButton(index, QTabBar.ButtonPosition.RightSide)
             if isinstance(button, QToolButton):
                 button.setIcon(tabler_icon("x", muted, 14))
-
-    # ---- the tabs ----
 
     def set_pinned_text(self, text: str, tip: str = "") -> None:
         self.pinned.setTabText(0, text)
@@ -306,8 +299,6 @@ class TabStrip(QWidget):
     def set_more(self, items: list[tuple[str, str, QIcon]]) -> None:
         """What ▾ lists: every tab's key, its words ("LAB-01 · deleting 2 of 3") and mark."""
         self._more_items = items
-
-    # ---- clicks ----
 
     def _clicked(self, index: int) -> None:
         if index >= 0:

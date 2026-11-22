@@ -1,6 +1,4 @@
-"""The list workspace: the Groups panel, the items (search above the table) and the Details panel,
-with everything about lists and groups. A list tool subclasses it and fills in its own parts: its
-table, Details panel, texts, add and edit dialog, search fields and right-click items."""
+"""The list workspace: Groups, the items and Details; a list tool subclasses it with its parts."""
 
 import logging
 from collections.abc import Sequence
@@ -70,10 +68,8 @@ class ListWorkspace(Tool):
     # Panel widths at a normal font size; a bigger font scales them up.
     PANES_DEFAULT = (220, 340)  # Groups, Details
     PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
-    # Another list tool's TOOL_ID: this one shows and edits that tool's open list, as SSH does
-    # Hosts' (his words, 2026-11-18). Opening, making and managing lists is then that tool's,
-    # and an edit made here shows there at once. With no such tool in the window (a test), it
-    # keeps lists of that kind itself.
+    # Another list tool's TOOL_ID: this one shows and edits that tool's open list (SSH, Hosts').
+    # That tool opens and manages the lists; with none in the window (a test), it keeps its own.
     LISTS_FROM: ClassVar[str] = ""
     list_changed = Signal()  # another list was opened, or the open one's items changed
 
@@ -117,7 +113,6 @@ class ListWorkspace(Tool):
         self.details.copied.connect(self._say_copied)
         self.status_label.clicked.connect(self.copy_list_path)
         self.splitter = PaneSplitter()
-        # The search box is a box of its own above the table, styled like the panels.
         self.tag_strip = TagStrip()  # while tags are picked: which, and how many they leave
         self.items_pane = QWidget()
         column = QVBoxLayout(self.items_pane)
@@ -189,7 +184,6 @@ class ListWorkspace(Tool):
     # ---- what a tool says: texts ----
 
     def list_texts(self) -> ListTexts:
-        """The tool's words for its lists, in the current language, and their kind."""
         raise NotImplementedError
 
     def items_text(self, n: int) -> str:
@@ -275,7 +269,7 @@ class ListWorkspace(Tool):
         return needle in item.name.casefold() or needle in item.notes.casefold()
 
     def show_details(self, items: Sequence[Host]) -> None:
-        """The Details panel for the items selected."""
+        pass
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
         """Right-click on items: use, copy, then managing them (add_copy_menu, add_move_menu)."""
@@ -310,7 +304,6 @@ class ListWorkspace(Tool):
         self.splitter.setStretchFactor(1, 1)
 
     def _restore_panes(self) -> None:
-        """The panels' widths as they were left."""
         splitter = self.prefs.get("main_splitter")
         if isinstance(splitter, str):
             self.splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
@@ -349,7 +342,7 @@ class ListWorkspace(Tool):
 
     def key_commands(self) -> list[KeyCommand]:
         """Every command in its menus, each this tool's own: one every list tool has (Edit,
-        Refresh, Copy address…) gets its own row and key in each (Gabriel, 2026-11-16)."""
+        Refresh, Copy address…) gets its own row and key in each."""
         a = self._list_commands
         return [
             KeyCommand(
@@ -389,7 +382,6 @@ class ListWorkspace(Tool):
         self._selection_changed()  # the panel on show follows at once
 
     def customize_details(self, tab: int = 0, parent: QWidget | None = None) -> None:
-        """The "Customize the details panel" window, on its tab `tab`."""
         parts = PartsTab(self.details_parts(), sorted(self.hidden_parts()), self.details_always())
         parts.changed.connect(self.set_hidden_parts)
         dialog = CustomizeDialog(parent or self, parts, self.customize_tabs())
@@ -414,9 +406,8 @@ class ListWorkspace(Tool):
         self.splitter.setSizes([groups, max(total - groups - details, 1), details])
 
     def _fit_pane(self, edge: int, splitter: PaneSplitter | None = None) -> None:
-        """A double-click on the Groups panel's or the items panel's right edge: that panel as
-        wide as its content, the panel on its right taking the rest, never below its minimum.
-        `splitter` is the one double-clicked, when the tool has more than its main one."""
+        """A double-click on the Groups or items panel's right edge fits that panel to its content;
+        the one on its right takes the rest, down to its minimum. `splitter`: the one clicked."""
         splitter = splitter or self.splitter
         left, right = splitter.widget(edge - 1), splitter.widget(edge)
         if left is None or right is None:
@@ -472,7 +463,6 @@ class ListWorkspace(Tool):
 
     @property
     def places(self) -> settings.ListPlaces:
-        """Where the tool keeps its lists."""
         return self._places
 
     @property
@@ -878,9 +868,8 @@ class ListWorkspace(Tool):
     def _ask_how_to_remove(
         self, group_id: str, groups: int, items: int
     ) -> tuple[str, str | None] | None:
-        """Move what's inside somewhere (its parent is ticked) or remove everything.
-        Returns ("move", group id, or NO_GROUP for the top level), ("all", None), or None for
-        Cancel."""
+        """Move what's inside somewhere (its parent is ticked) or remove everything: ("move", group
+        id, or NO_GROUP for the top level), ("all", None), or None for Cancel."""
         assert self._doc is not None
         host_list = self._doc.hosts
         group = host_list.group(group_id)
@@ -1072,7 +1061,6 @@ class ListWorkspace(Tool):
     # ---- showing ----
 
     def retranslate(self) -> None:
-        """Every text the panels show, in the current language."""
         self.sort_groups_action.setText(_("&Sort groups A–Z"))
         self.nav.retranslate()
         self.table.retranslate()
@@ -1229,9 +1217,8 @@ class ListWorkspace(Tool):
         self.title_changed.emit(name)
         self.list_picker.setText(name)
         self.list_picker.setToolTip(str(doc.path))
-        # "Shared · Clinic · 8 hosts · 6 online · 1 selected": the kind, the list's name as the
-        # picker says it (Default and Personal are named after their kind: said once), counts.
-        # The file's path is a click away, and in the tooltip.
+        # "Shared · Clinic · 8 hosts · 6 online": the kind, the list's name as the picker says it
+        # (Default and Personal only once), then counts; the file's path is in the tooltip.
         kind = self._kind(doc.path)
         parts = [
             self._kind_label(kind),
@@ -1265,9 +1252,8 @@ class ListWorkspace(Tool):
         return self._list_name(self._doc.path) if self._doc is not None else ""
 
     def report_sources(self, host_list: HostList) -> tuple[list[Source], int]:
-        """What Report can take, and which one is shown now: the search's results or what the
-        picked tags leave, the items selected, everything, no group, each group (with its
-        subgroups) and each tag."""
+        """What Report can take and the one shown: the search's results or what the tags leave, the
+        selection, everything, no group, each group (its subgroups too) and each tag."""
         counted = self.counted_text
         sources: list[Source] = []
         current = self.nav.current_filter()
@@ -1479,10 +1465,8 @@ class ListWorkspace(Tool):
         return self._real_doc is not None
 
     def show_sample(self) -> None:
-        """While a guide runs: the list on show gains the tool's samples, on top of the table
-        with the first picked, and hidden panels show, so the guide's cards have something to
-        point at. Only in memory: the list is never saved with them, and nothing is read from
-        their addresses (each tool's checks leave out every is_sample id)."""
+        """While a guide runs: the tool's samples on top of the list, the first picked, and hidden
+        panels shown. In memory only: never saved, and no address of theirs is read (is_sample)."""
         doc = self._doc
         if doc is None or self._real_doc is not None:
             return

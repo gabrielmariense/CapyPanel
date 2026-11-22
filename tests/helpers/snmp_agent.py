@@ -1,7 +1,4 @@
-"""A pretend printer for tests: an SNMP agent on 127.0.0.1 that answers Get, GetNext and GetBulk
-from a table of invented objects. Over v2c a wrong community gets no answer, like a real one;
-given a v3 account, it speaks v3 instead and refuses a wrong user, password or level with the
-Report a real printer sends."""
+"""A pretend SNMP printer on 127.0.0.1 for tests, over v2c or v3, refusing as a real one does."""
 
 import socket
 import threading

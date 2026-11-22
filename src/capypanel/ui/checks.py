@@ -1,5 +1,4 @@
-"""Refresh: running the status and logged-on-users checks in the background, the account
-prompt, and how their results read in the table and the details pane."""
+"""Refresh: the status and logged-on checks in the background, and how their results read."""
 
 import threading
 from collections.abc import Callable, Sequence
@@ -197,9 +196,6 @@ class AccountDialog(QDialog):
         """The PCs picked in Use it for, as a link to this account; None when not asked."""
         picked = self.use_for.currentData()
         return replace(picked, user=self.account().user) if isinstance(picked, Link) else None
-
-
-# ---- how results read ----
 
 
 def when_text(when: datetime) -> str:

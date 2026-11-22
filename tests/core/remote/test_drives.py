@@ -1,5 +1,4 @@
-"""A person's saved network drives, read over WMI: this PC's own for real, others from an
-answer written by hand."""
+"""Saved network drives over WMI: this PC's for real, others from an answer written by hand."""
 
 import getpass
 

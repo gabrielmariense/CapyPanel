@@ -1,7 +1,4 @@
-"""CapyPanel's icon in the Windows tray: there while the window is in the tray or a tool works on
-its own (Refresh on its own), so its notifications can show. A click opens the window. Its menu:
-Open CapyPanel (bold, what the click does), a line per tool with items needing attention ("3
-printers need attention…"), Quit CapyPanel. The icon carries the rail's red count, added up."""
+"""CapyPanel's tray icon, there so its notifications can show; a click opens the window."""
 
 import html
 from collections.abc import Mapping
