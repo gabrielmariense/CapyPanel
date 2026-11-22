@@ -101,7 +101,7 @@ ORDER = (
     "printers.show_groups", "printers.show_tags", "printers.show_details",
     "printers.customize_details", "printers.new_list", "printers.open_list",
     "ssh.connect_host", "ssh.connect_window", "ssh.refresh_shown", "ssh.add_host",
-    "ssh.add_group", "ssh.manage_groups",
+    "ssh.add_group", "ssh.manage_groups", "ssh.import_hosts",
     "ssh.refresh_selected", "ssh.copy_address", "ssh.edit", "ssh.remove", "ssh.show_groups",
     "ssh.show_tags", "ssh.show_details", "ssh.customize_details", "ssh.new_list", "ssh.open_list",
 )  # fmt: skip

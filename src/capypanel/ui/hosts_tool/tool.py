@@ -56,7 +56,7 @@ from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
 from capypanel.ui.hosts_tool.table import Cells, HostTable, not_checked
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import dot_icon, tabler_icon
-from capypanel.ui.import_hosts import ImportDialog
+from capypanel.ui.import_hosts import HostsImportDialog
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
@@ -479,7 +479,7 @@ class HostsTool(ListWorkspace):
         doc = self._writable()
         if doc is None:
             return
-        dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
+        dialog = HostsImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
         new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
         if new is not None and self._commit(new):
             added = dialog.added()

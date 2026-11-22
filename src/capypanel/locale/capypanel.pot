@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 18:20-0300\n"
+"POT-Creation-Date: 2026-11-22 18:41-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -646,9 +646,6 @@ msgid "Add host"
 msgstr ""
 
 msgid "Add hosts"
-msgstr ""
-
-msgid "Add hosts and groups, and manage the groups"
 msgstr ""
 
 msgid "Add hosts and groups, or import a list of hosts"
@@ -1734,6 +1731,12 @@ msgid ""
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid ""
+"Editing in the table rewrites the list above as CSV with a header row "
+"(name, address, group, tags, notes, SSH port and SSH login), so the two "
+"always match. Continue?"
+msgstr ""
+
 msgid "Empty: your SSH config, then your Windows user name"
 msgstr ""
 
@@ -2639,7 +2642,15 @@ msgstr ""
 msgid "Not a computer name or IP address"
 msgstr ""
 
+msgid ""
+"Not a name ssh.exe can log in as: no spaces, quotes or characters such as"
+" ; & |, and no “-” first"
+msgstr ""
+
 msgid "Not a printer name or IP address"
+msgstr ""
+
+msgid "Not an SSH port: type a number from 1 to 65535"
 msgstr ""
 
 #, python-brace-format
@@ -3636,6 +3647,15 @@ msgid "SRV-SAMPLE"
 msgstr ""
 
 msgid "SSH"
+msgstr ""
+
+msgid "SSH login"
+msgstr ""
+
+msgid "SSH port"
+msgstr ""
+
+msgid "SSH servers"
 msgstr ""
 
 msgid "SSH terminal"
@@ -4636,11 +4656,6 @@ msgstr ""
 
 msgid ""
 "This list has no hosts yet.\n"
-"Add one to start."
-msgstr ""
-
-msgid ""
-"This list has no hosts yet.\n"
 "Add one, or import several at once."
 msgstr ""
 
@@ -4787,6 +4802,11 @@ msgid "Try another account…"
 msgstr ""
 
 msgid "Turns the PC off; someone has to turn it back on."
+msgstr ""
+
+msgid ""
+"Two more columns for servers you connect to in SSH: the port and the name"
+" to log in as. An empty cell leaves it to ssh.exe's own settings."
 msgstr ""
 
 msgid "Type"
@@ -5353,6 +5373,9 @@ msgid ""
 msgstr ""
 
 msgid "name, address, group, tags, notes"
+msgstr ""
+
+msgid "name, address, group, tags, notes, SSH port, SSH login"
 msgstr ""
 
 msgid "not reported"

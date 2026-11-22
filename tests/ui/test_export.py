@@ -12,6 +12,8 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.bulk import parse
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote.status import Status
+from capypanel.core.ssh import bulk as ssh_bulk
+from capypanel.core.ssh.host import SshInfo, with_info
 from capypanel.ui import export_hosts
 from capypanel.ui.checks import clock_text
 from capypanel.ui.export_hosts import FOR_IMPORT, ExportDialog
@@ -72,7 +74,7 @@ def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
         assert d.columns() == list(FOR_IMPORT) and d.preset.currentText() == "For Import"
         d.source.setCurrentIndex(0)
         assert d.preview.topLevelItemCount() == 2
-        assert d.rows()[0] == ["HQ-01", "10.0.0.1", "Headquarters", "kiosk;2nd floor", ""]
+        assert d.rows()[0] == ["HQ-01", "10.0.0.1", "Headquarters", "", "", "kiosk;2nd floor", ""]
 
     _run(window, monkeypatch, look)
     assert seen == ["No group (1 host)"]
@@ -240,12 +242,32 @@ def test_export_saves_csv_that_imports_back_and_says_where(
     assert window.statusBar().currentMessage() == "Report saved: 2 hosts from All hosts."
 
 
+def test_for_import_brings_ssh_s_port_and_login_back_into_an_import(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    hl, host = HostList().add_host("nas-01", NO_GROUP, address="192.0.2.41")
+    hl = hl.update_host(with_info(host, SshInfo(port=2222, login="root")))
+    hl, _plain = hl.add_host("DESK-01", NO_GROUP, address="192.0.2.11")
+    servers = tmp_path / "servers.json"
+    listfile.save(servers, hl, expected=None)
+    assert window.hosts.open_list(servers)
+
+    def copy(d: ExportDialog) -> None:
+        assert d.columns() == list(FOR_IMPORT)
+        d.copy_button.click()
+
+    _run(window, monkeypatch, copy)
+    rows = {row.name: row for row in ssh_bulk.parse(QApplication.clipboard().text()).rows}
+    assert ssh_bulk.info_of_row(rows["nas-01"]) == SshInfo(port=2222, login="root")
+    assert ssh_bulk.info_of_row(rows["DESK-01"]) == SshInfo()
+
+
 def test_copy_puts_every_row_on_the_clipboard_for_excel(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _run(window, monkeypatch, lambda d: d.copy_button.click())
     lines = QApplication.clipboard().text().splitlines()
-    assert lines[0] == "Name\tAddress\tGroup\tTags\tNotes"
+    assert lines[0] == "Name\tAddress\tGroup\tSSH port\tSSH login\tTags\tNotes"
     assert len(lines) == 3
     assert window.statusBar().currentMessage() == "Copied 2 hosts from All hosts."
 

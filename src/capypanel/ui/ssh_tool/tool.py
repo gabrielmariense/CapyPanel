@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
 
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.document import OpenList, starter_list
-from capypanel.core.hosts.model import Group, Host, HostList, HostListRuleError
+from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import PortState
 from capypanel.core.ssh import known, launch
@@ -31,6 +31,7 @@ from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path, host_list_texts
 from capypanel.ui.hosts_tool.command_windows import Question
+from capypanel.ui.import_hosts import HostsImportDialog
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
 from capypanel.ui.list_workspace.tabbed import TabbedListWorkspace
@@ -124,12 +125,16 @@ class SshTool(TabbedListWorkspace):
 
     def _fill_inventory(self) -> None:
         a = self.commands
-        self.toolbar.inventory_menu.addActions([a.add_host, a.add_group, a.manage_groups])
-        self.toolbar.inventory_menu.addAction(self.sort_groups_action)
+        inventory = self.toolbar.inventory_menu
+        inventory.addActions([a.add_host, a.add_group, a.manage_groups])
+        inventory.addAction(self.sort_groups_action)
+        inventory.addSeparator()
+        inventory.addAction(a.import_hosts)
 
     def _connect(self) -> None:
         a = self.commands
         a.add_host.triggered.connect(self.add_item)
+        a.import_hosts.triggered.connect(self.import_hosts)
         # Toolbar menus take keys only while open: these shortcuts live on the tool.
         self.addActions([a.copy_address, a.add_host, a.refresh_shown])
         a.refresh_shown.triggered.connect(lambda: self.check_hosts(self.visible_items()))
@@ -203,9 +208,23 @@ class SshTool(TabbedListWorkspace):
         fields.append(_("notes"))
         return fields, _("Searches every host in the list (Ctrl+F)")
 
+    def import_action(self) -> QAction | None:
+        return self.commands.import_hosts
+
+    def import_hosts(self) -> None:
+        doc = self._writable()
+        if doc is None:
+            return
+        dialog = HostsImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
+        new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
+        if new is not None and self._commit(new):
+            added = dialog.added()
+            note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
+            self._shell.show_message(note, 10_000)
+
     def empty_texts(self) -> EmptyTexts:
         return EmptyTexts(
-            _("This list has no hosts yet.\nAdd one to start."),
+            _("This list has no hosts yet.\nAdd one, or import several at once."),
             _("This list has no hosts."),
             _("This group has no hosts yet."),
             _("Every host is in a group."),
@@ -689,6 +708,7 @@ class SshTool(TabbedListWorkspace):
     def update_tool_state(self, writable: bool, selected: int) -> None:
         a = self.commands
         a.add_host.setEnabled(writable)
+        a.import_hosts.setEnabled(writable)
         for action in (a.connect_host, a.connect_window, a.copy_address):
             action.setEnabled(selected > 0)
         self._show_more()

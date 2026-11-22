@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan, Verdict, parse, plan, to_csv
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import N_, _, ngettext
+from capypanel.core.ssh import bulk as ssh_bulk
 from capypanel.ui import help_links, spacing
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.groups import TreeMenu, fill_group_menu
@@ -460,6 +461,27 @@ class ImportDialog(QDialog):
         super().keyPressEvent(event)
 
 
+class HostsImportDialog(ImportDialog):
+    EDIT_QUESTION = N_(
+        "Editing in the table rewrites the list above as CSV with a header row (name, "
+        "address, group, tags, notes, SSH port and SSH login), so the two always match. Continue?"
+    )
+    MORE = ((ssh_bulk.PORT, N_("SSH port")), (ssh_bulk.LOGIN, N_("SSH login")))
+    WIDTH = 1250
+
+    def needs_header(self) -> str:
+        return needs_header_text(_("name, address, group, tags, notes, SSH port, SSH login"))
+
+    def formats(self) -> QDialog:
+        return HostsFormats(self)
+
+    def read_rows(self, text: str, *, file: bool) -> Parsed:
+        return ssh_bulk.parse(text, file=file)
+
+    def plan_rows(self, rows: list[ImportRow], group_id: str) -> Plan:
+        return ssh_bulk.plan(self._hosts, rows, group_id)
+
+
 def needs_header_text(columns: str = "") -> str:
     header = "<b>" + html.escape(columns or _("name, address, group, tags, notes")) + "</b>"
     lines = [
@@ -613,3 +635,15 @@ class FormatsDialog(QDialog):
         label = QLabel(text)
         label.setObjectName("detailsSection")
         return label
+
+
+class HostsFormats(FormatsDialog):
+    def _formats(self) -> list[tuple[str, QWidget]]:
+        header = ["name", "address", "ssh port", "ssh login"]
+        rows = [["web-01", "198.51.100.42", "", "deploy"], ["nas-01", "192.0.2.41", "2222", "root"]]
+        about = _(
+            "Two more columns for servers you connect to in SSH: the port and the name to log in "
+            "as. An empty cell leaves it to ssh.exe's own settings."
+        )
+        typed = "\n".join(",".join(row) for row in [header, *rows])
+        return [*super()._formats(), (_("SSH servers"), self._page(about, typed, header, rows))]

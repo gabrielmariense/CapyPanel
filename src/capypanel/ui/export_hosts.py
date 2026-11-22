@@ -41,6 +41,8 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
+from capypanel.core.ssh import bulk as ssh_bulk
+from capypanel.core.ssh.host import info_of
 from capypanel.ui import help_links, spacing
 from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
@@ -54,19 +56,21 @@ TITLES = {
     "name": N_("Name"),
     "address": N_("Address"),
     "group": N_("Group"),
+    ssh_bulk.PORT: N_("SSH port"),
+    ssh_bulk.LOGIN: N_("SSH login"),
     "tags": N_("Tags"),
     "notes": N_("Notes"),
     "status": N_("Status"),
     "users": N_("Logged-on users"),
 }
 SECTIONS = (
-    (N_("Host"), ("name", "address", "group")),
+    (N_("Host"), ("name", "address", "group", ssh_bulk.PORT, ssh_bulk.LOGIN)),
     (N_("Tags and notes"), ("tags", "notes")),
     (N_("Last check"), ("status", "users")),
 )
 CHECKED = ("status", "users")
 SAYS_NOT_CHECKED = frozenset({"status"})
-FOR_IMPORT = ("name", "address", "group", "tags", "notes")
+FOR_IMPORT = ("name", "address", "group", ssh_bulk.PORT, ssh_bulk.LOGIN, "tags", "notes")
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
 WIDEST = 240
@@ -305,7 +309,7 @@ class ExportDialog(QDialog):
     NOTE_UNDER = "users"
 
     def fields(self, host: Host, between_tags: str) -> dict[str, str]:
-        return host_fields(self._hosts, host, between_tags)
+        return {**host_fields(self._hosts, host, between_tags), **ssh_bulk.fields(info_of(host))}
 
     def checks_note(self) -> str:
         return _("People's names: keep the file private.")
