@@ -170,6 +170,18 @@ def test_a_resize_reaches_the_program(runs: Callable[..., Run]) -> None:
     assert run.until(lambda: "70 20" in run.lines())
 
 
+@pytest.mark.parametrize("before", ["", "".join(f"echo line{n} & " for n in range(10))])
+def test_a_line_wider_than_the_console_copies_as_one_line(
+    runs: Callable[..., Run], before: str
+) -> None:
+    long = "".join(chr(ord("a") + n % 26) for n in range(60))  # 60 cells in a 40-cell row
+    run = runs([CMD, "/d", "/c", f"{before}echo {long}"], columns=40, rows=8)
+    assert run.until(lambda: long[40:] in run.lines())
+    screen = run.screen
+    first = next(r for r in range(screen.total_rows) if screen.row_text(r) == long[:40])
+    assert screen.text_between((first, 0), (first + 1, 39)) == long
+
+
 def test_the_carried_engine_takes_ctrl_c_as_key_events() -> None:
     ctrl_c = b"\x1b[17;29;0;1;8;1_\x1b[67;46;3;1;8;1_\x1b[67;46;3;0;8;1_\x1b[17;29;0;0;0;1_"
     run = Run([CMD, "/d"], env=CMD_ENV, engine=_carried())
