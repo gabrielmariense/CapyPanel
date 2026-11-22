@@ -1,6 +1,7 @@
 """Themes: the native Windows look, the CapyPanel look and the shipped *.json looks over them."""
 
 import ctypes
+import gc
 import json
 import logging
 from collections.abc import Mapping, Sequence
@@ -225,10 +226,16 @@ def apply(theme: Theme) -> None:
     # Nothing the watcher fixes happens during a switch, and its Python call on each of the
     # thousands of events a switch sends only made the switch slower.
     app.removeEventFilter(watcher)
+    # Qt restyles from lists of widgets it takes first: one Python's collector frees meanwhile
+    # stays on them, and Qt reading it crashes the app.
+    collecting = gc.isenabled()
+    gc.disable()
     try:
         _switch(app, theme, scheme, engine_changed=engine_changed)
     finally:
         app.installEventFilter(watcher)
+        if collecting:
+            gc.enable()
     for widget in app.topLevelWidgets():
         if widget.isWindow() and widget.isVisible():
             paint_title_bar(widget)
