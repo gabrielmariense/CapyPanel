@@ -1,5 +1,4 @@
-"""The Profile cleanup tool: the Hosts tab, a tab per host, the profiles table, details, sizes,
-deletes, failed scans, the shared limit on reads; nothing reaches a PC, all answered by hand."""
+"""The Profile cleanup tool; nothing reaches a PC: every answer is written by hand."""
 
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta

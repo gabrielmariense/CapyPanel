@@ -1,5 +1,4 @@
-"""One program on a pseudo console (core/ssh/conpty.py), from each engine: output, keys, Ctrl+C,
-closing and a flood, with Windows' own cmd.exe and timeout.exe; nothing reaches the network."""
+"""A pseudo console from each engine, with Windows' cmd.exe and timeout.exe; no network."""
 
 import ctypes
 import json

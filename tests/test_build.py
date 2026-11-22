@@ -1,5 +1,4 @@
-"""The build label testers compare against (version, a build number that only grows, the commit),
-from source and in the exe; and the exe's settings outside its folder and its version info."""
+"""The build label (version, an ever-growing build number, commit) and the exe's version info."""
 
 import importlib.util
 import re

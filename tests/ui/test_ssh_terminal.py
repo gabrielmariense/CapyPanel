@@ -1,5 +1,4 @@
-"""The SSH tool's terminal: keys as Windows key events, the colours in every theme, the characters
-CapyPanel draws, the end strip and the view, on a stand-in console and on cmd.exe; no network."""
+"""The SSH tool's terminal, on a stand-in console and on cmd.exe; nothing reaches the network."""
 
 import ctypes
 import logging

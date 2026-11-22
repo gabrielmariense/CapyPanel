@@ -1,5 +1,4 @@
-"""First-run guides: cards beside real controls, when they show, and Profile cleanup's first-use
-warning. With no screen nothing shows on its own: each test starts what it checks."""
+"""First-run guides and Profile cleanup's first-use warning, each started by its test."""
 
 from collections.abc import Iterator
 from pathlib import Path

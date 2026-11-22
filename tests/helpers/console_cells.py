@@ -1,5 +1,4 @@
-"""The cells Windows' console gives characters: CONSOLE_CELLS for the screen's tests; run in a
-pseudo console, it measures them (args: the samples' JSON file, then the answer's file)."""
+"""The cells Windows' console gives characters; run in a pseudo console, it measures them."""
 
 import ctypes
 import json

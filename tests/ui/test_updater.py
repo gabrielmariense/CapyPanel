@@ -1,5 +1,4 @@
-"""The updater in the app: the look at GitHub (faked here, nothing reaches the network), the
-menu bar's button, the update window and the hand-over to the new version's exe."""
+"""The updater in the app, with GitHub faked: nothing reaches the network."""
 
 import time
 from collections.abc import Callable, Iterator

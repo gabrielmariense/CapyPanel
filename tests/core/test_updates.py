@@ -1,5 +1,4 @@
-"""Updates: what counts as a newer release, the download's checks, and the swap with its way
-back. Nothing reaches GitHub: the network is a fake, the folders are temporary."""
+"""Updates: what's newer, the download's checks and the swap; the network is a fake."""
 
 import contextlib
 import errno

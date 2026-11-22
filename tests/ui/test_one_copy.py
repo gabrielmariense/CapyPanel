@@ -1,5 +1,4 @@
-"""One running copy per person: the lock beside the settings, and a second start asking the
-first to show its window. Both copies live in this one process here; nothing leaves the PC."""
+"""One running copy per person: the lock, and a second start showing the first, in one process."""
 
 from pathlib import Path
 

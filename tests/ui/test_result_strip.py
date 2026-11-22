@@ -1,5 +1,4 @@
-"""Hosts' result strip: its icon on the middle of the text's first line, beside the taller button
-or wrapped; a failure the docs explain gets "What does this mean?"."""
+"""Hosts' result strip: where its icon sits, and the docs' link on a failure they explain."""
 
 import pytest
 from PySide6.QtCore import QPoint

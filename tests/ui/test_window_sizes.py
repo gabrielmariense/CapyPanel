@@ -1,5 +1,4 @@
-"""No window grows by accident: each one's height as recorded with the spacing scale (4, 8, 12 and
-16 px). One that grows fails here, then is either fixed or recorded on purpose."""
+"""No window grows by accident: each one's height as recorded with the spacing scale."""
 
 from collections.abc import Iterator
 from pathlib import Path

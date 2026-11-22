@@ -1,5 +1,4 @@
-"""The terminal's screen (core/ssh/screen.py) on our pyte: Windows' console's widths, palette
-numbers, the alternate screen, the scrollback, and what the server may not do."""
+"""The terminal's screen on our pyte, and what a server may not do to it."""
 
 import pytest
 from console_cells import CONSOLE_CELLS  # as Windows' own console counted them

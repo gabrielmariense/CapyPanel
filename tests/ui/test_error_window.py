@@ -1,5 +1,4 @@
-"""The window for an error nothing caught: one window however many errors, the same one counted
-instead of shown again, and details big enough to read."""
+"""The window for errors nothing caught: one however many, a repeat counted, not shown again."""
 
 from collections.abc import Iterator
 

@@ -1,5 +1,4 @@
-"""The user profiles on a PC: read here for real (this PC's own, over WMI); the states sorted on a
-folder standing in for a PC's drive. A real delete only on CI's throwaway machine and account."""
+"""A PC's user profiles, this PC's read for real; a real delete only on CI's throwaway machine."""
 
 import _winapi
 import contextlib

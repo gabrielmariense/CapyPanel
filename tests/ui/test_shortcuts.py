@@ -1,5 +1,4 @@
-"""Settings › CapyPanel › Keyboard shortcuts: every command a key can run, today's keys as the
-defaults, a person's changes kept and applied at once, and the keys no command may take."""
+"""Keyboard shortcuts: the defaults, a person's changes, and the keys no command may take."""
 
 from collections.abc import Iterator
 from pathlib import Path

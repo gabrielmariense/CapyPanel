@@ -1,5 +1,4 @@
-"""Refresh on printers: the Status and Toner cells, Details, Settings' Refresh section, against
-a pretend printer on 127.0.0.1 with invented data."""
+"""Refresh on printers, against a pretend printer on 127.0.0.1 with invented data."""
 
 import time
 from collections.abc import Iterator

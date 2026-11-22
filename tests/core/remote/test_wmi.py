@@ -1,5 +1,4 @@
-"""The two ways reads reach a PC's WMI, over COM and through PowerShell: on this PC both give the
-same answers, and each falls back or fails as its setting says. Nothing reaches another PC."""
+"""WMI over COM and over PowerShell, on this PC: the same answers; nothing reaches another PC."""
 
 import secrets
 import subprocess

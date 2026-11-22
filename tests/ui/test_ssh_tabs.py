@@ -1,5 +1,4 @@
-"""The SSH tool's connections as tabs: each its own, named after its server; closing asks, and
-quitting asks once; the text size is kept. A stand-in console, but cmd.exe in the last test."""
+"""The SSH tool's connections as tabs, on a stand-in console (cmd.exe in the last test)."""
 
 import json
 import time

@@ -1,5 +1,4 @@
-"""Help from where you are (ui/help_links.py): F1 and the ? open a window's part of the docs, and a
-warning or error links its own line, in CapyPanel's language; tests/docs checks the docs' side."""
+"""Help from where you are: F1, the ? and warnings' links open the right part of the docs."""
 
 import re
 from collections.abc import Iterator

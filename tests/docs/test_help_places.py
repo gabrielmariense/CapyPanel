@@ -1,5 +1,4 @@
-"""Help's links against the docs: every place the app opens is on its page in both languages, with
-the same ids, read from the docs source; it runs as CI's help-links job, apart from the tests."""
+"""Every place help opens is on its docs page in both languages; CI's help-links job runs it."""
 
 import re
 from pathlib import Path

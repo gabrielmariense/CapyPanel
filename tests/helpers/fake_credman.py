@@ -1,5 +1,4 @@
-"""Windows Credential Manager for the tests: credstore's five advapi32 calls, kept in memory, so no
-test reads or writes the real one (shared by the user's processes, it lost updates under load)."""
+"""Credential Manager in memory for the tests, so no test reads or writes the real one."""
 
 import ctypes
 from dataclasses import dataclass

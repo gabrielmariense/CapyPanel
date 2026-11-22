@@ -1,5 +1,4 @@
-"""Printers' warnings: which printers need attention, the strip above the table with Show and
-Show all, and the red count on the Printers rail icon. Invented printers only."""
+"""Printers' warnings: the strip over the table and the rail's red count; invented printers."""
 
 from collections.abc import Iterator
 from datetime import datetime

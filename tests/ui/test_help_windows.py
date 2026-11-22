@@ -1,5 +1,4 @@
-"""The ? in the main window's tools' windows: first in each button row, opening that window's part
-of the docs, F1 with it; a question has none, F1 opening the part that asked."""
+"""The ? in the tools' windows: first in each button row, opening that window's part of the docs."""
 
 from collections.abc import Iterator
 from pathlib import Path

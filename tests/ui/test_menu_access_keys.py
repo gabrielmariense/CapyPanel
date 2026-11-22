@@ -1,5 +1,4 @@
-"""No right-click menu on hosts gives one access key to two items, in either language: Alt and the
-letter would only reach the first. Each tool's host and group menus, one host picked and two."""
+"""No host or group menu gives one access key to two items, in either language."""
 
 import re
 from collections.abc import Iterator

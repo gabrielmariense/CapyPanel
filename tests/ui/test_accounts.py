@@ -1,5 +1,4 @@
-"""Which account signs in to which PC: Settings' Accounts table, the login window's "Use it
-for", Details' Signs in as, and Refresh and the host commands using each PC's own account."""
+"""Which account signs in to which PC: set in Settings, the login window or Details, and used."""
 
 import sys
 import time

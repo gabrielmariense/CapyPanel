@@ -1,5 +1,4 @@
-"""A stand-in for conpty.py's PseudoConsole the test drives: `prints` queues output, `ends` the
-program's end, `written` what the terminal wrote; it runs nothing and signals as the real one."""
+"""A stand-in for conpty.py's PseudoConsole, driven by the test; it runs nothing."""
 
 from collections.abc import Callable, Mapping, Sequence
 

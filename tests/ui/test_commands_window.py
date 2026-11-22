@@ -1,5 +1,4 @@
-"""The Commands window: picking and running commands, the keyboard, search, the results side and
-Add to host list…. Every call to another PC is replaced: nothing here reaches the network."""
+"""The Commands window; every call to another PC is replaced: nothing reaches the network."""
 
 import time
 from collections.abc import Iterator
