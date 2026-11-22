@@ -95,13 +95,16 @@ def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
 def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
     """ssh.exe never starts and no real port is knocked on: a tab runs cmd.exe, off the network."""
     from capypanel.core.remote.status import PortState
-    from capypanel.core.ssh import known, launch
+    from capypanel.core.ssh import known, launch, terminals
     from capypanel.ui.ssh_tool import refresh
 
     started: list[tuple[str, object]] = []
     monkeypatch.setattr(
-        launch, "connect", lambda address, info, name="": started.append((address, info))
+        launch,
+        "connect",
+        lambda address, info, name="", terminal=None: started.append((address, info)),
     )
+    monkeypatch.setattr(terminals, "ready_here", lambda env=None: [])
 
     def in_tab(address: str, info: object) -> list[str]:
         started.append((address, info))

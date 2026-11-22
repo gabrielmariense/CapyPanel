@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 19:25-0300\n"
+"POT-Creation-Date: 2026-11-22 19:48-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,6 +66,9 @@ msgid "&Another account…"
 msgstr ""
 
 msgid "&Another name…"
+msgstr ""
+
+msgid "&Arguments:"
 msgstr ""
 
 msgid "&Authentication"
@@ -322,6 +325,9 @@ msgstr ""
 msgid "&Profile:"
 msgstr ""
 
+msgid "&Program:"
+msgstr ""
+
 msgid "&Quick commands"
 msgstr ""
 
@@ -529,6 +535,9 @@ msgid "A click on a line shows the profile in the table."
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
+msgstr ""
+
+msgid "A console window"
 msgstr ""
 
 msgid "A few hosts are read at a time; this one starts when one ends."
@@ -742,6 +751,12 @@ msgid_plural ""
 "until they're gone, then install the update."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Another program…"
+msgstr ""
+
+msgid "Another terminal program"
+msgstr ""
 
 #, python-brace-format
 msgid "Answered a ping at {address}."
@@ -1075,6 +1090,9 @@ msgstr ""
 msgid "Choose a {tool} settings file"
 msgstr ""
 
+msgid "Choose the terminal program"
+msgstr ""
+
 msgid "Clear"
 msgstr ""
 
@@ -1177,6 +1195,13 @@ msgid "Connect"
 msgstr ""
 
 msgid "Connect in a separate &window"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Connect in a separate window starts this program, which runs ssh.exe. In "
+"the arguments, {ssh} stands for ssh.exe with the server's address, port "
+"and login, and {name} for the server's name, for a window or tab title."
 msgstr ""
 
 msgid "Connect to the selected hosts with Windows' ssh.exe"
@@ -1407,6 +1432,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't start ssh.exe: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Couldn't start {program}: {error}. Settings › SSH › General says where "
+"separate windows open."
 msgstr ""
 
 #, python-brace-format
@@ -2858,6 +2889,9 @@ msgstr ""
 msgid "Open &folder"
 msgstr ""
 
+msgid "Open &in"
+msgstr ""
+
 msgid "Open &log folder"
 msgstr ""
 
@@ -3131,7 +3165,13 @@ msgid ""
 "and your own. Click a group below it to see just that group's hosts."
 msgstr ""
 
+msgid "Pick a program: a file whose name ends in .exe."
+msgstr ""
+
 msgid "Pick hosts in the list first"
+msgstr ""
+
+msgid "Pick the program."
 msgstr ""
 
 #, python-brace-format
@@ -3810,6 +3850,9 @@ msgstr ""
 msgid "Send a message…"
 msgstr ""
 
+msgid "Separate windows"
+msgstr ""
+
 msgid "Serial"
 msgstr ""
 
@@ -4197,6 +4240,10 @@ msgid "The app's logs, to attach to a problem report"
 msgstr ""
 
 #, python-brace-format
+msgid "The arguments need {ssh}, where the program takes the command it runs."
+msgstr ""
+
+#, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr ""
 
@@ -4550,6 +4597,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "There's a mark at {n} % already."
+msgstr ""
+
+msgid "There's no program at this path."
 msgstr ""
 
 msgid ""
@@ -5028,6 +5078,12 @@ msgid "When the host was scanned, or where its scan is"
 msgstr ""
 
 msgid "Where"
+msgstr ""
+
+msgid ""
+"Where Connect in a separate window opens ssh.exe. In a terminal program, "
+"that program's own settings decide whether its window stays open after an"
+" error."
 msgstr ""
 
 msgid "Where I left off"

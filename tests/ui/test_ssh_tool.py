@@ -15,16 +15,19 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote.status import PortState
-from capypanel.core.ssh import known, launch
+from capypanel.core.ssh import known, launch, terminals
 from capypanel.core.ssh.host import SshInfo, group_login, info_of, with_info
 from capypanel.core.ssh.launch import connect as real_connect
 from capypanel.core.ssh.launch import tab_command as real_tab_command
+from capypanel.core.ssh.terminals import Terminal
 from capypanel.ui import menus
 from capypanel.ui.list_workspace.panels import ROLE_NOTHING
 from capypanel.ui.settings.pages import AutoStatusOnlyPage, SettingRow
 from capypanel.ui.ssh_tool import refresh
+from capypanel.ui.ssh_tool import settings as ssh_settings
 from capypanel.ui.ssh_tool import tool as tool_module
 from capypanel.ui.ssh_tool.dialog import LoginDialog, SshHostDialog
+from capypanel.ui.ssh_tool.settings import SshGeneralPage, TerminalDialog
 from capypanel.ui.ssh_tool.table import ROLE_QUIET
 from capypanel.ui.ssh_tool.tool import SshTool
 from capypanel.ui.themes import engine as themes
@@ -423,7 +426,9 @@ def test_the_separate_window_is_told_the_host_s_name(
     ssh: SshTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     names: list[str] = []
-    monkeypatch.setattr(launch, "connect", lambda _address, _info, name="": names.append(name))
+    monkeypatch.setattr(
+        launch, "connect", lambda _address, _info, name="", _terminal=None: names.append(name)
+    )
     _select(ssh, "web-01")
     ssh.commands.connect_window.trigger()
     assert names == ["web-01"]
@@ -721,3 +726,110 @@ def test_refresh_status_by_itself_is_off_until_picked_and_warns_about_fail2ban(
     assert ssh._auto_timer.isActive() and ssh._auto_timer.interval() == 15 * 60_000
     page.pick_every(0)
     assert ssh.auto_status() == (False, 15) and not ssh._auto_timer.isActive()
+
+
+def _general(
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch, ready: list[Terminal]
+) -> SshGeneralPage:
+    monkeypatch.setattr(terminals, "ready_here", lambda env=None: ready)
+    [(_page_id, page)] = ssh.settings_group().build()
+    assert isinstance(page, SshGeneralPage)
+    return page
+
+
+def _choose(page: SshGeneralPage, index: int) -> None:
+    combo = page.terminal_section.terminal
+    combo.setCurrentIndex(index % combo.count())
+    combo.activated.emit(index % combo.count())
+
+
+def _offered(page: SshGeneralPage) -> list[str]:
+    combo = page.terminal_section.terminal
+    return [combo.itemText(i) for i in range(combo.count())]
+
+
+def test_separate_windows_open_in_a_console_window_until_a_terminal_is_picked(
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    (tmp_path / "wt.exe").touch()
+    wt = Terminal(tmp_path / "wt.exe", "new-tab --title {name} -- {ssh}", "windows-terminal")
+    page = _general(ssh, monkeypatch, [wt])
+    assert _offered(page) == ["A console window", "Windows Terminal", "Another program…"]
+    assert page.terminal_section.terminal.currentIndex() == 0 and ssh.terminal() is None
+    [row] = [r for r in page.findChildren(SettingRow) if r.name.text() == "Open &in"]
+    assert row.description.text() == (
+        "Where Connect in a separate window opens ssh.exe. In a terminal program, that "
+        "program's own settings decide whether its window stays open after an error."
+    )
+    _choose(page, 1)
+    assert ssh.prefs["terminal"] == {"ready": "windows-terminal"}
+
+    def unchanged(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, TerminalDialog)
+        assert dialog.program.text() == str(wt.program)
+        assert dialog.arguments.text() == wt.arguments
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(ssh_settings, "run_modal", unchanged)
+    _choose(page, -1)
+    assert _offered(page)[1:] == ["Windows Terminal", "Another program…"]
+    assert ssh.prefs["terminal"] == {"ready": "windows-terminal"}
+    _choose(page, 0)
+    assert "terminal" not in ssh.prefs and ssh.terminal() is None
+
+
+def test_another_program_is_checked_before_it_s_kept_and_named_by_its_file(
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    program = tmp_path / "WezTerm" / "wezterm-gui.exe"
+    program.parent.mkdir()
+    program.touch()
+    page = _general(ssh, monkeypatch, [])
+
+    def fill(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, TerminalDialog)
+        assert dialog.windowTitle() == "Another terminal program"
+        ok = dialog.buttons.button(QDialogButtonBox.StandardButton.Ok)
+        assert dialog.arguments.text() == "{ssh}" and not ok.isEnabled()
+        assert ok.toolTip() == dialog.problem.text() == "Pick the program."
+        dialog.program.setText(str(tmp_path / "term.bat"))
+        assert dialog.problem.text() == "Pick a program: a file whose name ends in .exe."
+        dialog.program.setText(str(program))
+        dialog.arguments.setText("start")
+        assert dialog.problem.text() == (
+            "The arguments need {ssh}, where the program takes the command it runs."
+        )
+        dialog.arguments.setText("start -- {ssh}")
+        assert ok.isEnabled() and dialog.problem.text() == "" and ok.toolTip() == ""
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(ssh_settings, "run_modal", fill)
+    _choose(page, -1)
+    assert ssh.prefs["terminal"] == {"program": str(program), "arguments": "start -- {ssh}"}
+    assert _offered(page) == ["A console window", "wezterm-gui.exe", "Another program…"]
+    assert page.terminal_section.terminal.currentText() == "wezterm-gui.exe"
+    monkeypatch.setattr(ssh_settings, "run_modal", lambda _dialog: QDialog.DialogCode.Rejected)
+    _choose(page, -1)
+    assert page.terminal_section.terminal.currentText() == "wezterm-gui.exe"
+    assert ssh.terminal() == Terminal(program, "start -- {ssh}")
+
+
+def test_a_terminal_that_won_t_start_is_named_and_the_rest_wait(
+    ssh: SshTool, shell: FakeShell, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    wezterm = Terminal(Path(r"C:\Program Files\WezTerm\wezterm-gui.exe"), "start -- {ssh}")
+    ssh.set_terminal(wezterm)
+    tried: list[tuple[str, object]] = []
+
+    def gone(_address: str, _info: SshInfo, name: str = "", terminal: object = None) -> None:
+        tried.append((name, terminal))
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+
+    monkeypatch.setattr(launch, "connect", gone)
+    _select(ssh, "core-sw-01", "web-01")
+    ssh.connect_selected(window=True)
+    assert tried == [("core-sw-01", wezterm)]
+    assert shell.messages[-1] == (
+        "Couldn't start wezterm-gui.exe: The system cannot find the file specified. "
+        "Settings › SSH › General says where separate windows open."
+    )

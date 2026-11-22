@@ -12,8 +12,9 @@ from typing import NamedTuple
 
 from capypanel.core import i18n
 from capypanel.core.hosts.model import MAX_ADDRESS
-from capypanel.core.ssh import holder
+from capypanel.core.ssh import holder, terminals
 from capypanel.core.ssh.host import DEFAULT_PORT, SshInfo, is_login, is_port
+from capypanel.core.ssh.terminals import Terminal
 from capypanel.core.updates import NO_SPLASH
 
 log = logging.getLogger(__name__)
@@ -66,11 +67,15 @@ def tab_command(destination: str, info: SshInfo) -> list[str]:
     return argv
 
 
-def connect(destination: str, info: SshInfo, name: str = "") -> subprocess.Popen[bytes]:
+def connect(
+    destination: str, info: SshInfo, name: str = "", terminal: Terminal | None = None
+) -> subprocess.Popen[bytes]:
     exe = ssh_exe()
     if exe is None:
         raise SshMissing
     argv = command_line(exe, destination, info)
+    if terminal is not None:
+        return terminals.start(terminal, argv, name or destination)
     log.info("Starting ssh.exe %s", subprocess.list2cmdline(argv[1:]))
     return subprocess.Popen(  # noqa: S603 -- CapyPanel's own exe; ssh.exe's arguments checked
         [*own_start(), *holder.args_for(argv, name or destination, i18n.language())],

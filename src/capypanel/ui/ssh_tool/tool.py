@@ -12,7 +12,7 @@ from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import PortState
-from capypanel.core.ssh import known, launch
+from capypanel.core.ssh import known, launch, terminals
 from capypanel.core.ssh.host import (
     SshInfo,
     connect_info,
@@ -25,6 +25,7 @@ from capypanel.core.ssh.host import (
     with_info,
     with_login,
 )
+from capypanel.core.ssh.terminals import Terminal
 from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
@@ -334,6 +335,17 @@ class SshTool(TabbedListWorkspace):
             self.prefs[AUTO_STATUS] = {"on": on, "minutes": minutes}
             self._apply_auto_status()
 
+    def terminal(self) -> Terminal | None:
+        return terminals.from_prefs(self.prefs.get(terminals.KEY))
+
+    def set_terminal(self, terminal: Terminal | None) -> None:
+        if terminal == self.terminal():
+            return
+        if terminal is None:
+            self.prefs.pop(terminals.KEY, None)
+        else:
+            self.prefs[terminals.KEY] = terminals.to_prefs(terminal)
+
     def _apply_auto_status(self) -> None:
         on, minutes = self.auto_status()
         if on:
@@ -439,15 +451,20 @@ class SshTool(TabbedListWorkspace):
             self.open_connection(self._typed_host, SshInfo(), self._typed_host)
 
     def _open_ssh(self, destination: str, info: SshInfo, name: str) -> bool:
+        terminal = self.terminal()
         try:
-            launch.connect(destination, info, name)
+            launch.connect(destination, info, name, terminal)
         except launch.SshMissing:
             help_links.warning(self, "CapyPanel", missing_text(), place="ssh-not-installed")
             return False
         except ValueError:
             self._cant_connect(name)
         except OSError as e:
-            self._couldnt_start(name, e)
+            if terminal is None:
+                self._couldnt_start(name, e)
+            else:
+                self._terminal_failed(terminal, e)
+                return False
         return True
 
     def open_connection(
@@ -497,6 +514,14 @@ class SshTool(TabbedListWorkspace):
         self._shell.show_message(
             _("Couldn't start ssh.exe: {error}").format(error=e.strerror or e), 10_000
         )
+
+    def _terminal_failed(self, terminal: Terminal, e: OSError) -> None:
+        log.warning("Couldn't start %s: %s", terminal.program, e)
+        self._shell.show_message(
+            _("Couldn't start {program}: {error}. Settings › SSH › General says where separate "
+              "windows open.").format(program=terminal.name, error=e.strerror or e),
+            10_000,
+        )  # fmt: skip
 
     def _tab_name(self, host: str) -> str:
         taken = set(self._tab_names.values())

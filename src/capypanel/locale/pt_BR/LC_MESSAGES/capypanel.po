@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 19:25-0300\n"
+"POT-Creation-Date: 2026-11-22 19:48-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -68,6 +68,9 @@ msgstr "&Outra conta…"
 
 msgid "&Another name…"
 msgstr "&Outro nome…"
+
+msgid "&Arguments:"
+msgstr "&Argumentos:"
 
 msgid "&Authentication"
 msgstr "&Autenticação"
@@ -323,6 +326,9 @@ msgstr "&Impressoras"
 msgid "&Profile:"
 msgstr "&Perfil:"
 
+msgid "&Program:"
+msgstr "&Programa:"
+
 msgid "&Quick commands"
 msgstr "Comandos &rápidos"
 
@@ -523,6 +529,9 @@ msgstr "Um clique numa linha mostra o perfil na tabela."
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
+
+msgid "A console window"
+msgstr "Uma janela de console"
 
 msgid "A few hosts are read at a time; this one starts when one ends."
 msgstr "Alguns hosts são lidos por vez; este começa quando um terminar."
@@ -726,6 +735,12 @@ msgid "Another CapyPanel from this folder is still running. It may be closing, o
 msgid_plural "{n} other CapyPanels from this folder are still running. They may be closing, or showing a message behind this window. Close them, or wait until they're gone, then install the update."
 msgstr[0] "Outro CapyPanel desta pasta ainda está aberto. Ele pode estar fechando ou mostrando uma mensagem atrás desta janela. Feche-o, ou espere até ele sumir, e depois instale a atualização."
 msgstr[1] "{n} outros CapyPanel desta pasta ainda estão abertos. Eles podem estar fechando ou mostrando uma mensagem atrás desta janela. Feche-os, ou espere até eles sumirem, e depois instale a atualização."
+
+msgid "Another program…"
+msgstr "Outro programa…"
+
+msgid "Another terminal program"
+msgstr "Outro programa de terminal"
 
 #, python-brace-format
 msgid "Answered a ping at {address}."
@@ -1029,6 +1044,9 @@ msgstr "Verifica se {host} responde, como o Atualizar do Hosts"
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
 
+msgid "Choose the terminal program"
+msgstr "Escolha o programa de terminal"
+
 msgid "Clear"
 msgstr "Limpar"
 
@@ -1129,6 +1147,10 @@ msgstr "Conectar"
 
 msgid "Connect in a separate &window"
 msgstr "Conectar numa janela &separada"
+
+#, python-brace-format
+msgid "Connect in a separate window starts this program, which runs ssh.exe. In the arguments, {ssh} stands for ssh.exe with the server's address, port and login, and {name} for the server's name, for a window or tab title."
+msgstr "Conectar numa janela separada inicia este programa, que executa o ssh.exe. Nos argumentos, {ssh} representa o ssh.exe com o endereço, a porta e o login do servidor, e {name}, o nome do servidor, para o título de uma janela ou aba."
 
 msgid "Connect to the selected hosts with Windows' ssh.exe"
 msgstr "Conecta aos hosts selecionados com o ssh.exe do Windows"
@@ -1364,6 +1386,10 @@ msgstr ""
 #, python-brace-format
 msgid "Couldn't start ssh.exe: {error}"
 msgstr "Não foi possível iniciar o ssh.exe: {error}"
+
+#, python-brace-format
+msgid "Couldn't start {program}: {error}. Settings › SSH › General says where separate windows open."
+msgstr "Não foi possível iniciar o {program}: {error}. Configurações › SSH › Geral diz onde as janelas separadas abrem."
 
 #, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
@@ -2712,6 +2738,9 @@ msgstr "Abrir &arquivo"
 msgid "Open &folder"
 msgstr "Abrir &pasta"
 
+msgid "Open &in"
+msgstr "Abrir &em"
+
 msgid "Open &log folder"
 msgstr "Abrir pasta de &logs"
 
@@ -2964,8 +2993,14 @@ msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua 
 msgid "Pick a list here: these are the same lists as in Hosts, the shared one and your own. Click a group below it to see just that group's hosts."
 msgstr "Escolha uma lista aqui: são as mesmas listas do Hosts, a compartilhada e as suas. Clique num grupo embaixo dela para ver só os hosts desse grupo."
 
+msgid "Pick a program: a file whose name ends in .exe."
+msgstr "Escolha um programa: um arquivo cujo nome termina em .exe."
+
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
+
+msgid "Pick the program."
+msgstr "Escolha o programa."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -3627,6 +3662,9 @@ msgstr "Enviar uma mensagem para {user}…"
 msgid "Send a message…"
 msgstr "Enviar uma mensagem…"
 
+msgid "Separate windows"
+msgstr "Janelas separadas"
+
 msgid "Serial"
 msgstr "Número de série"
 
@@ -3991,6 +4029,10 @@ msgid "The app's logs, to attach to a problem report"
 msgstr "Os logs do app, para anexar a um relato de problema"
 
 #, python-brace-format
+msgid "The arguments need {ssh}, where the program takes the command it runs."
+msgstr "Os argumentos precisam de {ssh}, onde o programa recebe o comando que executa."
+
+#, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
 
@@ -4301,6 +4343,9 @@ msgstr "Não houve resposta em {address}. O PC pode estar desligado ou fora da r
 #, python-brace-format
 msgid "There's a mark at {n} % already."
 msgstr "Já existe uma marca em {n} %."
+
+msgid "There's no program at this path."
+msgstr "Não há programa neste caminho."
 
 msgid "These are the built-in profiles: the folder is created when you change one."
 msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você altera um."
@@ -4739,6 +4784,9 @@ msgstr "Quando o host foi escaneado, ou em que ponto está o escaneamento"
 
 msgid "Where"
 msgstr "Onde"
+
+msgid "Where Connect in a separate window opens ssh.exe. In a terminal program, that program's own settings decide whether its window stays open after an error."
+msgstr "Onde Conectar numa janela separada abre o ssh.exe. Num programa de terminal, as configurações do próprio programa decidem se a janela dele fica aberta depois de um erro."
 
 msgid "Where I left off"
 msgstr "Onde parei"
