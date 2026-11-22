@@ -1,4 +1,4 @@
-"""Comments and docstrings keep the rule: two lines at most, and no names, dates or builds."""
+"""Comments and docstrings keep the rule: two lines (a file's one, a test's none), no history."""
 
 import ast
 import io
@@ -45,14 +45,23 @@ def problems(name: str, source: str) -> list[str]:
     found += [
         f"{name}:{a}-{b}: {b - a + 1} comment lines in a row" for a, b in blocks if b - a >= 2
     ]
-    for node in ast.walk(ast.parse(source, name)):
+    tree = ast.parse(source, name)
+    first = tree.body[0] if tree.body else None
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.FunctionDef)
+            and node.name.startswith("test")
+            and ast.get_docstring(node) is not None
+        ):
+            found.append(f"{name}:{node.lineno}: a test with a docstring")
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
             text = node.value.value
             if not isinstance(text, str):
                 continue
             count = sum(1 for line in text.splitlines() if line.strip())
-            if count > 2:
-                found.append(f"{name}:{node.lineno}: a docstring of {count} lines")
+            if count > (1 if node is first else 2):
+                kind = "file docstring" if node is first else "docstring"
+                found.append(f"{name}:{node.lineno}: a {kind} of {count} lines")
             found += [
                 f"{name}:{node.lineno}: {m.group(0)!r} in a docstring"
                 for m in HISTORY.finditer(text)
@@ -71,17 +80,22 @@ def test_every_comment_and_docstring_keeps_the_rule() -> None:
 
 def test_the_check_finds_each_kind_of_problem() -> None:
     source = (
-        '"""What it is for.\n\nWhat else, as Luna asked.\nAnd more."""\n'
+        '"""What it is for,\nas Luna asked."""\n'
         "# one\n# two\n# three\n"
         "x = 1  # since 2026-11-20, Gabriel's, Build 698\n"
         "# type: ignore\n# two lines\n# at most\n"
         "y = 2  # 0.19's lists are still read\n"
+        'def f():\n    """Two lines\n    at most."""\n'
+        'def g():\n    """One,\n    two,\n    three."""\n'
+        'def test_f():\n    """A test has none."""\n'
     )
     assert problems("f.py", source) == [
-        "f.py:8: '2026-11-20' in a comment",
-        "f.py:8: 'Gabriel' in a comment",
-        "f.py:8: 'Build 698' in a comment",
-        "f.py:5-7: 3 comment lines in a row",
-        "f.py:1: a docstring of 3 lines",
+        "f.py:6: '2026-11-20' in a comment",
+        "f.py:6: 'Gabriel' in a comment",
+        "f.py:6: 'Build 698' in a comment",
+        "f.py:3-5: 3 comment lines in a row",
+        "f.py:1: a file docstring of 2 lines",
         "f.py:1: 'Luna' in a docstring",
+        "f.py:18: a test with a docstring",
+        "f.py:15: a docstring of 3 lines",
     ]
