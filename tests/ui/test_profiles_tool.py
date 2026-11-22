@@ -469,7 +469,7 @@ def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
     menu = _hosts_menu(window, "DESK-03")
     texts = [a.text() for a in menu.actions()]
     at = texts.index("&Open in Profile cleanup")
-    assert texts[at - 1] == "&All commands…" and menu.actions()[at + 1].isSeparator()
+    assert texts[at - 1] == "&All commands…" and texts[at + 1] == "Open in SS&H"
     assert not menu.actions()[at].icon().isNull()
     menu.actions()[at].trigger()
     key = _id(window, "DESK-03")
@@ -480,7 +480,7 @@ def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
     menu = _hosts_menu(window, "DESK-03", "DESK-10")
     texts = [a.text() for a in menu.actions()]
     at = texts.index("&Open 2 hosts in Profile cleanup")
-    assert texts[at - 1] == "Re&fresh 2 hosts" and texts[at + 2] == "Commands run a&s"
+    assert texts[at - 1] == "Re&fresh 2 hosts" and texts[at + 1] == "Open 2 hosts in SS&H"
     menu.actions()[at].trigger()
     assert window.shown_tool() is tool and tool.tabs.tab_keys() == [key, _id(window, "DESK-10")]
     assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]
@@ -495,9 +495,9 @@ def test_from_hosts_its_first_use_warning_comes_first_and_cancelled_opens_nothin
     answers = iter([QDialog.DialogCode.Rejected, QDialog.DialogCode.Accepted])
     monkeypatch.setattr(first_use, "run_modal", lambda _dialog: next(answers))
     assert tool.first_use_pending()
-    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])
+    window.hosts.open_in("profiles", [_id(window, "DESK-03")])
     assert window.shown_tool() is window.hosts and tool.tabs.tab_keys() == [] and not pc.scanned
-    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])
+    window.hosts.open_in("profiles", [_id(window, "DESK-03")])
     assert window.shown_tool() is tool and tool.tabs.tab_keys() == [_id(window, "DESK-03")]
 
 

@@ -229,6 +229,37 @@ def test_a_list_picked_or_made_in_ssh_opens_in_hosts_and_profile_cleanup(
     assert listfile.load(made).hosts.hosts == ()
 
 
+def test_hosts_right_click_opens_the_pcs_in_ssh_tabs(
+    capy: "CapyWindow", no_ssh: list[tuple[str, object]]
+) -> None:
+    ssh = _ssh(capy)
+    doc = capy.hosts.document
+    assert doc is not None
+    ids = {host.name: host.id for host in doc.hosts.hosts}
+    menus_shown: list[QMenu] = []
+
+    def line(names: list[str], text: str) -> Any:
+        capy.show_tool("hosts")
+        capy.hosts.table.select_ids([ids[name] for name in names])
+        menu = QMenu()
+        menus_shown.append(menu)
+        capy.hosts.fill_item_menu(menu, capy.hosts.selected_items())
+        [found] = [action for action in menu.actions() if action.text() == text]
+        assert not found.icon().isNull()
+        return found
+
+    try:
+        line(["nas-01"], "Open in SS&H").trigger()
+        assert capy.shown_tool() is ssh and ssh.tabs.current() == "connection-1"
+        assert no_ssh == [("192.0.2.41", SshInfo(port=2222, login="root"))]
+        line(["DESK-01", "nas-01"], "Open 2 hosts in SS&H").trigger()
+        assert sorted(address for address, _info in no_ssh[1:]) == ["192.0.2.11", "192.0.2.41"]
+        assert capy.shown_tool() is ssh and len(ssh.connections()) == 3
+    finally:
+        for tab in ssh.connections():
+            tab.close_connection()
+
+
 def test_ssh_keeps_no_lists_of_its_own(capy: "CapyWindow", monkeypatch: pytest.MonkeyPatch) -> None:
     places = capy.paths.lists("ssh")
     assert not places.shared_dir.exists() and not places.user_dir.exists()

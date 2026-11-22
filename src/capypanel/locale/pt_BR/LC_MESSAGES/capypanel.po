@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 16:56-0300\n"
+"POT-Creation-Date: 2026-11-22 17:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2735,6 +2735,9 @@ msgstr "Abrir &pasta"
 msgid "Open folder"
 msgstr "Abrir pasta"
 
+msgid "Open in SS&H"
+msgstr "Abrir no SS&H"
+
 msgid "Open many remote screens?"
 msgstr "Abrir muitas telas remotas?"
 
@@ -2749,6 +2752,10 @@ msgstr "Abre a página web das impressoras selecionadas"
 
 msgid "Open web page"
 msgstr "Abrir página web"
+
+#, python-brace-format
+msgid "Open {n} hosts in SS&H"
+msgstr "Abrir {n} hosts no SS&H"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"

@@ -377,6 +377,17 @@ class SshTool(TabbedListWorkspace):
 
     def connect_selected(self, *, window: bool = False) -> None:
         hosts = [h for h in self.selected_items() if not is_sample(h.id)]
+        self._connect_hosts(hosts, window=window)
+
+    def open_hosts(self, ids: Sequence[str], focus: bool) -> None:
+        doc = self.saved_document
+        if doc is not None:
+            hosts = [host for key in ids if (host := doc.hosts.host(key)) is not None]
+            self._connect_hosts(hosts, front=focus)
+
+    def _connect_hosts(
+        self, hosts: Sequence[Host], *, window: bool = False, front: bool = True
+    ) -> None:
         if not hosts:
             return
         reachable = [h for h in hosts if h.connect_address]
@@ -387,7 +398,7 @@ class SshTool(TabbedListWorkspace):
                 opened = self._open_ssh(host.connect_address, info, host.name)
             else:
                 opened = self.open_connection(
-                    host.connect_address, info, host.name, front=index == 0
+                    host.connect_address, info, host.name, front=front and index == 0
                 )
             if not opened:
                 return
