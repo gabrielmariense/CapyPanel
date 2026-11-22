@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:58-0300\n"
+"POT-Creation-Date: 2026-11-22 16:48-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -720,6 +720,9 @@ msgstr "Sempre aparecem: o nome da impressora e o status."
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse campo."
+
+msgid "Another CapyPanel from this folder is still running, maybe still closing or with a message waiting behind this window. Close it, then install the update."
+msgstr "Outro CapyPanel desta pasta ainda está aberto, talvez ainda fechando ou com uma mensagem esperando atrás desta janela. Feche-o e depois instale a atualização."
 
 #, python-brace-format
 msgid "Answered a ping at {address}."
@@ -5848,6 +5851,7 @@ msgstr "O {tool} não aceita receber um arquivo de configurações."
 msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
 
+#, python-brace-format
 msgid "{tool} doesn't use a settings file."
 msgstr "{tool} não usa arquivo de configurações."
 
@@ -5855,9 +5859,11 @@ msgstr "{tool} não usa arquivo de configurações."
 msgid "{tool} has no option “{option}”."
 msgstr "O {tool} não tem a opção “{option}”."
 
+#, python-brace-format
 msgid "{tool} has no options to set here."
 msgstr "{tool} não tem opções para definir aqui."
 
+#, python-brace-format
 msgid "{tool} has no other way to log in."
 msgstr "{tool} não tem outra forma de entrar."
 

@@ -550,8 +550,8 @@ class UpdateWindow(_Frame):
         release = self._release
         if release is None:
             return
-        if open_ssh := self._ssh_windows_open():
-            self._say(open_ssh)
+        if held := self._held_open():
+            self._say(held)
             return
         self.install.setEnabled(False)
         self.later.setText(_("Cancel"))
@@ -595,10 +595,10 @@ class UpdateWindow(_Frame):
         release = self._release
         if release is None:
             return
-        if open_ssh := self._ssh_windows_open():
+        if held := self._held_open():
             self._waiting.stop()
-            self._say(open_ssh)
-            self._stays_open(open_ssh)
+            self._say(held)
+            self._stays_open(held)
             return
         if self._working():
             self._footer_says(_("Waiting for CapyPanel to finish what it's doing…"), bar=False)
@@ -620,19 +620,23 @@ class UpdateWindow(_Frame):
             self._stays_open(_("Not installed: CapyPanel stays open. Install again when "
                                "you're ready."))  # fmt: skip
 
-    def _ssh_windows_open(self) -> str:
-        """SSH windows run from CapyPanel's folder and hold its files: the swap couldn't replace
-        them."""
-        n = ssh_launch.open_windows()
-        if not n:
-            return ""
-        return ngettext(
-            "{n} SSH connection is still open in a separate window. Close it, then install the "
-            "update.",
-            "{n} SSH connections are still open in separate windows. Close them, then install "
-            "the update.",
-            n,
-        ).format(n=n)
+    def _held_open(self) -> str:
+        """Anything run from CapyPanel's folder holds its files: the swap couldn't replace them."""
+        copies = ssh_launch.other_copies()
+        if n := copies.windows:
+            return ngettext(
+                "{n} SSH connection is still open in a separate window. Close it, then install "
+                "the update.",
+                "{n} SSH connections are still open in separate windows. Close them, then "
+                "install the update.",
+                n,
+            ).format(n=n)
+        if copies.others:
+            return _(
+                "Another CapyPanel from this folder is still running, maybe still closing or with "
+                "a message waiting behind this window. Close it, then install the update."
+            )
+        return ""
 
     def _say(self, text: str) -> None:
         box = QMessageBox(

@@ -227,7 +227,7 @@ def test_install_waits_for_the_separate_ssh_windows_to_close(
     monkeypatch.setattr(updater_ui, "packaged", lambda: True)
     monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
     monkeypatch.setattr(updater_ui._Job, "start", lambda self: pytest.fail("it downloaded"))
-    monkeypatch.setattr(ssh_launch, "open_windows", lambda: 2)
+    monkeypatch.setattr(ssh_launch, "other_copies", lambda: ssh_launch.Copies(2, 1))
     said: list[QMessageBox] = []
     monkeypatch.setattr(updater_ui, "run_modal", lambda box: said.append(box) or 0)
     window.updater.offer = NEWER
@@ -247,7 +247,7 @@ def test_a_separate_window_opened_during_the_download_stops_the_hand_over(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setattr(updater_ui, "packaged", lambda: True)
-    monkeypatch.setattr(ssh_launch, "open_windows", lambda: 1)
+    monkeypatch.setattr(ssh_launch, "other_copies", lambda: ssh_launch.Copies(1, 0))
     said: list[str] = []
     monkeypatch.setattr(updater_ui, "run_modal", lambda box: said.append(box.text()) or 0)
     app_dir = tmp_path / "CapyPanel"
@@ -260,6 +260,27 @@ def test_a_separate_window_opened_during_the_download_stops_the_hand_over(
     one = "1 SSH connection is still open in a separate window. Close it, then install the update."
     assert said == [one]
     assert dialog.status.text() == one and dialog.install.isEnabled()
+    dialog.close()
+
+
+def test_another_copy_from_the_folder_is_never_called_an_ssh_window(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(updater_ui, "packaged", lambda: True)
+    monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
+    monkeypatch.setattr(updater_ui._Job, "start", lambda self: pytest.fail("it downloaded"))
+    monkeypatch.setattr(ssh_launch, "other_copies", lambda: ssh_launch.Copies(0, 1))
+    said: list[str] = []
+    monkeypatch.setattr(updater_ui, "run_modal", lambda box: said.append(box.text()) or 0)
+    window.updater.offer = NEWER
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: pytest.fail("it quit"))  # fmt: skip
+    dialog.install.click()
+    assert said == [
+        "Another CapyPanel from this folder is still running, maybe still closing or with a "
+        "message waiting behind this window. Close it, then install the update."
+    ]
+    assert dialog.install.isEnabled() and dialog._job is None
     dialog.close()
 
 
