@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from capypanel.core.printers import snmp, usm
 
 Objects = Mapping[str, snmp.Value | tuple[int, bytes]]
-ENGINE_ID = b"\x80\x00\x1f\x88\x80SAMPLE01"  # an invented engine ID
+ENGINE_ID = b"\x80\x00\x1f\x88\x80SAMPLE01"
 # usmStats, the Report counters: 1 level, 2 time window, 3 user, 4 engine, 5 auth, 6 privacy
 _STATS = "1.3.6.1.6.3.15.1.1."
 _WINDOW = 150  # seconds a v3 message's clock may differ from the agent's (RFC 3414)
@@ -26,7 +26,7 @@ class Agent:
         community: bytes = b"public",
         account: usm.Account | None = None,
         *,
-        tells_time: bool = True,  # v3: whether its first Report gives its clock (some don't)
+        tells_time: bool = True,
     ) -> None:
         self.objects = dict(objects)
         self.community = community
@@ -34,7 +34,7 @@ class Agent:
         self.tells_time = tells_time
         self.boots, self._clock_start = 7, time.monotonic() - 5000
         self._keys = usm.keys(account, ENGINE_ID) if account else usm.Keys()
-        self.requests: list[int] = []  # the message types it received, in order
+        self.requests: list[int] = []
         self.answering = True
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._sock.bind(("127.0.0.1", 0))
@@ -60,7 +60,7 @@ class Agent:
             return [(o, self.objects.get(o, snmp.missing())) for o in oids]
         if asked.pdu == snmp.GET_NEXT:
             return [self._next(o) for o in oids]
-        answer = []  # GetBulk: no non-repeaters here, `error_index` rows after each OID
+        answer = []
         for oid in oids:
             for _ in range(asked.error_index):
                 oid, value = self._next(oid)
@@ -109,7 +109,7 @@ class Agent:
 
         if not self.answering:
             return
-        if not header.engine_id:  # discovery: tell the engine ID, and maybe the clock
+        if not header.engine_id:
             self.requests.append(snmp.open_v3(header, usm.Keys()).pdu)
             self.requests.append(snmp.REPORT)
             reply(snmp.REPORT, 0, [(f"{_STATS}4.0", snmp.counter(1))], sign=False,
@@ -123,7 +123,7 @@ class Agent:
         if signed and not usm.verified(self._keys, data, header.auth_at):
             return refuse(5)
         if signed and (header.boots != self.boots or abs(header.time - now) > _WINDOW):
-            return refuse(2, sign=True)  # signed, so the client can trust the clock in it
+            return refuse(2, sign=True)
         try:
             asked = snmp.open_v3(header, self._keys)
         except snmp.SnmpError:

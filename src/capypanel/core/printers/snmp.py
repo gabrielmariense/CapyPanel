@@ -13,7 +13,7 @@ PORT = 161
 TIMEOUT = 1.5  # seconds to wait for each answer
 RETRIES = 1  # one more try: UDP may drop a packet
 LIMIT = 30.0  # seconds for everything one Session asks: a printer slow on purpose can't hold on
-MAX_REPETITIONS = 20  # rows one GetBulk asks for
+MAX_REPETITIONS = 20
 MAX_ROWS = 400  # a walk stops here: no printer table is anywhere near this long
 _MAX_ANSWER = 65_535
 _V2C, _V3 = 1, 3  # the version numbers SNMP v2c and v3 put in their messages
@@ -34,7 +34,7 @@ GET, GET_NEXT, RESPONSE, GET_BULK, REPORT = 0xA0, 0xA1, 0xA2, 0xA5, 0xA8
 _REQUESTS = {GET, GET_NEXT, GET_BULK}
 _ANSWERS = {RESPONSE, REPORT}
 
-Value = int | bytes | str | None  # INTEGER and counters, OCTET STRING, an OID, nothing
+Value = int | bytes | str | None
 Secret = str | usm.Account  # a v2c community string, or a v3 account; never logged
 
 # v3's Report answers: what the printer refused (RFC 3414's usmStats counters).
@@ -46,7 +46,7 @@ _REFUSALS = {"1": LEVEL, "2": TIME_WINDOW, "3": USER, "4": ENGINE, "5": AUTH, "6
 
 
 class SnmpError(Exception):
-    """The printer answered with an error, or something that isn't a valid SNMP answer."""
+    pass
 
 
 class NoAnswer(SnmpError):
@@ -55,9 +55,6 @@ class NoAnswer(SnmpError):
 
 
 class Refused(SnmpError):
-    """The printer answered, but refused the SNMP v3 account: `reason` is USER, AUTH, PRIVACY
-    (a wrong password), LEVEL (it wants more or less security) or another Report."""
-
     def __init__(self, host: str, reason: str) -> None:
         super().__init__(f"{host}: refused ({reason})")
         self.reason = reason
@@ -65,8 +62,8 @@ class Refused(SnmpError):
 
 class Kind(Enum):
     VALUE = "value"
-    MISSING = "missing"  # the printer doesn't have this object
-    END = "end"  # a walk ran past the printer's last object
+    MISSING = "missing"
+    END = "end"
 
 
 @dataclass(frozen=True)
@@ -78,13 +75,10 @@ class Binding:
 
 @dataclass(frozen=True)
 class _Engine:
-    """A v3 printer's engine: its ID, the keys for it, and its clock, which every request
-    repeats so an old message can't be replayed."""
-
     id: bytes
     boots: int
     time: int
-    at: float  # time.monotonic() when `time` was read
+    at: float
     keys: usm.Keys
 
     def now(self) -> int:
@@ -92,8 +86,6 @@ class _Engine:
 
 
 class Session:
-    """Requests to one printer. Use it in a `with` block, so the socket closes."""
-
     def __init__(
         self,
         host: str,
@@ -105,7 +97,7 @@ class Session:
         limit: float = LIMIT,
     ) -> None:
         self._secret = secret
-        self._engine: _Engine | None = None  # v3: found with the first request
+        self._engine: _Engine | None = None
         self._timeout, self._retries = timeout, retries
         self._until = time.monotonic() + limit
         try:
@@ -128,7 +120,6 @@ class Session:
         self._sock.close()
 
     def get(self, oids: Sequence[str]) -> dict[str, Value]:
-        """Each object's value; None for one the printer doesn't have."""
         found: dict[str, Value] = dict.fromkeys(oids)
         for binding in self._ask(GET, oids):
             if binding.kind is Kind.VALUE and binding.oid in found:
@@ -136,7 +127,6 @@ class Session:
         return found
 
     def walk(self, base: str) -> list[tuple[str, Value]]:
-        """Every object under `base`, in order, read with GetBulk."""
         prefix, rows = _arcs(base), []
         after = base
         while len(rows) < MAX_ROWS:
@@ -155,8 +145,6 @@ class Session:
         return rows[:MAX_ROWS]
 
     def _ask(self, pdu: int, oids: Sequence[str], a: int = 0, b: int = 0) -> list[Binding]:
-        """One request and its answer. `a` and `b` are the error fields of Get and GetNext,
-        and non-repeaters and max-repetitions for GetBulk."""
         request_id = _random_id()
         bindings = [(o, None) for o in oids]
         if isinstance(self._secret, usm.Account):
@@ -165,7 +153,7 @@ class Session:
 
         def read(data: bytes) -> Answer | None:
             answer = parse(data)
-            return answer if answer.request_id == request_id else None  # None: a late one
+            return answer if answer.request_id == request_id else None
 
         answer = self._exchange(packet, read)
         if answer.error_status:
@@ -204,8 +192,6 @@ class Session:
         raise Refused(self._host, TIME_WINDOW)
 
     def _discover(self, account: usm.Account) -> _Engine:
-        """v3's first step: an empty request that the printer answers with a Report holding
-        its engine ID and clock, which the keys and every later request need."""
         message_id = _random_id()
         packet = message_v3(
             GET, _random_id(), [], message_id=message_id, user=b"", engine_id=b"",
@@ -223,8 +209,6 @@ class Session:
         return _Engine(header.engine_id, header.boots, header.time, time.monotonic(), keys)
 
     def _read_v3(self, data: bytes, message_id: int) -> "Answer | None":
-        """A v3 answer to our message, checked; None for one to ignore: a late answer, or one
-        whose signature doesn't match (garbled, or not from the printer)."""
         engine = self._engine
         assert engine is not None
         header = parse_v3(data)
@@ -233,7 +217,6 @@ class Session:
         if header.flags & _AUTH:
             if engine.keys.auth is None or not usm.verified(engine.keys, data, header.auth_at):
                 return None
-            # A signed answer carries the printer's clock: keep ours in step with it.
             self._engine = _Engine(
                 engine.id, header.boots, header.time, time.monotonic(), engine.keys
             )
@@ -242,8 +225,6 @@ class Session:
         return open_v3(header, engine.keys)
 
     def _exchange[T](self, packet: bytes, read: Callable[[bytes], T | None]) -> T:
-        """Sends `packet` until `read` accepts an answer, within the timeout, the retries and
-        the session's limit."""
         for _attempt in range(self._retries + 1):
             if time.monotonic() >= self._until:
                 raise SnmpError(f"{self._host}: answers too slowly")
@@ -281,9 +262,6 @@ def _refusal(bindings: list[Binding]) -> str:
     return "report"
 
 
-# ---- encoding ----
-
-
 def message(
     community: bytes,
     pdu: int,
@@ -292,7 +270,6 @@ def message(
     a: int = 0,
     b: int = 0,
 ) -> bytes:
-    """A whole SNMP v2c message. Only reads, plus the Response a test agent sends back."""
     if pdu not in _REQUESTS and pdu != RESPONSE:
         raise ValueError("this client only reads")
     body = _tlv(pdu, _pdu_body(request_id, bindings, a, b))
@@ -314,8 +291,6 @@ def message_v3(
     keys: usm.Keys,
     privacy: bool,
 ) -> bytes:
-    """A whole SNMP v3 message, signed when `keys` has an authentication key and encrypted
-    when `privacy` is set. Only reads, plus the Response and Report a test agent sends."""
     if pdu not in _REQUESTS and pdu not in _ANSWERS:
         raise ValueError("this client only reads")
     pdu_part = _tlv(pdu, _pdu_body(request_id, bindings, a, b))
@@ -327,7 +302,7 @@ def message_v3(
         flags |= _PRIVACY
         encrypted, salt = usm.encrypt(keys, boots, engine_time, scoped)
         scoped = _tlv(_OCTETS, encrypted)
-    zeros = bytes(keys.auth.length if keys.auth else 0)  # the signature's place, until signed
+    zeros = bytes(keys.auth.length if keys.auth else 0)
     before = (
         _tlv(_OCTETS, engine_id) + _integer(boots) + _integer(engine_time) + _tlv(_OCTETS, user)
     )
@@ -353,7 +328,6 @@ def _pdu_body(
 
 
 def missing() -> tuple[int, bytes]:
-    """For a test agent: "no such object"."""
     return (_NO_SUCH_OBJECT, b"")
 
 
@@ -362,14 +336,13 @@ def end_of_mib() -> tuple[int, bytes]:
 
 
 def counter(n: int) -> tuple[int, bytes]:
-    """For a test agent: a Counter32."""
     return (_COUNTER32, _integer(n)[2:])
 
 
 def _value(value: Value | tuple[int, bytes]) -> bytes:
     if value is None:
         return _tlv(_NULL, b"")
-    if isinstance(value, tuple):  # a tag and its body, already encoded
+    if isinstance(value, tuple):
         return _tlv(*value)
     if isinstance(value, int):
         return _integer(value)
@@ -413,8 +386,7 @@ def _arcs(oid: str) -> tuple[int, ...]:
         raise ValueError(f"not an OID: {oid}") from None
 
 
-# ---- decoding ----
-# Answers come from the network: every length and count is checked before it's used.
+# Answers come from the network: every length and count is checked before use.
 
 
 @dataclass(frozen=True)
@@ -428,7 +400,6 @@ class Answer:
 
 
 def parse(data: bytes) -> Answer:
-    """A whole SNMP v2c message. Raises SnmpError when anything about it is wrong."""
     tag, start, end = _read(data, 0, len(data))
     if tag != _SEQUENCE or end != len(data):
         raise SnmpError("not an SNMP message")
@@ -447,22 +418,18 @@ def parse(data: bytes) -> Answer:
 
 @dataclass(frozen=True)
 class Header:
-    """An SNMP v3 message up to its contents, which may still be encrypted."""
-
     message_id: int
     flags: int
     engine_id: bytes
     boots: int
     time: int
     user: bytes
-    auth_at: int  # where the signature starts in the message
+    auth_at: int
     salt: bytes
-    payload: bytes  # the scoped PDU, or its encrypted bytes when flags has _PRIVACY
+    payload: bytes
 
 
 def parse_v3(data: bytes) -> Header:
-    """An SNMP v3 message's header. Raises SnmpError when anything about it is wrong; the
-    caller, which has the keys, checks its signature."""
     tag, start, end = _read(data, 0, len(data))
     if tag != _SEQUENCE or end != len(data):
         raise SnmpError("not an SNMP message")
@@ -546,7 +513,6 @@ def _octets_field(data: bytes, pos: int, end: int) -> tuple[bytes, int]:
 
 
 def _pdu(pdu: int, data: bytes, pos: int, end: int, community: bytes = b"") -> Answer:
-    """A request's or answer's numbers and variable bindings."""
     numbers = []
     for _ in range(3):
         tag, s, pos = _read(data, pos, end)
@@ -573,7 +539,6 @@ def _pdu(pdu: int, data: bytes, pos: int, end: int, community: bytes = b"") -> A
 
 
 def _read(data: bytes, pos: int, end: int) -> tuple[int, int, int]:
-    """One tag, and where its body starts and ends, checked against `end`."""
     if pos + 2 > end:
         raise SnmpError("truncated answer")
     tag, first = data[pos], data[pos + 1]
@@ -606,7 +571,7 @@ def _binding(oid: str, tag: int, body: bytes) -> Binding:
         return Binding(oid, _decode_oid(body))
     if tag == _NULL:
         return Binding(oid, None, Kind.MISSING)
-    return Binding(oid, bytes(body))  # OCTET STRING, IpAddress, Opaque: as bytes
+    return Binding(oid, bytes(body))
 
 
 def _signed(body: bytes) -> int:

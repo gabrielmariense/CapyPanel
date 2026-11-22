@@ -18,7 +18,6 @@ def _supply(index: str, cls: int, kind: int, name: bytes, most: int, level: int)
     }
 
 
-# An invented colour laser printer: four toners, a drum, a waste box, a jam and an open door.
 COLOUR: Objects = {
     reading.SYS_DESCR: b"SAMPLE Color LaserJet; firmware 1.0",
     reading.SYS_OBJECT_ID: "1.3.6.1.4.1.11.2.3.9.1",
@@ -44,9 +43,9 @@ COLOUR: Objects = {
     f"{A}.2.1.3": 1,  # just information: not shown
     f"{A}.8.1.3": b"Sleep mode on",
     f"{A}.2.1.4": 3,
-    f"{A}.8.1.4": b"Paper jam in tray 2",  # said twice: shown once
-    f"{reading.IF_ADDRESS}.1": b"",  # the loopback: no MAC
-    f"{reading.IF_ADDRESS}.2": bytes.fromhex("02005eaabb01"),  # an invented, local MAC
+    f"{A}.8.1.4": b"Paper jam in tray 2",
+    f"{reading.IF_ADDRESS}.1": b"",
+    f"{reading.IF_ADDRESS}.2": bytes.fromhex("02005eaabb01"),
     f"{reading.ENTITY_FIRMWARE}.1": b"",
     f"{reading.ENTITY_FIRMWARE}.2": b"SAMPLE-FW 2.4.1",
 }
@@ -67,7 +66,7 @@ def test_a_colour_printer_with_problems() -> None:
         "Color LaserJet SAMPLE-M479",
         "SAMPLE0001",
     )
-    assert found.pages == 48_213  # the marker counting impressions, not the one in inches
+    assert found.pages == 48_213
     assert (found.mac, found.firmware) == ("02:00:5E:AA:BB:01", "SAMPLE-FW 2.4.1")
     by_name = {s.name: s for s in found.supplies}
     assert list(by_name) == [
@@ -85,7 +84,7 @@ def test_a_colour_printer_with_problems() -> None:
     assert yellow.percent is None and not yellow.some_left
     assert by_name["Imaging Drum"].kind is SupplyKind.DRUM
     waste = by_name["Toner Collection Unit"]
-    assert waste.kind is SupplyKind.WASTE and waste.receptacle and waste.low(10)  # nearly full
+    assert waste.kind is SupplyKind.WASTE and waste.receptacle and waste.low(10)
 
 
 def test_a_printer_that_answers_little_still_reads() -> None:
@@ -93,7 +92,7 @@ def test_a_printer_that_answers_little_still_reads() -> None:
         {reading.SYS_DESCR: b"Brother HL-SAMPLE series", f"{reading.HR_PRINTER_STATUS}.1": 3}
     )
     assert found.state is State.IDLE
-    assert (found.brand, found.model) == ("BROTHER", "HL-SAMPLE series")  # from the description
+    assert (found.brand, found.model) == ("BROTHER", "HL-SAMPLE series")
     assert found.supplies == () and found.pages is None and found.serial == ""
     assert found.device is Device.UNKNOWN
 
@@ -105,15 +104,14 @@ def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsew
         f"{reading.HR_PRINTER_STATUS}.1": 1,
         f"{reading.HR_DEVICE_STATUS}.1": 2,
         f"{reading.ENTITY_SERIAL}.1": b"SAMPLE0002",
-        f"{reading.LIFE_COUNT}.1.1": snmp.counter(1_234),  # no unit given: counted as pages
-        f"{reading.ENTITY_SOFTWARE}.1": b"SAMPLE 1.07",  # its firmware, where some put it
+        f"{reading.LIFE_COUNT}.1.1": snmp.counter(1_234),
+        f"{reading.ENTITY_SOFTWARE}.1": b"SAMPLE 1.07",
     })  # fmt: skip
     assert (found.state, found.device) == (State.OTHER, Device.RUNNING)
     assert (found.brand, found.serial, found.pages) == ("RICOH", "SAMPLE0002", 1_234)
     assert (found.firmware, found.mac) == ("SAMPLE 1.07", "")
 
 
-# Shaped like what real Samsung, Ricoh, Brother and Canon printers answer.
 @pytest.mark.parametrize(
     ("objects", "firmware"),
     [
@@ -122,11 +120,11 @@ def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsew
           f"{reading.SOFTWARE_INSTALLED}.1": b"Samsung SAMPLE Series Engine V1.03.14",
           f"{reading.SOFTWARE_INSTALLED}.2": b"Samsung SAMPLE Series Main V4.00.02.20 MAY-27-2020",
           f"{reading.SOFTWARE_INSTALLED}.3": b"Samsung SAMPLE Series AddressBook V1.0.0"},
-         "V4.00.02.20"),  # the Main line, not the engine's that's listed first here
+         "V4.00.02.20"),
         ({reading.SYS_DESCR: b"RICOH SP SAMPLE V1.11 / RICOH Network Printer C model"}, "V1.11"),
         ({reading.SYS_DESCR: b"Brother NC-SAMPLE, Firmware Ver.Q ,MID 8C5-H27,FID 2"}, "Q"),
         ({reading.SYS_DESCR: b"Canon SAMPLE /P"}, ""),
-        ({reading.SYS_DESCR: b"SAMPLE printer at 192.0.2.7"}, ""),  # an address isn't a version
+        ({reading.SYS_DESCR: b"SAMPLE printer at 192.0.2.7"}, ""),
     ],
 )  # fmt: skip
 def test_firmware_from_installed_software_or_the_description(

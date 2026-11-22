@@ -12,8 +12,6 @@ _STRETCH = 1_048_576  # bytes of repeated password hashed into a key (RFC 3414 A
 
 
 class Auth(Enum):
-    """How messages are signed: the hash, and how many bytes of the signature travel."""
-
     MD5 = ("MD5", "md5", 12)
     SHA = ("SHA", "sha1", 12)
     SHA224 = ("SHA-224", "sha224", 16)
@@ -26,13 +24,12 @@ class Auth(Enum):
 
 
 class Privacy(Enum):
-    AES128 = "AES-128"  # the one RFC 3826 defines, which printers offer
+    AES128 = "AES-128"
 
 
 @dataclass(frozen=True)
 class Account:
-    """An SNMP v3 user. Without `auth` it's sent unsigned; `privacy` needs `auth` too.
-    Its passwords never reach a log, a repr or an error message."""
+    """Its passwords never reach a log, a repr or an error message."""
 
     user: str
     auth: Auth | None = None
@@ -53,8 +50,6 @@ class Account:
 
 @dataclass(frozen=True)
 class Keys:
-    """An account's keys for one printer (its engine ID)."""
-
     auth: Auth | None = None
     auth_key: bytes = field(default=b"", repr=False)
     privacy_key: bytes = field(default=b"", repr=False)
@@ -83,12 +78,10 @@ def master_key(auth: Auth, password: str) -> bytes:
 
 
 def localized(auth: Auth, master: bytes, engine_id: bytes) -> bytes:
-    """The key for one printer, so a key read off one can't sign for another (RFC 3414 A.2.2)."""
     return hashlib.new(auth.hash_name, master + engine_id + master).digest()
 
 
 def signature(keys: Keys, message: bytes) -> bytes:
-    """The signature for a whole message, worked out with its signature field still zeros."""
     assert keys.auth is not None
     digest = hmac.new(keys.auth_key, message, keys.auth.hash_name).digest()
     return digest[: keys.auth.length]
@@ -101,8 +94,6 @@ def signed(keys: Keys, message: bytes, signature_at: int) -> bytes:
 
 
 def verified(keys: Keys, message: bytes, signature_at: int) -> bool:
-    """Whether the answer was signed with this account's key: the signature is checked against
-    the message with that field put back to zeros."""
     assert keys.auth is not None
     end = signature_at + keys.auth.length
     zeroed = message[:signature_at] + bytes(keys.auth.length) + message[end:]
@@ -125,7 +116,6 @@ def decrypt(keys: Keys, boots: int, time: int, salt: bytes, data: bytes) -> byte
 def _cipher(
     keys: Keys, boots: int, time: int, salt: bytes, data: bytes, *, encrypting: bool
 ) -> bytes:
-    # Loaded by the first encrypted Refresh, not at CapyPanel's start (about 10 ms).
     from cryptography.hazmat.decrepit.ciphers.modes import CFB  # RFC 3826 names this mode
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
 
