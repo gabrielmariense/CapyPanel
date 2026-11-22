@@ -100,7 +100,7 @@ class HostPage(QObject):
         self._sizes: dict[str, int | None] = {}  # bytes per row; None while it's counted
         self._counting: object | None = None  # the size count under way: the pool's owner
         self._count_total = 0
-        self._count_left = 0  # counts not ended yet
+        self._count_left = 0
         self._uncounted = 0
         self._so_far: dict[str, int] = {}  # bytes counted up to now, written by the counts
         self._ticker = QTimer(self)  # shows them moving, so a long count isn't taken for stuck
@@ -115,7 +115,7 @@ class HostPage(QObject):
         self._began = datetime.now().astimezone()
         self._ended = self._began  # when the last run was over
         self._run_shown = False  # the card shows a delete run, under way or just over
-        self._window: ProfileWindow | None = None  # a profile's details, while it's open
+        self._window: ProfileWindow | None = None
         self._window_ident = ""
         self._freed = 0
         self._jobs: set[Job] = set()

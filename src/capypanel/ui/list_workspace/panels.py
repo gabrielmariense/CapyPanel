@@ -713,7 +713,6 @@ class ItemTable(QTreeWidget):
         """The column titles, in the current language."""
 
     def row_texts(self, item: Host) -> list[str]:
-        """What each column shows for an item."""
         raise NotImplementedError
 
     def decorate(self, row: QTreeWidgetItem, item: Host) -> None:

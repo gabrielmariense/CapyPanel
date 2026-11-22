@@ -129,4 +129,4 @@ class TabbedListWorkspace(ListWorkspace):
         raise NotImplementedError
 
     def tab_menu(self, key: str, where: QPoint) -> None:
-        """A right-click on a tab."""
+        pass

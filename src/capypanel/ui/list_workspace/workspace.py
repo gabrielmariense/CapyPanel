@@ -185,7 +185,6 @@ class ListWorkspace(Tool):
     # ---- what a tool says: texts ----
 
     def list_texts(self) -> ListTexts:
-        """The tool's words for its lists, in the current language, and their kind."""
         raise NotImplementedError
 
     def items_text(self, n: int) -> str:
@@ -271,7 +270,7 @@ class ListWorkspace(Tool):
         return needle in item.name.casefold() or needle in item.notes.casefold()
 
     def show_details(self, items: Sequence[Host]) -> None:
-        """The Details panel for the items selected."""
+        pass
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
         """Right-click on items: use, copy, then managing them (add_copy_menu, add_move_menu)."""
@@ -306,7 +305,6 @@ class ListWorkspace(Tool):
         self.splitter.setStretchFactor(1, 1)
 
     def _restore_panes(self) -> None:
-        """The panels' widths as they were left."""
         splitter = self.prefs.get("main_splitter")
         if isinstance(splitter, str):
             self.splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
@@ -385,7 +383,6 @@ class ListWorkspace(Tool):
         self._selection_changed()  # the panel on show follows at once
 
     def customize_details(self, tab: int = 0, parent: QWidget | None = None) -> None:
-        """The "Customize the details panel" window, on its tab `tab`."""
         parts = PartsTab(self.details_parts(), sorted(self.hidden_parts()), self.details_always())
         parts.changed.connect(self.set_hidden_parts)
         dialog = CustomizeDialog(parent or self, parts, self.customize_tabs())
@@ -467,7 +464,6 @@ class ListWorkspace(Tool):
 
     @property
     def places(self) -> settings.ListPlaces:
-        """Where the tool keeps its lists."""
         return self._places
 
     @property
@@ -1066,7 +1062,6 @@ class ListWorkspace(Tool):
     # ---- showing ----
 
     def retranslate(self) -> None:
-        """Every text the panels show, in the current language."""
         self.sort_groups_action.setText(_("&Sort groups A–Z"))
         self.nav.retranslate()
         self.table.retranslate()

@@ -52,7 +52,7 @@ TICKED_LINES = 6  # a host's card shows this many profiles
 class Entry:
     """One line of a card: a mark, a name, and words on the right."""
 
-    key: str  # what a click on it says
+    key: str
     name: str
     words: str = ""
     icon: str = ""
@@ -650,8 +650,8 @@ class Foot(QWidget):
 
 
 class ProfileWindow(QDialog):
-    """A profile's details, in a window: what the right panel used to show, with a tick for
-    deleting it and Close. It shows the profile it was opened for."""
+    """A profile's details in a window, with a tick for deleting it and Close. It shows the
+    profile it was opened for."""
 
     tick_toggled = Signal(bool)
     copied = Signal(str)

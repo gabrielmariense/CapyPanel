@@ -32,7 +32,7 @@ from capypanel.ui.profiles_tool.panels import Squeeze, TabBox, hint
 from capypanel.ui.profiles_tool.side import GroupFacts, HostCard, HostFacts
 from capypanel.ui.tables import grid_table
 
-NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)  # the table's columns
+NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)
 ID_ROLE = Qt.ItemDataRole.UserRole  # the row's host
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1
 RIGHT_ALIGNED = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
