@@ -113,6 +113,10 @@ def test_a_portable_copy_s_home_guide_ends_with_where_it_keeps_everything(
     text = card.text.text()
     assert "userdata folder" in text and "settings-and-files/#settings-portable-mode" in text
     assert not card.action.isHidden() and card.action.text() == "Open the userdata folder"
+    assert card.skip_button.isHidden() and not card.back_button.isHidden()
+    action, back = card.action.geometry(), card.back_button.geometry()
+    assert (action.top(), action.height()) == (back.top(), back.height())
+    assert action.left() == card.text.geometry().left() and action.right() < back.left()
     card.action.click()
     assert opened == [window.paths.root]
     card.next_button.click()

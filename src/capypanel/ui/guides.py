@@ -184,6 +184,7 @@ class GuideCard(QFrame):
         head.addWidget(self.dots, 0, Qt.AlignmentFlag.AlignTop)
         foot = QHBoxLayout()
         foot.setSpacing(spacing.CONTROLS)
+        foot.addWidget(self.action)
         foot.addWidget(self.skip_button)
         foot.addStretch(1)
         foot.addWidget(self.back_button)
@@ -193,7 +194,6 @@ class GuideCard(QFrame):
         column.setSpacing(spacing.CONTROLS)
         column.addLayout(head)
         column.addWidget(self.text)
-        column.addWidget(self.action, 0, Qt.AlignmentFlag.AlignLeft)
         column.addLayout(foot)
         self.hide()
 
