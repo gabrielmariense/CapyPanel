@@ -569,7 +569,6 @@ class TermScreen(pyte.Screen):
         self.scrollback.clear()
 
     def set_scrollback(self, lines: int) -> int:
-        """Shorter, it lets the oldest rows go, and says how many."""
         dropped = max(0, len(self.scrollback) - lines)
         self.scrollback = deque(self.scrollback, maxlen=lines)
         return dropped
