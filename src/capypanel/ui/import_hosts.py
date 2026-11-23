@@ -150,6 +150,7 @@ class ImportDialog(QDialog):
         top.addWidget(formats)
 
         self.text = QPlainTextEdit()
+        self.text.setTabChangesFocus(True)
         self.text.setPlaceholderText(_(self.PLACEHOLDER))
         self.text.setFixedHeight(self.fontMetrics().lineSpacing() * 7 + 12)
         self.text.textChanged.connect(self._typed)

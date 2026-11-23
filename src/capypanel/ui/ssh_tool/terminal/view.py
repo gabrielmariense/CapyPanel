@@ -25,6 +25,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QColor,
+    QContextMenuEvent,
     QDesktopServices,
     QFocusEvent,
     QFont,
@@ -895,6 +896,21 @@ class TerminalView(QAbstractScrollArea):
             self._selecting = True
             self.viewport().update()
 
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        if event.reason() != QContextMenuEvent.Reason.Keyboard:
+            super().contextMenuEvent(event)  # a right-click opened it already, on its press
+            return
+        self.open_menu(self.menu(), event.globalPos())
+
+    def inputMethodQuery(self, query: Qt.InputMethodQuery) -> object:
+        if query != Qt.InputMethodQuery.ImCursorRectangle:
+            return super().inputMethodQuery(query)
+        c = self.term.cursor
+        if self._top_row() != len(self.term.scrollback):
+            return self.viewport().geometry()
+        x, y = PAD + c.x * self.cell_w, PAD + c.y * self.cell_h
+        return QRect(x, y, self.cell_w, self.cell_h).translated(self.viewport().pos())
+
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         if self._link_click(event) is None:  # Qt's own presses again: a link would open twice
             self.mousePressEvent(event)
@@ -946,8 +962,9 @@ class TerminalView(QAbstractScrollArea):
             and isinstance(e, QKeyEvent)
             and e.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab)
             and not e.modifiers() & Qt.KeyboardModifier.ControlModifier
+            and self.running
         ):
-            self.keyPressEvent(e)  # Tab completes in the shell; it never moves the focus
+            self.keyPressEvent(e)  # Tab completes in the shell until it ends: then it moves on
             return True
         return super().event(e)
 

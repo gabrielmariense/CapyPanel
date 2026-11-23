@@ -1,5 +1,13 @@
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPainter, QPaintEvent, QPalette
+from PySide6.QtGui import (
+    QColor,
+    QIcon,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPaintEvent,
+    QPalette,
+)
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -18,6 +26,8 @@ PINNED = ""
 GAP = 14
 ARROW = 18
 CUT = 4
+STEPS = {Qt.Key.Key_Left: -1, Qt.Key.Key_Right: 1}
+ENDS = {Qt.Key.Key_Home: False, Qt.Key.Key_End: True}
 
 
 class _Bar(QTabBar):
@@ -25,6 +35,8 @@ class _Bar(QTabBar):
     its own."""
 
     middle_clicked = Signal(int)
+    stepped = Signal(int)
+    to_end = Signal(bool)
 
     def __init__(self) -> None:
         super().__init__()
@@ -36,6 +48,8 @@ class _Bar(QTabBar):
         self.setUsesScrollButtons(True)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        for arrow in self._scrollers():
+            arrow.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # Qt makes them Tab stops: arrows suffice
         self._height = 0
         self._hidden_from = -1  # x from which tabs are hidden before the arrows; -1: none
 
@@ -136,6 +150,22 @@ class _Bar(QTabBar):
                 return
         super().mouseReleaseEvent(event)
 
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        key = Qt.Key(event.key())
+        if event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+            super().keyPressEvent(event)
+        elif key in STEPS:
+            self.stepped.emit(STEPS[key])
+        elif key in ENDS:
+            self.to_end.emit(ENDS[key])
+        else:
+            super().keyPressEvent(event)
+
+    def inputMethodQuery(self, query: Qt.InputMethodQuery) -> object:
+        if query == Qt.InputMethodQuery.ImCursorRectangle and self.currentIndex() >= 0:
+            return self.tabRect(self.currentIndex())
+        return super().inputMethodQuery(query)
+
 
 class _Close(QToolButton):
     def _hidden(self) -> bool:
@@ -194,6 +224,9 @@ class TabStrip(QWidget):
         self.bar.tabBarClicked.connect(self._clicked)
         self.bar.middle_clicked.connect(lambda i: self.close_requested.emit(self.key_at(i)))
         self.bar.customContextMenuRequested.connect(self._menu)
+        for bar in (self.pinned, self.bar):
+            bar.stepped.connect(self._step)
+            bar.to_end.connect(self._to_end)
         self.restyle()
 
     def set_height(self, height: int) -> None:
@@ -246,6 +279,7 @@ class TabStrip(QWidget):
             self.bar.set_active(False)
         self.bar.blockSignals(False)
         self.line.show()
+        self._stops()
 
     def remove(self, key: str) -> None:
         index = self.index_of(key)
@@ -254,6 +288,7 @@ class TabStrip(QWidget):
             self.bar.removeTab(index)
             self.bar.blockSignals(False)
             self.line.setVisible(self.bar.count() > 0)
+            self._stops()
 
     def show_tab(self, key: str, text: str, icon: QIcon, tip: str, closable: bool) -> None:
         index = self.index_of(key)
@@ -277,6 +312,27 @@ class TabStrip(QWidget):
             self.bar.blockSignals(True)
             self.bar.setCurrentIndex(self.index_of(self._current))
             self.bar.blockSignals(False)
+        self._stops()
+
+    def _holder(self) -> _Bar:
+        return self.pinned if self._current == PINNED else self.bar
+
+    def _stops(self) -> None:
+        holder = self._holder() if self.bar.count() else None
+        for bar in (self.pinned, self.bar):
+            policy = Qt.FocusPolicy.TabFocus if bar is holder else Qt.FocusPolicy.NoFocus
+            bar.setFocusPolicy(policy)
+
+    def _to_end(self, last: bool) -> None:
+        self._step(self.bar.count() + 1 if last else -self.bar.count() - 1)
+
+    def _step(self, by: int) -> None:
+        keys = [PINNED, *self.tab_keys()]
+        index = keys.index(self._current) if self._current in keys else 0
+        to = min(max(index + by, 0), len(keys) - 1)
+        if to != index:
+            self.picked.emit(keys[to])
+        self._holder().setFocus(Qt.FocusReason.OtherFocusReason)
 
     def set_more(self, items: list[tuple[str, str, QIcon]]) -> None:
         self._more_items = items

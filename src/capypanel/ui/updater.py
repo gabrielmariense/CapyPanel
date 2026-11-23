@@ -28,7 +28,7 @@ from capypanel.core import files, i18n, updates
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.ssh import launch as ssh_launch
 from capypanel.core.updates import Release, UpdateError
-from capypanel.ui import branding, help_links
+from capypanel.ui import branding, help_links, keyboard
 from capypanel.ui.dialogs import run_modal
 
 log = logging.getLogger(__name__)
@@ -258,6 +258,7 @@ class _Changes(QScrollArea):
     def __init__(self) -> None:
         super().__init__()
         self.width_for_rows = WIDE - 48
+        keyboard.tab_stop_while_it_scrolls(self)
 
     def sizeHint(self) -> QSize:  # noqa: N802 -- Qt's name
         rows = self.widget()

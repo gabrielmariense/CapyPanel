@@ -1,7 +1,8 @@
-from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
+from PySide6.QtGui import QColor, QFocusEvent, QKeyEvent, QPalette
 from PySide6.QtWidgets import QButtonGroup, QFrame, QLabel, QToolButton, QVBoxLayout, QWidget
 
+from capypanel.ui import keyboard
 from capypanel.ui.icons import tabler_icon
 
 RAIL_WIDTH = 52
@@ -43,6 +44,8 @@ class ToolRail(QWidget):
         self._layout.addStretch(1)
         self._layout.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignHCenter)
         self._layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        for button in (self.home_button, self.help_button, self.settings_button):
+            button.installEventFilter(self)
         self.restyle()
 
     def add_tool(self, tool_id: str, icon: str) -> QToolButton:
@@ -59,8 +62,36 @@ class ToolRail(QWidget):
         badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         badge.hide()
         self.badges[tool_id] = badge
+        button.installEventFilter(self)
+        keyboard.chain(self.in_order())
         self.restyle()
         return button
+
+    def in_order(self) -> list[QToolButton]:
+        return [self.home_button, *self.buttons.values(), self.help_button, self.settings_button]
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """Qt makes the checkable buttons one Tab stop, as it does radio buttons: Tab comes in at
+        the tool shown, and the arrows move on without opening each tool they pass."""
+        if not isinstance(watched, QToolButton):
+            return super().eventFilter(watched, event)
+        if event.type() == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
+            step = {Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}.get(Qt.Key(event.key()), 0)
+            shown = [b for b in self.in_order() if b.isVisible() and b.isEnabled()]
+            if step and not event.modifiers() and watched in shown:
+                index = shown.index(watched) + step
+                if 0 <= index < len(shown):
+                    shown[index].setFocus(Qt.FocusReason.OtherFocusReason)
+                return True
+        if event.type() == QEvent.Type.FocusIn and isinstance(event, QFocusEvent):
+            tool = self._tools.checkedButton()
+            tabbed = event.reason() in (Qt.FocusReason.TabFocusReason,
+                                        Qt.FocusReason.BacktabFocusReason)  # fmt: skip
+            others = [b for b in self._tools.buttons() if b is not tool]
+            if tabbed and tool is not None and watched in others:
+                tool.setFocus(event.reason())
+                return True
+        return super().eventFilter(watched, event)
 
     def set_badge(self, tool_id: str, count: int) -> None:
         badge = self.badges[tool_id]

@@ -226,7 +226,8 @@ class HostsTool(ListWorkspace):
         return {**super().view_choices(), "domains": self.commands.show_domains}
 
     def view_actions(self) -> list[list[QAction]]:
-        return [*super().view_actions(), [self.commands.show_domains]]
+        panes, table = super().view_actions()
+        return [panes, [*table, self.commands.show_domains]]
 
     def key_commands(self) -> list[KeyCommand]:
         """Never one that disturbs the PC's user (Restart, Shut down, Restart Print Spooler)."""

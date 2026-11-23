@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import keyboard
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
 
@@ -123,6 +124,7 @@ class DetailsPanel(QWidget):
         self._scroll.setWidgetResizable(True)
         self._scroll.setFrameShape(QFrame.Shape.NoFrame)
         self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        keyboard.tab_stop_while_it_scrolls(self._scroll)
         self._values: dict[str, list[CopyValue]] = {}
         self._shown: tuple[object, str] | None = None
 

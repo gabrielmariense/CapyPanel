@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QFileDialog
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QFileDialog, QLabel
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -165,6 +165,23 @@ def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
         assert d.checks_box.text() == "Last check" and d.checks_time.text() == clock_text(when)
         d.boxes["status"].setChecked(False)
         assert not d.checks_time.text()
+
+    _run(window, monkeypatch, look)
+
+
+def test_a_greyed_refresh_says_why_under_it_where_the_keyboard_sees_it(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def look(d: ExportDialog) -> None:
+        for key in d.CHECKED:
+            d.boxes[key].setChecked(False)
+        assert not d.refresh_button.isEnabled() and d.refresh_why.isVisibleTo(d)
+        assert d.refresh_why.text() == "Tick Status or Logged-on users to refresh them"
+        d.boxes["status"].setChecked(True)
+        assert d.refresh_button.isEnabled() and not d.refresh_why.isVisibleTo(d)
+        both = [w for w in d.findChildren(QLabel) if 'href="all"' in w.text()]
+        keyboard = Qt.TextInteractionFlag.LinksAccessibleByKeyboard
+        assert both and all(w.textInteractionFlags() & keyboard for w in both)
 
     _run(window, monkeypatch, look)
 

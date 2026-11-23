@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
-from capypanel.ui import help_links
+from capypanel.ui import help_links, keyboard
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
@@ -436,6 +436,7 @@ def _scrolling(widget: QWidget) -> _PageArea:
     area = _PageArea()
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.Shape.NoFrame)
+    keyboard.tab_stop_while_it_scrolls(area)
     holder = QWidget()
     layout = QVBoxLayout(holder)
     layout.setContentsMargins(0, 0, GUTTER, GUTTER)

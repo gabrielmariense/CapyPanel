@@ -19,6 +19,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QAction,
+    QActionGroup,
     QColor,
     QFontMetrics,
     QIcon,
@@ -43,6 +44,7 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QToolButton,
+    QTreeView,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -51,7 +53,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
-from capypanel.ui import spacing
+from capypanel.ui import keyboard, spacing
 from capypanel.ui.groups import (
     HOSTS_MIME,
     ROLE_ID,
@@ -94,11 +96,13 @@ class NavigationPane(QWidget):
         layout = self.layout()
         assert isinstance(layout, QVBoxLayout)
         layout.insertWidget(0, picker)
+        self._picker = picker
         return picker
 
     def __init__(self, everything: Callable[[], str], icon: str = "device-desktop") -> None:
         super().__init__()
         self._filter = Filter("all")
+        self._picker: MenuCombo | None = None
         self._everything_text = everything
         self._icon = icon
         self.add_group_button = QToolButton()
@@ -277,6 +281,11 @@ class NavigationPane(QWidget):
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._fit_everything()
+        # Qt puts the pane's widgets back in the order they were made when it moves into its
+        # window, which put the list picker last.
+        parts = (self._picker, self.everything, self.add_group_button, self.groups,
+                 self.clear_tags_button, self.tags)  # fmt: skip
+        keyboard.chain([w for w in parts if w is not None])
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
@@ -592,6 +601,31 @@ class RowsOffer(QObject):
         return False
 
 
+def fill_sort_menu(menu: QMenu, tree: QTreeView) -> None:
+    for old in menu.findChildren(QActionGroup):
+        old.deleteLater()
+    header, model = tree.header(), tree.model()
+    section, order = header.sortIndicatorSection(), header.sortIndicatorOrder()
+    columns, ways = QActionGroup(menu), QActionGroup(menu)
+    for index in range(header.count()):
+        title = model.headerData(index, Qt.Orientation.Horizontal)
+        if tree.isColumnHidden(index) or not isinstance(title, str) or not title:
+            continue
+        item = menu.addAction(title)
+        item.setCheckable(True)
+        item.setChecked(index == section)
+        columns.addAction(item)
+        item.triggered.connect(lambda _c=False, i=index: tree.sortByColumn(i, order))
+    menu.addSeparator()
+    for text, way in ((_("&Ascending"), Qt.SortOrder.AscendingOrder),
+                      (_("&Descending"), Qt.SortOrder.DescendingOrder)):  # fmt: skip
+        item = menu.addAction(text)
+        item.setCheckable(True)
+        item.setChecked(way == order)
+        ways.addAction(item)
+        item.triggered.connect(lambda _c=False, w=way: tree.sortByColumn(section, w))
+
+
 class ItemTable(QTreeWidget):
     COLUMNS: tuple[str, ...] = ()
     SEARCHED: frozenset[int] = frozenset({0})
@@ -771,6 +805,10 @@ class ItemTable(QTreeWidget):
 
     def _columns_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
+        self.fill_columns_menu(menu)
+        popup(menu, self.header().viewport().mapToGlobal(position))
+
+    def fill_columns_menu(self, menu: QMenu) -> None:
         header = self.headerItem()
         for index in range(1, len(self.COLUMNS)):
             item = menu.addAction(header.text(index))
@@ -779,7 +817,9 @@ class ItemTable(QTreeWidget):
             item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
         menu.addSeparator()
         menu.addAction(_("&Fit columns to content"), self.fit_columns)
-        popup(menu, self.header().viewport().mapToGlobal(position))
+
+    def fill_sort_menu(self, menu: QMenu) -> None:
+        fill_sort_menu(menu, self)
 
     def _show_column(self, index: int, shown: bool) -> None:
         self.setColumnHidden(index, not shown)

@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
-from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShortcut, QShowEvent
+from PySide6.QtGui import QAction, QIcon, QKeyEvent, QMouseEvent, QShortcut, QShowEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication,
@@ -36,6 +36,7 @@ from capypanel.core.remote.user_profiles import (
     Why,
 )
 from capypanel.ui.main_window import window as window_module
+from capypanel.ui.menus import label
 from capypanel.ui.profiles_tool import first_use, host_page, hosts_page, panels, rows, side, work
 from capypanel.ui.profiles_tool import tool as tool_ui
 from capypanel.ui.profiles_tool.host_page import HostPage, Stage
@@ -890,13 +891,33 @@ def test_the_panels_widths_and_view_choices_are_kept(window: CapyWindow) -> None
     assert left > 0 and right > 0
     assert tool_ui._two_widths([230, 300]) == (230, 300)
     assert tool_ui._two_widths([0, 300]) is None and tool_ui._two_widths("wide") is None
-    assert tool.view_actions() == [[tool.show_groups, tool.show_tags, tool.show_details]]
+    panes = [tool.show_groups, tool.show_tags, tool.show_details]
+    assert tool.view_actions() == [panes, [tool.sort_menu.menuAction()]]
     tool.show_tags.setChecked(False)
     assert tool.nav.tags.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["tags"] is False
     tool.show_details.setChecked(False)
     assert tool.side.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["details"] is False
     tool.show_groups.setChecked(False)
     assert tool.nav.isHidden()
+
+
+def _sort_picks(tool: ProfilesTool) -> dict[str, QAction]:
+    tool.sort_menu.aboutToShow.emit()
+    return {label(a): a for a in tool.sort_menu.actions() if not a.isSeparator()}
+
+
+def test_view_s_sort_by_sorts_the_tab_shown(window: CapyWindow) -> None:
+    tool = _tool(window)
+    hosts = tool.hosts_page.table.tree
+    picks = _sort_picks(tool)
+    assert list(picks)[0] == hosts.headerItem().text(hosts_page.NAME)
+    picks["&Descending"].trigger()
+    assert _hosts(tool) == ["LAB-02", "DESK-10", "DESK-03"]
+    tree = _open(window).table.tree
+    picks = _sort_picks(tool)
+    assert tree.headerItem().text(panels.USER) in picks
+    picks[tree.headerItem().text(panels.SIZE)].trigger()
+    assert tree.header().sortIndicatorSection() == panels.SIZE
 
 
 def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -> None:

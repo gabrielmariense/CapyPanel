@@ -16,6 +16,7 @@ from capypanel.__main__ import close_splash
 from capypanel.core import applog, i18n, migration, settings, updates
 from capypanel.ui import branding, error_window, language
 from capypanel.ui.dialogs import ScreenFit
+from capypanel.ui.keyboard import Keyboard
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.one_copy import OneCopy, already_running_text
 from capypanel.ui.themes import engine as themes
@@ -229,6 +230,7 @@ def run(argv: list[str] | None = None) -> int:
     registry = themes.Registry()
     themes.apply(registry.find(prefs.get("theme")))
     app.installEventFilter(ScreenFit(app))
+    app.installEventFilter(Keyboard(app))
     stages.done("language and theme")
     window = MainWindow(paths, prefs, registry=registry, tools=tools)
     stages.done("the window and its lists")

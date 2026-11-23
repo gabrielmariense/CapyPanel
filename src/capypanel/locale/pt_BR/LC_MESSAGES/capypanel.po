@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 22:40-0300\n"
+"POT-Creation-Date: 2026-11-22 23:18-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -78,6 +78,9 @@ msgstr "&Outro nome…"
 msgid "&Arguments:"
 msgstr "&Argumentos:"
 
+msgid "&Ascending"
+msgstr "&Crescente"
+
 msgid "&Authentication"
 msgstr "&Autenticação"
 
@@ -125,6 +128,9 @@ msgstr "&Excluir o arquivo"
 
 msgid "&Delete…"
 msgstr "E&xcluir…"
+
+msgid "&Descending"
+msgstr "&Decrescente"
 
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
@@ -1130,6 +1136,9 @@ msgid "Close {n} open connection?"
 msgid_plural "Close {n} open connections?"
 msgstr[0] "Fechar {n} conexão aberta?"
 msgstr[1] "Fechar {n} conexões abertas?"
+
+msgid "Co&lumns"
+msgstr "Co&lunas"
 
 msgid "Co&py"
 msgstr "Co&piar"
@@ -3865,6 +3874,9 @@ msgstr "Ignorado: esta pessoa entrou no PC depois da leitura. Nada foi excluído
 
 msgid "Smaller text"
 msgstr "Texto menor"
+
+msgid "So&rt by"
+msgstr "&Classificar por"
 
 msgid "Software"
 msgstr "Software"
