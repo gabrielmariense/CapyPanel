@@ -8,6 +8,7 @@ from PySide6.QtCore import QKeyCombination, QRect, Qt
 from PySide6.QtGui import QColor, QKeySequence, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QLabel,
     QMessageBox,
@@ -167,7 +168,8 @@ def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWind
     page.table.setCurrentItem(last_of_file)
     QTest.keyClick(page.table, Qt.Key.Key_Down)
     assert page.table.currentItem() is headings[1][1][0]
-    assert page.about.text() == "Double-click a command and press its new key."
+    hint = "Double-click a command, or press Enter on it, then press its new key."
+    assert page.about.text() == hint
     assert page.about.objectName() == "lead" and page.problem.objectName() == "hint"
     assert page.about.font().pointSizeF() == page.table.font().pointSizeF() + 1
     assert page.problem.text() == RESERVED_LINE
@@ -392,8 +394,10 @@ def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) 
     QApplication.processEvents()
     page = dialog.shortcuts
     table, view = page.table, page.table.viewport()
-    whole = [i for i in page._items() if view.rect().contains(table.visualItemRect(i))]  # pyright: ignore[reportPrivateUsage]
-    last = whole[-1]
+    keyed = [i for i in page._items() if i.flags() & Qt.ItemFlag.ItemIsEnabled]  # pyright: ignore[reportPrivateUsage]
+    last = [i for i in keyed if view.rect().contains(table.visualItemRect(i))][-1]
+    table.scrollToItem(last, QAbstractItemView.ScrollHint.PositionAtBottom)
+    QApplication.processEvents()
     height = view.height()
     page.change(last)
     catcher = table.itemWidget(last, KEY)

@@ -267,7 +267,9 @@ class ShortcutsPage(Page):
         column = self.section.layout()
         if column is not None:
             column.setSpacing(0)
-        self.about = lead(_("Double-click a command and press its new key."))
+        self.about = lead(
+            _("Double-click a command, or press Enter on it, then press its new key.")
+        )
         self.table = grid_table([_("Command"), _("Key")])
         self.table.itemActivated.connect(lambda item, _c: self.change(item))
         self.table.itemSelectionChanged.connect(self._enable)
