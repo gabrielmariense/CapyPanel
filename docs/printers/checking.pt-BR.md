@@ -120,7 +120,7 @@ detalhes.
 
 ## Escolher quais problemas avisam <a id="printers-checking-choose-which-problems-warn"></a>
 
-![A seção Avisos nas Configurações: uma linha por motivo, marcada em No CapyPanel e Notificação do Windows, no padrão](../images/settings-printers-warnings-dark-pt-BR.png)
+![A seção Avisos nas Configurações: uma linha por motivo, marcada em No CapyPanel e Notificação do Windows, no padrão, e o que Offline, Parada e Suprimento baixo querem dizer embaixo da tabela](../images/settings-printers-warnings-dark-pt-BR.png)
 
 1. Abra **Configurações > Impressoras > Avisos e suprimentos**. A seção **Avisos** tem uma linha
    para cada motivo: **Offline**, **Papel atolado**, **Parada**, **Sem papel**, **Sem toner** e
@@ -251,12 +251,12 @@ Conexão > Conta do Doc360 MPS**. Um Atualizar então pega a contagem de página
     ![Uma impressora do Doc360 MPS no painel de detalhes: o total de páginas dela e de onde ele veio](../images/doc360-details-dark-pt-BR.png)
 
     O número aparece nos detalhes em **Contadores de páginas**, com a **Origem** dizendo "Doc360 MPS
-    · obtido em 14:32"; a dica acrescenta que o Doc360 lê as impressoras no horário dele, então o
-    número pode estar atrasado em relação à impressora. Ele é a contagem deste mês. Nos primeiros
-    dias de um mês o Doc360 pode ainda não ter nenhuma, então o CapyPanel pega a do mês passado e
-    avisa em âmbar, e o relatório escreve "20500 (de outubro de 2026)". Quando não há contagem
-    nenhuma, os detalhes dizem o porquê no lugar dela e o relatório fica com "Erro" (veja a tabela
-    abaixo).
+    · obtido em 14:32", e uma linha cinza embaixo diz "O Doc360 MPS lê as impressoras no horário
+    dele, então este número pode estar atrasado em relação à impressora." Ele é a contagem deste
+    mês. Nos primeiros dias de um mês o Doc360 pode ainda não ter nenhuma, então o CapyPanel pega a
+    do mês passado e avisa em âmbar, e o relatório escreve "20500 (de outubro de 2026)". Quando não
+    há contagem nenhuma, os detalhes dizem o porquê no lugar dela e o relatório fica com "Erro"
+    (veja a tabela abaixo).
 
     Um login recusado é tentado uma vez e deixado em paz até o próximo Atualizar, para uma senha
     errada não ser enviada de novo e de novo.
@@ -282,8 +282,8 @@ Conexão > Conta do Doc360 MPS**. Um Atualizar então pega a contagem de página
 |---|---|---|
 | <a id="printer-not-checked"></a>**Não verificado** | Nenhum Atualizar leu a impressora ainda | Atualize-a |
 | <a id="printer-offline"></a>**Offline** | Nada respondeu | Confira se a impressora está ligada e o endereço está certo |
-| <a id="printer-refused"></a>**Recusada** (âmbar), com uma dica como "Recusada às 14:32: senha ou tipo de autenticação errado." | A impressora recusou a conta SNMP. A dica diz o motivo: um usuário que ela não conhece, a senha ou o tipo de autenticação errado, a senha da criptografia errada, a autenticação ou a criptografia que ela espera de outro jeito, ou um relógio longe demais do do CapyPanel | Corrija essa parte em **Configurações > Impressoras > Conexão**, ou o relógio da impressora |
-| <a id="printer-unreadable"></a>**Ilegível** (âmbar) | Ela respondeu, mas de um jeito que o CapyPanel não conseguiu ler | Abra a página web dela |
+| <a id="printer-refused"></a>**Recusada** (âmbar), com uma dica como "Recusada às 14:32: senha ou tipo de autenticação errado." | A impressora recusou a conta SNMP. A dica, e os detalhes embaixo da linha de status, dizem o motivo: um usuário que ela não conhece, a senha ou o tipo de autenticação errado, a senha da criptografia errada, a autenticação ou a criptografia que ela espera de outro jeito, ou um relógio longe demais do do CapyPanel | Corrija essa parte em **Configurações > Impressoras > Conexão**, ou o relógio da impressora |
+| <a id="printer-unreadable"></a>**Ilegível** (âmbar) | Ela respondeu, mas de um jeito que o CapyPanel não conseguiu ler. Os detalhes dizem o que havia de errado na resposta, embaixo da linha de status | Abra a página web dela |
 | <a id="printer-snmpv3-not-set"></a>"Defina antes a conta SNMP v3 em Configurações › Impressoras › Conexão." | O **v3** está escolhido sem conta, então um Atualizar não começa | Defina a conta |
 | <a id="printers-credential-not-saved"></a>"Não foi possível salvar a mudança no Gerenciador de Credenciais do Windows: …", e depois "Nada foi alterado." | O Windows recusou salvar ou remover a comunidade SNMP, a conta SNMP v3 ou o login do Doc360 MPS, então o CapyPanel continua usando o que já tinha | Tente **Salvar** de novo. Se continuar falhando, procure as entradas do CapyPanel em Painel de Controle › **Gerenciador de Credenciais** › **Credenciais do Windows** |
 | <a id="printer-check-stopped"></a>"Parado: 4 impressoras não foram verificadas." | Você apertou **Parar** | Atualize de novo |

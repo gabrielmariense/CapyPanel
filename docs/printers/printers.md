@@ -96,8 +96,8 @@ http.
 ??? note "More about web pages"
 
     - An address that starts with `https://` opens exactly as you typed it, port and all, so
-      `https://prn-01.example.com:8443` reaches a printer whose web page is on another port. The
-      **Address** field says so in its tooltip.
+      `https://prn-01.example.com:8443` reaches a printer whose web page is on another port. A line
+      under the **Address** field says so.
     - CapyPanel opens at most ten pages at once.
     - Only the address is handed to the browser. CapyPanel fetches nothing from the printer and
       signs in to nothing.

@@ -101,7 +101,9 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
     A barra de menus é a mesma em toda ferramenta. **Arquivo** abre as **Configurações…** (Ctrl+,) e
     o **Sair** (Ctrl+Q). **Exibir** leva ao **Início** e a cada ferramenta, e depois mostra ou
     esconde os painéis, a **Barra de ferramentas** e a **Barra de status**; no Hosts ele também
-    guarda **Personalizar o painel de detalhes…** e **Mostrar domínio dos usuários**. Ele fica
+    guarda **Personalizar o painel de detalhes…** e **Mostrar domínio dos usuários**. No Hosts, no
+    Impressoras e no SSH ele também tem **Classificar por** e **Colunas** para a tabela da
+    ferramenta, e a Limpeza de perfis tem **Classificar por** para a aba da frente. Ele fica
     aberto enquanto você marca. **Ajuda** tem **Guia desta tela**, **Mostrar todos os guias de
     novo**, **Ajuda desta tela**, **Documentação**, **Relatar um problema**, **Procurar nova
     versão…** e **Sobre o CapyPanel**. Quando sai uma versão mais nova, um botão **Nova versão**
@@ -112,7 +114,8 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
 
     - Arraste a borda entre dois painéis para movê-la, ou dê um **clique duplo** na borda direita
       do **painel de grupos** ou do **painel de hosts** para ajustar esse painel ao que tem dentro.
-    - Clique com o botão direito nos títulos das colunas da tabela de hosts para escolher quais
+    - Clique com o botão direito nos títulos das colunas da tabela de hosts, ou use **Exibir >
+      Colunas**, para escolher quais
       aparecem, ou em **Ajustar colunas ao conteúdo** para ajustar todas ao texto delas; um clique
       duplo na borda de uma coluna ajusta só ela.
     - As larguras são salvas para a próxima vez, e nada as redimensiona por trás, nem uma
@@ -220,6 +223,25 @@ CapyPanel (veja
 | F1 | Ajuda da tela em que você está |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |
+
+??? note "Usar só o teclado"
+
+    - O **Tab** passa por cada janela na ordem de leitura. Um anel na cor de destaque do tema mostra
+      onde o teclado está: sempre num campo, e em qualquer outra coisa depois que uma tecla levou o
+      teclado até ela. Numa tabela, ele contorna a linha atual.
+    - A tecla de menu, ou **Shift+F10**, abre o menu que o botão direito abre: na linha atual de uma
+      tabela, na aba atual, no cursor de um terminal SSH, ou no cursor de texto de um campo.
+    - A barra lateral é uma parada só do Tab, e a lista de páginas das Configurações também: as
+      setas **para cima** e **para baixo** andam por ela, e **Enter** ou **Espaço** abre o que está
+      com o anel. Da lista das Configurações, o Tab segue para a página exibida.
+    - No Início, as setas andam entre os blocos, e Enter ou Espaço abre um.
+    - Uma fileira de abas é uma parada só: as setas **para a esquerda** e **para a direita** vão
+      para a próxima aba, e **Home** e **End** para a primeira e a última.
+    - Cada link numa linha de texto é uma parada própria. Uma área com rolagem, como os detalhes ou
+      uma página das Configurações, só é uma parada enquanto tem mais para rolar.
+    - O **Exibir > Classificar por** classifica a tabela da ferramenta, e o **Exibir > Colunas**
+      escolhe as colunas dela, como os títulos das colunas fazem com um clique e com o botão
+      direito.
 
 ## Mensagens que você pode ver <a id="start-messages-you-may-see"></a>
 

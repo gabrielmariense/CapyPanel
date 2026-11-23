@@ -107,11 +107,11 @@ o **Restaurar padrão** devolve a que ele tinha de início.
     - **Conectar** e **Abrir página web** dizem "Enter (na lista)": a tecla deles só vale na lista
       de hosts ou de impressoras.
     - A lista termina com **Terminal SSH**, embaixo de "Dentro de um terminal, todas as teclas vão
-      para o servidor, menos as abaixo e as que trocam de ferramenta ou abrem as Configurações.":
-      as teclas do próprio terminal (Copiar, Copiar com texto selecionado, Colar, Texto maior e
-      menor, Próxima aba e Aba anterior, Fechar aba), em cinza, porque "As teclas do próprio
-      terminal não podem ser alteradas." (veja
-      [Trabalhar no terminal](ssh/ssh.pt-BR.md#trabalhar-no-terminal)).
+      para o servidor, menos as abaixo e as que trocam de ferramenta ou abrem as Configurações.": as
+      teclas do próprio terminal (Copiar, Copiar com texto selecionado, Colar, Pesquisar, Texto
+      maior e menor, Próxima aba e Aba anterior, Fechar aba), em cinza, porque "As teclas do próprio
+      terminal não podem ser alteradas." (veja [Trabalhar no
+      terminal](ssh/ssh.pt-BR.md#trabalhar-no-terminal)).
     - Reiniciar, Desligar, Cancelar a reinicialização pendente, Reiniciar o Spooler de Impressão,
       e fazer logoff ou desconectar alguém não estão na lista.
     - As dicas e os guias de primeiro uso dizem a tecla que o comando tem agora: uma tecla que
@@ -196,9 +196,11 @@ Hosts.
 | Configuração | O que faz | De início |
 |---|---|---|
 | **Atualizar o status sozinho** | Verifica a porta SSH dos hosts exibidos **a cada minuto**, a cada **5**, **15** ou **30 minutos**, ou num intervalo **Personalizado…**. "Só a porta SSH, sem fazer login. Um servidor com fail2ban num modo rígido pode contar cada verificação como uma tentativa de login que falhou e bloquear este PC." (veja [Ver quais hosts respondem](ssh/ssh.pt-BR.md#ver-quais-hosts-respondem)) | Desligado |
+| **Terminal > Tamanho do texto** | O texto do terminal em todas as conexões, de 8 a 20 pt. "Em todas as conexões. Ctrl+= e Ctrl+- num terminal também o mudam." | 10 pt |
+| **Terminal > Histórico de rolagem** | "Linhas que cada conexão guarda acima da tela, para rolar de volta, pesquisar e salvar. Mais linhas ocupam mais memória." De 1.000 a 50.000; um menor deixa as linhas mais antigas irem embora | 10.000 linhas |
+| **Janelas separadas > Abrir em** | Onde o **Conectar numa janela separada** abre o ssh.exe: **Uma janela de console**, o **Windows Terminal** quando ele está neste PC, ou **Outro programa…** (veja [Conectar numa janela separada](ssh/ssh.pt-BR.md#ssh-connect-in-a-separate-window)) | Uma janela de console |
 
-O SSH usa as listas do Hosts, então elas são configuradas em **Hosts > Geral**. O tamanho do texto
-do terminal fica guardado no seu arquivo de configurações quando você o muda com Ctrl+= e Ctrl+-.
+O SSH usa as listas do Hosts, então elas são configuradas em **Hosts > Geral**.
 
 ## Sobre <a id="settings-about"></a>
 
@@ -276,6 +278,14 @@ Enquanto uma atualização roda, os arquivos de trabalho dela ficam em
 Um arquivo vazio chamado `capypanel.portable` ao lado do app guarda tudo (configurações, listas,
 logs) numa pasta `userdata` ao lado dele, para rodar de um pendrive ou de uma pasta compartilhada.
 Quando você roda pelo código-fonte, "ao lado do app" significa a pasta do repositório.
+
+No primeiro início de uma cópia portátil, o guia do Início termina com mais um cartão, **Uma cópia
+portátil**: o que ela guarda na `userdata`, que as senhas salvas ficam no Gerenciador de
+Credenciais do Windows daquele PC, e que listas e configurações de outra cópia não são trazidas.
+O **Abrir a pasta userdata** abre a pasta. Para usar uma lista de outra cópia, abra-a com o
+**Abrir lista…** embaixo do nome da lista, no topo do painel de grupos.
+
+![O cartão Uma cópia portátil no fim do guia do Início, com Abrir a pasta userdata](images/guide-portable-dark-pt-BR.png)
 
 ## Mensagens que você pode ver <a id="settings-messages-you-may-see"></a>
 

@@ -3,6 +3,42 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.31.0 <a id="whats-new-0310"></a>
+
+- CapyPanel works from the keyboard alone in the main window, Settings, Hosts, Printers, SSH and
+  Profile cleanup. A ring in the theme's accent shows where the keyboard is, and the menu key or
+  Shift+F10 opens the menu a right-click opens. **View > Sort by** and **View > Columns** sort a
+  table and pick its columns. See [Keyboard shortcuts](getting-started.md#start-keyboard-shortcuts).
+- SSH's terminal finds text with **Find…** (Ctrl+Shift+F), saves it all to a file with **Save all
+  the text…**, and rewraps its lines when the tab changes width.
+- The terminal also gives the mouse to programs that ask for it, such as htop and mc, opens a web
+  address with Ctrl+click, marks a tab with a bell when a server rings in it, and shows the cursor
+  shape a program asks for. Settings › SSH › General sets its **Text size** and **Scrollback**.
+- A connection can move to a window of its own, for a second monitor, and back again: **Move to a
+  new window** on its tab's right-click menu or the terminal's. See [Move a connection to its own
+  window](ssh/ssh.md#ssh-move-a-connection-to-its-own-window).
+- **Connect in a separate window** can open ssh.exe in Windows Terminal or another terminal program:
+  **Open in**, in Settings › SSH › General.
+- The first time a server connects in a tab, a strip says ssh.exe will ask whether you trust it, and
+  to type yes, not just y.
+- **Import hosts…** reads **SSH port** and **SSH login** columns, and SSH's **Inventory** has it
+  too. Hosts' Report writes both, ticked in **For Import**.
+- In Hosts, right-click a host for **Open in SSH**, or several for **Open {n} hosts in SSH**.
+- A portable copy's first start ends Home's guide with a card on what the copy keeps beside it, with
+  **Open the userdata folder**.
+- The main window opens sooner on a slow PC: about 0.7 s on one we measured.
+- In the Windows themes, a Users or Power button that can't be used is grey all over. Before, its
+  word stayed amber, so it looked clickable.
+- CapyPanel ends as soon as you close it, even in the middle of a refresh. Before, it could keep
+  running unseen until every host answered, and an update started meanwhile refused.
+- When another CapyPanel from the same folder is still running, the update now says so. Before, it
+  said an SSH connection was open in a separate window.
+- Switching themes no longer risks closing CapyPanel after one of the Windows themes.
+- In Printers, Details says why a printer refused or couldn't be read, under its status line.
+  Settings › Printers › Warnings and supplies says what Offline, Stopped and Supply low mean, and
+  Add printer says when to start an address with https://.
+- The Report's greyed **Refresh** button says why on a line under it.
+
 ## 0.30.1 <a id="whats-new-0301"></a>
 
 - In SSH and Profile cleanup, the short line beside the list's tab is now a thin line in the

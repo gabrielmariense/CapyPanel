@@ -20,13 +20,15 @@ The Details panel's first row is always **Refresh**, **Commands** (the
 
 ??? note "Every place a command can start"
 
-    - **Right-click a host:** **Connect** in bold, **Refresh host**, your first four quick
-      commands, **All commands…** and **Open in Profile cleanup**, then **Copy ▸**, **Edit…**,
-      **Move to ▸**, **Tags ▸** and **Remove**. With several hosts selected the menu holds what
-      works on all of them: **Connect**, **Refresh {n} hosts**, **Open {n} hosts in Profile
-      cleanup**, **Commands run as ▸**, **Copy ▸**, **Move to ▸**, **Tags ▸** and **Remove**.
-      **Open in Profile cleanup** scans the hosts in
-      [Profile cleanup](../profiles/user-profiles.md#scan-a-pcs-profiles).
+    - **Right-click a host:** **Connect** in bold, **Refresh host**, your first four quick commands,
+      **All commands…**, **Open in Profile cleanup** and **Open in SSH**, then **Copy ▸**,
+      **Edit…**, **Move to ▸**, **Tags ▸** and **Remove**. With several hosts selected the menu
+      holds what works on all of them: **Connect**, **Refresh {n} hosts**, **Open {n} hosts in
+      Profile cleanup**, **Open {n} hosts in SSH**, **Commands run as ▸**, **Copy ▸**, **Move to
+      ▸**, **Tags ▸** and **Remove**. **Open in Profile cleanup** scans the hosts in [Profile
+      cleanup](../profiles/user-profiles.md#scan-a-pcs-profiles), and **Open in SSH** opens each in
+      a connection tab of [the SSH tool](../ssh/ssh.md#connect), with its port and Log in as, up to
+      ten at once.
     - **The toolbar:** **Commands** opens the Commands window for the selected host. Its arrow
       lists every command by group (**Check**, **Folders**, **Admin tools**, **Users**,
       **Printers** and **Power**) and ends with **All commands…**.
