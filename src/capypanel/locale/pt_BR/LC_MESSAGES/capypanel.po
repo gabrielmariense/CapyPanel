@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 22:14-0300\n"
+"POT-Creation-Date: 2026-11-22 22:26-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -3210,7 +3210,7 @@ msgid "Quitting now cancels the profiles still queued. The profile being deleted
 msgstr "Sair agora cancela os perfis ainda na fila. O perfil sendo excluído em cada host termina primeiro; o CapyPanel sai depois disso."
 
 msgid "Rang its bell"
-msgstr "Tocou o sino"
+msgstr "Tocou a campainha"
 
 msgid "Re&fresh group"
 msgstr "At&ualizar grupo"
