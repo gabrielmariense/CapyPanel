@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 19:56-0300\n"
+"POT-Creation-Date: 2026-11-22 21:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1093,6 +1093,9 @@ msgstr "Fechar"
 
 msgid "Close &tab"
 msgstr "Fechar &aba"
+
+msgid "Close &window"
+msgstr "Fechar &janela"
 
 #, python-brace-format
 msgid "Close the connection to {host}?"
@@ -2351,6 +2354,9 @@ msgstr "Modelo, Windows, memória, disco"
 msgid "More in the documentation"
 msgstr "Mais na documentação"
 
+msgid "Move &back to a tab"
+msgstr "&Voltar para uma aba"
+
 msgid "Move &down"
 msgstr "Mover para &baixo"
 
@@ -2359,6 +2365,9 @@ msgstr "Mover &para"
 
 msgid "Move &up"
 msgstr "Mover para &cima"
+
+msgid "Move to a &new window"
+msgstr "Mover para uma &nova janela"
 
 msgid "My personal list"
 msgstr "Minha lista pessoal"

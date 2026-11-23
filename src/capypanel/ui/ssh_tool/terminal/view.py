@@ -210,6 +210,7 @@ class TerminalView(QAbstractScrollArea):
         self.chunk_s: deque[float] = deque(maxlen=CHUNK_LOG)
         self.confirm_paste: Callable[[QWidget, Sequence[str], str], bool] = ask_paste
         self.open_menu: Callable[[QMenu, QPoint], None] = popup
+        self.extend_menu: Callable[[QMenu], None] = lambda _menu: None
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, True)
@@ -546,6 +547,7 @@ class TerminalView(QAbstractScrollArea):
         menu.addAction(_("Select &all"), self.select_all)
         menu.addSeparator()
         menu.addAction(_("Clear &scrollback"), self.clear_scrollback)
+        self.extend_menu(menu)
         for action in menu.actions():
             action.setShortcutVisibleInContextMenu(True)
         return menu

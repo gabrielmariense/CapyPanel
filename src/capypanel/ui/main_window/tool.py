@@ -72,6 +72,7 @@ class Tool(QWidget):
     title_changed = Signal(str)
     badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
     notify_requested = Signal(str, str)  # a Windows notification: its title and text
+    front_requested = Signal()
 
     def __init__(self, shell: Shell, toolbar: ToolBar):
         super().__init__()

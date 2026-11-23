@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import shiboken6
 from fake_console import FakeConsole
-from PySide6.QtCore import QEvent, QPoint, Qt
+from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
 from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QWidget
 from test_printers_tool import FakeShell
@@ -22,6 +23,7 @@ from capypanel.ui.ssh_tool import tool as tool_module
 from capypanel.ui.ssh_tool.terminal import keys
 from capypanel.ui.ssh_tool.terminal import view as view_module
 from capypanel.ui.ssh_tool.tool import POINTS, SshTool
+from capypanel.ui.ssh_tool.window import ConnectionWindow
 from capypanel.ui.tab_strip import PINNED
 from capypanel.ui.themes import engine as themes
 
@@ -326,6 +328,7 @@ def test_the_tab_menu_reconnects_an_ended_one_and_closes_others_with_one_questio
 
     assert menu_of("connection-1") == [
         ("Reconnect", False),
+        ("Move to a new window", True),
         ("Close", True),
         ("Close the others", True),
         ("Close the ended ones", True),
@@ -339,6 +342,72 @@ def test_the_tab_menu_reconnects_an_ended_one_and_closes_others_with_one_questio
     others.trigger()
     assert answers.asked == [("Close", "<b>Close 2 open connections?</b>", "&Close")]
     assert _names(ssh) == ["nas-01"]
+
+
+def _window(tool: SshTool, key: str) -> ConnectionWindow:
+    window = tool.window_of(key)
+    assert window is not None
+    return window
+
+
+def test_a_connection_moves_out_to_a_window_of_its_own_and_back(
+    ssh: SshTool, consoles: list[FakeConsole]
+) -> None:
+    _connect(ssh, "core-sw-01")
+    _connect(ssh, "nas-01")
+    first, second = ssh.connections()
+    fronts: list[bool] = []
+    ssh.front_requested.connect(lambda: fronts.append(True))
+    ssh.move_out("connection-1")
+    window = _window(ssh, "connection-1")
+    assert window.isVisible() and first.window() is window and first.isVisible()
+    assert window.windowTitle() == "core-sw-01 · SSH"
+    assert _names(ssh) == ["nas-01"] and ssh.tabs.current() == "connection-2"
+    assert first.running and first.view.session is consoles[0] and len(consoles) == 2
+    assert ssh.connections() == [second, first]
+    ssh.move_back("connection-1")
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert not shiboken6.isValid(window) and ssh.window_of("connection-1") is None
+    assert _names(ssh) == ["nas-01", "core-sw-01"] and ssh.tabs.current() == "connection-1"
+    assert ssh.pages.currentWidget() is first and first.running and fronts == [True]
+
+
+def test_the_terminal_s_menu_moves_it_out_and_back_and_its_end_closes_the_window(
+    ssh: SshTool, consoles: list[FakeConsole], answers: Answers
+) -> None:
+    _connect(ssh, "core-sw-01")
+    [tab] = ssh.connections()
+
+    def last(menu: QMenu) -> str:
+        return menus.label(menu.actions()[-1])
+
+    assert last(tab.view.menu()) == "Move to a &new window"
+    tab.view.menu().actions()[-1].trigger()
+    window = _window(ssh, "connection-1")
+    assert last(tab.view.menu()) == "Move &back to a tab"
+    assert tab.bar.close_button.text() == "Close &window"
+    _ended(ssh, consoles[0], 0)
+    tab.bar.close_button.click()
+    assert answers.asked == [] and ssh.connections() == [] and not window.isVisible()
+
+
+def test_closing_a_connection_s_window_asks_first_as_closing_its_tab_does(
+    ssh: SshTool, consoles: list[FakeConsole], answers: Answers
+) -> None:
+    _connect(ssh, "core-sw-01", "nas-01")
+    ssh.move_out("connection-1")
+    window = _window(ssh, "connection-1")
+    ctrl_shift = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier
+    assert window.tab.view.leaves(QKeyEvent(QEvent.Type.ShortcutOverride, Qt.Key.Key_W, ctrl_shift))
+    [close] = [s for s in window.findChildren(QShortcut) if s.key() == QKeySequence("Ctrl+Shift+W")]
+    close.activated.emit()
+    assert answers.asked == [("Close", "<b>Close the connection to core-sw-01?</b>", "&Close")]
+    assert window.isVisible() and not consoles[0].closed
+    answers.queued.append(True)
+    assert ssh.quit_question(QWidget())
+    assert answers.asked[-1][1] == "<b>Quit CapyPanel with 2 connections open?</b>"
+    assert all(console.closed for console in consoles)
+    assert window.close() and len(answers.asked) == 2 and ssh.window_of("connection-1") is None
 
 
 def test_a_tab_s_mark_says_whether_it_is_open_or_how_it_ended(

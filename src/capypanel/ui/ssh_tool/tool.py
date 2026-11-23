@@ -1,8 +1,10 @@
+import functools
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
@@ -54,6 +56,7 @@ from capypanel.ui.themes import engine as themes
 
 if TYPE_CHECKING:  # loaded at the first connection, never at CapyPanel's start
     from capypanel.ui.ssh_tool.terminal.tab import TerminalTab
+    from capypanel.ui.ssh_tool.window import ConnectionWindow
 
 log = logging.getLogger(__name__)
 AT_ONCE = 10  # more selected connect only the first ones: a tab or a window each
@@ -74,6 +77,13 @@ def _named(found: tuple[str, Group | None]) -> tuple[str, str]:
     return login, source.name if source is not None else ""
 
 
+def _take_windows(windows: dict[str, "ConnectionWindow"]) -> None:
+    for window in windows.values():
+        if shiboken6.isValid(window):
+            shiboken6.delete(window)
+    windows.clear()
+
+
 class SshTool(TabbedListWorkspace):
     TOOL_ID = "ssh"
     ICON = "terminal-2"
@@ -89,6 +99,7 @@ class SshTool(TabbedListWorkspace):
         self.toolbar: SshToolBar = SshToolBar(self.commands)
         self._checked: dict[str, Checked] = {}
         self._connections: dict[str, TerminalTab] = {}
+        self._windows: dict[str, ConnectionWindow] = {}
         self._tab_names: dict[str, str] = {}
         self._opened = 0
         super().__init__(
@@ -98,6 +109,7 @@ class SshTool(TabbedListWorkspace):
             table=self.table,
             details=self.details,
         )
+        self.destroyed.connect(functools.partial(_take_windows, self._windows))
         for action in vars(self.commands).values():
             action.setParent(self)
         self._run: SshRun | None = None
@@ -487,6 +499,7 @@ class SshTool(TabbedListWorkspace):
         tab.changed.connect(lambda: self._show_tab(key))
         tab.close_asked.connect(lambda: self.close_tab(key))
         tab.view.size_picked.connect(self._size_picked)
+        tab.view.extend_menu = lambda menu: self._fill_terminal_menu(key, menu)
         self._connections[key] = tab
         self._tab_names[key] = self._tab_name(name)
         self.add_page(key, tab, self._tab_names[key])
@@ -534,7 +547,59 @@ class SshTool(TabbedListWorkspace):
         return self._connections.get(key)
 
     def connections(self) -> list["TerminalTab"]:
-        return [self._connections[k] for k in self.tabs.tab_keys() if k in self._connections]
+        in_tabs = [self._connections[k] for k in self.tabs.tab_keys() if k in self._connections]
+        return in_tabs + [self._connections[k] for k in self._windows]
+
+    def window_of(self, key: str) -> "ConnectionWindow | None":
+        return self._windows.get(key)
+
+    def move_out(self, key: str) -> None:
+        tab = self._connections.get(key)
+        if tab is None or key in self._windows:
+            return
+        from capypanel.ui.ssh_tool.window import ConnectionWindow
+
+        where, size = tab.mapToGlobal(QPoint(0, 0)), tab.size()
+        self.remove_page(key, tab)
+        window = ConnectionWindow(tab, lambda: self._window_closing(key))
+        self._windows[key] = window
+        self._show_tab(key)
+        self._show_more()
+        window.resize(size)
+        window.move(where)
+        window.show()
+        window.activateWindow()
+        tab.view.setFocus()
+
+    def move_back(self, key: str) -> None:
+        tab = self._connections.get(key)
+        window = self._windows.pop(key, None)
+        if tab is None or window is None:
+            return
+        tab.set_in_window(False)
+        self.add_page(key, tab, self._tab_names[key])
+        window.hide()
+        window.deleteLater()
+        self._show_tab(key)
+        self.switch(key)
+        self.front_requested.emit()
+
+    def _window_closing(self, key: str) -> bool:
+        tab = self._connections.get(key)
+        if tab is None:
+            return True
+        live = tab.running and not tab.view.closed_by_us
+        if live and not self._close_asked([tab], tab.window()):
+            return False
+        self._drop(key)
+        return True
+
+    def _fill_terminal_menu(self, key: str, menu: QMenu) -> None:
+        menu.addSeparator()
+        if key in self._windows:
+            menu.addAction(_("Move &back to a tab"), lambda: self.move_back(key))
+        else:
+            menu.addAction(_("Move to a &new window"), lambda: self.move_out(key))
 
     def switch(self, key: str) -> None:
         super().switch(key)
@@ -553,10 +618,15 @@ class SshTool(TabbedListWorkspace):
 
     def _show_tab(self, key: str) -> None:
         tab = self._connections.get(key)
-        if tab is not None:
-            icon, tip = self._mark(tab)
-            self.tabs.show_tab(key, self._tab_names[key], icon, tip, closable=True)
-            self._show_more()
+        if tab is None:
+            return
+        window = self._windows.get(key)
+        if window is not None:
+            window.setWindowTitle(f"{self._tab_names[key]} · {self.tool_name()}")
+            return
+        icon, tip = self._mark(tab)
+        self.tabs.show_tab(key, self._tab_names[key], icon, tip, closable=True)
+        self._show_more()
 
     def _show_more(self) -> None:
         doc = self.document
@@ -571,6 +641,9 @@ class SshTool(TabbedListWorkspace):
         self.tabs.set_more(items)
 
     def close_tab(self, key: str) -> bool:
+        window = self._windows.get(key)
+        if window is not None:
+            return window.close()
         tab = self._connections.get(key)
         if tab is None:
             return False
@@ -588,7 +661,7 @@ class SshTool(TabbedListWorkspace):
             if key in self._connections:
                 self._drop(key)
 
-    def _close_asked(self, live: Sequence["TerminalTab"]) -> bool:
+    def _close_asked(self, live: Sequence["TerminalTab"], parent: QWidget | None = None) -> bool:
         n = len(live)
         if n == 1:
             heading = _("Close the connection to {host}?").format(host=live[0].host)
@@ -602,7 +675,7 @@ class SshTool(TabbedListWorkspace):
             n,
         )
         question = Question(
-            self, _("Close"), heading, text, _("&Close"), place="ssh-work-in-the-terminal"
+            parent or self, _("Close"), heading, text, _("&Close"), place="ssh-work-in-the-terminal"
         )
         return run_modal(question) == QDialog.DialogCode.Accepted
 
@@ -610,8 +683,13 @@ class SshTool(TabbedListWorkspace):
         tab = self._connections.pop(key)
         del self._tab_names[key]
         tab.close_connection()
-        self.remove_page(key, tab)
-        tab.deleteLater()
+        window = self._windows.pop(key, None)
+        if window is None:
+            self.remove_page(key, tab)
+            tab.deleteLater()
+        else:
+            window.hide()
+            window.deleteLater()
         self._show_more()
 
     def tab_menu(self, key: str, where: QPoint) -> None:
@@ -621,13 +699,14 @@ class SshTool(TabbedListWorkspace):
         menu = QMenu(self)
         reconnect = menu.addAction(plain(_("&Reconnect")), tab.view.restart)
         reconnect.setEnabled(tab.ended)
+        menu.addAction(plain(_("Move to a &new window")), lambda: self.move_out(key))
         menu.addSeparator()
         menu.addAction(_("Close"), lambda: self.close_tab(key))
         others = [k for k in self.tabs.tab_keys() if k != key]
         menu.addAction(_("Close the others"), lambda: self.close_tabs(others)).setEnabled(
             bool(others)
         )
-        ended = [k for k, t in self._connections.items() if t.ended]
+        ended = [k for k in self.tabs.tab_keys() if self._connections[k].ended]
         menu.addAction(_("Close the ended ones"), lambda: self.close_tabs(ended)).setEnabled(
             bool(ended)
         )

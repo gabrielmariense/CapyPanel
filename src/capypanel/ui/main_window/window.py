@@ -155,6 +155,7 @@ class MainWindow(QMainWindow):
         tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
         tool.badge_changed.connect(lambda count, t=tool_id: self._badge_changed(t, count))
         tool.notify_requested.connect(lambda title, text, t=tool_id: self._notify(t, title, text))
+        tool.front_requested.connect(lambda t=tool_id: self._bring_forward(t))
 
     def shown_tool(self) -> Tool | None:
         return None if self._shown is None else self.tools[self._shown]
@@ -474,9 +475,12 @@ class MainWindow(QMainWindow):
             self.open_from_tray()
 
     def _show_attention(self, tool_id: str) -> None:
+        self._bring_forward(tool_id)
+        self.tools[tool_id].show_attention()
+
+    def _bring_forward(self, tool_id: str) -> None:
         self.open_from_tray()
         self.show_tool(tool_id)
-        self.tools[tool_id].show_attention()
 
     def to_tray(self) -> None:
         self._save_state()

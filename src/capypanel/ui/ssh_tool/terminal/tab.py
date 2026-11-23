@@ -119,6 +119,7 @@ class EndedBar(QFrame):
         self.close_button.clicked.connect(self.close_tab)
         themes.switches().switched.connect(self._restyle)
         self.error = False
+        self.in_window = False
         self._end: tuple[str, int, bool] | None = None
         self.retranslate()
         self.hide()
@@ -132,7 +133,7 @@ class EndedBar(QFrame):
 
     def retranslate(self) -> None:
         self.reconnect_button.setText(_("&Reconnect"))
-        self.close_button.setText(_("Close &tab"))
+        self.close_button.setText(_("Close &window") if self.in_window else _("Close &tab"))
         self._show_words()
 
     def words(self) -> str:
@@ -208,6 +209,10 @@ class TerminalTab(QWidget):
 
     def close_connection(self) -> None:
         self.view.close_connection()
+
+    def set_in_window(self, in_window: bool) -> None:
+        self.bar.in_window = in_window
+        self.bar.retranslate()
 
     def retranslate(self) -> None:
         self.hint.retranslate()

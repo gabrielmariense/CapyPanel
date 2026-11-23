@@ -273,6 +273,24 @@ def test_hosts_right_click_opens_the_pcs_in_ssh_tabs(
             tab.close_connection()
 
 
+def test_a_connection_moved_back_brings_capypanel_forward_with_ssh_in_front(
+    capy: "CapyWindow",
+) -> None:
+    ssh = _ssh(capy)
+    assert ssh.open_connection("192.0.2.41", SshInfo(), "nas-01")
+    try:
+        ssh.move_out("connection-1")
+        capy.show_home()
+        capy.to_tray()
+        assert not capy.isVisible()
+        ssh.move_back("connection-1")
+        assert capy.isVisible() and not capy._in_tray
+        assert capy.shown_tool() is ssh and ssh.tabs.current() == "connection-1"
+    finally:
+        for tab in ssh.connections():
+            tab.close_connection()
+
+
 def test_ssh_keeps_no_lists_of_its_own(capy: "CapyWindow", monkeypatch: pytest.MonkeyPatch) -> None:
     places = capy.paths.lists("ssh")
     assert not places.shared_dir.exists() and not places.user_dir.exists()
