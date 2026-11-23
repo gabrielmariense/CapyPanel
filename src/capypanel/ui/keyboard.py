@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QContextMenuEvent, QFocusEvent, QKeyEvent
@@ -16,6 +16,8 @@ from capypanel.ui.focus_ring import FocusRing
 
 PLAIN = Qt.KeyboardModifier.NoModifier
 SHIFT = Qt.KeyboardModifier.ShiftModifier
+CTRL = Qt.KeyboardModifier.ControlModifier
+ALT = Qt.KeyboardModifier.AltModifier
 WATCHED = frozenset({
     QEvent.Type.FocusIn, QEvent.Type.FocusOut, QEvent.Type.KeyPress, QEvent.Type.KeyRelease,
     QEvent.Type.ContextMenu, QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonDblClick,
@@ -130,3 +132,49 @@ def tab_stop_while_it_scrolls(area: QAbstractScrollArea) -> None:
 def chain(widgets: Sequence[QWidget]) -> None:
     for before, after in zip(widgets, widgets[1:], strict=False):
         QWidget.setTabOrder(before, after)
+
+
+class OneStop(QObject):
+    def __init__(self, members: Sequence[QWidget], entry: Callable[[], QWidget | None]) -> None:
+        super().__init__(members[0])
+        self.members: list[QWidget] = []
+        self._entry = entry
+        self.reset(members)
+
+    def reset(self, members: Sequence[QWidget]) -> None:
+        for member in members:
+            if member not in self.members:
+                member.installEventFilter(self)
+        self.members = list(members)
+        for member in self.members:
+            # Qt's setTabOrder() does nothing for a widget that takes no focus.
+            member.setFocusPolicy(_tab_policy(member.focusPolicy(), tab=True))
+        chain(self.members)
+        self.settle()
+
+    def settle(self) -> None:
+        entry = self._entry()
+        for member in self.members:
+            member.setFocusPolicy(_tab_policy(member.focusPolicy(), tab=member is entry))
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if (
+            event.type() == QEvent.Type.KeyPress
+            and isinstance(event, QKeyEvent)
+            and event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab)
+            and not event.modifiers() & (CTRL | ALT)
+        ):
+            for member in self.members:
+                member.setFocusPolicy(_tab_policy(member.focusPolicy(), tab=False))
+            # Qt looks for the next stop once this returns, past every member: they come back after.
+            QTimer.singleShot(0, self, self.settle)
+        return False
+
+
+def _tab_policy(policy: Qt.FocusPolicy, *, tab: bool) -> Qt.FocusPolicy:
+    clicks = policy in (
+        Qt.FocusPolicy.ClickFocus, Qt.FocusPolicy.StrongFocus, Qt.FocusPolicy.WheelFocus
+    )  # fmt: skip
+    if tab:
+        return Qt.FocusPolicy.StrongFocus if clicks else Qt.FocusPolicy.TabFocus
+    return Qt.FocusPolicy.ClickFocus if clicks else Qt.FocusPolicy.NoFocus

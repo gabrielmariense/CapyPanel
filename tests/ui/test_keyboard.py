@@ -23,12 +23,13 @@ from PySide6.QtWidgets import (
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
-from capypanel.ui import help_links
+from capypanel.ui import about, help_links
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.keyboard import Keyboard, tab_stop_while_it_scrolls
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.toolbar import ToolButton
 from capypanel.ui.menus import label
+from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.ssh_tool.terminal import view as view_module
 from capypanel.ui.ssh_tool.terminal.view import PAD, TerminalView
 from capypanel.ui.tab_strip import PINNED, TabStrip
@@ -42,6 +43,13 @@ def keys(qapp: QApplication) -> Iterator[Keyboard]:
     qapp.installEventFilter(keys)
     yield keys
     qapp.removeEventFilter(keys)
+
+
+@pytest.fixture
+def opened(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    urls: list[str] = []
+    monkeypatch.setattr(about, "open_url", urls.append)
+    return urls
 
 
 @pytest.fixture
@@ -91,15 +99,31 @@ def _row(window: CapyWindow, name: str) -> QTreeWidgetItem:
     return next(r for r in rows if r is not None and r.text(0) == name)
 
 
-def test_the_rail_s_tools_are_one_tab_stop_entered_at_the_tool_shown(
+def test_the_rail_is_one_tab_stop_entered_at_the_tool_shown(
     window: CapyWindow, office: Path
 ) -> None:
     window.show_tool("ssh")
     rail = window.rail
-    rail.settings_button.setFocus(Qt.FocusReason.TabFocusReason)
-    assert _press(K.Key_Backtab) is rail.help_button
+    rail.settings_button.setFocus(Qt.FocusReason.OtherFocusReason)
+    after = _press(K.Key_Tab)
+    assert after is not None and not rail.isAncestorOf(after)
     assert _press(K.Key_Backtab) is rail.buttons["ssh"]
-    assert _press(K.Key_Tab) is rail.help_button
+    before = _press(K.Key_Backtab)
+    assert before is not None and not rail.isAncestorOf(before)
+    stops = _tabs(40)
+    assert rail.help_button not in stops and rail.settings_button not in stops
+
+
+def test_enter_opens_the_rail_s_button_with_the_ring_as_space_does(window: CapyWindow) -> None:
+    window.show_tool("hosts")
+    rail = window.rail
+    rail.buttons["hosts"].setFocus(Qt.FocusReason.OtherFocusReason)
+    _press(K.Key_Down)
+    _press(K.Key_Return)
+    assert window.shown_tool() is window.tools["printers"]
+    _press(K.Key_Down)
+    _press(K.Key_Enter, Qt.KeyboardModifier.KeypadModifier)
+    assert window.shown_tool() is window.tools["profiles"]
 
 
 def test_tab_goes_through_the_tool_as_it_stands(window: CapyWindow, office: Path) -> None:
@@ -124,6 +148,77 @@ def test_up_and_down_move_along_the_rail_opening_nothing(window: CapyWindow) -> 
     rail[0].setFocus(Qt.FocusReason.OtherFocusReason)
     assert _press(K.Key_Up) is rail[0]
     assert window.shown_tool() is window.hosts
+
+
+def _in_page_shown(dialog: SettingsDialog, widget: QWidget | None) -> bool:
+    view = dialog.stack.currentWidget()
+    return widget is not None and view is not None and (widget is view or view.isAncestorOf(widget))
+
+
+def _settings(window: CapyWindow, page: str) -> SettingsDialog:
+    dialog = window.settings_dialog()
+    dialog.show_page(page)
+    _shown(dialog)
+    return dialog
+
+
+def test_settings_pages_about_and_help_are_one_stop_and_tab_goes_into_the_page_shown(
+    window: CapyWindow,
+) -> None:
+    dialog = _settings(window, "general")
+    dialog.search.setFocus(Qt.FocusReason.TabFocusReason)
+    assert _press(K.Key_Tab) is dialog.page_list
+    assert dialog.page_list.currentRow() == dialog.row_of("general")
+    assert _in_page_shown(dialog, _press(K.Key_Tab))
+    assert _press(K.Key_Backtab) is dialog.page_list
+    assert _press(K.Key_Backtab) is dialog.search
+    stops = _tabs(30)
+    assert dialog.pinned_list not in stops and dialog.help_button not in stops
+    assert dialog.current_page() == "general"
+    dialog.show_page("about")
+    dialog.search.setFocus(Qt.FocusReason.TabFocusReason)
+    assert _press(K.Key_Tab) is dialog.pinned_list
+    assert _in_page_shown(dialog, _press(K.Key_Tab)) and dialog.current_page() == "about"
+    dialog.close()
+
+
+def test_settings_arrows_walk_pages_about_and_help_opening_nothing_till_enter_or_space(
+    window: CapyWindow, opened: list[str]
+) -> None:
+    dialog = _settings(window, "general")
+    pages = dialog.page_list
+    pages.setFocus(Qt.FocusReason.TabFocusReason)
+    while pages.currentRow() != dialog.row_of("hosts"):
+        assert _press(K.Key_Down) is pages
+    assert dialog.current_page() == "general"
+    _press(K.Key_Return)
+    assert dialog.current_page() == "hosts"
+    assert _press(K.Key_End) is dialog.help_button
+    assert _press(K.Key_Up) is dialog.pinned_list and dialog.current_page() == "hosts"
+    assert _press(K.Key_Down) is dialog.help_button
+    _press(K.Key_Return)
+    assert opened == [help_links.url(dialog.pages["hosts"].place)]
+    _press(K.Key_Up)
+    _press(K.Key_Space)
+    assert dialog.current_page() == "about"
+    assert _press(K.Key_Up) is pages and pages.currentRow() == pages.count() - 1
+    assert _press(K.Key_Home) is pages and pages.currentRow() == dialog.row_of("general")
+    assert dialog.current_page() == "about"
+    dialog.close()
+
+
+def test_settings_tab_comes_back_at_the_page_shown_wherever_the_arrows_left_the_ring(
+    window: CapyWindow,
+) -> None:
+    dialog = _settings(window, "hosts")
+    dialog.page_list.setFocus(Qt.FocusReason.TabFocusReason)
+    _press(K.Key_End)
+    assert _press(K.Key_Up) is dialog.pinned_list
+    assert _in_page_shown(dialog, _press(K.Key_Tab))
+    assert _press(K.Key_Backtab) is dialog.page_list
+    assert dialog.page_list.currentRow() == dialog.row_of("hosts")
+    assert dialog.pinned_list.currentRow() == -1 and dialog.current_page() == "hosts"
+    dialog.close()
 
 
 def test_home_s_tiles_take_tab_the_arrows_as_they_stand_and_enter_or_space(

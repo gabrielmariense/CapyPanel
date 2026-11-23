@@ -46,6 +46,8 @@ class ToolRail(QWidget):
         self._layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignHCenter)
         for button in (self.home_button, self.help_button, self.settings_button):
             button.installEventFilter(self)
+        self.stop = keyboard.OneStop(self.in_order(), self._tools.checkedButton)
+        self._tools.buttonToggled.connect(lambda _b, _on: self.stop.settle())
         self.restyle()
 
     def add_tool(self, tool_id: str, icon: str) -> QToolButton:
@@ -63,7 +65,7 @@ class ToolRail(QWidget):
         badge.hide()
         self.badges[tool_id] = badge
         button.installEventFilter(self)
-        keyboard.chain(self.in_order())
+        self.stop.reset(self.in_order())
         self.restyle()
         return button
 
@@ -71,17 +73,21 @@ class ToolRail(QWidget):
         return [self.home_button, *self.buttons.values(), self.help_button, self.settings_button]
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        """Qt makes the checkable buttons one Tab stop, as it does radio buttons: Tab comes in at
-        the tool shown, and the arrows move on without opening each tool they pass."""
+        """Qt's own arrows click each tool they reach in an exclusive group: these only move."""
         if not isinstance(watched, QToolButton):
             return super().eventFilter(watched, event)
         if event.type() == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
-            step = {Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}.get(Qt.Key(event.key()), 0)
+            key = Qt.Key(event.key())
+            step = {Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}.get(key, 0)
             shown = [b for b in self.in_order() if b.isVisible() and b.isEnabled()]
             if step and not event.modifiers() and watched in shown:
                 index = shown.index(watched) + step
                 if 0 <= index < len(shown):
                     shown[index].setFocus(Qt.FocusReason.OtherFocusReason)
+                return True
+            plain = not event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
+            if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and plain:
+                watched.click()
                 return True
         if event.type() == QEvent.Type.FocusIn and isinstance(event, QFocusEvent):
             tool = self._tools.checkedButton()

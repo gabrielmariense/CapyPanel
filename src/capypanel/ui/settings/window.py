@@ -1,8 +1,9 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
-from PySide6.QtCore import QEvent, Qt, QTimer, Signal
-from PySide6.QtGui import QPalette, QShowEvent
+from PySide6.QtCore import QEvent, QItemSelectionModel, QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QKeyEvent, QPalette, QShowEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QFrame,
     QHBoxLayout,
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -158,7 +160,7 @@ class SettingsDialog(QDialog):
         )
         self.page_list.setFixedWidth(longest + 64)
         self._paint_labels()
-        self.page_list.currentRowChanged.connect(self._row_picked)
+        self.page_list.itemSelectionChanged.connect(self._row_picked)
         self.pinned_list = QListWidget()
         self.pinned_list.setObjectName("pageList")
         for page_id in PINNED:
@@ -166,8 +168,7 @@ class SettingsDialog(QDialog):
         self.pinned_list.setFixedWidth(self.page_list.width())
         self.pinned_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._fit_pinned()
-        self.pinned_list.currentRowChanged.connect(self._pinned_picked)
-        self.page_list.setCurrentRow(self.row_of("general"))
+        self.pinned_list.itemSelectionChanged.connect(self._pinned_picked)
 
         content = QWidget()
         columns = QHBoxLayout()
@@ -183,6 +184,9 @@ class SettingsDialog(QDialog):
         side.addWidget(self.pinned_list)
         self.help_button = help_links.HelpButton(self.help_place)
         side.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignLeft)
+        self._page_id = "general"
+        self._column = _SideColumn(self.page_list, self.pinned_list, self.help_button, self._entry)
+        self.page_list.setCurrentRow(self.row_of("general"))
         columns.addLayout(side)
         divider = QFrame()
         divider.setObjectName("pagesDivider")
@@ -265,7 +269,8 @@ class SettingsDialog(QDialog):
             button.setAutoDefault(False)
             button.setDefault(False)
 
-    def _row_picked(self, row: int) -> None:
+    def _row_picked(self) -> None:
+        row = _picked_row(self.page_list)
         page_id = self._rows[row] if 0 <= row < len(self._rows) else None
         if page_id is None:
             return
@@ -273,16 +278,23 @@ class SettingsDialog(QDialog):
         self._leave_search()
         self._show_view(page_id)
 
-    def _pinned_picked(self, row: int) -> None:
+    def _pinned_picked(self) -> None:
+        row = _picked_row(self.pinned_list)
         if 0 <= row < len(PINNED):
             self._unpick(self.page_list)
             self._leave_search()
             self._show_view(PINNED[row])
 
     def _show_view(self, page_id: str) -> None:
+        self._page_id = page_id
         view = self._views[self._view_of[page_id]]
         self.stack.setCurrentWidget(view)
         view.verticalScrollBar().setValue(0)
+        self._column.stop.settle()
+
+    def _entry(self) -> QWidget:
+        pinned = self._page_id in PINNED and self.stack.currentIndex() != self._results_view
+        return self.pinned_list if pinned else self.page_list
 
     def _leave_search(self) -> None:
         if self._lent:
@@ -294,6 +306,7 @@ class SettingsDialog(QDialog):
     @staticmethod
     def _unpick(pages: QListWidget) -> None:
         pages.blockSignals(True)
+        pages.clearSelection()
         pages.setCurrentRow(-1)
         pages.blockSignals(False)
 
@@ -393,11 +406,7 @@ class SettingsDialog(QDialog):
     def current_page(self) -> str:
         if self.stack.currentIndex() == self._results_view:
             return "search"
-        if self.pinned_list.currentRow() >= 0:
-            return PINNED[self.pinned_list.currentRow()]
-        row = self.page_list.currentRow()
-        entry = self._rows[row] if 0 <= row < len(self._rows) else None
-        return entry if entry is not None else "general"
+        return self._page_id
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
@@ -430,6 +439,91 @@ class _PageArea(QScrollArea):
         page = self.widget()
         bar = self.verticalScrollBar().sizeHint().width()
         return (page.minimumSizeHint().width() if page is not None else 0) + bar
+
+
+def _picked_row(pages: QListWidget) -> int:
+    picked = pages.selectionModel().selectedIndexes()
+    return picked[0].row() if picked else -1
+
+
+class _SideColumn(QObject):
+    MOVES = frozenset({
+        Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Home, Qt.Key.Key_End,
+        Qt.Key.Key_PageUp, Qt.Key.Key_PageDown,
+    })  # fmt: skip
+    OPENS = frozenset({Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space})
+
+    def __init__(
+        self,
+        pages: QListWidget,
+        pinned: QListWidget,
+        help_button: QToolButton,
+        entry: Callable[[], QWidget],
+    ) -> None:
+        super().__init__(pages)
+        self._lists = (pages, pinned)
+        self._help = help_button
+        self.stop = keyboard.OneStop([pages, pinned, help_button], entry)
+        for member in (pages, pinned, help_button):
+            member.installEventFilter(self)
+
+    def places(self) -> list[tuple[QWidget, int]]:
+        found: list[tuple[QWidget, int]] = []
+        for pages in self._lists:
+            for row in range(pages.count()):
+                item = pages.item(row)
+                enabled = item is not None and item.flags() & Qt.ItemFlag.ItemIsEnabled
+                if enabled and not pages.isRowHidden(row):
+                    found.append((pages, row))
+        return [*found, (self._help, -1)]
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.FocusOut:
+            QTimer.singleShot(0, self, self._left)
+            return False
+        if event.type() != QEvent.Type.KeyPress or not isinstance(event, QKeyEvent):
+            return False
+        if event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+            return False
+        key = Qt.Key(event.key())
+        if key in self.MOVES and isinstance(watched, QWidget):
+            self._move(watched, key)
+            return True
+        if key in self.OPENS and isinstance(watched, QListWidget) and watched.currentRow() >= 0:
+            watched.setCurrentRow(watched.currentRow())
+            return True
+        if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and watched is self._help:
+            self._help.click()
+            return True
+        return False
+
+    def _move(self, watched: QWidget, key: Qt.Key) -> None:
+        places = self.places()
+        row = watched.currentRow() if isinstance(watched, QListWidget) else -1
+        here = places.index((watched, row)) if (watched, row) in places else -1
+        last = len(places) - 1
+        to = {
+            Qt.Key.Key_Up: max(here - 1, 0),
+            Qt.Key.Key_Down: min(here + 1, last),
+            Qt.Key.Key_Home: 0,
+            Qt.Key.Key_PageUp: 0,
+        }.get(key, last)
+        widget, row = places[to]
+        if isinstance(widget, QListWidget):
+            _point_at(widget, row)
+        widget.setFocus(Qt.FocusReason.OtherFocusReason)
+
+    def _left(self) -> None:
+        focus = QApplication.focusWidget()
+        if focus in (*self._lists, self._help):
+            return
+        for pages in self._lists:
+            _point_at(pages, _picked_row(pages))
+
+
+def _point_at(pages: QListWidget, row: int) -> None:
+    index = pages.model().index(row, 0)
+    pages.selectionModel().setCurrentIndex(index, QItemSelectionModel.SelectionFlag.NoUpdate)
 
 
 def _scrolling(widget: QWidget) -> _PageArea:
