@@ -167,9 +167,7 @@ class PrinterDetailsPanel(DetailsPanel):
         self._fields(layout, (("pages", _("Total pages"), total),
                               ("counter_source", _("Source"), source)))  # fmt: skip
         if info.counter_source == DOC360 and shown.counted is not None and not error:
-            behind = self.muted(status.doc360_behind())
-            behind.setObjectName("doc360Behind")
-            layout.addWidget(behind)
+            layout.addWidget(self.muted(status.doc360_behind()))
         if error:
             layout.addWidget(_link(status.doc360_place(info, reading, shown.counted)))
         if error and shown.counted and shown.counted.account:
