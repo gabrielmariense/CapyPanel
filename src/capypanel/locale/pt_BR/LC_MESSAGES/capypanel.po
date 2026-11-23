@@ -3988,7 +3988,7 @@ msgid "Supply low"
 msgstr "Suprimento baixo"
 
 msgid "Supply low: at or below the Low supply level, under Supplies."
-msgstr "Suprimento baixo: no nível baixo de suprimento, em Suprimentos, ou abaixo dele."
+msgstr "Suprimento baixo: no Nível baixo de suprimento, em Suprimentos, ou abaixo dele."
 
 msgid "Supply missing"
 msgstr "Suprimento ausente"
