@@ -3,9 +3,10 @@ from collections.abc import Iterator
 from dataclasses import replace
 
 import pytest
-from PySide6.QtCore import QPointF, QRect, Qt
+from PySide6.QtCore import QPointF, QRect, QRectF, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
+    QAbstractScrollArea,
     QApplication,
     QCheckBox,
     QLabel,
@@ -134,6 +135,60 @@ def test_a_table_rings_its_current_row_across_its_columns(keys: Keyboard) -> Non
         assert rect.adjusted(-OUT, -OUT, OUT, OUT).toRect() == whole and radius == 0
         _press(K.Key_Down)
     assert _ring(keys) is ring
+    window.close()
+
+
+def test_a_row_wider_than_its_table_closes_its_ring_at_the_table_s_edge(keys: Keyboard) -> None:
+    before, table = QLineEdit(), _office()
+    for column in range(3):
+        table.setColumnWidth(column, 300)
+    window = _window(before, table)
+    table.setCurrentItem(_item(table, 1))
+    before.setFocus(Qt.FocusReason.TabFocusReason)
+    assert _press(K.Key_Tab) is table
+    viewport, bar = table.viewport(), table.horizontalScrollBar()
+    assert table.header().length() > viewport.width()
+    row = table.visualItemRect(_item(table, 1))
+    for value in (0, bar.maximum() // 2, bar.maximum()):
+        bar.setValue(value)
+        QApplication.processEvents()
+        ((rect, _radius),) = focus_ring.row_paths(table)
+        seen = QRect(0, row.top(), viewport.width(), row.height())
+        assert rect.adjusted(-OUT, -OUT, OUT, OUT).toRect() == seen
+    window.close()
+
+
+class _Pane(QAbstractScrollArea):
+    def __init__(self, typed: bool) -> None:
+        super().__init__()
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, typed)
+
+
+def test_a_pane_s_ring_goes_inside_it_round_what_it_shows(keys: Keyboard) -> None:
+    before, pane = QLineEdit(), _Pane(typed=False)
+    window = _window(before, pane)
+    pane.setFocus(Qt.FocusReason.MouseFocusReason)
+    QApplication.processEvents()
+    assert QApplication.focusWidget() is pane and _ring(keys) is None
+    before.setFocus(Qt.FocusReason.OtherFocusReason)
+    assert _press(K.Key_Tab) is pane
+    ring = _ring(keys)
+    viewport = pane.viewport()
+    assert ring is not None and ring.parentWidget() is pane
+    assert ring.geometry() == viewport.geometry()
+    assert ring.paths == [(QRectF(viewport.rect()).adjusted(OUT, OUT, -OUT, -OUT), 0.0)]
+    window.close()
+
+
+def test_a_pane_you_type_in_keeps_its_ring_however_it_got_the_keyboard(keys: Keyboard) -> None:
+    first, pane = QPushButton("First"), _Pane(typed=True)
+    window = _window(first, pane)
+    pane.setFocus(Qt.FocusReason.MouseFocusReason)
+    QApplication.processEvents()
+    ring = _ring(keys)
+    assert QApplication.focusWidget() is pane and ring is not None
+    assert ring.parentWidget() is pane and ring.geometry() == pane.viewport().geometry()
     window.close()
 
 

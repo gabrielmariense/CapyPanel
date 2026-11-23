@@ -80,9 +80,11 @@ class Kind(Enum):
     LINK = "link"
     TAB = "tab"
     BOX = "box"
+    PANE = "pane"
 
 
 ALWAYS = frozenset({Kind.FIELD, Kind.LINK})
+INSIDE = frozenset({Kind.ROW, Kind.PANE})
 
 
 class Ring(QWidget):
@@ -149,12 +151,12 @@ class FocusRing(QObject):
 
     def place(self) -> None:
         target, kind = _target(QApplication.focusWidget())
-        if target is None or kind is None or not (self.by_keyboard or kind in ALWAYS):
+        if target is None or kind is None or not (self.by_keyboard or _always(target, kind)):
             self._hide()
             return
         if target is not self._target or kind is not self._kind:
             self._follow(target, kind)
-        host = target if kind is Kind.ROW else _host(target)
+        host = target if kind in INSIDE else _host(target)
         ring = self.ring
         if ring is None or not shiboken6.isValid(ring):
             ring = self.ring = Ring(host)
@@ -164,9 +166,10 @@ class FocusRing(QObject):
             self._fresh = True
         if isinstance(target, QAbstractItemView) and kind is Kind.ROW:
             self._place_rows(ring, target)
+        elif isinstance(target, QAbstractScrollArea) and kind is Kind.PANE:
+            self._place_pane(ring, target)
         else:
             self._place_around(ring, target, kind, host)
-        self._fresh = False
         ring.show()
         ring.raise_()
         ring.update()
@@ -174,10 +177,19 @@ class FocusRing(QObject):
     def _place_rows(self, ring: Ring, view: QAbstractItemView) -> None:
         ring.rows, ring.paths = view, []
         ring.setGeometry(view.viewport().geometry())
+        box = row_box(view)
+        if self._fresh and not box.isEmpty():
+            ring.ink = _ink(_pixel(view.viewport(), QPoint(box.left() + 1, box.center().y())))
+            self._fresh = False
+
+    def _place_pane(self, ring: Ring, pane: QAbstractScrollArea) -> None:
+        viewport = pane.viewport()
+        inner = QRectF(viewport.rect()).adjusted(OUT, OUT, -OUT, -OUT)
+        ring.rows, ring.paths = None, [(inner, 0.0)]
+        ring.setGeometry(viewport.geometry())
         if self._fresh:
-            box = row_box(view)
-            spot = QPoint(max(box.left(), 0) + 1, box.center().y())
-            ring.ink = _ink(_pixel(view.viewport(), spot))
+            ring.ink = _ink(_surface(viewport, viewport.rect().adjusted(GAP, GAP, -GAP, -GAP)))
+            self._fresh = False
 
     def _place_around(self, ring: Ring, target: QWidget, kind: Kind, host: QWidget) -> None:
         boxes = _boxes(target, kind, host)
@@ -195,13 +207,20 @@ class FocusRing(QObject):
         ring.paths = [(rect.translated(-shift), radius) for rect, radius in paths]
         if self._fresh:
             ring.ink = _ink(_surface(host, boxes[0][0].toAlignedRect()))
+            self._fresh = False
 
     def _follow(self, target: QWidget, kind: Kind) -> None:
         self._unfollow()
         self._target, self._kind, self._fresh = target, kind, True
         watched: list[QWidget] = [target]
-        if isinstance(target, QAbstractItemView):
+        if isinstance(target, QAbstractScrollArea) and kind in INSIDE:
             watched.append(target.viewport())
+        else:
+            host, widget = _host(target), target.parentWidget()
+            while widget is not None and widget is not host:
+                watched.append(widget)
+                widget = widget.parentWidget()
+        if isinstance(target, QAbstractItemView):
             links: list[tuple[SignalInstance, Callable[..., object]]] = [
                 (target.verticalScrollBar().valueChanged, self.later),
                 (target.horizontalScrollBar().valueChanged, self.later),
@@ -213,11 +232,6 @@ class FocusRing(QObject):
             for signal, slot in links:
                 signal.connect(slot)
             self._links = links
-        else:
-            host, widget = _host(target), target.parentWidget()
-            while widget is not None and widget is not host:
-                watched.append(widget)
-                widget = widget.parentWidget()
         for widget in watched:
             widget.installEventFilter(self)
         self._watched = watched
@@ -251,6 +265,9 @@ def _target(focus: QWidget | None) -> tuple[QWidget | None, Kind | None]:
         return None, None
     if isinstance(focus, QAbstractItemView):
         return focus, Kind.ROW
+    text_box = isinstance(focus, QPlainTextEdit | QTextEdit)
+    if isinstance(focus, QAbstractScrollArea) and not text_box:
+        return focus, Kind.PANE
     if isinstance(focus, QTabBar):
         return (focus, Kind.TAB) if focus.currentIndex() >= 0 else (None, None)
     if isinstance(focus, QLabel):
@@ -265,6 +282,11 @@ def _target(focus: QWidget | None) -> tuple[QWidget | None, Kind | None]:
     if focus.testAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled):
         return focus, Kind.FIELD
     return focus, Kind.PRESS
+
+
+def _always(target: QWidget, kind: Kind) -> bool:
+    typed = target.testAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled)
+    return kind in ALWAYS or (kind is Kind.PANE and typed)
 
 
 def _in_menu(widget: QWidget) -> bool:
@@ -300,8 +322,7 @@ def _boxes(target: QWidget, kind: Kind, host: QWidget) -> list[tuple[QRectF, flo
 def corner(widget: QWidget) -> float:
     theme = engine.current()
     name = widget.objectName()
-    text_box = isinstance(widget, QPlainTextEdit | QTextEdit)
-    flat = _in_item_view(widget) or (isinstance(widget, QAbstractScrollArea) and not text_box)
+    flat = _in_item_view(widget)
     if theme.engine == "native":
         if name == "homeTile":
             return 10.0
@@ -341,8 +362,8 @@ def row_box(view: QAbstractItemView) -> QRect:
     cell = view.visualRect(current)
     if isinstance(view, QTreeView):
         header = view.header()
-        return QRect(-header.offset(), cell.top(), header.length(), cell.height())
-    return cell
+        cell = QRect(-header.offset(), cell.top(), header.length(), cell.height())
+    return cell.intersected(view.viewport().rect())
 
 
 def row_paths(view: QAbstractItemView) -> list[tuple[QRectF, float]]:
