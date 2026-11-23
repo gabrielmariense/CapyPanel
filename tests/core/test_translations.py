@@ -95,6 +95,9 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
         # Import hosts' table, where F2 is Qt's own key to edit a cell: F2 anywhere else is caught.
         "Double-click a cell, or press F2, to change it; the list above follows. Right-click "
         "for more.",
+        # The terminal's find field, whose Enter and Shift+Enter are its own.
+        "Older match (Enter)",
+        "Newer match (Shift+Enter)",
     }
     assert named == fixed
     old = "Reads the status, toner and page count of every printer shown. Nothing is read until"

@@ -62,6 +62,7 @@ log = logging.getLogger(__name__)
 AT_ONCE = 10  # more selected connect only the first ones: a tab or a window each
 AUTO_STATUS = "auto_status"
 POINTS = "terminal_points"
+SAVE_FOLDER = "save_folder"
 MIN_POINTS, MAX_POINTS, DEFAULT_POINTS = 8, 20, 10
 
 
@@ -500,6 +501,8 @@ class SshTool(TabbedListWorkspace):
         tab.close_asked.connect(lambda: self.close_tab(key))
         tab.view.size_picked.connect(self._size_picked)
         tab.view.extend_menu = lambda menu: self._fill_terminal_menu(key, menu)
+        tab.view.save_folder = self._save_folder
+        tab.view.text_saved.connect(self._text_saved)
         self._connections[key] = tab
         self._tab_names[key] = self._tab_name(name)
         self.add_page(key, tab, self._tab_names[key])
@@ -750,6 +753,17 @@ class SshTool(TabbedListWorkspace):
         self._save_prefs()
         for tab in self._connections.values():
             tab.view.set_point_size(points)
+
+    def _save_folder(self, chosen: str | None) -> str:
+        if chosen is not None:
+            self.prefs[SAVE_FOLDER] = chosen
+            self._save_prefs()
+            return chosen
+        saved = self.prefs.get(SAVE_FOLDER)
+        return saved if isinstance(saved, str) else ""
+
+    def _text_saved(self, path: str) -> None:
+        self._shell.show_message(_("Saved the text in {path}").format(path=path), 5000)
 
     def _copy_address(self) -> None:
         hosts = self.selected_items()

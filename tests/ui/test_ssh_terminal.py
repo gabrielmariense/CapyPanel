@@ -21,7 +21,7 @@ from test_themes import ACCENTS
 
 from capypanel.core.ssh import conpty
 from capypanel.core.ssh.screen import TermScreen, TermStream
-from capypanel.ui import error_window, help_links
+from capypanel.ui import error_window, help_links, menus
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys
 from capypanel.ui.ssh_tool.terminal import glyphs, keys, palette
@@ -1089,3 +1089,173 @@ def test_each_character_stays_in_its_cell_and_blocks_leave_no_seam(
         )
     full = _ink(_render(["███", "███"], cw, ch, 0), 128)
     assert all(all(row) for row in full)
+
+
+def _printed(view: TerminalView, consoles: list[FakeConsole], data: bytes) -> FakeConsole:
+    view.start(["ssh.exe"])
+    console = consoles[-1]
+    console.prints(data)
+    _until(lambda: not console.pending)
+    view.settle()
+    return console
+
+
+def _enter(widget: QWidget, mods: Qt.KeyboardModifier = NONE) -> None:
+    QApplication.sendEvent(widget, QKeyEvent(QEvent.Type.KeyPress, K.Key_Return, mods, "\r"))
+
+
+def _rows_shown(view: TerminalView) -> list[str]:
+    top = view.verticalScrollBar().value()
+    return [view.term.row_text(r) for r in range(top, top + view.term.lines)]
+
+
+def test_the_terminal_menu_finds_saves_and_clears_in_that_order(view: TerminalView) -> None:
+    actions = view.menu().actions()
+    assert [menus.label(a) for a in actions] == [
+        "&Copy", "&Paste", "Select &all", "", "&Find…", "Save the &text…", "Clear &scrollback",
+    ]  # fmt: skip
+    assert actions[4].shortcut().toString() == "Ctrl+Shift+F"
+
+
+def test_ctrl_shift_f_opens_find_with_the_words_selected_and_sends_nothing(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"disk sda1 92% full\r\n$ ")
+    _asks_for_key_events(view, console)
+    view.select_cells((0, 5), (0, 8))
+    both = keys.Q_CTRL_L | keys.Q_SHIFT_L
+    QApplication.sendEvent(view, _key(K.Key_F, 0x46, 0x21, native=both, mods=CTRL | SHIFT))
+    bar = view.search_bar
+    assert bar is not None and bar.isVisible()
+    assert view.window().focusWidget() is bar.field
+    assert bar.words == "sda1" and bar.count.text() == "1 of 1"
+    assert console.written == []
+
+
+def test_find_starts_at_the_newest_match_and_enter_goes_to_older_ones_in_turn(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    errors = {10: b"error ten", 50: b"error fifty", 95: b"error ninety-five"}
+    text = b"".join(errors.get(n, b"line %d ok" % n) + b"\r\n" for n in range(100))
+    console = _printed(view, consoles, text + b"$ ")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    bar.field.setText("ERROR")
+    bar.flush()
+    assert bar.count.text() == "3 of 3" and view.selected_text() == "error"
+    assert "error ninety-five" in _rows_shown(view)
+    QApplication.processEvents()
+    assert bar.count.geometry().left() > bar.field.geometry().right()
+    assert bar.count.width() >= bar.count.sizeHint().width()
+    assert bar.geometry().right() < view.viewport().geometry().right()
+    for count, words in (("2 of 3", "error fifty"), ("1 of 3", "error ten"), ("3 of 3", "nine")):
+        _enter(bar.field)
+        assert bar.count.text() == count
+        assert any(words in row for row in _rows_shown(view))
+    _enter(bar.field, SHIFT)
+    assert bar.count.text() == "1 of 3"
+    assert console.written == []
+
+
+def test_find_can_match_case_and_says_when_nothing_matches(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    _printed(view, consoles, b"Error one\r\nerror two\r\n")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    bar.field.setText("Error")
+    bar.flush()
+    assert bar.count.text() == "2 of 2"
+    bar.case.setChecked(True)
+    assert bar.count.text() == "1 of 1"
+    bar.field.setText("missing")
+    bar.flush()
+    assert bar.count.text() == "No matches"
+
+
+def test_escape_closes_find_and_gives_the_keys_back_to_the_terminal(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"error\r\n")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    bar.field.setText("error")
+    bar.flush()
+    QApplication.sendEvent(bar.field, QKeyEvent(QEvent.Type.KeyPress, K.Key_Escape, NONE))
+    assert not bar.isVisible()
+    assert view.window().focusWidget() is view
+    assert view._visible_matches(0) == {}
+    assert console.written == []
+
+
+def test_save_the_text_writes_each_line_whole_for_windows_and_remembers_the_folder(
+    view: TerminalView, consoles: list[FakeConsole], tmp_path: Path
+) -> None:
+    long = "".join(chr(ord("a") + n % 26) for n in range(300))
+    _printed(view, consoles, f"{long}\r\nsecond  \r\n$ ".encode())
+    assert view.term.wrapped_at(0)
+    target = tmp_path / "web-01.txt"
+    suggested: list[str] = []
+    remembered: list[str | None] = []
+    saved: list[str] = []
+
+    def ask(_parent: QWidget, _title: str, path: str) -> str:
+        suggested.append(path)
+        return str(target)
+
+    def folder(chosen: str | None) -> str:
+        remembered.append(chosen)
+        return str(tmp_path)
+
+    view.ask_save_path, view.save_folder = ask, folder
+    view.text_saved.connect(saved.append)
+    view.save_text()
+    assert Path(suggested[0]).parent == tmp_path
+    assert Path(suggested[0]).name.startswith("web-01 ") and suggested[0].endswith(".txt")
+    assert target.read_bytes() == b"\xef\xbb\xbf" + f"{long}\r\nsecond\r\n$\r\n".encode()
+    assert remembered == [None, str(tmp_path)]
+    assert saved == [str(target)]
+
+
+def test_a_file_that_can_t_be_saved_says_why_and_its_folder_isn_t_remembered(
+    view: TerminalView,
+    consoles: list[FakeConsole],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _printed(view, consoles, b"text\r\n")
+    warned: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        help_links, "warning", lambda _p, _title, text, *, place: warned.append((text, place))
+    )
+    remembered: list[str | None] = []
+
+    def folder(chosen: str | None) -> str:
+        remembered.append(chosen)
+        return ""
+
+    view.save_folder = folder
+    view.ask_save_path = lambda *_args: str(tmp_path / "gone" / "web-01.txt")
+    view.save_text()
+    assert len(warned) == 1 and "web-01.txt" in warned[0][0]
+    assert warned[0][1] == "ssh-work-in-the-terminal"
+    view.ask_save_path = lambda *_args: ""
+    view.save_text()
+    assert remembered == [None, None]
+
+
+def test_a_narrower_terminal_rewraps_its_scrollback_once_the_resizing_stops(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    lines = ["".join(chr(ord("a") + (n + i) % 26) for i in range(150)) for n in range(40)]
+    _printed(view, consoles, "\r\n".join([*lines, "$ "]).encode())
+    view.window().resize(500, 400)
+    QApplication.processEvents()
+    assert not view.term.scrollback_settled
+    _until(lambda: view.term.scrollback_settled)
+    columns = view.term.columns
+    assert all(len(row) <= columns for row in view.term.scrollback_text())
+    assert view.term.whole_text().split("\r\n")[:40] == lines

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import re
 import unicodedata
+from bisect import bisect_right
 from collections import defaultdict, deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, NamedTuple, cast
@@ -99,6 +101,110 @@ def unpack(packed: PackedLine, columns: int) -> tuple[list[str], list[Style]]:
     return chars, styles
 
 
+def rewrap(
+    rows: Iterable[PackedLine], columns: int, mark: tuple[int, int] | None = None
+) -> tuple[list[PackedLine], tuple[int, int] | None]:
+    """Rows of any widths laid out again at `columns` as the console does, a wide character that
+    won't fit moved down. `mark` (row, cell) moves with its text, past the line's end too."""
+    out: list[PackedLine] = []
+    parts: list[str | tuple[str, ...]] = []
+    runs: list[tuple[int, int, Style]] = []
+    length = 0
+    marked: int | None = None
+    moved: tuple[int, int] | None = None
+    for index, row in enumerate(rows):
+        is_marked = mark is not None and index == mark[0]
+        if not parts and not row.wrapped_at and len(row.cells) <= columns and not is_marked:
+            out.append(row)
+            continue
+        taken = row.wrapped_at or len(row.cells)
+        if mark is not None and is_marked:
+            marked = length + mark[1]
+        for start, end, style in row.runs:
+            if start < taken:
+                runs.append((length + start, length + min(end, taken), style))
+        parts.append(row.cells[:taken])
+        length += taken
+        if not row.wrapped_at:
+            placed = _lay_out(parts, runs, length, columns, out, ended=True, marked=marked)
+            moved = placed or moved
+            parts, runs, length, marked = [], [], 0, None
+    if parts:
+        placed = _lay_out(parts, runs, length, columns, out, ended=False, marked=marked)
+        moved = placed or moved
+    return out, moved
+
+
+def _lay_out(
+    parts: list[str | tuple[str, ...]],
+    runs: list[tuple[int, int, Style]],
+    length: int,
+    columns: int,
+    out: list[PackedLine],
+    *,
+    ended: bool,
+    marked: int | None,
+) -> tuple[int, int] | None:
+    line: str | tuple[str, ...]
+    if all(isinstance(part, str) for part in parts):
+        line = "".join(cast(list[str], parts))
+    else:
+        line = tuple(cell for part in parts for cell in part)
+    if marked is not None and marked > length:
+        pad = marked - length
+        line = line + " " * pad if isinstance(line, str) else line + (" ",) * pad
+        length = marked
+    moved = None
+    start = first_run = 0
+    while True:
+        end = min(start + columns, length)
+        if end < length and line[end] == "\0" and end - 1 > start:
+            end -= 1
+        last = end >= length
+        row_runs = []
+        i = first_run
+        while i < len(runs) and runs[i][0] < end:
+            s, e, style = runs[i]
+            if e > start:
+                row_runs.append((max(s, start) - start, min(e, end) - start, style))
+            i += 1
+        while first_run < len(runs) and runs[first_run][1] <= end:
+            first_run += 1
+        if marked is not None and moved is None and (marked < end or last):
+            moved = (len(out), marked - start)
+        wrapped_at = 0 if last and ended else end - start
+        out.append(PackedLine(line[start:end], tuple(row_runs), wrapped_at))
+        if last:
+            return moved
+        start = end
+
+
+def _row_from(packed: PackedLine, columns: int, blank: Char) -> _Row:
+    row = _Row(blank)
+    chars, styles = unpack(packed, columns)
+    for x, (data, style) in enumerate(zip(chars, styles, strict=True)):
+        if data != " " or style is not DEFAULT_STYLE:
+            row[x] = blank._replace(data=data, **style._asdict())
+    row.wrapped_at = packed.wrapped_at
+    return row
+
+
+def _matches(
+    pattern: re.Pattern[str], rows: list[int], starts: list[int], cells: list[str]
+) -> Iterator[tuple[int, int, int, int]]:
+    text = "".join(cells)
+    if len(text) == len(cells):
+        owner: Sequence[int] = range(len(cells))
+    else:
+        owner = [i for i, cell in enumerate(cells) for _ in cell]
+    for match in pattern.finditer(text):
+        first, last = owner[match.start()], owner[match.end() - 1]
+        if last + 1 < len(cells) and cells[last + 1] == "":
+            last += 1  # a wide character's second half
+        a, b = bisect_right(starts, first) - 1, bisect_right(starts, last) - 1
+        yield rows[a], first - starts[a], rows[b], last - starts[b]
+
+
 def _unpair_before(line: Any, x: int) -> None:
     """Writing over a wide character's second half blanks its first, as Windows' console does."""
     if x and line[x].data == "":
@@ -129,6 +235,8 @@ class TermScreen(pyte.Screen):
         # A regional indicator takes 2 cells in Windows' own console, 1 in the carried engine.
         self.regional_indicator_cells = 2
         self._main_buffer: Any = None
+        self._main_size = (lines, columns)
+        self.scrollback_settled = True  # every row laid out at the screen's width
         self._reply = reply or (lambda data: None)
         self.titles_seen = 0
         self.bells = 0
@@ -307,6 +415,7 @@ class TermScreen(pyte.Screen):
                     if m == 1049:
                         self.save_cursor()
                     self._main_buffer = self.buffer
+                    self._main_size = (self.lines, self.columns)
                     self.buffer = defaultdict(lambda: _Row(self.default_char))
                     self.in_alt = True
                     self.dirty.update(range(self.lines))
@@ -323,6 +432,10 @@ class TermScreen(pyte.Screen):
                     self.in_alt = False
                     if m == 1049:
                         self.restore_cursor()
+                    if self._main_size != (self.lines, self.columns):
+                        size = self.lines, self.columns
+                        self.lines, self.columns = self._main_size
+                        self.resize(*size)
                     self.dirty.update(range(self.lines))
         super().reset_mode(*modes, **kwargs)
 
@@ -350,18 +463,25 @@ class TermScreen(pyte.Screen):
         if how == 3:
             self.scrollback.clear()
 
-    def resize(self, lines: int | None = None, columns: int | None = None) -> None:
-        """Blank rows go from the bottom: pyte's cut the top, where an error message sits."""
+    def resize(
+        self, lines: int | None = None, columns: int | None = None, *, defer: bool = False
+    ) -> None:
+        """Blank rows go from the bottom: pyte's cut the top, where an error message sits.
+        `defer` leaves the scrollback to rewrap_scrollback(), as a window is dragged."""
         lines = lines or self.lines
         columns = columns or self.columns
         if lines == self.lines and columns == self.columns:
             return
+        if columns != self.columns:
+            self.scrollback_settled = False
+            if not self.in_alt:
+                self._rewrap_screen(columns)
         if lines < self.lines:
             off_top = max(0, self.cursor.y + 1 - lines)
             if off_top:
                 if not self.in_alt:
                     for y in range(off_top):
-                        self.scrollback.append(pack(self.buffer[y], self.columns))
+                        self.scrollback.append(pack(self.buffer[y], columns))
                         self.lines_scrolled += 1
                 for y in range(self.lines - off_top):
                     self.buffer[y] = self.buffer[y + off_top]
@@ -377,6 +497,30 @@ class TermScreen(pyte.Screen):
         self.cursor.x = min(self.cursor.x, columns - 1)
         self.margins = None
         self.dirty.update(range(lines))
+        if not defer:
+            self.rewrap_scrollback()
+
+    def rewrap_scrollback(self) -> None:
+        if not self.scrollback_settled:
+            rows, _ = rewrap(self.scrollback, self.columns)
+            self.scrollback = deque(rows, maxlen=self.scrollback.maxlen)
+            self.scrollback_settled = True
+
+    def _rewrap_screen(self, columns: int) -> None:
+        """As the console lays out its own screen, so the two agree on the cursor: from the top,
+        rows that no longer fit leave at the top, into the scrollback."""
+        packed = [pack(self.buffer[y], self.columns) for y in range(self.lines)]
+        used = max([y for y, row in enumerate(packed) if row.cells or row.runs] + [self.cursor.y])
+        rows, moved = rewrap(packed[: used + 1], columns, (self.cursor.y, self.cursor.x))
+        assert moved is not None
+        off_top = max(0, len(rows) - self.lines)
+        for row in rows[:off_top]:
+            self.scrollback.append(row)
+            self.lines_scrolled += 1
+        self.buffer.clear()
+        for y, row in enumerate(rows[off_top:]):
+            self.buffer[y] = _row_from(row, columns, self.default_char)
+        self.cursor.y, self.cursor.x = moved[0] - off_top, moved[1]
 
     def clear_scrollback(self) -> None:
         self.scrollback.clear()
@@ -401,7 +545,12 @@ class TermScreen(pyte.Screen):
         return [self.row_text(sb + y) for y in range(self.lines)]
 
     def scrollback_text(self) -> list[str]:
-        return ["".join(unpack(p, self.columns)[0]).rstrip() for p in self.scrollback]
+        return ["".join(self._row_cells(r)).rstrip() for r in range(len(self.scrollback))]
+
+    def whole_text(self) -> str:
+        text = self.text_between((0, 0), (self.total_rows - 1, self.columns - 1))
+        text = text.rstrip("\r\n")
+        return text + "\r\n" if text else ""
 
     def wrapped_at(self, index: int) -> int:
         sb = len(self.scrollback)
@@ -409,14 +558,44 @@ class TermScreen(pyte.Screen):
             return self.scrollback[index].wrapped_at
         return self._row(index - sb).wrapped_at
 
+    def _row_cells(self, index: int) -> list[str]:
+        sb = len(self.scrollback)
+        if index < sb:
+            cells = self.scrollback[index].cells
+            if isinstance(cells, str) and "\0" not in cells:
+                return list(cells)
+            return ["" if c == "\0" else c for c in cells]
+        return list(map(_DATA, _cells(self.buffer[index - sb], self.columns)))
+
+    def find(self, words: str, *, match_case: bool = False) -> list[tuple[int, int, int, int]]:
+        """Each match as (row, cell, last row, last cell); a line wrapped over rows is one line."""
+        if not words:
+            return []
+        pattern = re.compile(re.escape(words), 0 if match_case else re.IGNORECASE)
+        found: list[tuple[int, int, int, int]] = []
+        rows: list[int] = []
+        starts: list[int] = []
+        cells: list[str] = []
+        last = self.total_rows - 1
+        for r in range(self.total_rows):
+            chars = self._row_cells(r)
+            wrapped = self.wrapped_at(r)
+            rows.append(r)
+            starts.append(len(cells))
+            cells.extend(chars[:wrapped] if wrapped else chars)
+            if not wrapped or r == last:
+                found.extend(_matches(pattern, rows, starts, cells))
+                rows, starts, cells = [], [], []
+        return found
+
     def text_between(self, start: tuple[int, int], end: tuple[int, int]) -> str:
         """A wrapped line comes whole; lines end with CRLF, as Windows' clipboard wants."""
         (r0, c0), (r1, c1) = sorted((start, end))
         out = []
         for r in range(r0, r1 + 1):
-            chars, _styles = self.row(r)
+            chars = self._row_cells(r)
             a = c0 if r == r0 else 0
-            b = c1 + 1 if r == r1 else self.columns
+            b = c1 + 1 if r == r1 else len(chars)
             wrapped_at = self.wrapped_at(r) if r < r1 else 0
             if wrapped_at:
                 out.append("".join(chars[a:wrapped_at]))

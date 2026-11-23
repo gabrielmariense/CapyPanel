@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 21:06-0300\n"
+"POT-Creation-Date: 2026-11-22 21:39-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -152,6 +152,9 @@ msgstr "&Exportar…"
 
 msgid "&File"
 msgstr "&Arquivo"
+
+msgid "&Find…"
+msgstr "&Pesquisar…"
 
 msgid "&Fit columns to content"
 msgstr "&Ajustar colunas ao conteúdo"
@@ -1097,6 +1100,9 @@ msgstr "Fechar &aba"
 msgid "Close &window"
 msgstr "Fechar &janela"
 
+msgid "Close (Esc)"
+msgstr "Fechar (Esc)"
+
 #, python-brace-format
 msgid "Close the connection to {host}?"
 msgstr "Fechar a conexão com {host}?"
@@ -1381,6 +1387,10 @@ msgstr ""
 #, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
+
+#, python-brace-format
+msgid "Couldn't save “{path}”: {error}"
+msgstr "Não foi possível salvar “{path}”: {error}"
 
 #, python-brace-format
 msgid ""
@@ -1825,6 +1835,9 @@ msgstr "Arquivo não encontrado"
 
 msgid "Filters"
 msgstr "Filtros"
+
+msgid "Find"
+msgstr "Pesquisar"
 
 msgid "Firmware"
 msgstr "Firmware"
@@ -2327,6 +2340,9 @@ msgstr "Cor da marca"
 msgid "Mascot:"
 msgstr "Mascote:"
 
+msgid "Match case"
+msgstr "Diferenciar maiúsculas de minúsculas"
+
 msgid "Memory"
 msgstr "Memória"
 
@@ -2418,6 +2434,9 @@ msgstr "Nova lista de impressoras"
 msgid "New tag"
 msgstr "Nova tag"
 
+msgid "Newer match (Shift+Enter)"
+msgstr "Resultado mais recente (Shift+Enter)"
+
 msgid "Next"
 msgstr "Avançar"
 
@@ -2484,6 +2503,9 @@ msgstr "Nenhum host para atualizar"
 
 msgid "No list open"
 msgstr "Nenhuma lista aberta"
+
+msgid "No matches"
+msgstr "Nenhum resultado"
 
 msgid "No message: it restarts right away."
 msgstr "Sem mensagem: ele reinicia na hora."
@@ -2670,6 +2692,9 @@ msgstr "Desligado"
 
 msgid "Offline"
 msgstr "Offline"
+
+msgid "Older match (Enter)"
+msgstr "Resultado mais antigo (Enter)"
 
 msgid "On the PCs you pick, it deletes Windows user profiles: each person's folder under C:\\Users, with every file in it, and the profile's entry in the registry. A deleted profile can't be brought back."
 msgstr "Nos PCs que você escolher, ela exclui perfis de usuário do Windows: a pasta de cada pessoa em C:\\Users, com todos os arquivos dela, e a entrada do perfil no registro. Um perfil excluído não pode ser recuperado."
@@ -3561,17 +3586,27 @@ msgstr "Salvar esquece a conta guardada."
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
 
+msgid "Save the &text…"
+msgstr "&Salvar o texto…"
+
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
 
+msgid "Save the text"
+msgstr "Salvar o texto"
+
 msgid "Saved credentials"
 msgstr "Credenciais salvas"
 
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
+
+#, python-brace-format
+msgid "Saved the text in {path}"
+msgstr "Texto salvo em {path}"
 
 msgid "Scan"
 msgstr "Escanear"
@@ -3994,6 +4029,9 @@ msgstr "Temporários:"
 
 msgid "Text"
 msgstr "Texto"
+
+msgid "Text files (*.txt)"
+msgstr "Arquivos de texto (*.txt)"
 
 msgid "That group doesn't exist."
 msgstr "Esse grupo não existe."

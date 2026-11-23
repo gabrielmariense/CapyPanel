@@ -4,8 +4,10 @@ import functools
 import math
 import time
 import unicodedata
+from bisect import bisect_left
 from collections import deque
 from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
 
 from PySide6.QtCore import (
     QEvent,
@@ -15,6 +17,7 @@ from PySide6.QtCore import (
     QPointF,
     QRect,
     QRectF,
+    QStandardPaths,
     Qt,
     QTimer,
     Signal,
@@ -41,6 +44,7 @@ from PySide6.QtWidgets import (
     QAbstractScrollArea,
     QApplication,
     QDialog,
+    QFileDialog,
     QFrame,
     QLabel,
     QMenu,
@@ -51,12 +55,14 @@ from PySide6.QtWidgets import (
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.ssh.conpty import PseudoConsole
 from capypanel.core.ssh.screen import SCROLLBACK, Style, TermScreen, TermStream
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.menus import popup
 from capypanel.ui.shortcuts import Keys, portable
 from capypanel.ui.ssh_tool.terminal import glyphs, keys
 from capypanel.ui.ssh_tool.terminal.palette import TermPalette, current
+from capypanel.ui.ssh_tool.terminal.search import SearchBar
 from capypanel.ui.themes import engine as themes
 
 FONT_FAMILIES = ("Cascadia Mono", "Consolas")
@@ -75,7 +81,10 @@ CHUNK_LOG = 10_000
 # A full cache starts over, so a flood of 24-bit colours or characters can't grow it.
 MAX_CACHED = 16_384
 MAX_PENDING = 131072  # bytes the reader holds before ssh.exe waits: Ctrl+C shows at once
+SETTLE_MS = 150  # a drag's last resize this long ago: the scrollback rewraps once, not each step
 COPY_PASTE = (int(Qt.Key.Key_C), int(Qt.Key.Key_V))
+FIND = int(Qt.Key.Key_F)
+_Match = tuple[int, int, int, int]  # first row and cell, last row and cell; rows counted stable
 # As key events they keep the selection and scroll: Ctrl goes down before Ctrl+C's C.
 HELD_KEYS = frozenset(
     int(k)
@@ -160,10 +169,25 @@ def ask_paste(parent: QWidget, lines: Sequence[str], host: str) -> bool:
     return run_modal(PasteQuestion(parent, lines, host)) == QDialog.DialogCode.Accepted
 
 
+def ask_save_path(parent: QWidget, title: str, suggested: str) -> str:
+    name, _filter = QFileDialog.getSaveFileName(parent, title, suggested, _("Text files (*.txt)"))
+    return name
+
+
+def documents(_remember: str | None = None) -> str:
+    return QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+
+
+def file_name(host: str) -> str:
+    safe = "".join("_" if c in '<>:"/\\|?*' else c for c in host).strip() or "ssh"
+    return f"{safe} {time.strftime('%Y-%m-%d %H-%M')}.txt"
+
+
 class TerminalView(QAbstractScrollArea):
     started = Signal()
     ended = Signal(object)  # object: 0xC000013A doesn't fit a C int
     size_picked = Signal(int)
+    text_saved = Signal(str)
 
     def __init__(
         self,
@@ -211,6 +235,11 @@ class TerminalView(QAbstractScrollArea):
         self.confirm_paste: Callable[[QWidget, Sequence[str], str], bool] = ask_paste
         self.open_menu: Callable[[QMenu, QPoint], None] = popup
         self.extend_menu: Callable[[QMenu], None] = lambda _menu: None
+        self.ask_save_path: Callable[[QWidget, str, str], str] = ask_save_path
+        self.save_folder: Callable[[str | None], str] = documents
+        self.search_bar: SearchBar | None = None
+        self._matches: list[_Match] = []
+        self._current: int | None = None
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, True)
@@ -223,6 +252,10 @@ class TerminalView(QAbstractScrollArea):
         self._repaint_timer = QTimer(self)
         self._repaint_timer.setSingleShot(True)
         self._repaint_timer.timeout.connect(self.viewport().update)
+        self._settle_timer = QTimer(self)
+        self._settle_timer.setSingleShot(True)
+        self._settle_timer.setInterval(SETTLE_MS)
+        self._settle_timer.timeout.connect(self.settle)
         self._blink = QTimer(self)
         flash = QApplication.cursorFlashTime()
         if flash > 0:
@@ -294,14 +327,27 @@ class TerminalView(QAbstractScrollArea):
     def _fit(self) -> None:
         cols, rows = self.grid_for(self.viewport().width(), self.viewport().height())
         if (cols, rows) != (self.term.columns, self.term.lines):
-            self.term.resize(rows, cols)
+            if cols != self.term.columns:
+                self._sel = None
+                self._settle_timer.start()
+            self.term.resize(rows, cols, defer=True)
             if self.session is not None:
                 self.session.resize(cols, rows)
             self._sync_scrollbar(at_bottom=True)
 
+    def settle(self) -> None:
+        if not self.term.scrollback_settled:
+            self._settle_timer.stop()
+            at_bottom = self._at_bottom()
+            self.term.rewrap_scrollback()
+            self._sel = None
+            self._sync_scrollbar(at_bottom=at_bottom)
+            self.viewport().update()
+
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._fit()
+        self._place_search_bar()
 
     def set_palette(self, palette: TermPalette) -> None:
         self._palette = palette
@@ -345,6 +391,7 @@ class TerminalView(QAbstractScrollArea):
         self._ended_sent = False
         self._closed_by_us = False
         self._sel = None
+        self._forget_matches()
         self._start_number += 1
         number, bridge = self._start_number, self._bridge
         self.session = PseudoConsole(
@@ -533,8 +580,137 @@ class TerminalView(QAbstractScrollArea):
     def clear_scrollback(self) -> None:
         self.term.clear_scrollback()
         self._sel = None
+        self._forget_matches()
         self._sync_scrollbar(at_bottom=True)
         self.viewport().update()
+
+    def save_text(self) -> None:
+        self.settle()
+        text = self.term.whole_text()
+        folder = self.save_folder(None)
+        if not folder or not Path(folder).is_dir():
+            folder = documents()
+        title = _("Save the text")
+        name = self.ask_save_path(self, title, str(Path(folder) / file_name(self.host)))
+        if not name:
+            return
+        path = Path(name)
+        try:
+            path.write_text(text, encoding="utf-8-sig", newline="")  # BOM: PowerShell 5.1 reads it
+        except OSError as e:
+            words = _("Couldn't save “{path}”: {error}").format(path=path, error=e.strerror or e)
+            help_links.warning(self, title, words, place="ssh-work-in-the-terminal")
+            return
+        self.save_folder(str(path.parent))
+        self.text_saved.emit(str(path))
+
+    def open_search(self) -> None:
+        bar = self.search_bar
+        if bar is None:
+            bar = self.search_bar = SearchBar(self)
+            bar.words_changed.connect(self._search_typed)
+            bar.older.connect(lambda: self.find_step(older=True))
+            bar.newer.connect(lambda: self.find_step(older=False))
+            bar.close_asked.connect(self.close_search)
+            bar.resized.connect(self._place_search_bar)
+        picked = self.selected_text().strip()
+        if picked and "\n" not in picked:
+            bar.field.setText(picked)
+        bar.adjustSize()
+        self._place_search_bar()
+        bar.show()
+        bar.raise_()
+        bar.field.setFocus()
+        bar.field.selectAll()
+        if bar.words and not bar.flush():
+            self._search_typed()
+
+    def close_search(self) -> None:
+        if self.search_bar is not None:
+            self.search_bar.hide()
+        self._matches, self._current = [], None
+        self.setFocus()
+        self.viewport().update()
+
+    def _forget_matches(self) -> None:
+        self._matches, self._current = [], None
+        if self.search_bar is not None:
+            self.search_bar.show_count(None, 0)
+
+    def _place_search_bar(self) -> None:
+        bar = self.search_bar
+        if bar is not None:
+            area = self.viewport().geometry()
+            bar.move(max(area.left(), area.right() + 1 - bar.width() - PAD), area.top() + PAD)
+
+    def _search_typed(self) -> None:
+        self._run_search()
+        self._current = len(self._matches) - 1 if self._matches else None
+        self._show_current()
+
+    def find_step(self, *, older: bool) -> None:
+        """From the match shown, found again first: the output may have moved since."""
+        bar = self.search_bar
+        if bar is None or bar.flush():
+            return
+        before = self._matches[self._current] if self._current is not None else None
+        self._run_search()
+        n = len(self._matches)
+        if not n:
+            self._current = None
+        elif before is None:
+            self._current = n - 1
+        else:
+            starts = [(m[0], m[1]) for m in self._matches]
+            i = bisect_left(starts, (before[0], before[1]))
+            if older:
+                self._current = (i - 1) % n
+            else:
+                same = i < n and starts[i] == (before[0], before[1])
+                self._current = (i + 1 if same else i) % n
+        self._show_current()
+
+    def _run_search(self) -> None:
+        bar = self.search_bar
+        if bar is None:
+            return
+        self.settle()
+        found = self.term.find(bar.words, match_case=bar.match_case)
+        if self.term.in_alt:
+            found = [m for m in found if m[0] >= len(self.term.scrollback)]
+        self._matches = [(self._stable(r0), c0, self._stable(r1), c1) for r0, c0, r1, c1 in found]
+
+    def _show_current(self) -> None:
+        if self._current is not None:
+            s0, c0, s1, c1 = self._matches[self._current]
+            self._sel = ((s0, c0), (s1, c1))
+            self._reveal(self._row_of(s0))
+        if self.search_bar is not None:
+            self.search_bar.show_count(self._current, len(self._matches))
+        self.viewport().update()
+
+    def _reveal(self, row: int) -> None:
+        top = self._top_row()
+        if not self.term.in_alt and not top <= row < top + self.term.lines:
+            bar = self.verticalScrollBar()
+            bar.setValue(max(0, min(bar.maximum(), row - self.term.lines // 2)))
+
+    def _visible_matches(self, top: int) -> dict[int, list[tuple[int, int]]]:
+        spans: dict[int, list[tuple[int, int]]] = {}
+        bottom = top + self.term.lines - 1
+        for s0, c0, s1, c1 in self._matches:
+            r0, r1 = self._row_of(s0), self._row_of(s1)
+            if r1 < top or r0 > bottom:
+                continue
+            for r in range(max(r0, top), min(r1, bottom) + 1):
+                end = c1 if r == r1 else self.term.columns - 1
+                spans.setdefault(r, []).append((c0 if r == r0 else 0, end))
+        return spans
+
+    def retranslate(self) -> None:
+        if self.search_bar is not None:
+            self.search_bar.retranslate()
+            self.search_bar.show_count(self._current, len(self._matches))
 
     def menu(self) -> QMenu:
         menu = QMenu(self)
@@ -546,6 +722,9 @@ class TerminalView(QAbstractScrollArea):
         paste.setEnabled(self.running)
         menu.addAction(_("Select &all"), self.select_all)
         menu.addSeparator()
+        find = menu.addAction(_("&Find…"), self.open_search)
+        find.setShortcut(QKeySequence("Ctrl+Shift+F"))
+        menu.addAction(_("Save the &text…"), self.save_text)
         menu.addAction(_("Clear &scrollback"), self.clear_scrollback)
         self.extend_menu(menu)
         for action in menu.actions():
@@ -557,6 +736,7 @@ class TerminalView(QAbstractScrollArea):
             self.open_menu(self.menu(), event.globalPosition().toPoint())
             return
         if event.button() == Qt.MouseButton.LeftButton:
+            self.settle()
             cell = self.cell_at(event.position().toPoint())
             self._sel = (cell, cell)
             self._selecting = True
@@ -611,7 +791,7 @@ class TerminalView(QAbstractScrollArea):
         ctrl = Qt.KeyboardModifier.ControlModifier
         shift = Qt.KeyboardModifier.ShiftModifier
         key = int(e.key())
-        if mods == ctrl | shift and key in COPY_PASTE:
+        if mods == ctrl | shift and key in (*COPY_PASTE, FIND):
             return True
         return mods in (ctrl, ctrl | shift) and key in SIZE_KEYS
 
@@ -630,6 +810,8 @@ class TerminalView(QAbstractScrollArea):
                 self.copy_selection()
             elif key == int(Qt.Key.Key_V):
                 self.paste_from_clipboard()
+            elif key == FIND:
+                self.open_search()
             else:
                 step = -1 if key == int(Qt.Key.Key_Minus) else 1
                 before = self._point_size
@@ -706,11 +888,13 @@ class TerminalView(QAbstractScrollArea):
             sel = (self._row_of(s0), c0, self._row_of(s1), c1)
         first = max(0, (event.rect().top() - PAD) // ch)
         last = min(screen.lines - 1, (event.rect().bottom() - PAD) // ch)
+        found = self._visible_matches(top) if self._matches else {}
         for vy in range(first, last + 1):
             row = top + vy
             if row >= screen.total_rows:
                 break
             chars, styles = screen.row(row)
+            spans = found.get(row)
             y = vy * ch
             run_x, run_text, run_key = 0, "", None
             for x in range(screen.columns):
@@ -725,6 +909,8 @@ class TerminalView(QAbstractScrollArea):
                 fg, bg = pair
                 if sel and (sel[0], sel[1]) <= (row, x) <= (sel[2], sel[3]):
                     bg = pal.selection
+                elif spans and any(a <= x <= b for a, b in spans):
+                    bg = pal.match
                 if bg != pal.background:
                     p.fillRect(QRect(x * cw, y, cw, ch), self._qcolor(bg))
                 text = chars[x]

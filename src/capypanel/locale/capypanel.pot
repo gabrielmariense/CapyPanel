@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 21:06-0300\n"
+"POT-Creation-Date: 2026-11-22 21:39-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -150,6 +150,9 @@ msgid "&Export…"
 msgstr ""
 
 msgid "&File"
+msgstr ""
+
+msgid "&Find…"
 msgstr ""
 
 msgid "&Fit columns to content"
@@ -1146,6 +1149,9 @@ msgstr ""
 msgid "Close &window"
 msgstr ""
 
+msgid "Close (Esc)"
+msgstr ""
+
 #, python-brace-format
 msgid "Close the connection to {host}?"
 msgstr ""
@@ -1429,6 +1435,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't save “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1906,6 +1916,9 @@ msgid "File not found"
 msgstr ""
 
 msgid "Filters"
+msgstr ""
+
+msgid "Find"
 msgstr ""
 
 msgid "Firmware"
@@ -2448,6 +2461,9 @@ msgstr ""
 msgid "Mascot:"
 msgstr ""
 
+msgid "Match case"
+msgstr ""
+
 msgid "Memory"
 msgstr ""
 
@@ -2539,6 +2555,9 @@ msgstr ""
 msgid "New tag"
 msgstr ""
 
+msgid "Newer match (Shift+Enter)"
+msgstr ""
+
 msgid "Next"
 msgstr ""
 
@@ -2606,6 +2625,9 @@ msgid "No hosts to refresh"
 msgstr ""
 
 msgid "No list open"
+msgstr ""
+
+msgid "No matches"
 msgstr ""
 
 msgid "No message: it restarts right away."
@@ -2804,6 +2826,9 @@ msgid "Off"
 msgstr ""
 
 msgid "Offline"
+msgstr ""
+
+msgid "Older match (Enter)"
 msgstr ""
 
 msgid ""
@@ -3749,16 +3774,26 @@ msgstr ""
 msgid "Save my version as a copy…"
 msgstr ""
 
+msgid "Save the &text…"
+msgstr ""
+
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
+msgid "Save the text"
+msgstr ""
+
 msgid "Saved credentials"
 msgstr ""
 
 msgid "Saved in Credential Manager:"
+msgstr ""
+
+#, python-brace-format
+msgid "Saved the text in {path}"
 msgstr ""
 
 msgid "Scan"
@@ -4196,6 +4231,9 @@ msgid "Temporary:"
 msgstr ""
 
 msgid "Text"
+msgstr ""
+
+msgid "Text files (*.txt)"
 msgstr ""
 
 msgid "That group doesn't exist."

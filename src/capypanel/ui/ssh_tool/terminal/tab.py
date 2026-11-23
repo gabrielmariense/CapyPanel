@@ -215,6 +215,7 @@ class TerminalTab(QWidget):
         self.bar.retranslate()
 
     def retranslate(self) -> None:
+        self.view.retranslate()
         self.hint.retranslate()
         self.bar.retranslate()
 

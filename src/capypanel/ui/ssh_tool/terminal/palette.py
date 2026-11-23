@@ -60,6 +60,7 @@ class TermPalette:
     foreground: str
     cursor: str
     selection: str
+    match: str
     ansi: tuple[str, ...]
     back: tuple[str, ...]
     swap_to: tuple[str, ...]
@@ -129,6 +130,7 @@ def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
         foreground=r["text"],
         cursor=r["accent"] if contrast(r["accent"], r["card"]) >= SHOWS else r["text"],
         selection=r["sel"],
+        match=mix(r["attention"], r["card"], 0.30),
         ansi=tuple(ansi),
         back=tuple(back),
         swap_to=(r["text"], r["card"]),
