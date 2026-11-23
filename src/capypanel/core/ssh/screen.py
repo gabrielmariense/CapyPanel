@@ -20,6 +20,13 @@ ALT_SCREEN_MODES = (1049, 1047, 47)
 BRACKETED_PASTE = 2004 << 5  # pyte keeps private modes shifted left by 5
 APP_CURSOR_KEYS = 1 << 5  # DECCKM, which pyte doesn't name
 WIN32_INPUT = 9001  # private mode: keys as Windows key events
+MOUSE_MODES = (1003, 1002, 1000)  # what a program asks of the mouse: every move, drags, clicks
+MOUSE_SGR = 1006 << 5
+# 0 and 1 a blinking block, 2 a steady one; 3 and 4 an underline, 5 and 6 a bar, blinking first
+CURSOR_STYLES = 6
+WEB_ADDRESS = re.compile(r"\bhttps?://[^\s<>\"'`{}|\\^]+", re.IGNORECASE)
+CLOSERS = {")": "(", "]": "["}
+LINK_ROWS = 20  # how far up and down a wrapped address is looked for
 
 
 class Style(NamedTuple):
@@ -190,19 +197,38 @@ def _row_from(packed: PackedLine, columns: int, blank: Char) -> _Row:
 
 
 def _matches(
-    pattern: re.Pattern[str], rows: list[int], starts: list[int], cells: list[str]
-) -> Iterator[tuple[int, int, int, int]]:
+    pattern: re.Pattern[str],
+    rows: list[int],
+    starts: list[int],
+    cells: list[str],
+    trim: Callable[[str], str] | None = None,
+) -> Iterator[tuple[int, int, int, int, str]]:
     text = "".join(cells)
     if len(text) == len(cells):
         owner: Sequence[int] = range(len(cells))
     else:
         owner = [i for i, cell in enumerate(cells) for _ in cell]
     for match in pattern.finditer(text):
-        first, last = owner[match.start()], owner[match.end() - 1]
+        found = match.group() if trim is None else trim(match.group())
+        if not found:
+            continue
+        first, last = owner[match.start()], owner[match.start() + len(found) - 1]
         if last + 1 < len(cells) and cells[last + 1] == "":
             last += 1  # a wide character's second half
         a, b = bisect_right(starts, first) - 1, bisect_right(starts, last) - 1
-        yield rows[a], first - starts[a], rows[b], last - starts[b]
+        yield rows[a], first - starts[a], rows[b], last - starts[b], found
+
+
+def _link_end(address: str) -> str:
+    """A sentence's full stop, or the bracket an address was written in, isn't the address's."""
+    while address:
+        last = address[-1]
+        opener = CLOSERS.get(last)
+        if last in ".,;:!?'\"*" or (opener and address.count(last) > address.count(opener)):
+            address = address[:-1]
+        else:
+            break
+    return address
 
 
 def _unpair_before(line: Any, x: int) -> None:
@@ -260,6 +286,15 @@ class TermScreen(pyte.Screen):
     def bell(self, *args: Any) -> None:
         self.bells += 1
 
+    def reset(self) -> None:
+        super().reset()
+        self.cursor_style = 0
+
+    def set_cursor_style(self, style: int = 0, *args: Any, **kwargs: Any) -> None:
+        """pyte drops DECSCUSR's SP (CSI n SP q): it lands here as DECLL's CSI n q, long unused."""
+        if not kwargs.get("private") and 0 <= style <= CURSOR_STYLES:
+            self.cursor_style = style
+
     def write_process_input(self, data: str) -> None:
         self._reply(data)
 
@@ -270,6 +305,14 @@ class TermScreen(pyte.Screen):
     @property
     def app_cursor_keys(self) -> bool:
         return APP_CURSOR_KEYS in self.mode
+
+    @property
+    def mouse_tracking(self) -> int:
+        return next((m for m in MOUSE_MODES if m << 5 in self.mode), 0)
+
+    @property
+    def mouse_sgr(self) -> bool:
+        return MOUSE_SGR in self.mode
 
     def draw(self, data: str) -> None:
         """pyte's drops everything after a zero-width character that isn't combining."""
@@ -525,6 +568,12 @@ class TermScreen(pyte.Screen):
     def clear_scrollback(self) -> None:
         self.scrollback.clear()
 
+    def set_scrollback(self, lines: int) -> int:
+        """Shorter, it lets the oldest rows go, and says how many."""
+        dropped = max(0, len(self.scrollback) - lines)
+        self.scrollback = deque(self.scrollback, maxlen=lines)
+        return dropped
+
     def row(self, index: int) -> tuple[list[str], list[Style]]:
         sb = len(self.scrollback)
         if index < sb:
@@ -584,9 +633,34 @@ class TermScreen(pyte.Screen):
             starts.append(len(cells))
             cells.extend(chars[:wrapped] if wrapped else chars)
             if not wrapped or r == last:
-                found.extend(_matches(pattern, rows, starts, cells))
+                found.extend(m[:4] for m in _matches(pattern, rows, starts, cells))
                 rows, starts, cells = [], [], []
         return found
+
+    def link_at(self, row: int, cell: int) -> tuple[int, int, int, int, str] | None:
+        """The web address over (row, cell), as (row, cell, last row, last cell, address)."""
+        if not 0 <= row < self.total_rows:
+            return None
+        first = row
+        while first > 0 and row - first < LINK_ROWS and self.wrapped_at(first - 1):
+            first -= 1
+        rows: list[int] = []
+        starts: list[int] = []
+        cells: list[str] = []
+        r = first
+        while r < self.total_rows and len(rows) <= 2 * LINK_ROWS:
+            wrapped = self.wrapped_at(r)
+            chars = self._row_cells(r)
+            rows.append(r)
+            starts.append(len(cells))
+            cells.extend(chars[:wrapped] if wrapped else chars)
+            if not wrapped:
+                break
+            r += 1
+        for r0, c0, r1, c1, address in _matches(WEB_ADDRESS, rows, starts, cells, _link_end):
+            if (r0, c0) <= (row, cell) <= (r1, c1):
+                return r0, c0, r1, c1, address
+        return None
 
     def text_between(self, start: tuple[int, int], end: tuple[int, int]) -> str:
         """A wrapped line comes whole; lines end with CRLF, as Windows' clipboard wants."""
@@ -607,6 +681,7 @@ class TermScreen(pyte.Screen):
 class TermStream(pyte.ByteStream):
     """pyte raised on a CSI "?" most handlers refuse (vim's ESC[?4m), losing the read."""
 
+    csi = {**pyte.ByteStream.csi, "q": "set_cursor_style"}
     dropped = 0
 
     def feed(self, data: bytes) -> None:  # type: ignore[override]

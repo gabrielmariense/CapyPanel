@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -33,6 +34,9 @@ if TYPE_CHECKING:
     from capypanel.ui.ssh_tool.tool import SshTool
 
 MONO = "'Cascadia Mono', Consolas, monospace"
+# The terminal's own copies, which Settings can't load before a first connection: tests match them.
+MIN_POINTS, MAX_POINTS, DEFAULT_POINTS = 8, 20, 10
+MIN_SCROLLBACK, MAX_SCROLLBACK, DEFAULT_SCROLLBACK = 1_000, 50_000, 10_000
 
 
 def auto_line() -> str:
@@ -171,6 +175,39 @@ class TerminalSection(Section):
         self.changed.emit()
 
 
+class TextSection(Section):
+    changed = Signal()
+
+    def __init__(self, points: int, scrollback: int) -> None:
+        super().__init__(_("Terminal"))
+        self.points = QSpinBox()
+        self.points.setRange(MIN_POINTS, MAX_POINTS)
+        self.points.setValue(points)
+        self.points.setSuffix(_(" pt"))
+        self.scrollback = QSpinBox()
+        self.scrollback.setRange(MIN_SCROLLBACK, MAX_SCROLLBACK)
+        self.scrollback.setSingleStep(1_000)
+        self.scrollback.setGroupSeparatorShown(True)
+        self.scrollback.setValue(scrollback)
+        self.scrollback.setSuffix(_(" lines"))
+        for box in (self.points, self.scrollback):
+            box.valueChanged.connect(self.changed)
+        add_rows(
+            self.content,
+            SettingRow(
+                _("&Text size"),
+                _("In every connection. Ctrl+= and Ctrl+- in a terminal change it too."),
+                self.points,
+            ),
+            SettingRow(
+                _("&Scrollback"),
+                _("Lines each connection keeps above its screen, to scroll back to, find and "
+                  "save. More lines take more memory."),
+                self.scrollback,
+            ),
+        )  # fmt: skip
+
+
 class SshGeneralPage(AutoStatusOnlyPage):
     def __init__(
         self,
@@ -178,15 +215,26 @@ class SshGeneralPage(AutoStatusOnlyPage):
         auto_status: tuple[bool, int],
         terminal: Terminal | None,
         ready: list[Terminal],
+        points: int = DEFAULT_POINTS,
+        scrollback: int = DEFAULT_SCROLLBACK,
         place: str,
     ) -> None:
         super().__init__(auto_line=auto_line(), auto_status=auto_status, place=place)
+        self.text_section = TextSection(points, scrollback)
+        self.text_section.changed.connect(self.changed)
         self.terminal_section = TerminalSection(terminal, ready)
         self.terminal_section.changed.connect(self.changed)
+        self.body.insertWidget(self.body.count() - 1, self.text_section)
         self.body.insertWidget(self.body.count() - 1, self.terminal_section)
 
     def terminal_choice(self) -> Terminal | None:
         return self.terminal_section.choice()
+
+    def points_choice(self) -> int:
+        return self.text_section.points.value()
+
+    def scrollback_choice(self) -> int:
+        return self.text_section.scrollback.value()
 
 
 class SshSettings(SettingsGroup):
@@ -203,6 +251,8 @@ class SshSettings(SettingsGroup):
             auto_status=self._tool.auto_status(),
             terminal=self._tool.terminal(),
             ready=terminals.ready_here(),
+            points=self._tool.terminal_points(),
+            scrollback=self._tool.terminal_scrollback(),
             place="settings-ssh-general",
         )
         self.general.changed.connect(self._changed)
@@ -211,4 +261,6 @@ class SshSettings(SettingsGroup):
     def _changed(self) -> None:
         self._tool.set_auto_status(self.general.auto_status_choice())
         self._tool.set_terminal(self.general.terminal_choice())
+        self._tool.set_terminal_points(self.general.points_choice())
+        self._tool.set_terminal_scrollback(self.general.scrollback_choice())
         self._tool.prefs_applied()

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 21:39-0300\n"
+"POT-Creation-Date: 2026-11-22 22:14-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -24,8 +24,14 @@ msgstr " %"
 msgid " and "
 msgstr " e "
 
+msgid " lines"
+msgstr " linhas"
+
 msgid " min"
 msgstr " min"
+
+msgid " pt"
+msgstr " pt"
 
 msgid "&About CapyPanel"
 msgstr "&Sobre o CapyPanel"
@@ -401,6 +407,9 @@ msgid_plural "&Scan {n} hosts"
 msgstr[0] "&Escanear {n} host"
 msgstr[1] "&Escanear {n} hosts"
 
+msgid "&Scrollback"
+msgstr "&Histórico de rolagem"
+
 msgid "&Send"
 msgstr "&Enviar"
 
@@ -448,6 +457,9 @@ msgstr "&Tags"
 
 msgid "&Tags:"
 msgstr "&Tags:"
+
+msgid "&Text size"
+msgstr "&Tamanho do texto"
 
 msgid "&Theme"
 msgstr "&Tema"
@@ -1449,6 +1461,9 @@ msgstr "Credenciais"
 msgid "Credits"
 msgstr "Créditos"
 
+msgid "Ctrl+click to open the link"
+msgstr "Ctrl+clique para abrir o link"
+
 msgid "Custom"
 msgstr "Personalizado"
 
@@ -2102,6 +2117,9 @@ msgstr "No CapyPanel"
 msgid "In a separate window"
 msgstr "Numa janela separada"
 
+msgid "In every connection. Ctrl+= and Ctrl+- in a terminal change it too."
+msgstr "Em todas as conexões. Ctrl+= e Ctrl+- num terminal também o mudam."
+
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
@@ -2244,6 +2262,9 @@ msgstr "Traços nas barras de suprimento em {marks}."
 
 msgid "Lines across the supply bars, in Details and the Toner column. The low level's follows Low supply level. A colour you pick may be hard to see on some bars; Reset to default goes back to one mark in the theme's colour."
 msgstr "Traços nas barras de suprimento, nos Detalhes e na coluna Toner. O do nível baixo segue o Nível baixo de suprimento. Uma cor escolhida pode ficar difícil de ver em algumas barras; Restaurar padrão volta a uma marca na cor do tema."
+
+msgid "Lines each connection keeps above its screen, to scroll back to, find and save. More lines take more memory."
+msgstr "Linhas que cada conexão guarda acima da tela, para rolar de volta, pesquisar e salvar. Mais linhas ocupam mais memória."
 
 msgid "List"
 msgstr "Lista"
@@ -3188,6 +3209,9 @@ msgstr[1] "Sair do CapyPanel com {n} conexões abertas?"
 msgid "Quitting now cancels the profiles still queued. The profile being deleted on each host finishes first; CapyPanel quits after that."
 msgstr "Sair agora cancela os perfis ainda na fila. O perfil sendo excluído em cada host termina primeiro; o CapyPanel sai depois disso."
 
+msgid "Rang its bell"
+msgstr "Tocou o sino"
+
 msgid "Re&fresh group"
 msgstr "At&ualizar grupo"
 
@@ -3577,6 +3601,12 @@ msgstr "Salvar uma cópia"
 msgid "Save a copy of the list"
 msgstr "Salvar uma cópia da lista"
 
+msgid "Save all the &text…"
+msgstr "&Salvar todo o texto…"
+
+msgid "Save all the text"
+msgstr "Salvar todo o texto"
+
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
@@ -3586,17 +3616,11 @@ msgstr "Salvar esquece a conta guardada."
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
 
-msgid "Save the &text…"
-msgstr "&Salvar o texto…"
-
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
-
-msgid "Save the text"
-msgstr "Salvar o texto"
 
 msgid "Saved credentials"
 msgstr "Credenciais salvas"
@@ -4026,6 +4050,9 @@ msgstr "Temporária"
 
 msgid "Temporary:"
 msgstr "Temporários:"
+
+msgid "Terminal"
+msgstr "Terminal"
 
 msgid "Text"
 msgstr "Texto"

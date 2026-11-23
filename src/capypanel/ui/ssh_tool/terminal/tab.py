@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.i18n import _
 from capypanel.core.ssh.ending import ended_line, is_error
+from capypanel.core.ssh.screen import SCROLLBACK
 from capypanel.ui import help_links, spacing
 from capypanel.ui.hosts_tool.result_strip import IconBesideText
 from capypanel.ui.icons import tabler_icon
@@ -171,9 +172,11 @@ class TerminalTab(QWidget):
     changed = Signal()
     close_asked = Signal()
 
-    def __init__(self, *, host: str, point_size: int = DEFAULT_PT) -> None:
+    def __init__(
+        self, *, host: str, point_size: int = DEFAULT_PT, scrollback: int = SCROLLBACK
+    ) -> None:
         super().__init__()
-        self.view = TerminalView(host=host, point_size=point_size)
+        self.view = TerminalView(host=host, point_size=point_size, scrollback=scrollback)
         self.hint = TrustHint()
         self.bar = EndedBar()
         layout = QVBoxLayout(self)

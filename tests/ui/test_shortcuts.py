@@ -195,6 +195,7 @@ def test_the_ssh_terminal_s_own_keys_follow_the_ssh_tool_greyed_and_say_where_th
         ("Copy", "Ctrl+Shift+C"),
         ("Copy, with text selected", "Ctrl+C"),
         ("Paste", "Ctrl+Shift+V"),
+        ("Find", "Ctrl+Shift+F"),
         ("Bigger text", "Ctrl+="),
         ("Smaller text", "Ctrl+-"),
         ("Next tab", "Ctrl+Tab"),

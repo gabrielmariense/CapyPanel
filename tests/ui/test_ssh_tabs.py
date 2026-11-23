@@ -16,13 +16,15 @@ from test_printers_tool import FakeShell
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
+from capypanel.core.ssh import terminals
 from capypanel.core.ssh.host import SshInfo, with_info
 from capypanel.ui import menus
 from capypanel.ui.hosts_tool.command_windows import WIDE, Question
 from capypanel.ui.ssh_tool import tool as tool_module
+from capypanel.ui.ssh_tool.settings import SshGeneralPage
 from capypanel.ui.ssh_tool.terminal import keys
 from capypanel.ui.ssh_tool.terminal import view as view_module
-from capypanel.ui.ssh_tool.tool import POINTS, SshTool
+from capypanel.ui.ssh_tool.tool import POINTS, SCROLLBACK, SshTool
 from capypanel.ui.ssh_tool.window import ConnectionWindow
 from capypanel.ui.tab_strip import PINNED
 from capypanel.ui.themes import engine as themes
@@ -444,3 +446,57 @@ def test_connect_runs_the_program_in_its_tab_and_closing_the_tab_ends_it(
         assert len(answers.asked) == 1 and not session.running
     finally:
         _closed_after(tool)
+
+
+def test_a_ring_in_a_tab_not_in_front_marks_it_until_it_is_shown(
+    ssh: SshTool, consoles: list[FakeConsole], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alerted: list[QWidget] = []
+    monkeypatch.setattr(tool_module, "alert", alerted.append)
+    _connect(ssh, "core-sw-01")
+    _connect(ssh, "nas-01")
+
+    def tip(key: str) -> str:
+        return ssh.tabs.bar.tabToolTip(ssh.tabs.index_of(key))
+
+    consoles[0].prints(b"backup done\x07")
+    _until(lambda: tip("connection-1") == "Rang its bell")
+    consoles[1].prints(b"\x07\x07")
+    _until(lambda: len(alerted) == 2)
+    assert tip("connection-2") == "Connection open"
+    assert alerted == [ssh.window(), ssh.window()]  # not the active window: the taskbar flashes
+    ssh.switch("connection-1")
+    assert tip("connection-1") == "Connection open"
+
+
+def test_a_ring_in_a_connection_s_own_window_flashes_that_window(
+    ssh: SshTool, consoles: list[FakeConsole], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alerted: list[QWidget] = []
+    monkeypatch.setattr(tool_module, "alert", alerted.append)
+    _connect(ssh, "core-sw-01", "nas-01")
+    ssh.move_out("connection-1")
+    window = _window(ssh, "connection-1")
+    consoles[0].prints(b"\x07")
+    _until(lambda: alerted == [window])
+    assert _names(ssh) == ["nas-01"]
+
+
+def test_settings_text_size_and_scrollback_reach_every_tab_and_the_next(
+    ssh: SshTool, consoles: list[FakeConsole], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(terminals, "ready_here", lambda env=None: [])
+    _connect(ssh, "core-sw-01", "nas-01")
+    first, second = ssh.connections()
+    [(_page_id, page)] = ssh.settings_group().build()
+    assert isinstance(page, SshGeneralPage)
+    assert page.points_choice() == first.view.point_size
+    assert page.scrollback_choice() == 10_000
+    page.text_section.points.setValue(14)
+    page.text_section.scrollback.setValue(2_000)
+    assert first.view.point_size == second.view.point_size == 14
+    assert first.view.term.scrollback.maxlen == second.view.term.scrollback.maxlen == 2_000
+    assert ssh.prefs[POINTS] == 14 and ssh.prefs[SCROLLBACK] == 2_000
+    _connect(ssh, "web-01")
+    third = ssh.connections()[2]
+    assert third.view.point_size == 14 and third.view.term.scrollback.maxlen == 2_000

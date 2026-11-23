@@ -81,6 +81,7 @@ def test_portuguese_zero_is_plural() -> None:
 def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
     fixed_keys = {
         "F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+Shift+W",
+        "Ctrl+click", "Ctrl+=", "Ctrl+-",
     }  # fmt: skip
     anywhere = re.compile(r"(?<![\w+])(?:F\d{1,2}|(?:Ctrl|Alt|Shift)\+\S+)")
     at_end = re.compile(r"\((?:also )?(?:Enter|Del)\)$")

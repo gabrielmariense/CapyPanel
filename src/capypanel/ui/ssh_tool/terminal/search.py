@@ -129,3 +129,5 @@ class SearchBar(QFrame):
         self.down.setIcon(tabler_icon("chevron-down", ink, 16))
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         self.close_button.setIcon(tabler_icon("x", muted, 14))
+        self.adjustSize()
+        self.resized.emit()

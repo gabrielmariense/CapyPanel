@@ -121,3 +121,35 @@ def encode_text(event: QKeyEvent, *, app_cursor: bool = False) -> bytes:
     else:
         return b""
     return b"\x1b" + body if alt else body
+
+
+# xterm's mouse reports: the button's code, plus these for what's held and for a move
+WHEEL_UP, WHEEL_DOWN, MOVED = 64, 65, 32
+MOUSE_ALT, MOUSE_CTRL = 8, 16
+BUTTONS = {Qt.MouseButton.LeftButton: 0, Qt.MouseButton.MiddleButton: 1,
+           Qt.MouseButton.RightButton: 2}  # fmt: skip
+NO_BUTTON = 3
+X10_LAST = 95  # ConPTY reads its input as UTF-8: past 32 + 95 a byte arrives as another character
+
+
+def mouse(
+    code: int,
+    column: int,
+    row: int,
+    mods: Qt.KeyboardModifier,
+    *,
+    released: bool = False,
+    sgr: bool = True,
+) -> bytes:
+    """Column and row count from 1. Without SGR a release can't name its button."""
+    if mods & Qt.KeyboardModifier.AltModifier:
+        code |= MOUSE_ALT
+    if mods & Qt.KeyboardModifier.ControlModifier:
+        code |= MOUSE_CTRL
+    if sgr:
+        return f"\x1b[<{code};{column};{row}{'m' if released else 'M'}".encode("ascii")
+    if released:
+        code = code & ~3 | NO_BUTTON
+    if column > X10_LAST or row > X10_LAST:
+        return b""
+    return b"\x1b[M" + bytes((32 + code, 32 + column, 32 + row))

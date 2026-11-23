@@ -384,3 +384,58 @@ def test_the_whole_text_ends_each_line_with_crlf_and_leaves_out_the_blank_rows_a
     assert screen.whole_text() == "abcd efgh ijkl\r\none\r\n\r\ntwo\r\n$\r\n"
     stream.feed(b"\x1b[3J\x1b[2J")
     assert screen.whole_text() == ""
+
+
+def test_a_program_picks_the_cursor_s_shape_and_a_reset_brings_the_block_back() -> None:
+    screen, stream = screen_and_stream()
+    assert screen.cursor_style == 0
+    stream.feed(b"\x1b[5 q")
+    assert screen.cursor_style == 5
+    stream.feed(b"\x1b[?3 q\x1b[9 q")
+    assert screen.cursor_style == 5
+    stream.feed(b"\x1b[2 q")
+    assert screen.cursor_style == 2
+    stream.feed(b"\x1bc")
+    assert screen.cursor_style == 0
+
+
+def test_a_web_address_is_found_without_the_sentence_or_bracket_around_it() -> None:
+    screen, stream = screen_and_stream(columns=60)
+    stream.feed(b"see https://example.com/a?b=1, or (http://example.com/x).\r\n")
+    stream.feed(b"wiki https://example.com/Capy_(animal) ok")
+    assert screen.link_at(0, 10) == (0, 4, 0, 28, "https://example.com/a?b=1")
+    assert screen.link_at(0, 29) is None
+    assert screen.link_at(0, 40) == (0, 35, 0, 54, "http://example.com/x")
+    assert screen.link_at(1, 30) == (1, 5, 1, 37, "https://example.com/Capy_(animal)")
+    assert screen.link_at(1, 2) is None
+    assert screen.link_at(9, 0) is None
+
+
+def test_an_address_wrapped_over_rows_is_one_link_from_either_row() -> None:
+    screen, stream = screen_and_stream(columns=20)
+    stream.feed(b"go https://example.com/long/path done")
+    found = (0, 3, 1, 11, "https://example.com/long/path")
+    assert screen.link_at(0, 5) == found
+    assert screen.link_at(1, 2) == found
+    assert screen.link_at(1, 16) is None
+
+
+def test_the_mouse_goes_to_a_program_only_while_it_asks() -> None:
+    screen, stream = screen_and_stream()
+    assert screen.mouse_tracking == 0 and not screen.mouse_sgr
+    stream.feed(b"\x1b[?1000h\x1b[?1006h")
+    assert screen.mouse_tracking == 1000 and screen.mouse_sgr
+    stream.feed(b"\x1b[?1002h")
+    assert screen.mouse_tracking == 1002
+    stream.feed(b"\x1b[?1002l\x1b[?1000l\x1b[?1006l")
+    assert screen.mouse_tracking == 0 and not screen.mouse_sgr
+    stream.feed(b"\x1b[?1003h\x1bc")
+    assert screen.mouse_tracking == 0
+
+
+def test_a_shorter_scrollback_keeps_the_newest_rows_and_counts_the_rest() -> None:
+    screen, stream = screen_and_stream(columns=10, lines=2)
+    stream.feed(b"\r\n".join(b"%d" % n for n in range(10)))
+    assert screen.set_scrollback(3) == 5
+    assert screen.scrollback_text() == ["5", "6", "7"]
+    assert screen.set_scrollback(20) == 0 and screen.scrollback.maxlen == 20

@@ -20,15 +20,18 @@ from PySide6.QtCore import (
     QStandardPaths,
     Qt,
     QTimer,
+    QUrl,
     Signal,
 )
 from PySide6.QtGui import (
     QColor,
+    QDesktopServices,
     QFocusEvent,
     QFont,
     QFontDatabase,
     QFontMetricsF,
     QGuiApplication,
+    QHelpEvent,
     QImage,
     QInputMethodEvent,
     QKeyEvent,
@@ -49,6 +52,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPlainTextEdit,
+    QToolTip,
     QWidget,
 )
 
@@ -84,7 +88,11 @@ MAX_PENDING = 131072  # bytes the reader holds before ssh.exe waits: Ctrl+C show
 SETTLE_MS = 150  # a drag's last resize this long ago: the scrollback rewraps once, not each step
 COPY_PASTE = (int(Qt.Key.Key_C), int(Qt.Key.Key_V))
 FIND = int(Qt.Key.Key_F)
+STEADY, UNDERLINE, BAR = (2, 4, 6), (3, 4), (5, 6)  # DECSCUSR's cursor styles
+NOTCH = 120  # one step of a mouse wheel, in angleDelta()'s units
+LINES_A_NOTCH = 3
 _Match = tuple[int, int, int, int]  # first row and cell, last row and cell; rows counted stable
+_Link = tuple[int, int, int, int, str]  # as a match, then the address
 # As key events they keep the selection and scroll: Ctrl goes down before Ctrl+C's C.
 HELD_KEYS = frozenset(
     int(k)
@@ -188,6 +196,7 @@ class TerminalView(QAbstractScrollArea):
     ended = Signal(object)  # object: 0xC000013A doesn't fit a C int
     size_picked = Signal(int)
     text_saved = Signal(str)
+    rang = Signal()
 
     def __init__(
         self,
@@ -240,14 +249,25 @@ class TerminalView(QAbstractScrollArea):
         self.search_bar: SearchBar | None = None
         self._matches: list[_Match] = []
         self._current: int | None = None
+        self._bells_heard = 0
+        self._link: _Link | None = None
+        self._pointer: QPoint | None = None
+        self._hand = False
+        self._reported: set[Qt.MouseButton] = set()
+        self._moved_at: tuple[int, int] | None = None
+        self._wheel = 0
+        self.open_link: Callable[[str], object] = lambda address: QDesktopServices.openUrl(
+            QUrl(address)
+        )
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.viewport().setMouseTracking(True)
         self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled, True)
         self.setFrameShape(QFrame.Shape.NoFrame)
         # Always shown, so the screen never changes width while the scrollback grows.
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.verticalScrollBar().valueChanged.connect(lambda _v: self.viewport().update())
+        self.verticalScrollBar().valueChanged.connect(lambda _v: self._scrolled())
         self.viewport().setCursor(Qt.CursorShape.IBeamCursor)
         self._repaint_timer = QTimer(self)
         self._repaint_timer.setSingleShot(True)
@@ -316,6 +336,7 @@ class TerminalView(QAbstractScrollArea):
             self._point_size = pt
             self._set_font()
             self._fit()
+            self._place_search_bar()
             self.viewport().update()
 
     def grid_for(self, width: int, height: int) -> tuple[int, int]:
@@ -392,6 +413,10 @@ class TerminalView(QAbstractScrollArea):
         self._closed_by_us = False
         self._sel = None
         self._forget_matches()
+        self._bells_heard = 0
+        self._link = None
+        self._reported.clear()
+        self._wheel = 0
         self._start_number += 1
         number, bridge = self._start_number, self._bridge
         self.session = PseudoConsole(
@@ -470,6 +495,11 @@ class TerminalView(QAbstractScrollArea):
             scrolled = self.term.lines_scrolled - before
             self._sync_scrollbar(at_bottom=at_bottom, scrolled=scrolled)
             self._schedule_paint()
+            if self.term.bells != self._bells_heard:
+                self._bells_heard = self.term.bells
+                self.rang.emit()
+            if self._link is not None:
+                self._hover(self._pointer, QGuiApplication.keyboardModifiers())
         if session.pending:
             QTimer.singleShot(0, self, self._drain)
         elif session.at_eof and self._exit_code is not None and not self._ended_sent:
@@ -508,11 +538,27 @@ class TerminalView(QAbstractScrollArea):
         self.viewport().update()
 
     def wheelEvent(self, event: QWheelEvent) -> None:
-        if self.term.in_alt:
+        mods = event.modifiers()
+        reports = self._takes_mouse(mods)
+        step = NOTCH if reports else NOTCH // LINES_A_NOTCH
+        self._wheel += event.angleDelta().y()
+        steps = int(self._wheel / step)
+        self._wheel -= steps * step
+        if not steps:
             return
-        steps = event.angleDelta().y() / 120
-        bar = self.verticalScrollBar()
-        bar.setValue(bar.value() - round(steps * 3))
+        if reports:
+            code = keys.WHEEL_UP if steps > 0 else keys.WHEEL_DOWN
+            for _ in range(abs(steps)):
+                self._report(code, event.position().toPoint(), mods)
+        elif self.term.in_alt:
+            if self.session is not None and self.session.running:
+                arrow = Qt.Key.Key_Up if steps > 0 else Qt.Key.Key_Down
+                press = QKeyEvent(QEvent.Type.KeyPress, arrow, Qt.KeyboardModifier.NoModifier)
+                data = keys.encode_text(press, app_cursor=self.term.app_cursor_keys)
+                self.session.write(data * abs(steps))
+        else:
+            bar = self.verticalScrollBar()
+            bar.setValue(bar.value() - steps)
 
     def _top_row(self) -> int:
         if self.term.in_alt:
@@ -525,10 +571,15 @@ class TerminalView(QAbstractScrollArea):
     def _row_of(self, stable: int) -> int:
         return stable - (self.term.lines_scrolled - len(self.term.scrollback))
 
-    def cell_at(self, pos: QPoint) -> tuple[int, int]:
+    def _grid_cell(self, pos: QPoint) -> tuple[int, int]:
+        """(column, row) on the screen shown, the nearest one when pos is in the margin."""
         col = max(0, min(self.term.columns - 1, (pos.x() - PAD) // self.cell_w))
-        row = self._top_row() + max(0, min(self.term.lines - 1, (pos.y() - PAD) // self.cell_h))
-        return self._stable(row), col
+        row = max(0, min(self.term.lines - 1, (pos.y() - PAD) // self.cell_h))
+        return col, row
+
+    def cell_at(self, pos: QPoint) -> tuple[int, int]:
+        col, row = self._grid_cell(pos)
+        return self._stable(self._top_row() + row), col
 
     def has_selection(self) -> bool:
         return self._sel is not None and self._sel[0] != self._sel[1]
@@ -584,13 +635,23 @@ class TerminalView(QAbstractScrollArea):
         self._sync_scrollbar(at_bottom=True)
         self.viewport().update()
 
+    def set_scrollback(self, lines: int) -> None:
+        self._scrollback_size = lines
+        at_bottom = self._at_bottom()
+        dropped = self.term.set_scrollback(lines)
+        if dropped:
+            self._sel = None
+            self._forget_matches()
+        self._sync_scrollbar(at_bottom=at_bottom, scrolled=dropped)
+        self.viewport().update()
+
     def save_text(self) -> None:
         self.settle()
         text = self.term.whole_text()
         folder = self.save_folder(None)
         if not folder or not Path(folder).is_dir():
             folder = documents()
-        title = _("Save the text")
+        title = _("Save all the text")
         name = self.ask_save_path(self, title, str(Path(folder) / file_name(self.host)))
         if not name:
             return
@@ -640,6 +701,7 @@ class TerminalView(QAbstractScrollArea):
     def _place_search_bar(self) -> None:
         bar = self.search_bar
         if bar is not None:
+            bar.setFixedHeight(math.ceil(bar.sizeHint().height() / self.cell_h) * self.cell_h)
             area = self.viewport().geometry()
             bar.move(max(area.left(), area.right() + 1 - bar.width() - PAD), area.top() + PAD)
 
@@ -724,30 +786,150 @@ class TerminalView(QAbstractScrollArea):
         menu.addSeparator()
         find = menu.addAction(_("&Find…"), self.open_search)
         find.setShortcut(QKeySequence("Ctrl+Shift+F"))
-        menu.addAction(_("Save the &text…"), self.save_text)
+        menu.addAction(_("Save all the &text…"), self.save_text)
         menu.addAction(_("Clear &scrollback"), self.clear_scrollback)
         self.extend_menu(menu)
         for action in menu.actions():
             action.setShortcutVisibleInContextMenu(True)
         return menu
 
+    def _takes_mouse(self, mods: Qt.KeyboardModifier) -> bool:
+        return (
+            self.term.mouse_tracking != 0
+            and self.running
+            and not mods & Qt.KeyboardModifier.ShiftModifier
+            and (self.term.in_alt or self._at_bottom())
+        )
+
+    def _report(
+        self, code: int, pos: QPoint, mods: Qt.KeyboardModifier, *, released: bool = False
+    ) -> None:
+        col, row = self._grid_cell(pos)
+        sgr = self.term.mouse_sgr
+        data = keys.mouse(code, col + 1, row + 1, mods, released=released, sgr=sgr)
+        if data and self.session is not None:
+            self.session.write(data)
+
+    def _link_under(self, pos: QPoint) -> _Link | None:
+        x, y = pos.x() - PAD, pos.y() - PAD
+        width, height = self.term.columns * self.cell_w, self.term.lines * self.cell_h
+        if not (0 <= x < width and 0 <= y < height):
+            return None
+        col, row = self._grid_cell(pos)
+        found = self.term.link_at(self._top_row() + row, col)
+        if found is None:
+            return None
+        r0, c0, r1, c1, address = found
+        return self._stable(r0), c0, self._stable(r1), c1, address
+
+    def _link_click(self, event: QMouseEvent) -> _Link | None:
+        if event.button() != Qt.MouseButton.LeftButton:
+            return None
+        if not event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            return None
+        return self._link_under(event.position().toPoint())
+
+    def _hover(self, pos: QPoint | None, mods: Qt.KeyboardModifier) -> None:
+        link = None if pos is None else self._link_under(pos)
+        if link != self._link:
+            self._link = link
+            self.viewport().update()
+        self._show_hand(mods)
+
+    def _show_hand(self, mods: Qt.KeyboardModifier) -> None:
+        hand = self._link is not None and bool(mods & Qt.KeyboardModifier.ControlModifier)
+        if hand != self._hand:
+            self._hand = hand
+            shape = Qt.CursorShape.PointingHandCursor if hand else Qt.CursorShape.IBeamCursor
+            self.viewport().setCursor(shape)
+
+    def _scrolled(self) -> None:
+        if self._pointer is not None:
+            self._hover(self._pointer, QGuiApplication.keyboardModifiers())
+        self.viewport().update()
+
+    def viewportEvent(self, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.ToolTip and isinstance(event, QHelpEvent):
+            link = self._link_under(event.pos())
+            if link is None:
+                QToolTip.hideText()
+                event.ignore()
+            else:
+                # Without a rect, Qt keeps the tip up wherever the mouse goes in the terminal.
+                tip = _("Ctrl+click to open the link")
+                QToolTip.showText(event.globalPos(), tip, self.viewport(), self._link_rect(link))
+            return True
+        if event.type() == QEvent.Type.Leave:
+            self._pointer = None
+            self._hover(None, Qt.KeyboardModifier.NoModifier)
+        return super().viewportEvent(event)
+
+    def _link_rect(self, link: _Link) -> QRect:
+        top = self._row_of(link[0]) - self._top_row()
+        bottom = self._row_of(link[2]) - self._top_row()
+        left, right = (link[1], link[3]) if top == bottom else (0, self.term.columns - 1)
+        x, y = PAD + left * self.cell_w, PAD + top * self.cell_h
+        return QRect(x, y, (right - left + 1) * self.cell_w, (bottom - top + 1) * self.cell_h)
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.RightButton:
+        pos = event.position().toPoint()
+        button = event.button()
+        link = self._link_click(event)
+        if link is not None:
+            self.open_link(link[4])
+            return
+        if button in keys.BUTTONS and self._takes_mouse(event.modifiers()):
+            self._reported.add(button)
+            self._moved_at = self._grid_cell(pos)
+            self._sel = None
+            self.viewport().update()
+            self._report(keys.BUTTONS[button], pos, event.modifiers())
+            return
+        if button == Qt.MouseButton.RightButton:
             self.open_menu(self.menu(), event.globalPosition().toPoint())
             return
-        if event.button() == Qt.MouseButton.LeftButton:
+        if button == Qt.MouseButton.LeftButton:
             self.settle()
-            cell = self.cell_at(event.position().toPoint())
+            cell = self.cell_at(pos)
             self._sel = (cell, cell)
             self._selecting = True
             self.viewport().update()
 
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        if self._link_click(event) is None:  # Qt's own presses again: a link would open twice
+            self.mousePressEvent(event)
+
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        pos = event.position().toPoint()
+        mods = event.modifiers()
+        cell = self._grid_cell(pos)
+        if self._pointer is None or self._grid_cell(self._pointer) != cell:
+            self._hover(pos, mods)
+        else:
+            self._show_hand(mods)
+        self._pointer = pos
         if self._selecting and self._sel is not None:
-            self._sel = (self._sel[0], self.cell_at(event.position().toPoint()))
+            self._sel = (self._sel[0], self.cell_at(pos))
             self.viewport().update()
+            return
+        tracking = self.term.mouse_tracking
+        held = next((b for b in keys.BUTTONS if b in self._reported), None)
+        if held is None and not (tracking == 1003 and self._takes_mouse(mods)):
+            return
+        if tracking in (1002, 1003) and self.running and cell != self._moved_at:
+            self._moved_at = cell
+            button = keys.NO_BUTTON if held is None else keys.BUTTONS[held]
+            self._report(button | keys.MOVED, pos, mods)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        button = event.button()
+        if button in self._reported:
+            self._reported.discard(button)
+            # A program that quit on the press has given the mouse back: its shell gets nothing.
+            if self.running and self.term.mouse_tracking:
+                pos = event.position().toPoint()
+                self._report(keys.BUTTONS[button], pos, event.modifiers(), released=True)
+            return
         self._selecting = False
 
     def event(self, e: QEvent) -> bool:
@@ -801,6 +983,8 @@ class TerminalView(QAbstractScrollArea):
         return mods == ctrl and int(e.key()) == int(Qt.Key.Key_C) and self.has_selection()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Control:
+            self._show_hand(Qt.KeyboardModifier.ControlModifier)
         if self.leaves(event):
             event.ignore()
             return
@@ -845,6 +1029,8 @@ class TerminalView(QAbstractScrollArea):
                 self.scroll_to_bottom()
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Control:
+            self._show_hand(Qt.KeyboardModifier.NoModifier)
         if event.isAutoRepeat() or self.session is None or not self.session.running:
             return
         vk = event.nativeVirtualKey()
@@ -868,6 +1054,8 @@ class TerminalView(QAbstractScrollArea):
 
     def _toggle_blink(self) -> None:
         self._blink_on = not self._blink_on
+        if self.term.cursor_style in STEADY:
+            return
         c = self.term.cursor
         x, y = PAD + c.x * self.cell_w, PAD + c.y * self.cell_h
         self.viewport().update(QRect(x, y, self.cell_w * 2, self.cell_h))
@@ -889,12 +1077,18 @@ class TerminalView(QAbstractScrollArea):
         first = max(0, (event.rect().top() - PAD) // ch)
         last = min(screen.lines - 1, (event.rect().bottom() - PAD) // ch)
         found = self._visible_matches(top) if self._matches else {}
+        link = self._link
+        link_rows = (-1, -1) if link is None else (self._row_of(link[0]), self._row_of(link[2]))
         for vy in range(first, last + 1):
             row = top + vy
             if row >= screen.total_rows:
                 break
             chars, styles = screen.row(row)
             spans = found.get(row)
+            under = (-1, -1)
+            if link is not None and link_rows[0] <= row <= link_rows[1]:
+                under = (link[1] if row == link_rows[0] else 0,
+                         link[3] if row == link_rows[1] else screen.columns - 1)  # fmt: skip
             y = vy * ch
             run_x, run_text, run_key = 0, "", None
             for x in range(screen.columns):
@@ -936,6 +1130,9 @@ class TerminalView(QAbstractScrollArea):
                         p.drawLine(x * cw, y + ch - 1, (x + 1) * cw - 1, y + ch - 1)
                     if st.strikethrough:
                         p.drawLine(x * cw, y + ch // 2, (x + 1) * cw - 1, y + ch // 2)
+                if under[0] <= x <= under[1]:
+                    p.setPen(self._qcolor(fg))
+                    p.drawLine(x * cw, y + ch - 1, (x + 1) * cw - 1, y + ch - 1)
             self._draw_run(p, run_x, run_text, run_key, y)
         self._paint_cursor(p, top)
         p.end()
@@ -959,11 +1156,17 @@ class TerminalView(QAbstractScrollArea):
             return
         rect = QRect(c.x * self.cell_w, c.y * self.cell_h, self.cell_w, self.cell_h)
         accent = self._qcolor(self._palette.cursor)
+        style = screen.cursor_style
+        shows = style in STEADY or self._blink_on or not self.hasFocus()
+        if style in UNDERLINE or style in BAR:
+            if shows:
+                p.fillRect(self._thin_cursor(rect, bar=style in BAR), accent)
+            return
         if not self.hasFocus():
             p.setPen(accent)
             p.drawRect(rect.adjusted(0, 0, -1, -1))
             return
-        if not self._blink_on:
+        if not shows:
             return
         p.fillRect(rect, accent)
         chars, styles = screen.row(len(screen.scrollback) + c.y)
@@ -979,6 +1182,12 @@ class TerminalView(QAbstractScrollArea):
                 nxt = chars[c.x + 1] if c.x + 1 < len(chars) else None
                 text, cells = (text + VS16, 2) if nxt == VS16 else (text, 2 if nxt == "" else 1)
                 self._draw_cell_text(p, text, c.x, rect.y(), st, back, cells)
+
+    def _thin_cursor(self, cell: QRect, *, bar: bool) -> QRect:
+        if bar:
+            return QRect(cell.x(), cell.y(), max(2, self.cell_w // 4), cell.height())
+        height = max(2, self.cell_h // 8)
+        return QRect(cell.x(), cell.bottom() + 1 - height, cell.width(), height)
 
     def _draw_cell_text(
         self, p: QPainter, text: str, x: int, y: int, st: Style, color: QColor, cells: int

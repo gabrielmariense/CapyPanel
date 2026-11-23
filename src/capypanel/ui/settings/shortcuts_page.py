@@ -126,6 +126,7 @@ def terminal_keys() -> list[tuple[str, str]]:
         (plain(_("&Copy")), "Ctrl+Shift+C"),
         (_("Copy, with text selected"), "Ctrl+C"),
         (plain(_("&Paste")), "Ctrl+Shift+V"),
+        (_("Find"), "Ctrl+Shift+F"),
         (_("Bigger text"), "Ctrl+="),
         (_("Smaller text"), "Ctrl+-"),
         (_("Next tab"), "Ctrl+Tab"),

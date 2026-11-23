@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 21:39-0300\n"
+"POT-Creation-Date: 2026-11-22 22:14-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,13 @@ msgstr ""
 msgid " and "
 msgstr ""
 
+msgid " lines"
+msgstr ""
+
 msgid " min"
+msgstr ""
+
+msgid " pt"
 msgstr ""
 
 msgid "&About CapyPanel"
@@ -400,6 +406,9 @@ msgid_plural "&Scan {n} hosts"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "&Scrollback"
+msgstr ""
+
 msgid "&Send"
 msgstr ""
 
@@ -446,6 +455,9 @@ msgid "&Tags"
 msgstr ""
 
 msgid "&Tags:"
+msgstr ""
+
+msgid "&Text size"
 msgstr ""
 
 msgid "&Theme"
@@ -1500,6 +1512,9 @@ msgstr ""
 msgid "Credits"
 msgstr ""
 
+msgid "Ctrl+click to open the link"
+msgstr ""
+
 msgid "Custom"
 msgstr ""
 
@@ -2197,6 +2212,9 @@ msgstr ""
 msgid "In a separate window"
 msgstr ""
 
+msgid "In every connection. Ctrl+= and Ctrl+- in a terminal change it too."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "In the open list it's set on {hosts} and {groups}. They'll use their "
@@ -2360,6 +2378,11 @@ msgid ""
 "Lines across the supply bars, in Details and the Toner column. The low "
 "level's follows Low supply level. A colour you pick may be hard to see on"
 " some bars; Reset to default goes back to one mark in the theme's colour."
+msgstr ""
+
+msgid ""
+"Lines each connection keeps above its screen, to scroll back to, find and"
+" save. More lines take more memory."
 msgstr ""
 
 msgid "List"
@@ -3364,6 +3387,9 @@ msgid ""
 " on each host finishes first; CapyPanel quits after that."
 msgstr ""
 
+msgid "Rang its bell"
+msgstr ""
+
 msgid "Re&fresh group"
 msgstr ""
 
@@ -3765,6 +3791,12 @@ msgstr ""
 msgid "Save a copy of the list"
 msgstr ""
 
+msgid "Save all the &text…"
+msgstr ""
+
+msgid "Save all the text"
+msgstr ""
+
 msgid "Save as preset"
 msgstr ""
 
@@ -3774,16 +3806,10 @@ msgstr ""
 msgid "Save my version as a copy…"
 msgstr ""
 
-msgid "Save the &text…"
-msgstr ""
-
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
-msgstr ""
-
-msgid "Save the text"
 msgstr ""
 
 msgid "Saved credentials"
@@ -4228,6 +4254,9 @@ msgid "Temporary"
 msgstr ""
 
 msgid "Temporary:"
+msgstr ""
+
+msgid "Terminal"
 msgstr ""
 
 msgid "Text"
