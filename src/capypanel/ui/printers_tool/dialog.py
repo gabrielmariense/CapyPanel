@@ -19,6 +19,7 @@ from capypanel.core.printers.printer import COUNTER_SOURCES, PrinterInfo, info_o
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.help_links import HelpButton
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
+from capypanel.ui.notes import notes
 from capypanel.ui.printers_tool.details import source_text
 
 MAX_FIELD = 100
@@ -54,7 +55,7 @@ class PrinterDialog(QDialog):
         self.address = QLineEdit(printer.address if printer else "")
         self.address.setMaxLength(MAX_ADDRESS)
         self.address.setPlaceholderText(_("IP address or network name"))
-        self.address.setToolTip(
+        self.address_hint = notes(
             _("Start it with https:// if the printer's web page needs it; otherwise it opens "
               "with http.")
         )  # fmt: skip
@@ -91,6 +92,7 @@ class PrinterDialog(QDialog):
         form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
         form.addRow(_("&Address:"), self.address)
+        form.addRow("", self.address_hint)
         form.addRow(_("&Group:"), self.group)
         tags_label = QLabel(_("&Tags:"))
         tags_label.setBuddy(self.tags.input)  # Alt+T goes to the text box inside the field

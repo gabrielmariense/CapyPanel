@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.reading import SupplyKind
@@ -80,6 +80,9 @@ class AttentionStrip(QFrame):
         row.addWidget(self._text, 1)
         row.addWidget(self.button)
         self.hide()
+
+    def tab_stops(self) -> tuple[QWidget, ...]:
+        return self._text, self.button
 
     def restyle(self) -> None:
         icon = tabler_icon("alert-triangle", QColor(amber()), ICON)

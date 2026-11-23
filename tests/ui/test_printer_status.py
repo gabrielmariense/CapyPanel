@@ -241,6 +241,27 @@ def test_refresh_reads_each_printer_and_fills_status_toner_and_details(
         w for w in printers.details.findChildren(QLabel) if w.objectName() == "printerSays_serial"
     ]
     assert "SAMPLE0099" in says.text() and "Use this" in says.text()
+    assert says.textInteractionFlags() & Qt.TextInteractionFlag.LinksAccessibleByKeyboard
+
+
+@pytest.mark.parametrize(
+    ("checked", "said"),
+    [
+        (Checked(NOW, refused=snmp.AUTH), "Wrong authentication password or type.\n"
+         "Check the SNMP account in Settings › Printers › Connecting."),
+        (Checked(NOW, error="SAMPLE <b>bad</b> answer"), "SAMPLE <b>bad</b> answer"),
+        (Checked(NOW, offline=True), None),
+    ],
+)  # fmt: skip
+def test_details_say_why_a_printer_refused_or_couldn_t_be_read(
+    printers: PrintersTool, checked: Checked, said: str | None
+) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    printers._checked[lab.id] = checked
+    printers.table.select_ids([lab.id])
+    why = [w for w in printers.details.findChildren(QLabel) if w.objectName() == "statusWhy"]
+    assert [w.text() for w in why] == ([said] if said else [])
+    assert all(w.textFormat() == Qt.TextFormat.PlainText for w in why)
 
 
 def test_use_this_copies_the_printer_s_value_into_the_list(printers: PrintersTool) -> None:
@@ -559,7 +580,11 @@ def test_the_warnings_table_ticks_what_warns(printers: PrintersTool) -> None:
     assert table.here() == table.notify() == DEFAULT_REASONS
     assert not table.restore.isEnabled()
     assert table.table.verticalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-    assert row["Stopped"].toolTip(0) == "Stopped without saying why."
+    assert table.meanings.text().splitlines() == [
+        "• Offline: it didn't answer the Refresh.",
+        "• Stopped: the printer stopped without saying why.",
+        "• Supply low: at or below the Low supply level, under Supplies.",
+    ]
 
     lab = printers.document.hosts.hosts[0]  # type: ignore[union-attr]
     printers._checked[lab.id] = Checked(NOW, offline=True)

@@ -92,6 +92,22 @@ def test_the_window_adds_colours_and_removes_marks(
     assert dialog.marks() == (Mark(10, low=True),)
 
 
+def test_the_focus_comes_back_to_the_mark_s_row(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dialog = BarMarksDialog(None, (Mark(10, low=True), Mark(50)))
+    dialog.show()
+    dialog.table.setCurrentItem(dialog.table.topLevelItem(1))  # type: ignore[arg-type]
+    monkeypatch.setattr(QColorDialog, "getColor", lambda *a, **k: QColor("#ff8800"))
+    for button in (dialog.colour_button, dialog.theme_button, dialog.remove_button):
+        assert dialog.picked() == 1
+        button.setFocus()
+        button.click()
+        assert dialog.focusWidget() is dialog.table
+    assert dialog.marks() == (Mark(10, low=True),) and dialog.picked() == 0
+    dialog.close()
+
+
 def test_settings_row_opens_the_window_and_keeps_its_answer(
     printers: PrintersTool,  # noqa: F811
     monkeypatch: pytest.MonkeyPatch,

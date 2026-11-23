@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 22:26-0300\n"
+"POT-Creation-Date: 2026-11-22 22:40-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -809,9 +809,6 @@ msgstr "Patrimônio"
 
 msgid "At every start"
 msgstr "A cada início"
-
-msgid "At or below the Low supply level, under Supplies."
-msgstr "No nível baixo de suprimento, em Suprimentos, ou abaixo dele."
 
 msgid "Authentication &password"
 msgstr "Senha da au&tenticação"
@@ -1637,6 +1634,9 @@ msgstr "O Doc360 MPS não tem o número de série {serial}."
 msgid "Doc360 MPS has no total for this printer."
 msgstr "O Doc360 MPS não tem o total desta impressora."
 
+msgid "Doc360 MPS reads printers on its own schedule, so this count can be behind the printer."
+msgstr "O Doc360 MPS lê as impressoras no horário dele, então este número pode estar atrasado em relação à impressora."
+
 msgid "Doc360 MPS refused the login."
 msgstr "O Doc360 MPS recusou o login."
 
@@ -1840,10 +1840,6 @@ msgstr "Falhou: o Windows recusou, ou o PC parou de responder."
 
 msgid "Failed: some files couldn't be removed."
 msgstr "Falhou: alguns arquivos não puderam ser removidos."
-
-#, python-brace-format
-msgid "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own schedule, so this can be behind the printer."
-msgstr "Obtido do Doc360 MPS em {when}. O Doc360 lê as impressoras no horário dele, então este número pode estar atrasado em relação à impressora."
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
@@ -2713,6 +2709,9 @@ msgstr "Desligado"
 
 msgid "Offline"
 msgstr "Offline"
+
+msgid "Offline: it didn't answer the Refresh."
+msgstr "Offline: não respondeu ao Atualizar."
 
 msgid "Older match (Enter)"
 msgstr "Resultado mais antigo (Enter)"
@@ -3961,8 +3960,8 @@ msgstr "Parar o cálculo"
 msgid "Stopped"
 msgstr "Parada"
 
-msgid "Stopped without saying why."
-msgstr "Parada sem dizer o motivo."
+msgid "Stopped: the printer stopped without saying why."
+msgstr "Parada: a impressora parou sem dizer o motivo."
 
 #, python-brace-format
 msgid "Stopped: {n} host wasn't checked."
@@ -3987,6 +3986,9 @@ msgstr "Suprimentos"
 
 msgid "Supply low"
 msgstr "Suprimento baixo"
+
+msgid "Supply low: at or below the Low supply level, under Supplies."
+msgstr "Suprimento baixo: no nível baixo de suprimento, em Suprimentos, ou abaixo dele."
 
 msgid "Supply missing"
 msgstr "Suprimento ausente"

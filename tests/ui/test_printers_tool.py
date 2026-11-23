@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLabel, QMenu
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLabel, QMenu, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -178,7 +178,18 @@ def test_an_empty_list_and_the_edit_window_say_printers_words(printers: Printers
     assert doc is not None
     dialog = PrinterDialog(None, doc.hosts, doc.hosts.hosts[0])
     assert dialog.buttons.button(QDialogButtonBox.StandardButton.Ok).text() == "Save"
+    assert dialog.address_hint.text().startswith("Start it with https://")
+    assert not dialog.address.toolTip()
     dialog.deleteLater()
+
+
+def test_tab_goes_from_the_search_through_the_attention_strip_to_the_table(
+    printers: PrintersTool,
+) -> None:
+    chain: list[QWidget | None] = [printers.search]
+    while len(chain) < 4 and chain[-1] is not None:
+        chain.append(chain[-1].nextInFocusChain())
+    assert chain[1:] == [*printers.attention_strip.tab_stops(), printers.table]
 
 
 def test_details_buttons_refresh_the_printer_and_open_its_page(

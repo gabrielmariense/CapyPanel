@@ -2,6 +2,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -356,6 +357,7 @@ class BarMarksDialog(QDialog):
         low, *extra = self._marks
         self._marks = [low, *sorted(extra, key=lambda m: m.percent)]
         self._fill(next(i for i, m in enumerate(self._marks) if m.percent == percent))
+        self._back_to_row()
 
     def pick_colour(self) -> None:
         row = self.picked()
@@ -371,6 +373,7 @@ class BarMarksDialog(QDialog):
         if row > 0:
             del self._marks[row]
             self._fill(min(row, len(self._marks) - 1))
+            self._back_to_row()
 
     def reset(self) -> None:
         self._marks = [Mark(self._marks[0].percent, low=True)]
@@ -382,8 +385,13 @@ class BarMarksDialog(QDialog):
             mark = self._marks[row]
             self._marks[row] = Mark(mark.percent, colour, mark.low)
             self._fill(row)
+            self._back_to_row()
+
+    def _back_to_row(self) -> None:
+        self.table.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def _fill(self, pick: int) -> None:
+        self.table.blockSignals(True)  # or clear() greys the buttons and the focus leaves them
         self.table.clear()
         for mark in self._marks:
             where = _("{percent} %").format(percent=mark.percent)
@@ -396,6 +404,7 @@ class BarMarksDialog(QDialog):
         fit_rows(self.table)
         if (row := self.table.topLevelItem(pick)) is not None:
             self.table.setCurrentItem(row)
+        self.table.blockSignals(False)
         self._update()
 
     def _update(self) -> None:

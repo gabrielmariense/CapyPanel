@@ -44,8 +44,9 @@ def test_details_and_the_report_show_doc360_s_total(printers: PrintersTool) -> N
     assert "20,500" in labels or "20.500" in labels
     assert not any("1,604,394" in text for text in labels)
     [source] = [t for t in labels if t.startswith("Doc360 MPS · fetched")]
-    [total] = [w for w in printers.details.findChildren(QLabel) if w.text() in ("20,500", "20.500")]
-    assert "Doc360 reads printers on its own schedule" in total.toolTip()
+    [behind] = [w for w in printers.details.findChildren(QLabel)
+                if w.objectName() == "doc360Behind"]  # fmt: skip
+    assert "reads printers on its own schedule" in behind.text()
     assert printers._report_cells(printer.id)[3] == "20500"
     assert source
 

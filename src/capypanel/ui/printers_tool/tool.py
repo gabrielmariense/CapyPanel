@@ -120,6 +120,9 @@ class PrintersTool(ListWorkspace):
         column = self.items_pane.layout()
         assert isinstance(column, QVBoxLayout)
         column.insertWidget(1, self.attention_strip)
+        stops = (self.search, *self.attention_strip.tab_stops(), self.table)
+        for before, after in zip(stops, stops[1:], strict=False):
+            QWidget.setTabOrder(before, after)
         self._run: PrinterRun | None = None
         self._progress = QLabel()
         self._stop_button = QToolButton()
