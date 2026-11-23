@@ -658,7 +658,7 @@ def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> N
 
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
-def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> None:
+def test_enabled_disabled_and_hover_read_apart(theme: themes.Theme) -> None:
     c, ratio = theme.colors, themes.contrast_ratio
     sheet = re.sub(r"/[*].*?[*]/", "", themes.stylesheet(theme), flags=re.DOTALL)
     assert ratio(c["text"], c["text3"]) >= 1.5, theme.id
@@ -669,12 +669,6 @@ def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> Non
     assert fill is not None and f"background: {fill[1]};" not in hover
     assert ratio(c["raised"], c["card"]) >= 1.08, theme.id
     assert ratio(c["accent"], c["border"]) >= 1.5, theme.id
-    for selector in (
-        "QPushButton:focus, QComboBox:focus",
-        "QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus",
-        "QRadioButton::indicator:focus, QCheckBox::indicator:focus",
-    ):
-        assert themes._qss_color(c["accent"]) in _rule(sheet, selector), selector
 
 
 def test_headings_come_in_two_styles() -> None:

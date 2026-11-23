@@ -12,9 +12,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.ui.focus_ring import FocusRing
+
 PLAIN = Qt.KeyboardModifier.NoModifier
 SHIFT = Qt.KeyboardModifier.ShiftModifier
-WATCHED = frozenset({QEvent.Type.FocusIn, QEvent.Type.KeyPress, QEvent.Type.ContextMenu})
+WATCHED = frozenset({
+    QEvent.Type.FocusIn, QEvent.Type.FocusOut, QEvent.Type.KeyPress, QEvent.Type.KeyRelease,
+    QEvent.Type.ContextMenu, QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonDblClick,
+})  # fmt: skip
 
 
 def is_menu_key(event: QKeyEvent) -> bool:
@@ -51,15 +56,17 @@ class Keyboard(QObject):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._sending = False
+        self.ring = FocusRing(self)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         kind = event.type()
         if kind not in WATCHED or self._sending or not isinstance(watched, QWidget):
             return False
+        self.ring.note(watched, event)
         if kind == QEvent.Type.FocusIn and isinstance(watched, QLabel):
             _to_a_link(watched, event)
             return False
-        if _in_menu(watched):
+        if kind not in (QEvent.Type.KeyPress, QEvent.Type.ContextMenu) or _in_menu(watched):
             return False
         if kind == QEvent.Type.KeyPress and isinstance(event, QKeyEvent) and is_menu_key(event):
             self.open_menu(watched, event.modifiers())

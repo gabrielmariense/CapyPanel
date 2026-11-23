@@ -322,6 +322,13 @@ def mark_tint(accent: QColor, card: str, text: str) -> str:
     return _mix(QColor(text), QColor(card), 0.25)
 
 
+def ring_inks() -> tuple[QColor, QColor]:
+    if _current.engine == "native":
+        text = NATIVE_TOKENS[native_scheme()]["text"]
+        return QApplication.palette().color(QPalette.ColorRole.Accent), QColor(text)
+    return QColor(_current.colors["accent"]), QColor(_current.colors["text"])
+
+
 def menu_mark() -> QColor:
     if _current.engine == "native":
         tokens = NATIVE_TOKENS[native_scheme()]
@@ -596,7 +603,6 @@ QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-size: 8p
 QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(border)s;
                             border-radius: %(r2)spx; padding: 5px 7px;
                             selection-background-color: %(accent)s; }
-QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus { border: 1px solid %(accent)s; }
 QLineEdit:disabled { color: %(text3)s; background: %(raised)s; }
 /* Styling a spin box drops Fusion's arrows, leaving empty squares: draw our own. */
 QSpinBox::up-button, QSpinBox::down-button { subcontrol-origin: border; width: 20px;
@@ -609,8 +615,7 @@ QSpinBox::up-arrow { image: url("%(arrow_up)s"); width: 10px; height: 6px; }
 QSpinBox::down-arrow { image: url("%(arrow)s"); width: 10px; height: 6px; }
 /* The tag field: a box like a text input, holding chips and a borderless text box. */
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx; }
-QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
-QLineEdit#tagInput, QLineEdit#tagInput:focus {
+QLineEdit#tagInput {
     border: none; background: transparent; padding: 3px 2px; }
 QFrame#tagChip { background: %(sel_solid)s; border: none; border-radius: 9px; }
 QToolButton#tagChipRemove {
@@ -720,10 +725,6 @@ QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
 QLabel#commandName[risky="true"] { color: %(attention)s; }
 QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
                             color: %(attention)s; }
-/* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
-   default it takes over from, where Enter would press it. */
-QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
-                          color: %(on_attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(badge)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -772,10 +773,6 @@ QSplitter#navSplit::handle { background: transparent; }
 QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
-/* Where the keyboard is (Tab): the accent ring that fields have, on buttons, dropdowns and
-   ticks too. */
-QPushButton:focus, QComboBox:focus { border-color: %(accent)s; }
-QRadioButton::indicator:focus, QCheckBox::indicator:focus { border-color: %(accent)s; }
 /* Greyed: faint text on no fill, clearly unlike a button that works. */
 QPushButton:disabled { color: %(text3)s; background: transparent; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
@@ -932,10 +929,6 @@ QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
 QLabel#commandName[risky="true"] { color: %(attention)s; }
 QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
                             color: %(attention)s; }
-/* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
-   default it takes over from, where Enter would press it. */
-QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
-                          color: %(on_attention)s; }
 /* This sheet sets no button border of its own, so these give a whole one: a colour alone
    would be drawn over by the native frame (Connect's waiting outline came out grey). The
    1 px margin: Windows draws its own buttons and fields 1 px inside their edges. */
@@ -1000,7 +993,6 @@ QFrame#divider { background: %(border)s; border: none; }
 QLabel#menuSection { color: %(text2)s; padding: 6px 12px 2px 12px; font-size: 8pt;
                      font-weight: 600; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
-QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
 QLineEdit#tagInput { border: none; background: transparent; padding: 3px 2px; }
 QFrame#tagChip { background: %(sel)s; border: none; border-radius: 9px; }
 QToolButton#tagChipRemove {
