@@ -456,16 +456,21 @@ def test_a_profile_whose_viewer_asks_passes_nothing_and_says_so_once(
         raise AssertionError("CapyPanel asks for nothing when the viewer asks")
 
     monkeypatch.setattr(CredentialDialog, "exec", must_not_ask)
-    noted: list[str] = []
-    monkeypatch.setattr(dialogs, "run_modal", lambda box: noted.append(box.text()) or 0)
+    noted: list[tuple[str, int]] = []
+    # 0 stands for any answer but OK's: the note never cancels Connect.
+    monkeypatch.setattr(
+        dialogs, "run_modal", lambda box: noted.append((box.text(), len(launched))) or 0
+    )
     connector = window.hosts.connector
     asks = ConnectionProfile("asks", "ultravnc", login="none", name="Asks")
     connector.catalogs.profiles.save(asks)
-    for _turn in range(2):
-        assert connector.connect([Request("PC-Z", Target("PC-Z"), "asks")]) == 1
-    assert [launch[3] for launch in launched] == [None, None]
-    assert len(noted) == 1
-    assert noted[0].startswith("With this profile, UltraVNC Viewer asks for the user and password")
+    both = [Request("PC-Y", Target("PC-Y"), "asks"), Request("PC-Z", Target("PC-Z"), "asks")]
+    assert connector.connect(both) == 2
+    assert connector.connect([Request("PC-Z", Target("PC-Z"), "asks")]) == 1
+    assert [launch[3] for launch in launched] == [None, None, None]
+    [(text, viewers_before)] = noted
+    assert text.startswith("With this profile, UltraVNC Viewer asks for the user and password")
+    assert viewers_before == 0
     assert window.hosts.prefs["notes_seen"] == ["viewer-asks"]
 
 
