@@ -84,6 +84,7 @@ PLACES: dict[str, str] = {
     "command-access-denied": "hosts/commands/",
     "command-no-folder": "hosts/commands/",
     "command-timed-out": "hosts/commands/",
+    "command-spooler-still-stopping": "hosts/commands/",
     "command-windows-error": "hosts/commands/",
     "pc-unreachable": "hosts/checking/",
     "pc-account-rejected": "hosts/checking/",

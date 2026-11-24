@@ -242,9 +242,10 @@ def test_a_spooler_that_hasnt_stopped_says_it_wasnt_started_again(
     strip = window.hosts.result_strip
     assert strip.property("failed") is True
     assert strip.text().startswith(
-        "The Print Spooler on PC-1 is still stopping after 30 seconds, so CapyPanel didn't start "
-        "it again. Until it runs, PC-1 can't print."
+        "The Print Spooler on PC-1 is still stopping after 30 seconds, so it wasn't started "
+        "again. Try again in a minute."
     )
+    assert strip.help_place() == "command-spooler-still-stopping"
     assert not strip.retry_button.isVisibleTo(window.hosts)
 
 
