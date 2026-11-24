@@ -109,6 +109,7 @@ class FocusRing(QObject):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.by_keyboard = False
+        self._keyed = False
         self.ring: Ring | None = None
         self._target: QWidget | None = None
         self._kind: Kind | None = None
@@ -124,11 +125,14 @@ class FocusRing(QObject):
     def note(self, widget: QWidget, event: QEvent) -> None:
         kind = event.type()
         if kind in PRESSES:
-            self.by_keyboard = False
+            self.by_keyboard = self._keyed = False
         elif kind == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
+            self._keyed = True
             self.by_keyboard = self.by_keyboard or event.key() in NAV_KEYS
         elif kind == QEvent.Type.FocusIn and isinstance(event, QFocusEvent):
-            self.by_keyboard = self.by_keyboard or event.reason() in BY_KEYBOARD
+            # A dialog's first show sends a FocusIn marked Tab, with no key pressed.
+            by_key = self._keyed and event.reason() in BY_KEYBOARD
+            self.by_keyboard = self.by_keyboard or by_key
             # Qt's styles draw their own focus marks while this is set: the ring replaces them.
             widget.window().setAttribute(Qt.WidgetAttribute.WA_KeyboardFocusChange, False)
         self.later()
