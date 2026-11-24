@@ -12,6 +12,7 @@ from capypanel.ui.main_window.actions import make_actions
 @dataclass(frozen=True)
 class SshActions(ListActions):
     add_host: QAction
+    import_hosts: QAction
     connect_host: QAction
     connect_window: QAction
     copy_address: QAction
@@ -38,6 +39,7 @@ def create_actions(parent: QObject | None) -> SshActions:
 def retranslate_actions(a: SshActions) -> None:
     retranslate_list_actions(a)
     a.add_host.setText(_("Add &host…"))
+    a.import_hosts.setText(_("&Import hosts…"))
     a.connect_host.setText(_("&Connect"))
     a.connect_window.setText(_("Connect in a separate &window"))
     a.connect_window.setToolTip(_("Opens ssh.exe in a window of its own, outside CapyPanel"))

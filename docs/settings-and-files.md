@@ -104,9 +104,9 @@ and **Restore default** gives back the one it came with.
       host or printer list.
     - The list ends with **SSH terminal**, under "Inside a terminal, every key goes to the server
       except the ones below and the keys that change tools or open Settings.": the terminal's own
-      keys (Copy, Copy with text selected, Paste, Bigger and Smaller text, Next and Previous tab,
-      Close tab), greyed, since "The terminal's own keys can't be changed." (see
-      [Work in the terminal](ssh/ssh.md#work-in-the-terminal)).
+      keys (Copy, Copy with text selected, Paste, Find, Bigger and Smaller text, Next and Previous
+      tab, Close tab), greyed, since "The terminal's own keys can't be changed." (see [Work in the
+      terminal](ssh/ssh.md#work-in-the-terminal)).
     - Restart, Shut down, Cancel the pending restart, Restart Print Spooler, and logging off or
       disconnecting someone aren't listed.
     - Tooltips and first-run guides name a command's key as it is now, so a key you change shows
@@ -189,9 +189,11 @@ Profile cleanup has no settings of its own: it uses Hosts' lists and accounts.
 | Setting | What it does | To begin with |
 |---|---|---|
 | **Refresh status by itself** | Checks the SSH port of the hosts shown every **minute**, **5**, **15** or **30 minutes**, or a **Custom…** interval. "Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode may count each check as a failed login and block this PC." (see [Check which hosts answer](ssh/ssh.md#check-which-hosts-answer)) | Off |
+| **Terminal > Text size** | The terminal's text in every connection, from 8 to 20 pt. "In every connection. Ctrl+= and Ctrl+- in a terminal change it too." | 10 pt |
+| **Terminal > Scrollback** | "Lines each connection keeps above its screen, to scroll back to, find and save. More lines take more memory." From 1,000 to 50,000; a shorter one lets the oldest lines go | 10,000 lines |
+| **Separate windows > Open in** | Where **Connect in a separate window** opens ssh.exe: **A console window**, **Windows Terminal** when it's on this PC, or **Another program…** (see [Connect in a separate window](ssh/ssh.md#ssh-connect-in-a-separate-window)) | A console window |
 
-SSH uses Hosts' lists, so they're set on **Hosts > General**. The terminal's text size is kept in
-your settings file when you change it with Ctrl+= and Ctrl+-.
+SSH uses Hosts' lists, so they're set on **Hosts > General**.
 
 ## About <a id="settings-about"></a>
 
@@ -267,6 +269,14 @@ deleted once the new version is running (see [Update CapyPanel](download.md#upda
 An empty file named `capypanel.portable` next to the app keeps everything (settings, lists, logs)
 in a `userdata` folder beside it instead, for running from a USB stick or a shared folder. When you
 run from source, "next to the app" means the repository folder.
+
+A portable copy's first start ends Home's guide with one more card, **A portable copy**: what it
+keeps in `userdata`, that saved passwords stay in Windows Credential Manager on that PC, and that
+lists and settings from another copy aren't brought in. **Open the userdata folder** opens the
+folder. To use a list from another copy, open it with **Open list…** under the list's name, on top
+of the Groups panel.
+
+![The A portable copy card at the end of Home's guide, with Open the userdata folder](images/guide-portable-dark.png)
 
 ## Messages you may see <a id="settings-messages-you-may-see"></a>
 

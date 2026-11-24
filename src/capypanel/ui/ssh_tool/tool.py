@@ -1,18 +1,20 @@
+import functools
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon
-from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu, QToolButton, QWidget
 
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.document import OpenList, starter_list
-from capypanel.core.hosts.model import Group, Host, HostList, HostListRuleError
+from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import PortState
-from capypanel.core.ssh import launch
+from capypanel.core.ssh import known, launch, terminals
 from capypanel.core.ssh.host import (
     SshInfo,
     connect_info,
@@ -25,12 +27,14 @@ from capypanel.core.ssh.host import (
     with_info,
     with_login,
 )
+from capypanel.core.ssh.terminals import Terminal
 from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path, host_list_texts
 from capypanel.ui.hosts_tool.command_windows import Question
+from capypanel.ui.import_hosts import HostsImportDialog
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
 from capypanel.ui.list_workspace.tabbed import TabbedListWorkspace
@@ -43,7 +47,15 @@ from capypanel.ui.ssh_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.ssh_tool.details import SshDetails, SshDetailsPanel
 from capypanel.ui.ssh_tool.dialog import LoginDialog, SshHostDialog, empty_text, follow_text
 from capypanel.ui.ssh_tool.refresh import SshRun, Target
-from capypanel.ui.ssh_tool.settings import SshSettings
+from capypanel.ui.ssh_tool.settings import (
+    DEFAULT_POINTS,
+    DEFAULT_SCROLLBACK,
+    MAX_POINTS,
+    MAX_SCROLLBACK,
+    MIN_POINTS,
+    MIN_SCROLLBACK,
+    SshSettings,
+)
 from capypanel.ui.ssh_tool.status import Cell, Checked
 from capypanel.ui.ssh_tool.table import SshTable
 from capypanel.ui.ssh_tool.toolbar import SshToolBar
@@ -52,12 +64,14 @@ from capypanel.ui.themes import engine as themes
 
 if TYPE_CHECKING:  # loaded at the first connection, never at CapyPanel's start
     from capypanel.ui.ssh_tool.terminal.tab import TerminalTab
+    from capypanel.ui.ssh_tool.window import ConnectionWindow
 
 log = logging.getLogger(__name__)
 AT_ONCE = 10  # more selected connect only the first ones: a tab or a window each
 AUTO_STATUS = "auto_status"
 POINTS = "terminal_points"
-MIN_POINTS, MAX_POINTS, DEFAULT_POINTS = 8, 20, 10
+SCROLLBACK = "terminal_scrollback"
+SAVE_FOLDER = "save_folder"
 
 
 def missing_text() -> str:
@@ -70,6 +84,17 @@ def missing_text() -> str:
 def _named(found: tuple[str, Group | None]) -> tuple[str, str]:
     login, source = found
     return login, source.name if source is not None else ""
+
+
+def alert(window: QWidget) -> None:
+    QApplication.alert(window)
+
+
+def _take_windows(windows: dict[str, "ConnectionWindow"]) -> None:
+    for window in windows.values():
+        if shiboken6.isValid(window):
+            shiboken6.delete(window)
+    windows.clear()
 
 
 class SshTool(TabbedListWorkspace):
@@ -87,7 +112,9 @@ class SshTool(TabbedListWorkspace):
         self.toolbar: SshToolBar = SshToolBar(self.commands)
         self._checked: dict[str, Checked] = {}
         self._connections: dict[str, TerminalTab] = {}
+        self._windows: dict[str, ConnectionWindow] = {}
         self._tab_names: dict[str, str] = {}
+        self._rang: set[str] = set()
         self._opened = 0
         super().__init__(
             shell,
@@ -96,6 +123,7 @@ class SshTool(TabbedListWorkspace):
             table=self.table,
             details=self.details,
         )
+        self.destroyed.connect(functools.partial(_take_windows, self._windows))
         for action in vars(self.commands).values():
             action.setParent(self)
         self._run: SshRun | None = None
@@ -124,12 +152,16 @@ class SshTool(TabbedListWorkspace):
 
     def _fill_inventory(self) -> None:
         a = self.commands
-        self.toolbar.inventory_menu.addActions([a.add_host, a.add_group, a.manage_groups])
-        self.toolbar.inventory_menu.addAction(self.sort_groups_action)
+        inventory = self.toolbar.inventory_menu
+        inventory.addActions([a.add_host, a.add_group, a.manage_groups])
+        inventory.addAction(self.sort_groups_action)
+        inventory.addSeparator()
+        inventory.addAction(a.import_hosts)
 
     def _connect(self) -> None:
         a = self.commands
         a.add_host.triggered.connect(self.add_item)
+        a.import_hosts.triggered.connect(self.import_hosts)
         # Toolbar menus take keys only while open: these shortcuts live on the tool.
         self.addActions([a.copy_address, a.add_host, a.refresh_shown])
         a.refresh_shown.triggered.connect(lambda: self.check_hosts(self.visible_items()))
@@ -203,9 +235,23 @@ class SshTool(TabbedListWorkspace):
         fields.append(_("notes"))
         return fields, _("Searches every host in the list (Ctrl+F)")
 
+    def import_action(self) -> QAction | None:
+        return self.commands.import_hosts
+
+    def import_hosts(self) -> None:
+        doc = self._writable()
+        if doc is None:
+            return
+        dialog = HostsImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
+        new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
+        if new is not None and self._commit(new):
+            added = dialog.added()
+            note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
+            self._shell.show_message(note, 10_000)
+
     def empty_texts(self) -> EmptyTexts:
         return EmptyTexts(
-            _("This list has no hosts yet.\nAdd one to start."),
+            _("This list has no hosts yet.\nAdd one, or import several at once."),
             _("This list has no hosts."),
             _("This group has no hosts yet."),
             _("Every host is in a group."),
@@ -315,6 +361,17 @@ class SshTool(TabbedListWorkspace):
             self.prefs[AUTO_STATUS] = {"on": on, "minutes": minutes}
             self._apply_auto_status()
 
+    def terminal(self) -> Terminal | None:
+        return terminals.from_prefs(self.prefs.get(terminals.KEY))
+
+    def set_terminal(self, terminal: Terminal | None) -> None:
+        if terminal == self.terminal():
+            return
+        if terminal is None:
+            self.prefs.pop(terminals.KEY, None)
+        else:
+            self.prefs[terminals.KEY] = terminals.to_prefs(terminal)
+
     def _apply_auto_status(self) -> None:
         on, minutes = self.auto_status()
         if on:
@@ -377,6 +434,17 @@ class SshTool(TabbedListWorkspace):
 
     def connect_selected(self, *, window: bool = False) -> None:
         hosts = [h for h in self.selected_items() if not is_sample(h.id)]
+        self._connect_hosts(hosts, window=window)
+
+    def open_hosts(self, ids: Sequence[str], focus: bool) -> None:
+        doc = self.saved_document
+        if doc is not None:
+            hosts = [host for key in ids if (host := doc.hosts.host(key)) is not None]
+            self._connect_hosts(hosts, front=focus)
+
+    def _connect_hosts(
+        self, hosts: Sequence[Host], *, window: bool = False, front: bool = True
+    ) -> None:
         if not hosts:
             return
         reachable = [h for h in hosts if h.connect_address]
@@ -387,7 +455,7 @@ class SshTool(TabbedListWorkspace):
                 opened = self._open_ssh(host.connect_address, info, host.name)
             else:
                 opened = self.open_connection(
-                    host.connect_address, info, host.name, front=index == 0
+                    host.connect_address, info, host.name, front=front and index == 0
                 )
             if not opened:
                 return
@@ -409,15 +477,20 @@ class SshTool(TabbedListWorkspace):
             self.open_connection(self._typed_host, SshInfo(), self._typed_host)
 
     def _open_ssh(self, destination: str, info: SshInfo, name: str) -> bool:
+        terminal = self.terminal()
         try:
-            launch.connect(destination, info, name)
+            launch.connect(destination, info, name, terminal)
         except launch.SshMissing:
             help_links.warning(self, "CapyPanel", missing_text(), place="ssh-not-installed")
             return False
         except ValueError:
             self._cant_connect(name)
         except OSError as e:
-            self._couldnt_start(name, e)
+            if terminal is None:
+                self._couldnt_start(name, e)
+            else:
+                self._terminal_failed(terminal, e)
+                return False
         return True
 
     def open_connection(
@@ -435,10 +508,17 @@ class SshTool(TabbedListWorkspace):
 
         self._opened += 1
         key = f"connection-{self._opened}"
-        tab = TerminalTab(host=name, point_size=self.terminal_points())
+        tab = TerminalTab(
+            host=name, point_size=self.terminal_points(), scrollback=self.terminal_scrollback()
+        )
+        tab.asks_to_trust = lambda: known.asks_to_trust(destination, info)
         tab.changed.connect(lambda: self._show_tab(key))
         tab.close_asked.connect(lambda: self.close_tab(key))
         tab.view.size_picked.connect(self._size_picked)
+        tab.view.extend_menu = lambda menu: self._fill_terminal_menu(key, menu)
+        tab.view.save_folder = self._save_folder
+        tab.view.text_saved.connect(self._text_saved)
+        tab.view.rang.connect(lambda: self._rang_in(key))
         self._connections[key] = tab
         self._tab_names[key] = self._tab_name(name)
         self.add_page(key, tab, self._tab_names[key])
@@ -467,6 +547,14 @@ class SshTool(TabbedListWorkspace):
             _("Couldn't start ssh.exe: {error}").format(error=e.strerror or e), 10_000
         )
 
+    def _terminal_failed(self, terminal: Terminal, e: OSError) -> None:
+        log.warning("Couldn't start %s: %s", terminal.program, e)
+        self._shell.show_message(
+            _("Couldn't start {program}: {error}. Settings › SSH › General says where separate "
+              "windows open.").format(program=terminal.name, error=e.strerror or e),
+            10_000,
+        )  # fmt: skip
+
     def _tab_name(self, host: str) -> str:
         taken = set(self._tab_names.values())
         n = 1
@@ -478,15 +566,73 @@ class SshTool(TabbedListWorkspace):
         return self._connections.get(key)
 
     def connections(self) -> list["TerminalTab"]:
-        return [self._connections[k] for k in self.tabs.tab_keys() if k in self._connections]
+        in_tabs = [self._connections[k] for k in self.tabs.tab_keys() if k in self._connections]
+        return in_tabs + [self._connections[k] for k in self._windows]
+
+    def window_of(self, key: str) -> "ConnectionWindow | None":
+        return self._windows.get(key)
+
+    def move_out(self, key: str) -> None:
+        tab = self._connections.get(key)
+        if tab is None or key in self._windows:
+            return
+        self._rang.discard(key)
+        from capypanel.ui.ssh_tool.window import ConnectionWindow
+
+        where, size = tab.mapToGlobal(QPoint(0, 0)), tab.size()
+        self.remove_page(key, tab)
+        window = ConnectionWindow(tab, lambda: self._window_closing(key))
+        self._windows[key] = window
+        self._show_tab(key)
+        self._show_more()
+        window.resize(size)
+        window.move(where)
+        window.show()
+        window.activateWindow()
+        tab.view.setFocus()
+
+    def move_back(self, key: str) -> None:
+        tab = self._connections.get(key)
+        window = self._windows.pop(key, None)
+        if tab is None or window is None:
+            return
+        tab.set_in_window(False)
+        self.add_page(key, tab, self._tab_names[key])
+        window.hide()
+        window.deleteLater()
+        self._show_tab(key)
+        self.switch(key)
+        self.front_requested.emit()
+
+    def _window_closing(self, key: str) -> bool:
+        tab = self._connections.get(key)
+        if tab is None:
+            return True
+        live = tab.running and not tab.view.closed_by_us
+        if live and not self._close_asked([tab], tab.window()):
+            return False
+        self._drop(key)
+        return True
+
+    def _fill_terminal_menu(self, key: str, menu: QMenu) -> None:
+        menu.addSeparator()
+        if key in self._windows:
+            menu.addAction(_("Move &back to a tab"), lambda: self.move_back(key))
+        else:
+            menu.addAction(_("Move to a &new window"), lambda: self.move_out(key))
 
     def switch(self, key: str) -> None:
         super().switch(key)
+        if key in self._rang:
+            self._rang.discard(key)
+            self._show_tab(key)
         tab = self._connections.get(key)
         if tab is not None:
             tab.view.setFocus()
 
-    def _mark(self, tab: "TerminalTab") -> tuple[QIcon, str]:
+    def _mark(self, key: str, tab: "TerminalTab") -> tuple[QIcon, str]:
+        if key in self._rang:
+            return mark_icon("bell", themes.status_color("attention")), _("Rang its bell")
         if tab.running:
             icon = mark_icon("plug-connected", themes.status_color("online"))
             return icon, _("Connection open")
@@ -497,10 +643,15 @@ class SshTool(TabbedListWorkspace):
 
     def _show_tab(self, key: str) -> None:
         tab = self._connections.get(key)
-        if tab is not None:
-            icon, tip = self._mark(tab)
-            self.tabs.show_tab(key, self._tab_names[key], icon, tip, closable=True)
-            self._show_more()
+        if tab is None:
+            return
+        window = self._windows.get(key)
+        if window is not None:
+            window.setWindowTitle(f"{self._tab_names[key]} · {self.tool_name()}")
+            return
+        icon, tip = self._mark(key, tab)
+        self.tabs.show_tab(key, self._tab_names[key], icon, tip, closable=True)
+        self._show_more()
 
     def _show_more(self) -> None:
         doc = self.document
@@ -511,10 +662,13 @@ class SshTool(TabbedListWorkspace):
         for key in self.tabs.tab_keys():
             tab = self._connections.get(key)
             if tab is not None:
-                items.append((key, self._tab_names[key], self._mark(tab)[0]))
+                items.append((key, self._tab_names[key], self._mark(key, tab)[0]))
         self.tabs.set_more(items)
 
     def close_tab(self, key: str) -> bool:
+        window = self._windows.get(key)
+        if window is not None:
+            return window.close()
         tab = self._connections.get(key)
         if tab is None:
             return False
@@ -532,7 +686,7 @@ class SshTool(TabbedListWorkspace):
             if key in self._connections:
                 self._drop(key)
 
-    def _close_asked(self, live: Sequence["TerminalTab"]) -> bool:
+    def _close_asked(self, live: Sequence["TerminalTab"], parent: QWidget | None = None) -> bool:
         n = len(live)
         if n == 1:
             heading = _("Close the connection to {host}?").format(host=live[0].host)
@@ -546,16 +700,22 @@ class SshTool(TabbedListWorkspace):
             n,
         )
         question = Question(
-            self, _("Close"), heading, text, _("&Close"), place="ssh-work-in-the-terminal"
+            parent or self, _("Close"), heading, text, _("&Close"), place="ssh-work-in-the-terminal"
         )
         return run_modal(question) == QDialog.DialogCode.Accepted
 
     def _drop(self, key: str) -> None:
         tab = self._connections.pop(key)
         del self._tab_names[key]
+        self._rang.discard(key)
         tab.close_connection()
-        self.remove_page(key, tab)
-        tab.deleteLater()
+        window = self._windows.pop(key, None)
+        if window is None:
+            self.remove_page(key, tab)
+            tab.deleteLater()
+        else:
+            window.hide()
+            window.deleteLater()
         self._show_more()
 
     def tab_menu(self, key: str, where: QPoint) -> None:
@@ -565,13 +725,14 @@ class SshTool(TabbedListWorkspace):
         menu = QMenu(self)
         reconnect = menu.addAction(plain(_("&Reconnect")), tab.view.restart)
         reconnect.setEnabled(tab.ended)
+        menu.addAction(plain(_("Move to a &new window")), lambda: self.move_out(key))
         menu.addSeparator()
         menu.addAction(_("Close"), lambda: self.close_tab(key))
         others = [k for k in self.tabs.tab_keys() if k != key]
         menu.addAction(_("Close the others"), lambda: self.close_tabs(others)).setEnabled(
             bool(others)
         )
-        ended = [k for k, t in self._connections.items() if t.ended]
+        ended = [k for k in self.tabs.tab_keys() if self._connections[k].ended]
         menu.addAction(_("Close the ended ones"), lambda: self.close_tabs(ended)).setEnabled(
             bool(ended)
         )
@@ -610,11 +771,46 @@ class SshTool(TabbedListWorkspace):
             return max(MIN_POINTS, min(MAX_POINTS, points))
         return DEFAULT_POINTS
 
-    def _size_picked(self, points: int) -> None:
+    def set_terminal_points(self, points: int) -> None:
         self.prefs[POINTS] = points
-        self._save_prefs()
         for tab in self._connections.values():
             tab.view.set_point_size(points)
+
+    def _size_picked(self, points: int) -> None:
+        self.set_terminal_points(points)
+        self._save_prefs()
+
+    def terminal_scrollback(self) -> int:
+        lines = self.prefs.get(SCROLLBACK)
+        if isinstance(lines, int) and not isinstance(lines, bool):
+            return max(MIN_SCROLLBACK, min(MAX_SCROLLBACK, lines))
+        return DEFAULT_SCROLLBACK
+
+    def set_terminal_scrollback(self, lines: int) -> None:
+        self.prefs[SCROLLBACK] = lines
+        for tab in self._connections.values():
+            tab.view.set_scrollback(lines)
+
+    def _save_folder(self, chosen: str | None) -> str:
+        if chosen is not None:
+            self.prefs[SAVE_FOLDER] = chosen
+            self._save_prefs()
+            return chosen
+        saved = self.prefs.get(SAVE_FOLDER)
+        return saved if isinstance(saved, str) else ""
+
+    def _rang_in(self, key: str) -> None:
+        window = self._windows.get(key)
+        if window is None:
+            if self.tabs.current() != key:
+                self._rang.add(key)
+                self._show_tab(key)
+            window = self.window()
+        if not window.isActiveWindow():
+            alert(window)
+
+    def _text_saved(self, path: str) -> None:
+        self._shell.show_message(_("Saved the text in {path}").format(path=path), 5000)
 
     def _copy_address(self) -> None:
         hosts = self.selected_items()
@@ -677,6 +873,7 @@ class SshTool(TabbedListWorkspace):
     def update_tool_state(self, writable: bool, selected: int) -> None:
         a = self.commands
         a.add_host.setEnabled(writable)
+        a.import_hosts.setEnabled(writable)
         for action in (a.connect_host, a.connect_window, a.copy_address):
             action.setEnabled(selected > 0)
         self._show_more()

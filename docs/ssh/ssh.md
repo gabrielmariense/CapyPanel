@@ -23,9 +23,14 @@ here is in Hosts at once, and the other way round.
    own settings.
 4. Click **Add**.
 
-Groups, tags, **Move to ▸**, **Tags ▸** and finding a host work as in Hosts: see
-[Host lists](../hosts/host-lists.md). To bring in many hosts at once, use **Import hosts…** in the
-Hosts tool; they show here too, on port 22.
+Groups, tags, **Move to ▸**, **Tags ▸** and finding a host work as in Hosts: see [Host
+lists](../hosts/host-lists.md). To bring in many hosts at once, use **Inventory > Import hosts…**,
+here or in Hosts. Its **SSH port** and **SSH login** columns bring each server's port and the name
+to log in as (see [Add hosts from a
+spreadsheet](../hosts/host-lists.md#host-lists-add-hosts-from-a-spreadsheet)). An empty list offers
+it too.
+
+![Import hosts with SSH servers pasted in: the SSH port and SSH login columns after Group, and a row left out for its port](../images/import-ssh-servers-dark.png)
 
 ??? note "More about adding hosts"
 
@@ -86,12 +91,16 @@ checks its subgroups too.
 
 ??? note "Settings › SSH › General"
 
-    ![Settings on SSH > General: Refresh status by itself, set to Off](../images/settings-ssh-dark.png)
+    ![Settings on SSH > General: Refresh status by itself set to Off, Terminal's Text size and Scrollback, and Separate windows' Open in](../images/settings-ssh-dark.png)
 
     **Refresh status by itself** checks the hosts shown every **minute**, **5**, **15** or **30
     minutes**, or a **Custom…** interval. It's **Off** to begin with, and says why it might stay
     that way: "Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode
     may count each check as a failed login and block this PC."
+
+    The same page sets the terminal's **Text size** and **Scrollback**, and where **Connect in a
+    separate window** opens (see [Settings and
+    files](../settings-and-files.md#settings-ssh-general)).
 
 ## Connect <a id="ssh-connect"></a>
 
@@ -99,8 +108,9 @@ checks its subgroups too.
 2. Click **Connect** on the toolbar, double-click the host, or press **Enter**.
 3. A tab opens beside the list, named after the host, and ssh.exe connects in it. A second
    connection to the same host is "srv-01 (2)".
-4. The first time you reach a server, ssh.exe asks, in English: "Are you sure you want to continue
-   connecting (yes/no/[fingerprint])?" Type **yes**, then press **Enter**.
+4. The first time you reach a server from this PC, a strip at the tab's foot says so, and ssh.exe
+   asks, in English: "Are you sure you want to continue connecting (yes/no/[fingerprint])?" Type
+   **yes**, not just y, then press **Enter**.
 5. Type the password if it asks. Nothing shows while you type it.
 
 ![A connection's tab beside the Hosts tab: the server's prompt and some output in the terminal](../images/ssh-terminal-dark.png)
@@ -114,6 +124,12 @@ own settings.
     - At the host key question, only **yes** (in any case) or the server's fingerprint accepts it.
       "y" or "sim" makes ssh.exe ask again, and **Enter** alone answers no, which ends the
       connection with "Host key verification failed."
+    - The first-connection strip shows only when ssh.exe will ask: CapyPanel looks the server up
+      in your `known_hosts` files first, as ssh.exe does. It goes with its **×** or when the
+      connection ends, and **Reconnect** checks again. A separate window has no strip.
+
+      ![A first connection: ssh.exe's question in the terminal, and the strip at the tab's foot saying to type yes](../images/ssh-first-connection-dark.png)
+
     - CapyPanel connects at most ten hosts at once: "Only the first 10 connect at once."
     - ssh.exe reads your own SSH config (`%USERPROFILE%\.ssh\config`) and your keys, so a key,
       a jump host or an older algorithm works as in any terminal (see
@@ -129,16 +145,29 @@ Every key you type goes to the server, apart from these:
 | **Ctrl+C** | Copies the text you selected; with nothing selected, it goes to the server and stops the running program |
 | **Ctrl+Shift+C** / **Ctrl+Shift+V** | Copy / paste |
 | **Ctrl+=** / **Ctrl+-** | Bigger / smaller text |
+| **Ctrl+Shift+F** | Find in the terminal |
 | **Ctrl+Tab** / **Ctrl+Shift+Tab** | The next / previous tab, the Hosts tab included: the way out of a terminal |
-| **Ctrl+Shift+W** | Close the tab |
+| **Ctrl+Shift+W** | Close the tab, or the window it moved to |
 | **Ctrl+0** to **Ctrl+4**, **Ctrl+,** | Home, the tools and Settings, with the keys **Keyboard shortcuts** gives them |
 
 So F1, Esc, F5, Ctrl+F and Exit's Ctrl+Q go to the server while a terminal has the keyboard. On
 the Hosts tab every key works as usual, and picking a group, a tag or a list on the left, or
 **Ctrl+F**, brings that tab forward.
 
-Select text with the mouse to copy it. A right-click opens **Copy**, **Paste**, **Select all** and
-**Clear scrollback**; it never pastes by itself.
+Select text with the mouse to copy it. A right-click opens **Copy**, **Paste**, **Select all**,
+**Find…**, **Save all the text…**, **Clear scrollback** and **Move to a new window**; it never
+pastes by itself.
+
+A program that asks for the mouse, such as htop, mc, or vim with its mouse on, gets clicks, drags
+and the wheel; hold **Shift** there to select text or open the menu. In less or man the wheel
+scrolls. A web address is underlined under the mouse: **Ctrl+click** opens it in your browser.
+
+**Find…** (Ctrl+Shift+F) opens a box over the terminal's top right. It starts at the newest
+match: **Enter** goes to older ones and **Shift+Enter** to newer ones, with **Match case** and a
+count, as in "3 of 4". **Esc** closes it. **Save all the text…** writes the scrollback and the
+screen to a `.txt` file named after the server and the time, each line whole.
+
+![The find box over the terminal: error typed in, 3 of 4, and every match marked in amber](../images/ssh-find-dark.png)
 
 ??? note "More about the terminal"
 
@@ -150,29 +179,19 @@ Select text with the mouse to copy it. A right-click opens **Copy**, **Paste**, 
       swapped for one that reads. The text is Cascadia Mono, or Consolas where Cascadia Mono isn't
       installed; line, block and Powerline characters are drawn by CapyPanel, so boxes join with
       no gaps.
-    - The text size is one for every tab, and it's kept for next time.
-    - A line too long for the tab goes on to the next row, and copies as one line, so it pastes
-      whole.
-    - Each tab keeps the last 10,000 lines. Nothing you type, paste or see is logged or saved, and
-      nothing of a connection outlives CapyPanel but the text size.
-
-??? note "What the terminal doesn't do yet"
-
-    - The mouse only selects text. Programs such as mc and htop don't get clicks: use their keys.
-    - Links in the output can't be clicked. Select one and copy it.
-    - There's no search in the scrollback. Right-click > **Select all**, copy, and search in a text
-      editor. The scrollback can't be saved to a file either; copy it the same way.
-    - The scrollback keeps the last 10,000 lines, and that isn't a setting.
-    - Lines already printed don't rewrap when the tab changes width, so a narrower tab cuts off
-      their ends at the right edge.
-    - The bell makes no sound and shows nothing.
-    - The cursor is always a block, even where a program asks for a bar, as vim does while you
-      type.
-    - The text size is changed with Ctrl+= and Ctrl+-, not in Settings.
-    - Screen readers can't read the terminal, and Windows' contrast themes don't change it.
-
-    For any of these, [Connect in a separate window](#connect-in-a-separate-window) opens the host
-    in Windows' own terminal.
+    - The text size is one for every tab: Ctrl+= and Ctrl+-, or **Text size** in Settings › SSH ›
+      General.
+    - Lines rewrap when the tab changes width, on the screen and in the scrollback. A line too
+      long for the tab copies as one line, so it pastes whole.
+    - A bell rung in a tab that isn't in front marks the tab with an amber bell, "Rang its bell",
+      until you open it, and CapyPanel's taskbar button flashes when CapyPanel isn't in front.
+      There's no sound.
+    - The cursor takes the shape a program asks for: block, underline or bar, steady or blinking.
+    - Each tab keeps the last 10,000 lines, or what **Scrollback** in Settings › SSH › General
+      says. Nothing you type, paste or see is logged or kept unless you save it.
+    - Screen readers can't read the terminal, and Windows' contrast themes don't change it. For
+      those, [Connect in a separate window](#connect-in-a-separate-window) opens the host in
+      Windows' own terminal.
 
 ## When a connection ends <a id="ssh-when-a-connection-ends"></a>
 
@@ -192,12 +211,30 @@ offers **Reconnect** (the default: **Enter** does it too) and **Close tab**.
     - **Ctrl+Shift+W**, the tab's **×** or **Close tab** closes it. A tab that's still connected
       asks first, "Close the connection to {host}?", with "Anything still running in it on the
       server may stop."
-    - Right-click a tab for **Reconnect**, **Close**, **Close the others** and **Close the ended
-      ones**. Closing several open connections asks once.
+    - Right-click a tab for **Reconnect**, **Move to a new window**, **Close**, **Close the others**
+      and **Close the ended ones**; the last two act on tabs only. Closing several open
+      connections asks once.
     - Each tab's mark says how it stands: **Connection open**, **Ended with an error** or
       **Ended**.
-    - Quitting CapyPanel with connections open asks once, as in "Quit CapyPanel with 2 connections
-      open?" and "They all close, and anything still running in them on the servers may stop."
+    - Quitting CapyPanel with connections open, in tabs or in windows of their own, asks once, as
+      in "Quit CapyPanel with 2 connections open?" and "They all close, and anything still
+      running in them on the servers may stop."
+
+## Move a connection to its own window <a id="ssh-move-a-connection-to-its-own-window"></a>
+
+To put a terminal on a second monitor beside the list, right-click its tab, or the terminal, and
+pick **Move to a new window**. The same connection, still running, opens in a window holding only
+its terminal, where the tab was and at its size, titled with the tab's name and SSH.
+
+- In that window, the terminal's right-click menu has **Move back to a tab**: the connection comes
+  back as the last tab, in front.
+- Closing the window closes the connection, asking first while it's open, as a tab does;
+  **Ctrl+Shift+W** too. Once the connection ends, its bar offers **Close window**.
+- The terminal keeps its copy, paste and text size keys there. Ctrl+Tab and Ctrl+Shift+Tab do
+  nothing, and every other key goes to the server, Ctrl+0 to Ctrl+4 and Ctrl+, included.
+
+This window is still CapyPanel's terminal, with its menu and keys. **Connect in a separate
+window**, below, runs ssh.exe on its own, outside CapyPanel.
 
 ## Connect in a separate window <a id="ssh-connect-in-a-separate-window"></a>
 
@@ -205,13 +242,25 @@ Right-click a host and pick **Connect in a separate window**. It "Opens ssh.exe 
 own, outside CapyPanel": there your keys never pass through CapyPanel, and the window does
 everything Windows' console does.
 
-If ssh.exe ends with an error, the window stays open so you can read why; press any key to close
-it. Under ssh.exe's message it says "The connection to {host} ended with an error. ssh.exe's
-message is above." and "Press any key to close this window." A key pressed in the first second
-after those words is ignored, so a quick extra Enter doesn't close it unread. After a normal end it
-closes by itself, and closing the window ends ssh.exe.
+**Open in**, in Settings › SSH › General, picks where it opens: **A console window** (to begin
+with), **Windows Terminal** when it's on this PC, or **Another program…**, which asks for the
+program and its arguments. In the arguments, `{ssh}` stands for ssh.exe with the server's address,
+port and login, and `{name}` for the server's name, for a window or tab title. **Save** stays
+greyed until the program is there and the arguments have `{ssh}`. For Windows Terminal,
+CapyPanel uses `new-tab --title {name} -- {ssh}`.
 
-To install an update, close these windows first (see
+![The Another terminal program window: the program's path with Choose…, and the arguments start -- {ssh}](../images/ssh-terminal-program-dark.png)
+
+In a terminal program, that program's own settings decide whether its window stays open after an
+error, and nothing of CapyPanel runs in it, so an update doesn't wait for it.
+
+In a console window, if ssh.exe ends with an error, the window stays open so you can read why; press
+any key to close it. Under ssh.exe's message it says "The connection to {host} ended with an error.
+ssh.exe's message is above." and "Press any key to close this window." A key pressed in the first
+second after those words is ignored, so a quick extra Enter doesn't close it unread. After a normal
+end it closes by itself, and closing the window ends ssh.exe.
+
+To install an update, close the console windows first (see
 [Update CapyPanel](../download.md#update-capypanel)).
 
 ## Old devices and your SSH config <a id="ssh-old-devices-and-your-ssh-config"></a>
@@ -243,9 +292,9 @@ looks for them, or in Windows' OpenSSH agent.
     | **Details panel** (right) | The selected host, under its name and status with **Connect** and **Refresh**: **Connection** (address, port, Log in as, group), **Tags** and **Notes**. Click any value to copy it |
     | **Status bar** | The open list and its counts, as in Hosts |
 
-    **Inventory** holds **Add host…** (Ctrl+N), **Add group…**, **Manage groups…** and **Sort
-    groups A–Z**. The list's dropdown switches lists, makes one with **New list…**, and opens
-    **Manage host lists…** in Settings, as in Hosts.
+    **Inventory** holds **Add host…** (Ctrl+N), **Add group…**, **Manage groups…**, **Sort groups
+    A–Z** and **Import hosts…**. The list's dropdown switches lists, makes one with **New list…**,
+    and opens **Manage host lists…** in Settings, as in Hosts.
 
 ??? note "The table and its menus"
 
@@ -269,6 +318,8 @@ CapyPanel's own messages:
 | <a id="ssh-bad-address"></a>"Can't connect to “{host}”: its address or Log in as has a space, starts with “-”, or has a character such as ; & \| or quotes." | The list holds an address or name ssh.exe must not get | Fix it with **Edit selected…** |
 | <a id="ssh-connect-limit"></a>"Only the first 10 connect at once." | More than ten hosts were selected | Connect the rest in a second go |
 | <a id="ssh-no-address-skipped"></a>"2 hosts have no address and were skipped." | Those hosts have only a name | Add their address |
+| <a id="ssh-terminal-program-not-started"></a>"Couldn't start …: …. Settings › SSH › General says where separate windows open." | The terminal program picked for separate windows couldn't run: it moved, it was uninstalled, or Windows refused it | Fix **Open in** in Settings › SSH › General, or pick **A console window** |
+| <a id="ssh-text-not-saved"></a>"Couldn't save “…”: …" after **Save all the text…** | Windows refused to write the file, often because the folder is read-only or the disk is full | Save it in another folder |
 | <a id="ssh-port-closed"></a>**Port closed** | The host is on, but its SSH server is off or listens on another port | Check the port, or start the server's SSH service |
 
 ssh.exe's messages come in English, as it prints them, since that's what you'd search for:

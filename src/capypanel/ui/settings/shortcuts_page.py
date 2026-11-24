@@ -101,7 +101,7 @@ ORDER = (
     "printers.show_groups", "printers.show_tags", "printers.show_details",
     "printers.customize_details", "printers.new_list", "printers.open_list",
     "ssh.connect_host", "ssh.connect_window", "ssh.refresh_shown", "ssh.add_host",
-    "ssh.add_group", "ssh.manage_groups",
+    "ssh.add_group", "ssh.manage_groups", "ssh.import_hosts",
     "ssh.refresh_selected", "ssh.copy_address", "ssh.edit", "ssh.remove", "ssh.show_groups",
     "ssh.show_tags", "ssh.show_details", "ssh.customize_details", "ssh.new_list", "ssh.open_list",
 )  # fmt: skip
@@ -126,6 +126,7 @@ def terminal_keys() -> list[tuple[str, str]]:
         (plain(_("&Copy")), "Ctrl+Shift+C"),
         (_("Copy, with text selected"), "Ctrl+C"),
         (plain(_("&Paste")), "Ctrl+Shift+V"),
+        (_("Find"), "Ctrl+Shift+F"),
         (_("Bigger text"), "Ctrl+="),
         (_("Smaller text"), "Ctrl+-"),
         (_("Next tab"), "Ctrl+Tab"),
@@ -266,7 +267,9 @@ class ShortcutsPage(Page):
         column = self.section.layout()
         if column is not None:
             column.setSpacing(0)
-        self.about = lead(_("Double-click a command and press its new key."))
+        self.about = lead(
+            _("Double-click a command, or press Enter on it, then press its new key.")
+        )
         self.table = grid_table([_("Command"), _("Key")])
         self.table.itemActivated.connect(lambda item, _c: self.change(item))
         self.table.itemSelectionChanged.connect(self._enable)

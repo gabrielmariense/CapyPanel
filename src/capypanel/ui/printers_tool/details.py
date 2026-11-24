@@ -154,21 +154,20 @@ class PrinterDetailsPanel(DetailsPanel):
         self.section(layout, _("Page counters"))
         info, checked = info_of(shown.printer), shown.checked
         reading = checked.reading if checked else None
-        pages, error, tip = reading.pages if reading else None, "", ""
+        pages, error = reading.pages if reading else None, ""
         source = source_text(info.counter_source)
         if info.counter_source == DOC360:
             pages, error = status.doc360_pages(info, reading, shown.counted)
             if shown.counted is not None:
                 when = clock_text(shown.counted.when)
                 source = _("{source} · fetched {when}").format(source=source, when=when)
-                tip = status.doc360_tip(shown.counted)
         total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
         if error:
             total = _("Error: {why}").format(why=error)
-        grid = self._grid(layout)
-        for key, label, value in (("pages", _("Total pages"), total),
-                                  ("counter_source", _("Source"), source)):  # fmt: skip
-            self._row(grid, key, label, value).setToolTip(tip)
+        self._fields(layout, (("pages", _("Total pages"), total),
+                              ("counter_source", _("Source"), source)))  # fmt: skip
+        if info.counter_source == DOC360 and shown.counted is not None and not error:
+            layout.addWidget(self.muted(status.doc360_behind()))
         if error:
             layout.addWidget(_link(status.doc360_place(info, reading, shown.counted)))
         if error and shown.counted and shown.counted.account:
@@ -222,9 +221,13 @@ class PrinterDetailsPanel(DetailsPanel):
             words = _("{status} · checked {when}").format(
                 status=cell.said(), when=clock_text(shown.checked.when)
             )
-        under = self.muted(words)
-        under.setToolTip(status.plain_tip(cell.tip))
-        layout.addWidget(under)
+        layout.addWidget(self.muted(words))
+        if cell.why:
+            why = QLabel(breakable(cell.why))
+            why.setObjectName("statusWhy")
+            why.setTextFormat(Qt.TextFormat.PlainText)
+            why.setWordWrap(True)
+            layout.addWidget(why)
         if place := status.status_place(shown.checked):
             layout.addWidget(_link(place))
         reading = shown.checked.reading if shown.checked else None
@@ -280,6 +283,7 @@ class PrinterDetailsPanel(DetailsPanel):
         label.setWordWrap(True)
         label.setStyleSheet(f"color: {amber()};")
         if use is not None:
+            label.setTextInteractionFlags(help_links.LINK_KEYS)
             label.linkActivated.connect(lambda _link: use(key, value))
         return label
 

@@ -312,7 +312,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     assert seen == [
         "&Connect", "Re&fresh host",
         "C$ share", "User's folder", "Computer Management", "Send a message…",
-        "&All commands…", "&Open in Profile cleanup",
+        "&All commands…", "&Open in Profile cleanup", "Open in SS&H",
         "Co&py",
         "&Edit…", "&Move to", "&Tags", "&Remove",
     ]  # fmt: skip
@@ -320,7 +320,8 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2"))
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))
     assert seen == [
-        "&Connect", "Re&fresh 2 hosts", "&Open 2 hosts in Profile cleanup", "Commands run a&s",
+        "&Connect", "Re&fresh 2 hosts", "&Open 2 hosts in Profile cleanup",
+        "Open 2 hosts in SS&H", "Commands run a&s",
         "Co&py", "&Move to", "&Tags", "&Remove",
     ]  # fmt: skip
 

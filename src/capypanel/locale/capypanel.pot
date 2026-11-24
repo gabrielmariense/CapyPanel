@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:58-0300\n"
+"POT-Creation-Date: 2026-11-22 23:26-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,13 @@ msgstr ""
 msgid " and "
 msgstr ""
 
+msgid " lines"
+msgstr ""
+
 msgid " min"
+msgstr ""
+
+msgid " pt"
 msgstr ""
 
 msgid "&About CapyPanel"
@@ -66,6 +72,12 @@ msgid "&Another account…"
 msgstr ""
 
 msgid "&Another name…"
+msgstr ""
+
+msgid "&Arguments:"
+msgstr ""
+
+msgid "&Ascending"
 msgstr ""
 
 msgid "&Authentication"
@@ -116,6 +128,9 @@ msgstr ""
 msgid "&Delete…"
 msgstr ""
 
+msgid "&Descending"
+msgstr ""
+
 msgid "&Details pane"
 msgstr ""
 
@@ -147,6 +162,9 @@ msgid "&Export…"
 msgstr ""
 
 msgid "&File"
+msgstr ""
+
+msgid "&Find…"
 msgstr ""
 
 msgid "&Fit columns to content"
@@ -322,6 +340,9 @@ msgstr ""
 msgid "&Profile:"
 msgstr ""
 
+msgid "&Program:"
+msgstr ""
+
 msgid "&Quick commands"
 msgstr ""
 
@@ -391,6 +412,9 @@ msgid_plural "&Scan {n} hosts"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "&Scrollback"
+msgstr ""
+
 msgid "&Send"
 msgstr ""
 
@@ -437,6 +461,9 @@ msgid "&Tags"
 msgstr ""
 
 msgid "&Tags:"
+msgstr ""
+
+msgid "&Text size"
 msgstr ""
 
 msgid "&Theme"
@@ -531,6 +558,9 @@ msgstr ""
 msgid "A connection profile must be a JSON object."
 msgstr ""
 
+msgid "A console window"
+msgstr ""
+
 msgid "A few hosts are read at a time; this one starts when one ends."
 msgstr ""
 
@@ -564,6 +594,9 @@ msgid "A newer CapyPanel is out: see what's new"
 msgstr ""
 
 msgid "A pop-up on the screen of everyone signed in."
+msgstr ""
+
+msgid "A portable copy"
 msgstr ""
 
 #, python-brace-format
@@ -643,9 +676,6 @@ msgid "Add host"
 msgstr ""
 
 msgid "Add hosts"
-msgstr ""
-
-msgid "Add hosts and groups, and manage the groups"
 msgstr ""
 
 msgid "Add hosts and groups, or import a list of hosts"
@@ -732,6 +762,24 @@ msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"Another CapyPanel from this folder is still running. It may be closing, "
+"or showing a message behind this window. Close it, or wait until it's "
+"gone, then install the update."
+msgid_plural ""
+"{n} other CapyPanels from this folder are still running. They may be "
+"closing, or showing a message behind this window. Close them, or wait "
+"until they're gone, then install the update."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Another program…"
+msgstr ""
+
+msgid "Another terminal program"
+msgstr ""
+
+#, python-brace-format
 msgid "Answered a ping at {address}."
 msgstr ""
 
@@ -791,9 +839,6 @@ msgid "Asset tag"
 msgstr ""
 
 msgid "At every start"
-msgstr ""
-
-msgid "At or below the Low supply level, under Supplies."
 msgstr ""
 
 msgid "Authentication &password"
@@ -1059,8 +1104,17 @@ msgstr ""
 msgid "Checks whether {host} answers, as Hosts' Refresh does"
 msgstr ""
 
+msgid "Choose a program: a file whose name ends in .exe."
+msgstr ""
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+msgid "Choose the program."
+msgstr ""
+
+msgid "Choose the terminal program"
 msgstr ""
 
 msgid "Clear"
@@ -1107,6 +1161,12 @@ msgstr ""
 msgid "Close &tab"
 msgstr ""
 
+msgid "Close &window"
+msgstr ""
+
+msgid "Close (Esc)"
+msgstr ""
+
 #, python-brace-format
 msgid "Close the connection to {host}?"
 msgstr ""
@@ -1125,6 +1185,9 @@ msgid "Close {n} open connection?"
 msgid_plural "Close {n} open connections?"
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Co&lumns"
+msgstr ""
 
 msgid "Co&py"
 msgstr ""
@@ -1165,6 +1228,13 @@ msgid "Connect"
 msgstr ""
 
 msgid "Connect in a separate &window"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Connect in a separate window starts this program, which runs ssh.exe. In "
+"the arguments, {ssh} stands for ssh.exe with the server's address, port "
+"and login, and {name} for the server's name, for a window or tab title."
 msgstr ""
 
 msgid "Connect to the selected hosts with Windows' ssh.exe"
@@ -1386,6 +1456,10 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't save “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid ""
 "Couldn't save “{path}”: {error}\n"
 "\n"
@@ -1395,6 +1469,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't start ssh.exe: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Couldn't start {program}: {error}. Settings › SSH › General says where "
+"separate windows open."
 msgstr ""
 
 #, python-brace-format
@@ -1436,6 +1516,9 @@ msgid "Credentials"
 msgstr ""
 
 msgid "Credits"
+msgstr ""
+
+msgid "Ctrl+click to open the link"
 msgstr ""
 
 msgid "Custom"
@@ -1613,6 +1696,11 @@ msgstr ""
 msgid "Doc360 MPS has no total for this printer."
 msgstr ""
 
+msgid ""
+"Doc360 MPS reads printers on its own schedule, so this count can be "
+"behind the printer."
+msgstr ""
+
 msgid "Doc360 MPS refused the login."
 msgstr ""
 
@@ -1636,7 +1724,7 @@ msgid ""
 "Right-click for more."
 msgstr ""
 
-msgid "Double-click a command and press its new key."
+msgid "Double-click a command, or press Enter on it, then press its new key."
 msgstr ""
 
 msgid ""
@@ -1706,6 +1794,12 @@ msgid "Edit the account"
 msgstr ""
 
 msgid "Edit the list here"
+msgstr ""
+
+msgid ""
+"Editing in the table rewrites the list above as CSV with a header row "
+"(name, address, group, ssh port, ssh login, tags and notes), so the two "
+"always match. Continue?"
 msgstr ""
 
 msgid ""
@@ -1838,19 +1932,24 @@ msgstr ""
 msgid "Failed: some files couldn't be removed."
 msgstr ""
 
-#, python-brace-format
-msgid ""
-"Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own "
-"schedule, so this can be behind the printer."
-msgstr ""
-
 msgid "File not found"
 msgstr ""
 
 msgid "Filters"
 msgstr ""
 
+msgid "Find"
+msgstr ""
+
 msgid "Firmware"
+msgstr ""
+
+#. i18n: ssh.exe asks in English whatever the language: say so in a
+#. translation.
+msgid ""
+"First connection to this server from this PC: ssh.exe asks whether you "
+"trust the server. Type yes, not just y, then press Enter. If it asks for "
+"a password, nothing shows as you type it."
 msgstr ""
 
 msgid "Folder"
@@ -2118,6 +2217,9 @@ msgstr ""
 msgid "In a separate window"
 msgstr ""
 
+msgid "In every connection. Ctrl+= and Ctrl+- in a terminal change it too."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "In the open list it's set on {hosts} and {groups}. They'll use their "
@@ -2283,6 +2385,11 @@ msgid ""
 " some bars; Reset to default goes back to one mark in the theme's colour."
 msgstr ""
 
+msgid ""
+"Lines each connection keeps above its screen, to scroll back to, find and"
+" save. More lines take more memory."
+msgstr ""
+
 msgid "List"
 msgstr ""
 
@@ -2382,6 +2489,9 @@ msgstr ""
 msgid "Mascot:"
 msgstr ""
 
+msgid "Match case"
+msgstr ""
+
 msgid "Memory"
 msgstr ""
 
@@ -2409,6 +2519,9 @@ msgstr ""
 msgid "More in the documentation"
 msgstr ""
 
+msgid "Move &back to a tab"
+msgstr ""
+
 msgid "Move &down"
 msgstr ""
 
@@ -2416,6 +2529,9 @@ msgid "Move &to"
 msgstr ""
 
 msgid "Move &up"
+msgstr ""
+
+msgid "Move to a &new window"
 msgstr ""
 
 msgid "My personal list"
@@ -2465,6 +2581,9 @@ msgid "New printer list"
 msgstr ""
 
 msgid "New tag"
+msgstr ""
+
+msgid "Newer match (Shift+Enter)"
 msgstr ""
 
 msgid "Next"
@@ -2534,6 +2653,9 @@ msgid "No hosts to refresh"
 msgstr ""
 
 msgid "No list open"
+msgstr ""
+
+msgid "No matches"
 msgstr ""
 
 msgid "No message: it restarts right away."
@@ -2616,7 +2738,15 @@ msgstr ""
 msgid "Not a computer name or IP address"
 msgstr ""
 
+msgid ""
+"Not a name ssh.exe can log in as: no spaces, quotes or characters such as"
+" ; & |, and it can't start with “-”"
+msgstr ""
+
 msgid "Not a printer name or IP address"
+msgstr ""
+
+msgid "Not an SSH port: type a number from 1 to 65535"
 msgstr ""
 
 #, python-brace-format
@@ -2726,6 +2856,12 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid "Offline: it didn't answer the Refresh."
+msgstr ""
+
+msgid "Older match (Enter)"
+msgstr ""
+
 msgid ""
 "On the PCs you pick, it deletes Windows user profiles: each person's "
 "folder under C:\\Users, with every file in it, and the profile's entry in"
@@ -2824,6 +2960,9 @@ msgstr ""
 msgid "Open &folder"
 msgstr ""
 
+msgid "Open &in"
+msgstr ""
+
 msgid "Open &log folder"
 msgstr ""
 
@@ -2861,6 +3000,9 @@ msgstr ""
 msgid "Open folder"
 msgstr ""
 
+msgid "Open in SS&H"
+msgstr ""
+
 msgid "Open many remote screens?"
 msgstr ""
 
@@ -2875,7 +3017,14 @@ msgstr ""
 msgid "Open the selected printers' web pages"
 msgstr ""
 
+msgid "Open the userdata folder"
+msgstr ""
+
 msgid "Open web page"
+msgstr ""
+
+#, python-brace-format
+msgid "Open {n} hosts in SS&H"
 msgstr ""
 
 #, python-brace-format
@@ -3246,6 +3395,9 @@ msgid ""
 " on each host finishes first; CapyPanel quits after that."
 msgstr ""
 
+msgid "Rang its bell"
+msgstr ""
+
 msgid "Re&fresh group"
 msgstr ""
 
@@ -3605,6 +3757,15 @@ msgstr ""
 msgid "SSH"
 msgstr ""
 
+msgid "SSH login"
+msgstr ""
+
+msgid "SSH port"
+msgstr ""
+
+msgid "SSH servers"
+msgstr ""
+
 msgid "SSH terminal"
 msgstr ""
 
@@ -3638,6 +3799,12 @@ msgstr ""
 msgid "Save a copy of the list"
 msgstr ""
 
+msgid "Save all the &text…"
+msgstr ""
+
+msgid "Save all the text"
+msgstr ""
+
 msgid "Save as preset"
 msgstr ""
 
@@ -3657,6 +3824,10 @@ msgid "Saved credentials"
 msgstr ""
 
 msgid "Saved in Credential Manager:"
+msgstr ""
+
+#, python-brace-format
+msgid "Saved the text in {path}"
 msgstr ""
 
 msgid "Scan"
@@ -3755,6 +3926,9 @@ msgid "Send a message to {user}…"
 msgstr ""
 
 msgid "Send a message…"
+msgstr ""
+
+msgid "Separate windows"
 msgstr ""
 
 msgid "Serial"
@@ -3895,6 +4069,9 @@ msgstr ""
 msgid "Smaller text"
 msgstr ""
 
+msgid "So&rt by"
+msgstr ""
+
 msgid "Software"
 msgstr ""
 
@@ -3994,7 +4171,7 @@ msgstr ""
 msgid "Stopped"
 msgstr ""
 
-msgid "Stopped without saying why."
+msgid "Stopped: the printer stopped without saying why."
 msgstr ""
 
 #, python-brace-format
@@ -4019,6 +4196,9 @@ msgid "Supplies"
 msgstr ""
 
 msgid "Supply low"
+msgstr ""
+
+msgid "Supply low: at or below the Low supply level, under Supplies."
 msgstr ""
 
 msgid "Supply missing"
@@ -4090,7 +4270,13 @@ msgstr ""
 msgid "Temporary:"
 msgstr ""
 
+msgid "Terminal"
+msgstr ""
+
 msgid "Text"
+msgstr ""
+
+msgid "Text files (*.txt)"
 msgstr ""
 
 msgid "That group doesn't exist."
@@ -4141,6 +4327,10 @@ msgid "The app's language. Changes at once."
 msgstr ""
 
 msgid "The app's logs, to attach to a problem report"
+msgstr ""
+
+#, python-brace-format
+msgid "The arguments need {ssh}, where the program takes the command it runs."
 msgstr ""
 
 #, python-brace-format
@@ -4499,6 +4689,9 @@ msgstr ""
 msgid "There's a mark at {n} % already."
 msgstr ""
 
+msgid "There's no program at this path."
+msgstr ""
+
 msgid ""
 "These are the built-in profiles: the folder is created when you change "
 "one."
@@ -4553,6 +4746,15 @@ msgid "This connection profile needs a newer version of CapyPanel."
 msgstr ""
 
 msgid ""
+"This copy keeps everything it saves (settings, lists, connection profiles"
+" and logs) in the userdata folder beside CapyPanel.exe. Saved passwords "
+"stay in Windows Credential Manager on this PC, so they don't travel with "
+"the folder. Lists and settings from another copy of CapyPanel aren't "
+"brought in. To open one of its lists here, pick Open list… under the "
+"list's name, on top of the Groups panel."
+msgstr ""
+
+msgid ""
 "This copy runs from source: update it with git, or download the zip from "
 "the release page."
 msgstr ""
@@ -4590,11 +4792,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "This isn't a valid list file ({error})."
-msgstr ""
-
-msgid ""
-"This list has no hosts yet.\n"
-"Add one to start."
 msgstr ""
 
 msgid ""
@@ -4659,7 +4856,9 @@ msgstr ""
 msgid "Tick a column under Last check to read them"
 msgstr ""
 
-msgid "Tick in the table: the box, a double-click on the row, or Space on the selected rows."
+msgid ""
+"Tick in the table: the box, a double-click on the row, or Space on the "
+"selected rows."
 msgstr ""
 
 msgid "Tick profiles in the table to delete"
@@ -4679,7 +4878,9 @@ msgstr ""
 msgid "Tick to delete"
 msgstr ""
 
-msgid "Tick to delete: the box, a double-click on the row, or Space on the selected rows"
+msgid ""
+"Tick to delete: the box, a double-click on the row, or Space on the "
+"selected rows"
 msgstr ""
 
 msgid "Ticked in tabs"
@@ -4741,6 +4942,12 @@ msgid "Try another account…"
 msgstr ""
 
 msgid "Turns the PC off; someone has to turn it back on."
+msgstr ""
+
+msgid ""
+"Two more columns for the servers you reach over SSH: the port and the "
+"name to log in as. An empty cell uses the default: for the name, the "
+"group's Log in as if it has one; otherwise ssh.exe's own settings."
 msgstr ""
 
 msgid "Type"
@@ -4968,6 +5175,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
+msgstr ""
+
+msgid ""
+"Where ssh.exe opens when you use Connect in a separate window. In a "
+"terminal program, that program's own settings decide whether its window "
+"stays open after an error."
 msgstr ""
 
 msgid "Where the mark goes, in %:"
@@ -5299,6 +5512,9 @@ msgid "model"
 msgstr ""
 
 msgid "name"
+msgstr ""
+
+msgid "name, address, group, SSH port, SSH login, tags, notes"
 msgstr ""
 
 msgid ""
@@ -6163,6 +6379,7 @@ msgstr ""
 msgid "{tool} can't be given a user name."
 msgstr ""
 
+#, python-brace-format
 msgid "{tool} doesn't use a settings file."
 msgstr ""
 
@@ -6170,9 +6387,11 @@ msgstr ""
 msgid "{tool} has no option “{option}”."
 msgstr ""
 
+#, python-brace-format
 msgid "{tool} has no options to set here."
 msgstr ""
 
+#, python-brace-format
 msgid "{tool} has no other way to log in."
 msgstr ""
 

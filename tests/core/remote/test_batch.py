@@ -1,7 +1,25 @@
+import subprocess
+import sys
 import threading
 import time
 
 from capypanel.core.remote.batch import Batch
+
+
+def test_a_host_that_never_answers_never_keeps_a_closed_capypanel_running() -> None:
+    code = (
+        "import threading\n"
+        "from capypanel.core.remote.batch import Batch\n"
+        "started = threading.Event()\n"
+        "def work(item):\n"
+        "    started.set()\n"
+        "    threading.Event().wait()\n"
+        "batch = Batch(['a', 'b', 'c'], work, lambda *a: None)\n"
+        "threading.Thread(target=batch.run, daemon=True).start()\n"
+        "assert started.wait(10)\n"
+    )
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=30)
+    assert done.returncode == 0, done.stderr
 
 
 def test_every_item_runs_and_is_reported_once() -> None:

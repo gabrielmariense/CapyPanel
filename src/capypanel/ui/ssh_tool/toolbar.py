@@ -34,7 +34,7 @@ class SshToolBar(ToolBar):
         self.refresh_button.setText(gap + _("Refresh all"))
         self._key_tips()
         self.inventory_button.setText(gap + _("Inventory"))
-        self.inventory_button.setToolTip(_("Add hosts and groups, and manage the groups"))
+        self.inventory_button.setToolTip(_("Add hosts and groups, or import a list of hosts"))
 
     def _key_tips(self) -> None:
         self.refresh_button.setToolTip(

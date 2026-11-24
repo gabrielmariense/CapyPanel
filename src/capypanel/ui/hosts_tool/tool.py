@@ -56,7 +56,7 @@ from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
 from capypanel.ui.hosts_tool.table import Cells, HostTable, not_checked
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import dot_icon, tabler_icon
-from capypanel.ui.import_hosts import ImportDialog
+from capypanel.ui.import_hosts import HostsImportDialog
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
@@ -82,6 +82,7 @@ FACTS_AFTER = 1_500  # ms
 WATCH_EVERY = 15_000  # ms
 WATCH_FOR = timedelta(minutes=20)
 PROFILE_CLEANUP = "profiles"  # its id, not its module: Profile cleanup imports this one
+SSH = "ssh"
 
 
 @runtime_checkable
@@ -225,7 +226,8 @@ class HostsTool(ListWorkspace):
         return {**super().view_choices(), "domains": self.commands.show_domains}
 
     def view_actions(self) -> list[list[QAction]]:
-        return [*super().view_actions(), [self.commands.show_domains]]
+        panes, table = super().view_actions()
+        return [panes, [*table, self.commands.show_domains]]
 
     def key_commands(self) -> list[KeyCommand]:
         """Never one that disturbs the PC's user (Restart, Shut down, Restart Print Spooler)."""
@@ -478,7 +480,7 @@ class HostsTool(ListWorkspace):
         doc = self._writable()
         if doc is None:
             return
-        dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
+        dialog = HostsImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
         new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
         if new is not None and self._commit(new):
             added = dialog.added()
@@ -960,14 +962,18 @@ class HostsTool(ListWorkspace):
             every = menu.addAction(_("&All commands…"))
             every.setEnabled(target is not None)
             every.triggered.connect(lambda: self.open_commands(self.selected_target()))
-            self._add_open_in_profile_cleanup(menu, items)
+            self._add_open_in(menu, items, PROFILE_CLEANUP, _("&Open in Profile cleanup"))
+            self._add_open_in(menu, items, SSH, _("Open in SS&H"))
         else:
             refresh = menu.addAction(_("Re&fresh {n} hosts").format(n=len(items)))
             refresh.setEnabled(self._run is None)
             refresh.triggered.connect(
                 lambda: self.check_hosts(self.selected_items(), status=True, users=True)
             )
-            self._add_open_in_profile_cleanup(menu, items)
+            n = len(items)
+            many = _("&Open {n} hosts in Profile cleanup").format(n=n)
+            self._add_open_in(menu, items, PROFILE_CLEANUP, many)
+            self._add_open_in(menu, items, SSH, _("Open {n} hosts in SS&H").format(n=n))
             menu.addSeparator()
             account = menu.addMenu(_("Commands run a&s"))
             self._fill_hosts_account_menu(account, items)
@@ -980,22 +986,18 @@ class HostsTool(ListWorkspace):
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
 
-    def _add_open_in_profile_cleanup(self, menu: QMenu, items: Sequence[Host]) -> None:
-        tool = self._shell.tool(PROFILE_CLEANUP)
+    def _add_open_in(self, menu: QMenu, items: Sequence[Host], tool_id: str, text: str) -> None:
+        tool = self._shell.tool(tool_id)
         if not isinstance(tool, OpensHosts):
             return
-        if len(items) == 1:
-            text = _("&Open in Profile cleanup")
-        else:
-            text = _("&Open {n} hosts in Profile cleanup").format(n=len(items))
         line = menu.addAction(text)
         line.setIcon(tabler_icon(tool.ICON, menu.palette().color(QPalette.ColorRole.Text)))
         ids = [host.id for host in items]
-        line.triggered.connect(lambda: self.open_in_profile_cleanup(ids))
+        line.triggered.connect(lambda: self.open_in(tool_id, ids))
 
-    def open_in_profile_cleanup(self, ids: Sequence[str]) -> None:
-        tool = self._shell.tool(PROFILE_CLEANUP)
-        if isinstance(tool, OpensHosts) and self._shell.show_tool(PROFILE_CLEANUP):
+    def open_in(self, tool_id: str, ids: Sequence[str]) -> None:
+        tool = self._shell.tool(tool_id)
+        if isinstance(tool, OpensHosts) and self._shell.show_tool(tool_id):
             tool.open_hosts(ids, True)
 
     def quick_commands(self) -> tuple[str, ...]:

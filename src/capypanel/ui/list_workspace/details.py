@@ -1,8 +1,15 @@
 import html
 from collections.abc import Sequence
 
-from PySide6.QtCore import QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QContextMenuEvent, QGuiApplication, QMouseEvent, QPalette
+from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import (
+    QColor,
+    QContextMenuEvent,
+    QGuiApplication,
+    QMouseEvent,
+    QPaintEvent,
+    QPalette,
+)
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -11,12 +18,15 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QStackedLayout,
     QStyle,
+    QStyleOptionToolButton,
+    QStylePainter,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import keyboard
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
 
@@ -37,6 +47,41 @@ BUTTON_ROOM = 16
 COLUMNS = 4
 GAP = 8
 BUTTON_ICON = 18
+MENU_ICON = 14
+MENU_GAP = 2
+
+
+class MenuWordButton(QToolButton):
+    def paintEvent(self, event: QPaintEvent) -> None:
+        option = QStyleOptionToolButton()
+        self.initStyleOption(option)
+        word, option.text = option.text, " "  # an empty word would centre the icon
+        painter = QStylePainter(self)
+        painter.drawComplexControl(QStyle.ComplexControl.CC_ToolButton, option)
+        style = self.style()
+        flags = Qt.TextFlag.TextShowMnemonic
+        if not style.styleHint(QStyle.StyleHint.SH_UnderlineShortcut, option, self):
+            flags |= Qt.TextFlag.TextHideMnemonic
+        # Qt's common style puts the word in the rest under an icon box 4 px taller than the icon.
+        line = self.rect().adjusted(0, self.iconSize().height() + 3, 0, -1)
+        if option.state & (QStyle.StateFlag.State_Sunken | QStyle.StateFlag.State_On):
+            line.translate(
+                style.pixelMetric(QStyle.PixelMetric.PM_ButtonShiftHorizontal, option, self),
+                style.pixelMetric(QStyle.PixelMetric.PM_ButtonShiftVertical, option, self),
+            )
+        metrics = self.fontMetrics()
+        width = metrics.size(flags, word).width()
+        left = line.left() + (line.width() - width - MENU_GAP - MENU_ICON) // 2
+        spot = QRect(left, line.top(), width, line.height())
+        align = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        style.drawItemText(painter, spot, int(align) | int(flags), option.palette,
+                           self.isEnabled(), word, QPalette.ColorRole.ButtonText)  # fmt: skip
+        baseline = spot.top() + (spot.height() - metrics.height()) / 2 + metrics.ascent()
+        middle = baseline - metrics.capHeight() / 2
+        top = round(middle - MENU_ICON / 2)
+        mark = QRect(spot.right() + 1 + MENU_GAP, top, MENU_ICON, MENU_ICON)
+        color = option.palette.color(QPalette.ColorRole.ButtonText)
+        tabler_icon("chevron-down", color, MENU_ICON).paint(painter, mark)
 
 
 class CopyValue(QLabel):
@@ -79,6 +124,7 @@ class DetailsPanel(QWidget):
         self._scroll.setWidgetResizable(True)
         self._scroll.setFrameShape(QFrame.Shape.NoFrame)
         self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        keyboard.tab_stop_while_it_scrolls(self._scroll)
         self._values: dict[str, list[CopyValue]] = {}
         self._shown: tuple[object, str] | None = None
 
@@ -111,8 +157,8 @@ class DetailsPanel(QWidget):
         return 0
 
     def word_button(self, icon: str, color: QColor, word: str, tip: str, *,
-                    risky: bool = False) -> QToolButton:  # fmt: skip
-        button = QToolButton()
+                    risky: bool = False, menu: QMenu | None = None) -> QToolButton:  # fmt: skip
+        button = QToolButton() if menu is None else MenuWordButton()
         button.setObjectName("commandButton")
         button.setProperty("risky", risky)
         button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
@@ -121,11 +167,16 @@ class DetailsPanel(QWidget):
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         button.setIcon(tabler_icon(icon, color, BUTTON_ICON))
         button.setIconSize(QSize(BUTTON_ICON, BUTTON_ICON))
+        if menu is not None:
+            button.setMenu(menu)
+            button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+            button.setProperty("arrow", False)
         return button
 
-    def grid_width(self, words: Sequence[str]) -> int:
-        metrics = self.fontMetrics()
-        return max(metrics.horizontalAdvance(word) for word in words) + BUTTON_ROOM
+    def grid_width(self, words: Sequence[str], menu_words: Sequence[str] = ()) -> int:
+        advance = self.fontMetrics().horizontalAdvance
+        menus = [advance(word) + MENU_GAP + MENU_ICON for word in menu_words]
+        return max([*map(advance, words), *menus]) + BUTTON_ROOM
 
     def grid_minimum(self, width: int) -> int:
         bar = self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)

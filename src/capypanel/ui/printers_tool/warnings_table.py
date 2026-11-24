@@ -32,11 +32,11 @@ HERE, NOTIFY = 1, 2
 _REASON = Qt.ItemDataRole.UserRole
 
 
-def _tips() -> dict[Reason, str]:
+def _meanings() -> dict[Reason, str]:
     return {
-        Reason.STOPPED: _("Stopped without saying why."),
-        Reason.OFFLINE: _("Didn't answer the Refresh."),
-        Reason.LOW: _("At or below the Low supply level, under Supplies."),
+        Reason.STOPPED: _("Stopped: the printer stopped without saying why."),
+        Reason.OFFLINE: _("Offline: it didn't answer the Refresh."),
+        Reason.LOW: _("Supply low: at or below the Low supply level, under Supplies."),
     }
 
 
@@ -105,12 +105,14 @@ class WarningsTable(QWidget):
             head.setTextAlignment(column, Qt.AlignmentFlag.AlignCenter)
             table.setItemDelegateForColumn(column, delegate)
         words = {reason: reason.words() for reason in Reason}
-        for reason in sorted(Reason, key=lambda r: words[r].casefold()):
+        order = sorted(Reason, key=lambda r: words[r].casefold())
+        for reason in order:
             row = QTreeWidgetItem([words[reason], "", ""])
             row.setData(0, _REASON, reason.value)
             row.setFlags(row.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            row.setToolTip(0, _tips().get(reason, ""))
             table.addTopLevelItem(row)
+        meanings = _meanings()
+        self.meanings = notes(*(meanings[r] for r in order if r in meanings))
         self.restore = QPushButton(_("&Restore default"))
         self._tick(here, notify, say=False)
         header = table.header()
@@ -136,6 +138,7 @@ class WarningsTable(QWidget):
             notes(_("Which reasons count as a warning. The table's Status always shows every one."))
         )
         column.addWidget(with_buttons(table, [self.restore]))
+        column.addWidget(self.meanings)
 
     def _rows(self) -> list[tuple[Reason, QTreeWidgetItem]]:
         items = (self.table.topLevelItem(i) for i in range(self.table.topLevelItemCount()))

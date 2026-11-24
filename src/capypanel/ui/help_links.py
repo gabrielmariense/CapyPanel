@@ -116,6 +116,7 @@ PLACES: dict[str, str] = {
     "ssh-choose-the-name-to-log-in-as": "ssh/ssh/",
     "ssh-work-in-the-terminal": "ssh/ssh/",
     "ssh-when-a-connection-ends": "ssh/ssh/",
+    "ssh-connect-in-a-separate-window": "ssh/ssh/",
     "ssh-not-installed": "ssh/ssh/",
 }
 TOPS = (

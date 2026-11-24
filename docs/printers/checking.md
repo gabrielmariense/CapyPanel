@@ -116,7 +116,7 @@ code and several sentences, is in the cell's tooltip and in full under its name 
 
 ## Choose which problems warn <a id="printers-checking-choose-which-problems-warn"></a>
 
-![The Warnings section in Settings: a row per reason, ticked under In CapyPanel and Windows notification, at the defaults](../images/settings-printers-warnings-dark.png)
+![The Warnings section in Settings: a row per reason, ticked under In CapyPanel and Windows notification, at the defaults, and what Offline, Stopped and Supply low mean under the table](../images/settings-printers-warnings-dark.png)
 
 1. Open **Settings > Printers > Warnings and supplies**. The **Warnings** section has a row for
    each reason: **Offline**, **Out of paper**, **Out of toner**, **Paper jam**, **Stopped** and
@@ -242,11 +242,11 @@ then takes that printer's page count from the portal.
     ![A Doc360 MPS printer in the Details panel: its total pages and the source it came from](../images/doc360-details-dark.png)
 
     The number shows in Details under **Page counters**, with **Source** reading "Doc360 MPS ·
-    fetched 14:32"; its tooltip adds that Doc360 reads printers on its own schedule, so the number
-    can be behind the printer. It's this month's count. In the first days of a month Doc360 may
-    have none yet, so CapyPanel takes last month's and says so in amber, and the report writes
-    "20500 (from October 2026)". When there's no count at all, Details says why in its place and
-    the report has plain "Error" (see the table below).
+    fetched 14:32", and a grey line under it says "Doc360 MPS reads printers on its own schedule, so
+    this count can be behind the printer." It's this month's count. In the first days of a month
+    Doc360 may have none yet, so CapyPanel takes last month's and says so in amber, and the report
+    writes "20500 (from October 2026)". When there's no count at all, Details says why in its place
+    and the report has plain "Error" (see the table below).
 
     A refused login is tried once and left alone until the next Refresh, so a wrong password isn't
     sent over and over.
@@ -272,8 +272,8 @@ then takes that printer's page count from the portal.
 |---|---|---|
 | <a id="printer-not-checked"></a>**Not checked** | No Refresh has read the printer yet | Refresh it |
 | <a id="printer-offline"></a>**Offline** | Nothing answered | Check the printer is on and its address is right |
-| <a id="printer-refused"></a>**Refused** (amber), with a tooltip such as "Refused at 14:32: wrong authentication password or type." | The printer rejected the SNMP account. The tooltip names the reason: a user name it doesn't know, a wrong authentication password or type, a wrong encryption password, authentication or encryption it wants set differently, or a clock too far from CapyPanel's | Fix that part in **Settings > Printers > Connecting**, or the printer's clock |
-| <a id="printer-unreadable"></a>**Unreadable** (amber) | It answered, but not in a way CapyPanel could read | Open its web page |
+| <a id="printer-refused"></a>**Refused** (amber), with a tooltip such as "Refused at 14:32: wrong authentication password or type." | The printer rejected the SNMP account. The tooltip, and Details under the status line, name the reason: a user name it doesn't know, a wrong authentication password or type, a wrong encryption password, authentication or encryption it wants set differently, or a clock too far from CapyPanel's | Fix that part in **Settings > Printers > Connecting**, or the printer's clock |
+| <a id="printer-unreadable"></a>**Unreadable** (amber) | It answered, but not in a way CapyPanel could read. Details says what was wrong with the answer, under the status line | Open its web page |
 | <a id="printer-snmpv3-not-set"></a>"Set the SNMP v3 account in Settings › Printers › Connecting first." | **v3** is picked with no account, so a Refresh doesn't start | Set the account |
 | <a id="printers-credential-not-saved"></a>"Couldn't save the change in Windows Credential Manager: …", then "Nothing was changed." | Windows refused to save or remove the SNMP community, the SNMP v3 account or the Doc360 MPS login, so CapyPanel still uses the one it had | Try **Save** again. If it keeps failing, look for CapyPanel's entries in Control Panel › **Credential Manager** › **Windows Credentials** |
 | <a id="printer-check-stopped"></a>"Stopped: 4 printers weren't checked." | You pressed **Stop** | Refresh again |

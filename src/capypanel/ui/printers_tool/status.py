@@ -139,6 +139,7 @@ class Cell:
     supply: Supply | None = None
     full: str = ""
     nothing: bool = False
+    why: str = ""
 
     def said(self) -> str:
         return self.full or self.text
@@ -157,12 +158,15 @@ def status(checked: Checked | None, low: int) -> Cell:
     if checked.offline:
         return Cell(_("Offline"), _("No answer at {when}.").format(when=when), grey(), quiet=True)
     if checked.refused:
-        tip = _("Refused at {when}: {why}").format(when=when, why=refused_text(checked.refused))
+        why = refused_text(checked.refused)
+        tip = _("Refused at {when}: {why}").format(when=when, why=why)
         hint = _("Check the SNMP account in Settings › Printers › Connecting.")
-        return Cell(_("Refused"), "\n".join((tip, hint)), amber(), quiet=True)
+        said = "\n".join((why[:1].upper() + why[1:], hint))
+        return Cell(_("Refused"), "\n".join((tip, hint)), amber(), quiet=True, why=said)
     if checked.reading is None:
         tip = _("Couldn't read the printer's answer at {when}.").format(when=when)
-        return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), amber(), quiet=True)
+        return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), amber(), quiet=True,
+                    why=checked.error.strip())  # fmt: skip
     reading = checked.reading
     tip = "\n".join((_("Checked {when}.").format(when=when), *reading.messages))
     stops = [problem for problem in _STOPS if problem in reading.problems]
@@ -295,11 +299,9 @@ def older_text(counted: Counted | None) -> str:
     return _("{month} {year}").format(month=locale.standaloneMonthName(month), year=year)
 
 
-def doc360_tip(counted: Counted) -> str:
-    return _(
-        "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own schedule, so this "
-        "can be behind the printer."
-    ).format(when=clock_text(counted.when))
+def doc360_behind() -> str:
+    return _("Doc360 MPS reads printers on its own schedule, so this count can be behind the "
+             "printer.")  # fmt: skip
 
 
 def plain_tip(text: str) -> str:

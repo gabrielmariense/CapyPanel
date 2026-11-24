@@ -141,7 +141,9 @@ def test_details_links_a_refused_printer_and_a_doc360_error(printers: PrintersTo
     link = next(w for w in printers.details.findChildren(HelpLink) if w._place == "printer-refused")
     holder = line.parentWidget()
     column = holder.layout() if holder is not None else None
-    assert column is not None and column.indexOf(link) == column.indexOf(line) + 1
+    why = next(w for w in printers.details.findChildren(QLabel) if w.objectName() == "statusWhy")
+    assert column is not None and column.indexOf(why) == column.indexOf(line) + 1
+    assert column.indexOf(link) == column.indexOf(why) + 1
     assert {link._on for link in printers.details.findChildren(HelpLink)} == {help_links.CARD}
 
 

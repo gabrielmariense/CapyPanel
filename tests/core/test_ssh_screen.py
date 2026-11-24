@@ -256,8 +256,186 @@ def test_a_line_windows_own_engine_wraps_after_a_scroll_copies_as_one_line() -> 
     assert screen.text_between((2, 0), (3, 9)) == "abcdefghijklm"
 
 
-def test_a_wrapped_line_copies_without_the_room_the_window_gained_since() -> None:
+LONG = "".join(chr(ord("a") + n % 26) for n in range(60))
+
+
+def rows_of(screen: TermScreen) -> list[str]:
+    return [screen.row_text(r) for r in range(screen.total_rows)]
+
+
+def test_a_wrapped_line_takes_one_row_again_when_the_window_widens() -> None:
     screen, stream = screen_and_stream(columns=10)
     stream.feed(b"abcd efgh ijkl")
     screen.resize(columns=20)
-    assert screen.text_between((0, 0), (1, 19)) == "abcd efgh ijkl"
+    assert screen.screen_text()[:2] == ["abcd efgh ijkl", ""]
+    assert (screen.cursor.y, screen.cursor.x) == (0, 14)
+
+
+@pytest.mark.parametrize("columns", [30, 50, 25])
+def test_a_line_rewraps_whole_on_the_screen_and_in_the_scrollback(columns: int) -> None:
+    screen, stream = screen_and_stream(columns=40, lines=4)
+    stream.feed(f"{LONG}\r\n{LONG}\r\nx\r\ny\r\n$ ".encode())
+    assert len(screen.scrollback) == 3  # the first line and half of the second
+    screen.resize(columns=columns)
+    texts = rows_of(screen)
+    first_line_rows = -(-len(LONG) // columns)
+    assert all(len(text) == columns for text in texts[: first_line_rows - 1])
+    assert "".join(texts[:first_line_rows]) == LONG
+    everything = screen.text_between((0, 0), (screen.total_rows - 1, columns - 1))
+    assert everything.split("\r\n")[:4] == [LONG, LONG, "x", "y"]
+    assert screen.row_text(len(screen.scrollback) + screen.cursor.y) == "$"
+    assert screen.cursor.x == 2
+
+
+def test_a_narrower_window_moves_the_rows_that_no_longer_fit_into_the_scrollback() -> None:
+    screen, stream = screen_and_stream(columns=40, lines=4)
+    stream.feed(f"{LONG}\r\nshort\r\n$ ".encode())
+    screen.resize(columns=20)
+    assert screen.scrollback_text() == [LONG[:20]]
+    assert screen.screen_text() == [LONG[20:40], LONG[40:], "short", "$"]
+    assert (screen.cursor.y, screen.cursor.x) == (3, 2)
+
+
+def test_a_wider_window_leaves_its_new_room_at_the_bottom_as_the_console_does() -> None:
+    screen, stream = screen_and_stream(columns=20, lines=5)
+    stream.feed(f"{LONG}\r\n$ ".encode())
+    screen.resize(columns=40)
+    assert screen.screen_text() == [LONG[:40], LONG[40:], "$", "", ""]
+    assert screen.scrollback_text() == []
+
+
+def test_the_cursor_inside_a_line_moves_with_its_text() -> None:
+    screen, stream = screen_and_stream(columns=40)
+    stream.feed(f"$ {LONG[:30]}\x1b[10D".encode())
+    assert (screen.cursor.y, screen.cursor.x) == (0, 22)
+    screen.resize(columns=15)
+    assert screen.screen_text()[:3] == ["$ abcdefghijklm", "nopqrstuvwxyzab", "cd"]
+    assert (screen.cursor.y, screen.cursor.x) == (1, 7)
+
+
+def test_a_wide_character_at_the_new_edge_moves_whole_to_the_next_row() -> None:
+    screen, stream = screen_and_stream(columns=20)
+    stream.feed("abcd中文中文中文中文".encode())
+    screen.resize(columns=9)
+    assert screen.screen_text()[:3] == ["abcd中文", "中文中文", "中文"]
+    assert screen.wrapped_at(0) == 8
+    assert screen.text_between((0, 0), (2, 8)) == "abcd中文中文中文中文"
+
+
+def test_colours_stay_on_their_characters_across_the_new_rows() -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed(b"abc\x1b[31mdefghijk\x1b[0mlm")
+    screen.resize(columns=6)
+    colours = "".join(
+        "r" if style.fg == 1 else "-"
+        for row in range(3)
+        for style in screen.row(row)[1][: len(screen.row_text(row))]
+    )
+    assert colours == "---rrrrrrrr--"
+
+
+def test_a_deferred_scrollback_rewraps_when_asked() -> None:
+    screen, stream = screen_and_stream(columns=40, lines=2)
+    stream.feed(f"{LONG}\r\nx\r\ny".encode())
+    screen.resize(columns=30, defer=True)
+    assert screen.row_text(0) == LONG[:30]
+    assert screen.scrollback_text() == [LONG[:40], LONG[40:]]  # shown cut, still whole
+    assert screen.text_between((0, 0), (1, 29)) == LONG
+    screen.rewrap_scrollback()
+    assert screen.scrollback_text() == [LONG[:30], LONG[30:]]
+
+
+def test_the_alternate_screen_is_left_to_its_program_and_the_main_one_rewraps_after() -> None:
+    screen, stream = screen_and_stream(columns=40, lines=4)
+    stream.feed(f"{LONG}\r\n$ ".encode())
+    stream.feed(b"\x1b[?1049h\x1b[Hfull-screen program")
+    screen.resize(columns=20)
+    assert screen.screen_text()[0] == "full-screen program"
+    stream.feed(b"\x1b[?1049l")
+    assert screen.screen_text() == [LONG[:20], LONG[20:40], LONG[40:], "$"]
+    assert (screen.cursor.y, screen.cursor.x) == (3, 2)
+
+
+def test_a_search_finds_each_match_in_the_scrollback_and_on_the_screen() -> None:
+    screen, stream = screen_and_stream(columns=20, lines=3)
+    stream.feed(b"error one\r\nfine\r\nERROR two\r\nok\r\nlast error")
+    assert [(r, c) for r, c, _, _ in screen.find("error")] == [(0, 0), (2, 0), (4, 5)]
+    assert screen.find("error", match_case=True) == [(0, 0, 0, 4), (4, 5, 4, 9)]
+    assert screen.find("") == []
+
+
+def test_a_match_over_a_wrapped_row_spans_both_rows() -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed(b"abcdefghij-klmnop\r\nabcdefghij")
+    assert screen.find("ij-kl") == [(0, 8, 1, 2)]
+    assert screen.find("ijab") == []
+
+
+def test_a_match_on_wide_characters_covers_both_their_cells() -> None:
+    screen, stream = screen_and_stream(columns=20)
+    stream.feed("ab中文cd".encode())
+    assert screen.find("中文") == [(0, 2, 0, 5)]
+    assert screen.find("文c") == [(0, 4, 0, 6)]
+
+
+def test_the_whole_text_ends_each_line_with_crlf_and_leaves_out_the_blank_rows_after() -> None:
+    screen, stream = screen_and_stream(columns=10, lines=6)
+    stream.feed(b"abcd efgh ijkl\r\none\r\n\r\ntwo  \r\n$ ")
+    assert screen.whole_text() == "abcd efgh ijkl\r\none\r\n\r\ntwo\r\n$\r\n"
+    stream.feed(b"\x1b[3J\x1b[2J")
+    assert screen.whole_text() == ""
+
+
+def test_a_program_picks_the_cursor_s_shape_and_a_reset_brings_the_block_back() -> None:
+    screen, stream = screen_and_stream()
+    assert screen.cursor_style == 0
+    stream.feed(b"\x1b[5 q")
+    assert screen.cursor_style == 5
+    stream.feed(b"\x1b[?3 q\x1b[9 q")
+    assert screen.cursor_style == 5
+    stream.feed(b"\x1b[2 q")
+    assert screen.cursor_style == 2
+    stream.feed(b"\x1bc")
+    assert screen.cursor_style == 0
+
+
+def test_a_web_address_is_found_without_the_sentence_or_bracket_around_it() -> None:
+    screen, stream = screen_and_stream(columns=60)
+    stream.feed(b"see https://example.com/a?b=1, or (http://example.com/x).\r\n")
+    stream.feed(b"wiki https://example.com/Capy_(animal) ok")
+    assert screen.link_at(0, 10) == (0, 4, 0, 28, "https://example.com/a?b=1")
+    assert screen.link_at(0, 29) is None
+    assert screen.link_at(0, 40) == (0, 35, 0, 54, "http://example.com/x")
+    assert screen.link_at(1, 30) == (1, 5, 1, 37, "https://example.com/Capy_(animal)")
+    assert screen.link_at(1, 2) is None
+    assert screen.link_at(9, 0) is None
+
+
+def test_an_address_wrapped_over_rows_is_one_link_from_either_row() -> None:
+    screen, stream = screen_and_stream(columns=20)
+    stream.feed(b"go https://example.com/long/path done")
+    found = (0, 3, 1, 11, "https://example.com/long/path")
+    assert screen.link_at(0, 5) == found
+    assert screen.link_at(1, 2) == found
+    assert screen.link_at(1, 16) is None
+
+
+def test_the_mouse_goes_to_a_program_only_while_it_asks() -> None:
+    screen, stream = screen_and_stream()
+    assert screen.mouse_tracking == 0 and not screen.mouse_sgr
+    stream.feed(b"\x1b[?1000h\x1b[?1006h")
+    assert screen.mouse_tracking == 1000 and screen.mouse_sgr
+    stream.feed(b"\x1b[?1002h")
+    assert screen.mouse_tracking == 1002
+    stream.feed(b"\x1b[?1002l\x1b[?1000l\x1b[?1006l")
+    assert screen.mouse_tracking == 0 and not screen.mouse_sgr
+    stream.feed(b"\x1b[?1003h\x1bc")
+    assert screen.mouse_tracking == 0
+
+
+def test_a_shorter_scrollback_keeps_the_newest_rows_and_counts_the_rest() -> None:
+    screen, stream = screen_and_stream(columns=10, lines=2)
+    stream.feed(b"\r\n".join(b"%d" % n for n in range(10)))
+    assert screen.set_scrollback(3) == 5
+    assert screen.scrollback_text() == ["5", "6", "7"]
+    assert screen.set_scrollback(20) == 0 and screen.scrollback.maxlen == 20

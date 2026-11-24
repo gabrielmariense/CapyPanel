@@ -3,6 +3,47 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.31.0 <a id="whats-new-0310"></a>
+
+- O CapyPanel funciona só com o teclado na janela principal, nas Configurações, no Hosts, no
+  Impressoras, no SSH e na Limpeza de perfis. Um anel na cor de destaque do tema mostra onde o
+  teclado está, e a tecla de menu ou Shift+F10 abre o menu que o botão direito abre. O **Exibir >
+  Classificar por** e o **Exibir > Colunas** classificam uma tabela e escolhem as colunas dela. Veja
+  [Atalhos de teclado](getting-started.pt-BR.md#start-keyboard-shortcuts).
+- O terminal do SSH pesquisa texto com o **Pesquisar…** (Ctrl+Shift+F), salva tudo num arquivo com o
+  **Salvar todo o texto…** e reorganiza as linhas quando a aba muda de largura.
+- O terminal também passa o mouse para os programas que pedem, como o htop e o mc, abre um endereço
+  web com Ctrl+clique, marca uma aba com um sino quando um servidor toca a campainha nela, e mostra
+  o cursor na forma que um programa pede. Configurações › SSH › Geral define o **Tamanho do texto**
+  e o **Histórico de rolagem** dele.
+- Uma conexão pode ir para uma janela própria, para um segundo monitor, e voltar: **Mover para uma
+  nova janela** no menu do botão direito da aba dela ou do terminal. Veja [Mover uma conexão para
+  uma janela própria](ssh/ssh.pt-BR.md#ssh-move-a-connection-to-its-own-window).
+- O **Conectar numa janela separada** pode abrir o ssh.exe no Windows Terminal ou em outro programa
+  de terminal: **Abrir em**, em Configurações › SSH › Geral.
+- Na primeira vez que um servidor conecta numa aba, uma faixa avisa que o ssh.exe vai perguntar se
+  você confia nele, e que é para digitar yes, não só y.
+- O **Importar hosts…** lê as colunas **Porta SSH** e **Login SSH**, e o **Inventário** do SSH
+  também o tem. O Relatório do Hosts escreve as duas, marcadas no **Para importar**.
+- No Hosts, clique com o botão direito num host para **Abrir no SSH**, ou em vários para **Abrir {n}
+  hosts no SSH**.
+- O primeiro início de uma cópia portátil termina o guia do Início com um cartão sobre o que a cópia
+  guarda ao lado dela, com **Abrir a pasta userdata**.
+- A janela principal abre mais cedo num PC lento: cerca de 0,7 s num que medimos.
+- Nos temas do Windows, um botão Usuários ou Energia que não pode ser usado fica todo cinza. Antes,
+  a palavra dele continuava âmbar, então ele parecia clicável.
+- O CapyPanel termina assim que você o fecha, mesmo no meio de uma verificação de hosts, impressoras
+  ou servidores. Antes, ele podia continuar rodando sem aparecer até todos os hosts responderem, e
+  uma atualização iniciada nesse meio-tempo era recusada.
+- Quando outro CapyPanel da mesma pasta ainda está aberto, a atualização agora diz isso. Antes, ela
+  dizia que uma conexão SSH estava aberta numa janela separada.
+- Trocar de tema não corre mais o risco de fechar o CapyPanel depois de um dos temas do Windows.
+- No Impressoras, os detalhes dizem por que uma impressora recusou ou não pôde ser lida, embaixo da
+  linha de status. Configurações › Impressoras › Avisos e suprimentos diz o que Offline, Parada e
+  Suprimento baixo querem dizer, e o Adicionar impressora diz quando começar um endereço com
+  https://.
+- O botão **Atualizar** do Relatório, quando está cinza, diz o motivo numa linha embaixo dele.
+
 ## 0.30.1 <a id="whats-new-0301"></a>
 
 - No SSH e na Limpeza de perfis, a linha curta ao lado da aba da lista agora é um traço fino na

@@ -1,9 +1,10 @@
 from dataclasses import replace
 from datetime import datetime, timedelta
 
+import pytest
 from PySide6.QtCore import QPointF, Qt
-from PySide6.QtGui import QGuiApplication, QMouseEvent
-from PySide6.QtWidgets import QApplication, QLabel
+from PySide6.QtGui import QColor, QGuiApplication, QImage, QMouseEvent, QPalette
+from PySide6.QtWidgets import QApplication, QLabel, QToolButton
 
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.remote.access import Reason, RemoteError
@@ -12,6 +13,7 @@ from capypanel.core.remote.status import Status
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts
 from capypanel.ui.list_workspace.details import breakable, marked
+from capypanel.ui.themes import engine as themes
 
 
 def _details(
@@ -145,3 +147,55 @@ def test_a_pc_that_did_not_answer_says_so_once(qapp: QApplication) -> None:
     texts = _texts(pane)
     assert "Last restart" in texts and "Model" in texts
     assert texts.count("Couldn't read: it took too long to answer") == 5
+
+
+def _apart(one: QColor, other: QColor) -> int:
+    return sum(abs(a - b) for a, b in ((one.red(), other.red()), (one.green(), other.green()),
+                                       (one.blue(), other.blue())))  # fmt: skip
+
+
+def _ink(button: QToolButton) -> tuple[list[tuple[int, int]], dict[int, list[int]], QImage]:
+    image = button.grab().toImage().convertToFormat(QImage.Format.Format_RGB32)
+    image.setDevicePixelRatio(1)
+    back = QColor(image.pixel(3, image.height() - 4))
+    rows: dict[int, list[int]] = {}
+    for x in range(3, image.width() - 3):
+        for y in range(button.iconSize().height() + 4, image.height() - 2):
+            if _apart(QColor(image.pixel(x, y)), back) > 90:
+                rows.setdefault(x, []).append(y)
+    columns = sorted(rows)
+    runs, start = [], columns[0]
+    for left, right in zip(columns, columns[1:], strict=False):
+        if right - left > 2:
+            runs.append((start, left))
+            start = right
+    return [*runs, (start, columns[-1])], rows, image
+
+
+@pytest.mark.usefixtures("default_theme_after")
+@pytest.mark.parametrize("theme", [themes.DEFAULT_THEME, themes.BUILTIN[3]], ids=lambda t: t.id)
+def test_users_and_power_draw_their_chevron_beside_the_word_in_its_colour(
+    qapp: QApplication, theme: themes.Theme
+) -> None:
+    themes.apply(theme)
+    pane = HostDetailsPanel()
+    pane.show_host(_details(), 1)
+    power, users = pane.buttons["power"], pane.buttons["users"]
+    assert (power.text(), power.isEnabled(), users.text(), users.isEnabled()) == (
+        "Power", True, "Users", False,
+    )  # fmt: skip
+    amber = QColor(themes.status_color("attention"))
+    grey = users.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText)
+    assert grey != amber
+    for button, color in ((power, amber), (users, grey)):
+        runs, rows, image = _ink(button)
+        word, mark = (runs[0][0], runs[-2][1]), runs[-1]
+        # The test platform draws each letter as a box, with more room after it than a letter.
+        assert 3 <= mark[0] - word[1] <= 12 and mark[1] - mark[0] <= 10
+        assert abs((word[0] + mark[1]) / 2 - image.width() / 2) <= 3
+        word_rows = [y for x in range(word[0], word[1] + 1) for y in rows.get(x, [])]
+        mark_rows = [y for x in range(mark[0], mark[1] + 1) for y in rows[x]]
+        middle = (min(word_rows) + max(word_rows)) / 2
+        assert abs((min(mark_rows) + max(mark_rows)) / 2 - middle) <= 2
+        tip = QColor(image.pixel((mark[0] + mark[1]) // 2, max(mark_rows)))
+        assert _apart(tip, color) <= 60

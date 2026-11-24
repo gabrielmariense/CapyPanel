@@ -96,7 +96,9 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
     The menu bar is the same in every tool. **File** opens **Settings…** (Ctrl+,) and **Exit**
     (Ctrl+Q). **View** goes to **Home** and each tool, then shows or hides the panels, the
     **Toolbar** and the **Status bar**; in Hosts it also holds **Customize the details panel…** and
-    **Show users' domain**. It stays open while you tick. **Help** has **Guide to this screen**,
+    **Show users' domain**. In Hosts, Printers and SSH it also has **Sort by** and **Columns**
+    for the tool's table, and Profile cleanup has **Sort by** for the tab in front. It stays open
+    while you tick. **Help** has **Guide to this screen**,
     **Show all the guides again**, **Help for this screen**, **Documentation**, **Report a
     problem**, **Check for updates…** and **About CapyPanel**. When a newer release is out, an
     **Update** button shows at the menu bar's right end (see [Update
@@ -106,7 +108,8 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
 
     - Drag the edge between two panels to move it, or **double-click** the right edge of the
       **Groups panel** or the **Hosts panel** to fit that panel to what's in it.
-    - Right-click the host table's column titles to choose which columns show, or **Fit columns to
+    - Right-click the host table's column titles, or use **View > Columns**, to choose which
+      columns show, or **Fit columns to
       content** to fit them all to their text; double-clicking a column's edge fits that one.
     - Widths are saved for next time, and nothing resizes them behind your back, not a Refresh and
       not switching lists.
@@ -208,6 +211,24 @@ them, except F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W, which are kept for CapyPanel
 | F1 | Help for the screen you're on |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |
+
+??? note "Working from the keyboard alone"
+
+    - **Tab** goes through each window in reading order. A ring in the theme's accent shows where
+      the keyboard is: always on a field, and on anything else once a key moved the keyboard
+      there. In a table it goes round the current row.
+    - The menu key, or **Shift+F10**, opens the menu a right-click opens: at a table's current row,
+      at the current tab, at the cursor in an SSH terminal, or at the text cursor in a field.
+    - The sidebar is one Tab stop, and so is Settings' page list: **Up** and **Down** move along
+      it, and **Enter** or **Space** opens what the ring is on. From Settings' list, Tab goes on
+      into the page shown.
+    - On Home, the arrow keys move between the tiles, and Enter or Space opens one.
+    - A row of tabs is one stop: **Left** and **Right** go to the next tab, **Home** and **End** to
+      the first and last.
+    - Each link in a line of text is a stop of its own. A scrolling area, such as Details or a
+      Settings page, is a stop only while it has more to scroll.
+    - **View > Sort by** sorts the tool's table, and **View > Columns** picks its columns, as the
+      column titles do with a click and a right-click.
 
 ## Messages you may see <a id="start-messages-you-may-see"></a>
 

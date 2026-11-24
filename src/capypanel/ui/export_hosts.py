@@ -41,6 +41,8 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
+from capypanel.core.ssh import bulk as ssh_bulk
+from capypanel.core.ssh.host import info_of
 from capypanel.ui import help_links, spacing
 from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
@@ -54,19 +56,21 @@ TITLES = {
     "name": N_("Name"),
     "address": N_("Address"),
     "group": N_("Group"),
+    ssh_bulk.PORT: N_("SSH port"),
+    ssh_bulk.LOGIN: N_("SSH login"),
     "tags": N_("Tags"),
     "notes": N_("Notes"),
     "status": N_("Status"),
     "users": N_("Logged-on users"),
 }
 SECTIONS = (
-    (N_("Host"), ("name", "address", "group")),
+    (N_("Host"), ("name", "address", "group", ssh_bulk.PORT, ssh_bulk.LOGIN)),
     (N_("Tags and notes"), ("tags", "notes")),
     (N_("Last check"), ("status", "users")),
 )
 CHECKED = ("status", "users")
 SAYS_NOT_CHECKED = frozenset({"status"})
-FOR_IMPORT = ("name", "address", "group", "tags", "notes")
+FOR_IMPORT = ("name", "address", "group", ssh_bulk.PORT, ssh_bulk.LOGIN, "tags", "notes")
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
 WIDEST = 240
@@ -149,6 +153,7 @@ class ExportDialog(QDialog):
         self.note = hint(self.checks_note())
         self.unchecked = hint()
         self.checking = hint()
+        self.refresh_why = hint()
         color = self.palette().color(QPalette.ColorRole.Text)
         self.refresh_button = _plain_button("refresh", color)
         self.stop_button = _plain_button("x", color)
@@ -169,6 +174,7 @@ class ExportDialog(QDialog):
                           f'<a href="none">{escape(_("None"))}</a>')  # fmt: skip
             both.setObjectName("hint")
             both.setTextFormat(Qt.TextFormat.RichText)
+            both.setTextInteractionFlags(help_links.LINK_KEYS)
             both.linkActivated.connect(lambda href, ks=keys: self._tick_section(ks, href == "all"))
             head = QHBoxLayout()
             head.setSpacing(spacing.CONTROLS)
@@ -197,10 +203,11 @@ class ExportDialog(QDialog):
                 buttons.addWidget(self.stop_button)
                 buttons.addStretch(1)
                 inside.addLayout(buttons)
+                inside.addWidget(self.refresh_why)
             self._section_boxes.append(frame)
         if self.checks_box is None:
             parts = (self.unchecked, self.refresh_button, self.stop_button, self.checking,
-                     self.checks_time, self.note)  # fmt: skip
+                     self.checks_time, self.note, self.refresh_why)  # fmt: skip
             for widget in parts:
                 widget.setParent(self)
                 widget.hide()
@@ -305,7 +312,7 @@ class ExportDialog(QDialog):
     NOTE_UNDER = "users"
 
     def fields(self, host: Host, between_tags: str) -> dict[str, str]:
-        return host_fields(self._hosts, host, between_tags)
+        return {**host_fields(self._hosts, host, between_tags), **ssh_bulk.fields(info_of(host))}
 
     def checks_note(self) -> str:
         return _("People's names: keep the file private.")
@@ -495,6 +502,9 @@ class ExportDialog(QDialog):
                 if wanted and reached < len(hosts):
                     tip += "\n" + self.left_out_text(len(hosts) - reached)
             self.refresh_button.setToolTip(tip)
+            greyed = running is None and not self.refresh_button.isEnabled()
+            self.refresh_why.setText(tip.partition("\n")[0] if greyed else "")
+            self.refresh_why.setVisible(greyed)
         can_export = running is None and bool(self.columns()) and bool(hosts)
         self.export_button.setEnabled(can_export)
         self.copy_button.setEnabled(can_export)

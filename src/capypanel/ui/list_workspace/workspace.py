@@ -53,7 +53,7 @@ from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
-from capypanel.ui.menus import popup
+from capypanel.ui.menus import StayOpenMenu, popup
 from capypanel.ui.new_list import ask_new_list
 from capypanel.ui.shortcuts import KeyCommand, portable
 
@@ -98,6 +98,12 @@ class ListWorkspace(Tool):
         self.table = table
         self.sort_groups_action = QAction(self)
         self.sort_groups_action.setText(_("&Sort groups A–Z"))
+        self.sort_menu, self.columns_menu = QMenu(self), StayOpenMenu(self)
+        for menu, fill in ((self.sort_menu, table.fill_sort_menu),
+                           (self.columns_menu, table.fill_columns_menu)):  # fmt: skip
+            menu.aboutToShow.connect(lambda m=menu, f=fill: (m.clear(), f(m)))
+        self.sort_menu.setTitle(_("So&rt by"))
+        self.columns_menu.setTitle(_("Co&lumns"))
         self.sort_groups_action.triggered.connect(self.sort_groups)
         self._search_timer = QTimer(self)
         self._search_timer.setSingleShot(True)
@@ -294,7 +300,7 @@ class ListWorkspace(Tool):
         panes = [a.show_groups, a.show_tags, a.show_details]
         if self.details_parts():
             panes.append(a.customize_details)
-        return [panes]
+        return [panes, [self.sort_menu.menuAction(), self.columns_menu.menuAction()]]
 
     def key_commands(self) -> list[KeyCommand]:
         a = self._list_commands
@@ -958,6 +964,8 @@ class ListWorkspace(Tool):
 
     def retranslate(self) -> None:
         self.sort_groups_action.setText(_("&Sort groups A–Z"))
+        self.sort_menu.setTitle(_("So&rt by"))
+        self.columns_menu.setTitle(_("Co&lumns"))
         self.nav.retranslate()
         self.table.retranslate()
         self.details.retranslate()

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import SIGNAL, Qt
 from PySide6.QtGui import QColor, QFontDatabase, QIcon, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
@@ -35,6 +35,18 @@ def back_to_default(qapp: QApplication) -> Iterator[None]:
     yield
     if themes.current() is not themes.DEFAULT_THEME:
         themes.apply(themes.DEFAULT_THEME)
+
+
+def test_a_menu_made_under_another_theme_is_still_watched_after_a_switch_to_windows(
+    qapp: QApplication,
+) -> None:
+    # First: a widget with its own stylesheet keeps Qt's cache alive and hides the bug, where
+    # an unwatched menu, deleted, stayed in the cache and the next switch read it.
+    themes.apply(themes.Registry().find("paper"))
+    menu = QMenu()
+    themes.apply(themes.DEFAULT_THEME)
+    menu.ensurePolished()
+    assert menu.receivers(SIGNAL("destroyed(QObject*)")) > 0
 
 
 def test_all_shipped_themes_load() -> None:
@@ -646,7 +658,7 @@ def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> N
 
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
-def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> None:
+def test_enabled_disabled_and_hover_read_apart(theme: themes.Theme) -> None:
     c, ratio = theme.colors, themes.contrast_ratio
     sheet = re.sub(r"/[*].*?[*]/", "", themes.stylesheet(theme), flags=re.DOTALL)
     assert ratio(c["text"], c["text3"]) >= 1.5, theme.id
@@ -657,12 +669,6 @@ def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> Non
     assert fill is not None and f"background: {fill[1]};" not in hover
     assert ratio(c["raised"], c["card"]) >= 1.08, theme.id
     assert ratio(c["accent"], c["border"]) >= 1.5, theme.id
-    for selector in (
-        "QPushButton:focus, QComboBox:focus",
-        "QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus",
-        "QRadioButton::indicator:focus, QCheckBox::indicator:focus",
-    ):
-        assert themes._qss_color(c["accent"]) in _rule(sheet, selector), selector
 
 
 def test_headings_come_in_two_styles() -> None:

@@ -38,6 +38,7 @@ from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.main_window.tray import Tray, ask_closing
 from capypanel.ui.menus import StayOpenMenu, label, plain
 from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
+from capypanel.ui.settings.pages import open_folder
 from capypanel.ui.settings.window import HEIGHT as SETTINGS_HEIGHT
 from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
@@ -154,6 +155,7 @@ class MainWindow(QMainWindow):
         tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
         tool.badge_changed.connect(lambda count, t=tool_id: self._badge_changed(t, count))
         tool.notify_requested.connect(lambda title, text, t=tool_id: self._notify(t, title, text))
+        tool.front_requested.connect(lambda t=tool_id: self._bring_forward(t))
 
     def shown_tool(self) -> Tool | None:
         return None if self._shown is None else self.tools[self._shown]
@@ -473,9 +475,12 @@ class MainWindow(QMainWindow):
             self.open_from_tray()
 
     def _show_attention(self, tool_id: str) -> None:
+        self._bring_forward(tool_id)
+        self.tools[tool_id].show_attention()
+
+    def _bring_forward(self, tool_id: str) -> None:
         self.open_from_tray()
         self.show_tool(tool_id)
-        self.tools[tool_id].show_attention()
 
     def to_tray(self) -> None:
         self._save_state()
@@ -632,9 +637,24 @@ class MainWindow(QMainWindow):
                        "again brings every guide back, and Documentation opens the step-by-step "
                        "pages."),
                      lambda: None, lambda: home, area=help_title),
+                *([self._portable_step()] if self.paths.portable else []),
             ]  # fmt: skip
 
-        return Guide("home", steps, docs="getting-started/", mascot=True)
+        docs = "getting-started/"
+        if self.paths.portable:
+            docs = "settings-and-files/#settings-portable-mode"
+        return Guide("home", steps, docs=docs, mascot=True)
+
+    def _portable_step(self) -> Step:
+        folder = self.paths.root
+        text = _("This copy keeps everything it saves (settings, lists, connection profiles and "
+                 "logs) in the userdata folder beside CapyPanel.exe. Saved passwords stay in "
+                 "Windows Credential Manager on this PC, so they don't travel with the folder. "
+                 "Lists and settings from another copy of CapyPanel aren't brought in. To open "
+                 "one of its lists here, pick Open list… under the list's name, on top of the "
+                 "Groups panel.")  # fmt: skip
+        opens = (_("Open the userdata folder"), lambda: open_folder(folder))
+        return Step(_("A portable copy"), text, lambda: None, action=opens)
 
     def tools_working(self) -> bool:
         return any(tool.working() for tool in self.tools.values())

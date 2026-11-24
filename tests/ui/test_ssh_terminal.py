@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 import time
 from collections import deque
 from collections.abc import Callable, Iterator, Sequence
@@ -13,17 +14,29 @@ from typing import Any
 
 import pytest
 from fake_console import FakeConsole
-from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QAction, QColor, QGuiApplication, QImage, QKeyEvent, QPainter
-from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
+from PySide6.QtGui import (
+    QAction,
+    QColor,
+    QGuiApplication,
+    QHelpEvent,
+    QImage,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QWheelEvent,
+)
+from PySide6.QtWidgets import QApplication, QLabel, QToolTip, QVBoxLayout, QWidget
 from test_themes import ACCENTS
 
 from capypanel.core.ssh import conpty
-from capypanel.core.ssh.screen import TermScreen, TermStream
-from capypanel.ui import error_window, help_links
+from capypanel.core.ssh.screen import SCROLLBACK, TermScreen, TermStream
+from capypanel.ui import error_window, help_links, menus
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys
+from capypanel.ui.ssh_tool import settings as ssh_settings
 from capypanel.ui.ssh_tool.terminal import glyphs, keys, palette
+from capypanel.ui.ssh_tool.terminal import tab as tab_module
 from capypanel.ui.ssh_tool.terminal import view as view_module
 from capypanel.ui.ssh_tool.terminal.tab import EndedBar, TerminalTab
 from capypanel.ui.ssh_tool.terminal.view import MAX_PT, PasteQuestion, TerminalView
@@ -535,6 +548,83 @@ def test_reconnect_takes_the_strip_away_and_close_tab_asks_the_tool(
     assert closes == [True]
 
 
+def test_the_first_connection_hint_shows_while_ssh_exe_will_ask_and_each_start_checks_again(
+    qapp: QApplication, consoles: list[FakeConsole]
+) -> None:
+    tab = TerminalTab(host="web-01")
+    _shown(tab)
+    checks: list[bool] = []
+    known_now = threading.Event()
+
+    def asks() -> bool:
+        checks.append(True)
+        if len(checks) < 3:
+            return True
+        known_now.wait(10)
+        return False
+
+    tab.asks_to_trust = asks
+    tab.start(["ssh.exe"])
+    _until(lambda: tab.hint.isVisible())
+    assert tab.hint.label.text() == tab_module.trust_words()
+    tab.hint.close_button.click()
+    assert not tab.hint.isVisible() and tab.running
+    consoles[-1].ends(255)
+    _until(lambda: tab.ended)
+    tab.bar.reconnect_button.click()
+    _until(lambda: tab.hint.isVisible())
+    consoles[-1].ends(0)
+    _until(lambda: tab.ended)
+    assert not tab.hint.isVisible()
+    tab.bar.reconnect_button.click()
+    check = tab._check
+    assert check is not None
+    answers: list[bool] = []
+    check.answered.connect(lambda _number, asks: answers.append(asks))
+    known_now.set()
+    _until(lambda: answers == [False])
+    QApplication.processEvents()
+    assert not tab.hint.isVisible() and len(checks) == 3
+
+
+def test_an_answer_that_comes_after_the_connection_ended_shows_no_hint(
+    qapp: QApplication, consoles: list[FakeConsole]
+) -> None:
+    tab = TerminalTab(host="web-01")
+    _shown(tab)
+    go = threading.Event()
+    tab.asks_to_trust = lambda: go.wait(10)
+    tab.start(["ssh.exe"])
+    check = tab._check
+    assert check is not None
+    answers: list[bool] = []
+    check.answered.connect(lambda _number, asks: answers.append(asks))
+    consoles[-1].ends(0)
+    _until(lambda: tab.ended)
+    go.set()
+    _until(lambda: answers == [True])
+    QApplication.processEvents()
+    assert not tab.hint.isVisible() and tab.bar.isVisible()
+
+
+def test_the_hint_s_icon_takes_the_accent_unless_it_wouldn_t_show_on_the_strip(
+    qapp: QApplication, default_theme_after: None
+) -> None:
+    light = themes.Registry().find("capypanel-light")
+    colors = light.colors
+    for accent, drawn in (
+        (colors["accent"], colors["accent"]),
+        (colors["sel_solid"], colors["text"]),
+    ):
+        themes.apply(replace(light, colors={**colors, "accent": accent}))
+        hint = tab_module.TrustHint()
+        image = hint._icon.pixmap().toImage()
+        pixels = (
+            image.pixelColor(x, y) for x in range(image.width()) for y in range(image.height())
+        )
+        assert max(pixels, key=QColor.alpha).name() == drawn
+
+
 BAD = b"\x1b[?5A"  # cursor up with "?": pyte's handler takes no such thing and raises
 
 
@@ -1010,3 +1100,401 @@ def test_each_character_stays_in_its_cell_and_blocks_leave_no_seam(
         )
     full = _ink(_render(["███", "███"], cw, ch, 0), 128)
     assert all(all(row) for row in full)
+
+
+def _printed(view: TerminalView, consoles: list[FakeConsole], data: bytes) -> FakeConsole:
+    view.start(["ssh.exe"])
+    console = consoles[-1]
+    console.prints(data)
+    _until(lambda: not console.pending)
+    view.settle()
+    return console
+
+
+def _enter(widget: QWidget, mods: Qt.KeyboardModifier = NONE) -> None:
+    QApplication.sendEvent(widget, QKeyEvent(QEvent.Type.KeyPress, K.Key_Return, mods, "\r"))
+
+
+def _rows_shown(view: TerminalView) -> list[str]:
+    top = view.verticalScrollBar().value()
+    return [view.term.row_text(r) for r in range(top, top + view.term.lines)]
+
+
+def test_the_terminal_menu_finds_saves_and_clears_in_that_order(view: TerminalView) -> None:
+    actions = view.menu().actions()
+    assert [menus.label(a) for a in actions] == [
+        "&Copy", "&Paste", "Select &all", "", "&Find…", "Save all the &text…",
+        "Clear &scrollback",
+    ]  # fmt: skip
+    assert actions[4].shortcut().toString() == "Ctrl+Shift+F"
+
+
+def test_ctrl_shift_f_opens_find_with_the_words_selected_and_sends_nothing(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"disk sda1 92% full\r\n$ ")
+    _asks_for_key_events(view, console)
+    view.select_cells((0, 5), (0, 8))
+    both = keys.Q_CTRL_L | keys.Q_SHIFT_L
+    QApplication.sendEvent(view, _key(K.Key_F, 0x46, 0x21, native=both, mods=CTRL | SHIFT))
+    bar = view.search_bar
+    assert bar is not None and bar.isVisible()
+    assert view.window().focusWidget() is bar.field
+    assert bar.words == "sda1" and bar.count.text() == "1 of 1"
+    assert console.written == []
+
+
+def test_find_starts_at_the_newest_match_and_enter_goes_to_older_ones_in_turn(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    errors = {10: b"error ten", 50: b"error fifty", 95: b"error ninety-five"}
+    text = b"".join(errors.get(n, b"line %d ok" % n) + b"\r\n" for n in range(100))
+    console = _printed(view, consoles, text + b"$ ")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    bar.field.setText("ERROR")
+    bar.flush()
+    assert bar.count.text() == "3 of 3" and view.selected_text() == "error"
+    assert "error ninety-five" in _rows_shown(view)
+    QApplication.processEvents()
+    assert bar.count.geometry().left() > bar.field.geometry().right()
+    assert bar.count.width() >= bar.count.sizeHint().width()
+    assert bar.geometry().right() < view.viewport().geometry().right()
+    for _size in range(2):
+        first_row = view.viewport().geometry().top() + view_module.PAD
+        assert bar.y() == first_row and bar.height() % view.cell_h == 0
+        assert bar.height() >= bar.sizeHint().height()
+        view.set_point_size(view.point_size + 4)
+    for count, words in (("2 of 3", "error fifty"), ("1 of 3", "error ten"), ("3 of 3", "nine")):
+        _enter(bar.field)
+        assert bar.count.text() == count
+        assert any(words in row for row in _rows_shown(view))
+    _enter(bar.field, SHIFT)
+    assert bar.count.text() == "1 of 3"
+    assert console.written == []
+
+
+def test_find_can_match_case_and_says_when_nothing_matches(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    _printed(view, consoles, b"Error one\r\nerror two\r\n")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    bar.field.setText("Error")
+    bar.flush()
+    assert bar.count.text() == "2 of 2"
+    bar.case.setChecked(True)
+    assert bar.count.text() == "1 of 1"
+    bar.field.setText("missing")
+    bar.flush()
+    assert bar.count.text() == "No matches"
+
+
+def test_escape_closes_find_and_gives_the_keys_back_to_the_terminal(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"error\r\n")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    bar.field.setText("error")
+    bar.flush()
+    QApplication.sendEvent(bar.field, QKeyEvent(QEvent.Type.KeyPress, K.Key_Escape, NONE))
+    assert not bar.isVisible()
+    assert view.window().focusWidget() is view
+    assert view._visible_matches(0) == {}
+    assert console.written == []
+
+
+def test_save_the_text_writes_each_line_whole_for_windows_and_remembers_the_folder(
+    view: TerminalView, consoles: list[FakeConsole], tmp_path: Path
+) -> None:
+    long = "".join(chr(ord("a") + n % 26) for n in range(300))
+    _printed(view, consoles, f"{long}\r\nsecond  \r\n$ ".encode())
+    assert view.term.wrapped_at(0)
+    target = tmp_path / "web-01.txt"
+    suggested: list[str] = []
+    remembered: list[str | None] = []
+    saved: list[str] = []
+
+    def ask(_parent: QWidget, _title: str, path: str) -> str:
+        suggested.append(path)
+        return str(target)
+
+    def folder(chosen: str | None) -> str:
+        remembered.append(chosen)
+        return str(tmp_path)
+
+    view.ask_save_path, view.save_folder = ask, folder
+    view.text_saved.connect(saved.append)
+    view.save_text()
+    assert Path(suggested[0]).parent == tmp_path
+    assert Path(suggested[0]).name.startswith("web-01 ") and suggested[0].endswith(".txt")
+    assert target.read_bytes() == b"\xef\xbb\xbf" + f"{long}\r\nsecond\r\n$\r\n".encode()
+    assert remembered == [None, str(tmp_path)]
+    assert saved == [str(target)]
+
+
+def test_a_file_that_can_t_be_saved_says_why_and_its_folder_isn_t_remembered(
+    view: TerminalView,
+    consoles: list[FakeConsole],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _printed(view, consoles, b"text\r\n")
+    warned: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        help_links, "warning", lambda _p, _title, text, *, place: warned.append((text, place))
+    )
+    remembered: list[str | None] = []
+
+    def folder(chosen: str | None) -> str:
+        remembered.append(chosen)
+        return ""
+
+    view.save_folder = folder
+    view.ask_save_path = lambda *_args: str(tmp_path / "gone" / "web-01.txt")
+    view.save_text()
+    assert len(warned) == 1 and "web-01.txt" in warned[0][0]
+    assert warned[0][1] == "ssh-work-in-the-terminal"
+    view.ask_save_path = lambda *_args: ""
+    view.save_text()
+    assert remembered == [None, None]
+
+
+def test_a_narrower_terminal_rewraps_its_scrollback_once_the_resizing_stops(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    lines = ["".join(chr(ord("a") + (n + i) % 26) for i in range(150)) for n in range(40)]
+    _printed(view, consoles, "\r\n".join([*lines, "$ "]).encode())
+    view.window().resize(500, 400)
+    QApplication.processEvents()
+    assert not view.term.scrollback_settled
+    _until(lambda: view.term.scrollback_settled)
+    columns = view.term.columns
+    assert all(len(row) <= columns for row in view.term.scrollback_text())
+    assert view.term.whole_text().split("\r\n")[:40] == lines
+
+
+@pytest.mark.parametrize(("ask", "inked"), [(b"\x1b[6 q", "bar"), (b"\x1b[4 q", "underline")])
+def test_a_program_s_bar_or_underline_cursor_is_drawn_as_asked(
+    view: TerminalView, consoles: list[FakeConsole], ask: bytes, inked: str
+) -> None:
+    _printed(view, consoles, b"ab" + ask)
+    image = view.viewport().grab().toImage()
+    ratio = image.devicePixelRatio()
+    cw, ch = view.cell_w, view.cell_h
+    left, top = view_module.PAD + 2 * cw, view_module.PAD
+    accent = QColor(view.term_palette.cursor)
+
+    def ink(x: int, y: int) -> bool:
+        return image.pixelColor(round((left + x) * ratio), round((top + y) * ratio)) == accent
+
+    assert ink(0, ch // 2) == (inked == "bar")
+    assert ink(cw // 2, ch - 1) == (inked == "underline")
+    assert not ink(cw - 1, ch // 4)
+
+
+PRESS, MOVE = QEvent.Type.MouseButtonPress, QEvent.Type.MouseMove
+RELEASE, TWICE = QEvent.Type.MouseButtonRelease, QEvent.Type.MouseButtonDblClick
+LEFT, RIGHT = Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton
+NO_BUTTON = Qt.MouseButton.NoButton
+HAND, BEAM = Qt.CursorShape.PointingHandCursor, Qt.CursorShape.IBeamCursor
+
+
+def _at(view: TerminalView, col: int, row: int) -> QPointF:
+    pad = view_module.PAD
+    return QPointF(pad + (col + 0.5) * view.cell_w, pad + (row + 0.5) * view.cell_h)
+
+
+def _mouse(
+    view: TerminalView,
+    kind: QEvent.Type,
+    col: int,
+    row: int,
+    *,
+    button: Qt.MouseButton = LEFT,
+    mods: Qt.KeyboardModifier = NONE,
+) -> None:
+    at = _at(view, col, row)
+    held = NO_BUTTON if kind == RELEASE else button
+    if kind == MOVE:
+        button, held = NO_BUTTON, button
+    event = QMouseEvent(kind, at, view.viewport().mapToGlobal(at), button, held, mods)
+    QApplication.sendEvent(view.viewport(), event)
+
+
+def _wheel(view: TerminalView, delta: int, col: int = 0, row: int = 0) -> None:
+    at = _at(view, col, row)
+    event = QWheelEvent(at, view.viewport().mapToGlobal(at), QPoint(), QPoint(0, delta),
+                        NO_BUTTON, NONE, Qt.ScrollPhase.NoScrollPhase, False)  # fmt: skip
+    QApplication.sendEvent(view.viewport(), event)
+
+
+def test_a_mouse_report_names_its_button_cell_and_keys_and_stays_within_conpty_s_text() -> None:
+    assert keys.mouse(0, 5, 3, NONE) == b"\x1b[<0;5;3M"
+    assert keys.mouse(0, 5, 3, NONE, released=True) == b"\x1b[<0;5;3m"
+    assert keys.mouse(keys.WHEEL_UP, 200, 60, CTRL | ALT) == b"\x1b[<88;200;60M"
+    assert keys.mouse(2, 5, 3, NONE, sgr=False) == b"\x1b[M\x22\x25\x23"
+    assert keys.mouse(2, 5, 3, CTRL, released=True, sgr=False) == b"\x1b[M\x33\x25\x23"
+    assert keys.mouse(0, 96, 3, NONE, sgr=False) == b""
+
+
+def test_a_program_that_asks_for_the_mouse_gets_its_clicks_and_shift_keeps_them_ours(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"\x1b[?1049h\x1b[?1000h\x1b[?1006hmenu")
+    menus_opened: list[object] = []
+    view.open_menu = lambda menu, _at: menus_opened.append(menu)
+    _mouse(view, PRESS, 4, 2)
+    _mouse(view, MOVE, 6, 2)
+    _mouse(view, RELEASE, 6, 2)
+    _mouse(view, PRESS, 1, 0, button=RIGHT)
+    _mouse(view, RELEASE, 1, 0, button=RIGHT)
+    assert console.written == [b"\x1b[<0;5;3M", b"\x1b[<0;7;3m", b"\x1b[<2;2;1M", b"\x1b[<2;2;1m"]
+    assert menus_opened == []
+    console.written.clear()
+    _mouse(view, PRESS, 0, 0, mods=SHIFT)
+    _mouse(view, MOVE, 3, 0, mods=SHIFT)
+    _mouse(view, RELEASE, 3, 0, mods=SHIFT)
+    _mouse(view, PRESS, 1, 1, button=RIGHT, mods=SHIFT)
+    assert console.written == [] and view.selected_text() == "menu"
+    assert len(menus_opened) == 1
+
+
+def test_drags_reach_a_program_once_a_cell_and_every_move_when_it_asks(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"\x1b[?1049h\x1b[?1002h\x1b[?1006h")
+    _mouse(view, MOVE, 2, 2, button=NO_BUTTON)
+    _mouse(view, PRESS, 2, 2)
+    _mouse(view, MOVE, 2, 2)
+    _mouse(view, MOVE, 3, 2)
+    _mouse(view, RELEASE, 3, 2)
+    assert console.written == [b"\x1b[<0;3;3M", b"\x1b[<32;4;3M", b"\x1b[<0;4;3m"]
+    console.written.clear()
+    console.prints(b"\x1b[?1003h")
+    _until(lambda: view.term.mouse_tracking == 1003)
+    _mouse(view, MOVE, 5, 1, button=NO_BUTTON)
+    assert console.written == [b"\x1b[<35;6;2M"]
+
+
+def test_a_program_that_quit_on_a_click_never_gets_its_release_in_the_shell(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"\x1b[?1049h\x1b[?1000h\x1b[?1006h")
+    _mouse(view, PRESS, 2, 2)
+    console.prints(b"\x1b[?1006l\x1b[?1000l\x1b[?1049l")
+    _until(lambda: not view.term.in_alt)
+    _mouse(view, RELEASE, 2, 2)
+    assert console.written == [b"\x1b[<0;3;3M"]
+
+
+def test_the_wheel_scrolls_back_sends_arrows_to_a_full_screen_program_or_reports_to_one(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"".join(b"line %d\r\n" % n for n in range(100)))
+    bar = view.verticalScrollBar()
+    bottom = bar.value()
+    _wheel(view, 120)
+    _wheel(view, 20)
+    _wheel(view, 20)
+    assert bar.value() == bottom - 4 and console.written == []
+    console.prints(b"\x1b[?1049h")
+    _until(lambda: view.term.in_alt)
+    _wheel(view, -120)
+    console.prints(b"\x1b[?1h")
+    _until(lambda: view.term.app_cursor_keys)
+    _wheel(view, 120)
+    console.prints(b"\x1b[?1000h\x1b[?1006h")
+    _until(lambda: view.term.mouse_sgr)
+    _wheel(view, 60, col=2, row=1)
+    _wheel(view, 60, col=2, row=1)
+    assert console.written == [b"\x1b[B" * 3, b"\x1bOA" * 3, b"\x1b[<64;3;2M"]
+
+
+def test_ctrl_click_opens_the_address_under_the_mouse_once_even_where_a_program_takes_it(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    console = _printed(view, consoles, b"docs: https://example.com/guide.\r\n$ ")
+    opened: list[str] = []
+    view.open_link = opened.append
+    _mouse(view, PRESS, 10, 0)
+    _mouse(view, RELEASE, 10, 0)
+    _mouse(view, PRESS, 1, 1, mods=CTRL)
+    _mouse(view, RELEASE, 1, 1, mods=CTRL)
+    assert opened == []
+    for kind in (PRESS, RELEASE, TWICE, RELEASE):
+        _mouse(view, kind, 10, 0, mods=CTRL)
+    assert opened == ["https://example.com/guide"]
+    console.prints(b"\x1b[?1000h\x1b[?1006h")
+    _until(lambda: view.term.mouse_sgr)
+    _mouse(view, PRESS, 30, 0, mods=CTRL)
+    _mouse(view, RELEASE, 30, 0, mods=CTRL)
+    assert opened == ["https://example.com/guide"] * 2 and console.written == []
+
+
+def test_an_address_under_the_mouse_is_underlined_says_how_to_open_and_ctrl_shows_a_hand(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    _printed(view, consoles, b"docs: https://example.com/guide\r\n$ ")
+    fg = QColor(view.term_palette.foreground)
+
+    def underlined() -> bool:
+        image = view.viewport().grab().toImage()
+        ratio = image.devicePixelRatio()
+        x = round((view_module.PAD + 15.5 * view.cell_w) * ratio)  # the x of "example"
+        bottom = round((view_module.PAD + view.cell_h) * ratio)
+        return any(image.pixelColor(x, y) == fg for y in range(bottom - 2, bottom))
+
+    assert not underlined()
+    _mouse(view, MOVE, 12, 0, button=NO_BUTTON)
+    assert underlined() and view.viewport().cursor().shape() == BEAM
+    _mouse(view, MOVE, 13, 0, button=NO_BUTTON, mods=CTRL)
+    assert view.viewport().cursor().shape() == HAND
+    at = _at(view, 13, 0).toPoint()
+    QApplication.sendEvent(
+        view.viewport(), QHelpEvent(QEvent.Type.ToolTip, at, view.viewport().mapToGlobal(at))
+    )
+    try:
+        assert QToolTip.text() == "Ctrl+click to open the link"
+    finally:
+        QToolTip.hideText()
+    _mouse(view, MOVE, 1, 1, button=NO_BUTTON, mods=CTRL)
+    assert not underlined() and view.viewport().cursor().shape() == BEAM
+
+
+def test_a_shorter_scrollback_lets_the_oldest_lines_go_and_keeps_the_ones_shown(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    _printed(view, consoles, b"".join(b"line %d\r\n" % n for n in range(300)))
+    bar = view.verticalScrollBar()
+    bar.setValue(bar.maximum() - 50)
+    shown = _rows_shown(view)
+    view.set_scrollback(100)
+    assert len(view.term.scrollback) == 100 and _rows_shown(view) == shown
+    view.set_scrollback(5_000)
+    assert len(view.term.scrollback) == 100 and _rows_shown(view) == shown
+
+
+def test_settings_offers_the_terminal_s_own_limits() -> None:
+    assert (ssh_settings.MIN_POINTS, ssh_settings.MAX_POINTS, ssh_settings.DEFAULT_POINTS) == (
+        view_module.MIN_PT, view_module.MAX_PT, view_module.DEFAULT_PT,
+    )  # fmt: skip
+    assert ssh_settings.DEFAULT_SCROLLBACK == SCROLLBACK
+
+
+def test_the_find_box_covers_whole_rows_in_every_shipped_theme(
+    view: TerminalView, consoles: list[FakeConsole], default_theme_after: None
+) -> None:
+    _printed(view, consoles, b"error one\r\n")
+    view.open_search()
+    bar = view.search_bar
+    assert bar is not None
+    for theme in themes.Registry().all():
+        themes.apply(theme)
+        QApplication.processEvents()
+        assert bar.height() % view.cell_h == 0, theme.id
+        assert bar.height() >= bar.sizeHint().height(), theme.id

@@ -99,7 +99,7 @@ com http.
 
     - Um endereço que começa com `https://` abre exatamente como você digitou, com porta e tudo,
       então `https://prn-01.example.com:8443` chega a uma impressora cuja página web está em outra
-      porta. O campo **Endereço** diz isso na dica dele.
+      porta. Uma linha embaixo do campo **Endereço** diz isso.
     - O CapyPanel abre no máximo dez páginas de uma vez.
     - Só o endereço é passado ao navegador. O CapyPanel não busca nada na impressora e não faz
       login em lugar nenhum.

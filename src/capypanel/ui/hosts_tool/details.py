@@ -149,23 +149,17 @@ class HostDetailsPanel(DetailsPanel):
                                 _("Every command for this PC, in the Commands window"))  # fmt: skip
         commands.clicked.connect(self.commands_requested)
         people = _people(details)
-        users = self.word_button("user-x", amber, f"{fixed['users']} ▾",
-                             _("Log off or disconnect someone"), risky=True)  # fmt: skip
-        users.setMenu(self.users_menu)
+        users = self.word_button("user-x", amber, fixed["users"],
+                                 _("Log off or disconnect someone"), risky=True,
+                                 menu=self.users_menu)  # fmt: skip
         users.setEnabled(reachable and bool(people))
         if reachable and not people:
             users.setToolTip(_("No one is signed in, or no one was checked: use Refresh"))
-        power = self.word_button("power", amber, f"{fixed['power']} ▾",
-                             _("Restart or shut down"), risky=True)  # fmt: skip
-        power.setMenu(self.power_menu)
+        power = self.word_button("power", amber, fixed["power"], _("Restart or shut down"),
+                                 risky=True, menu=self.power_menu)  # fmt: skip
         for button in (refresh, commands, power):
             button.setEnabled(reachable)
-        for key, button in (("refresh", refresh), ("commands", commands), ("users", users),
-                            ("power", power)):  # fmt: skip
-            if button.menu() is not None:
-                button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-                button.setProperty("arrow", False)
-            self.buttons[key] = button
+        self.buttons.update(refresh=refresh, commands=commands, users=users, power=power)
         column.addLayout(self.button_rows([refresh, commands, users, power], width))
 
         who, nobody = _folder_user(details), _nobody(details)
@@ -192,8 +186,9 @@ class HostDetailsPanel(DetailsPanel):
 
     def _button_width(self) -> int:
         fixed = quick.fixed_labels()
-        words = [f"{fixed[k]} ▾" if k in ("users", "power") else fixed[k] for k in fixed]
-        return self.grid_width([*words, *quick.short_labels().values()])
+        menus = ("users", "power")
+        words = [word for key, word in fixed.items() if key not in menus]
+        return self.grid_width([*words, *quick.short_labels().values()], [fixed[k] for k in menus])
 
     def minimum_width(self) -> int:
         return self.grid_minimum(self._button_width())

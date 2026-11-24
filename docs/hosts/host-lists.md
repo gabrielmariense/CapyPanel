@@ -101,19 +101,20 @@ the first result, and **Esc** to end the search and go back to the group you had
 
 ## Add hosts from a spreadsheet <a id="host-lists-add-hosts-from-a-spreadsheet"></a>
 
-1. **Inventory > Import hosts…**.
+1. **Inventory > Import hosts…**, in Hosts or in SSH.
 2. Paste a list into the box at the top, or click **Open a CSV file…** for a `.csv` or `.txt`
    file. The rows fill the preview below.
 3. Check the preview, and pick where hosts with no group go under **Hosts with no group go to:**.
 4. Click **Add {n} hosts**. Nothing changes in your list before that.
 
-Three shapes are understood, and **Formats…** shows each one with an example:
+Four shapes are understood, and **Formats…** shows each one with an example:
 
 | Format | What it looks like |
 |---|---|
 | **Hostnames** | One computer name per line |
 | **Name and address** | A name, then the computer's name or IP address, separated by a comma, or two columns copied from Excel |
-| **CSV with headers** | A first line naming the columns: `name, address, group, tags, notes` |
+| **CSV with headers** | A first line naming the columns: `name, address, group, SSH port, SSH login, tags, notes` |
+| **SSH servers** | The same, with **SSH port** and **SSH login** filled in for the servers you reach over SSH. "An empty cell uses the default: for the name, the group's Log in as if it has one; otherwise ssh.exe's own settings." |
 
 A host already in your list is skipped, never overwritten.
 
@@ -126,13 +127,17 @@ A host already in your list is skipped, never overwritten.
       separates the tags. Columns CapyPanel has no use for are ignored, and the summary names them.
     - A table copied with its columns lined up with spaces instead of tabs is read too, as long as
       the first line is the header row and names at least two columns, one of them the name.
+    - **SSH port** and **SSH login** are found by those titles, in English or Portuguese, or by
+      **Log in as**; never by port, user or login alone, which a list of PCs may use for a switch
+      port or the person at the desk. A row with a port or a name ssh.exe can't take says why, as
+      in "Not an SSH port: type a number from 1 to 65535", and stays out.
     - A list with more than a name and an address but no header row can't be read: CapyPanel won't
       guess which column is which.
 
 ??? note "Fixing rows in the preview"
 
-    The preview shows **Name**, **Address**, a **Warning**, **Group**, **Tags** and **Notes** for
-    every row. Right-click a row:
+    The preview shows **Name**, **Address**, a **Warning**, **Group**, **SSH port**, **SSH
+    login**, **Tags** and **Notes** for every row. Right-click a row:
 
     - **Edit cell** (F2) changes the value under the pointer; a double-click does the same.
     - **Put in group ▸** puts the selected rows in a group, picked from the tree.
@@ -161,14 +166,15 @@ read-only one too.
 
 ??? note "More about the Report"
 
-    - **Columns** come in three boxes: **Host** (Name, Address, Group), **Tags and notes** and
-      **Last check** (Status, Logged-on users). Each has **All · None**. Ticks are kept as soon as
-      you change them. Keep your own set with **Save as preset…**; ticks matching no preset read
-      **Custom**.
+    - **Columns** come in three boxes: **Host** (Name, Address, Group, SSH port, SSH login), **Tags
+      and notes** and **Last check** (Status, Logged-on users). Each has **All · None**. Ticks are
+      kept as soon as you change them. Keep your own set with **Save as preset…**; ticks matching no
+      preset read **Custom**.
     - **Last check** comes from the last refresh, with its time beside the box's name. A host
       nobody has checked shows **Not checked** in the preview, and an empty cell in the file. A
       button under the ticks checks these hosts again now, named after how many there are
-      (**Refresh 3 hosts**, or **Refresh host** for one), with **Stop** while it runs. With
+      (**Refresh 3 hosts**, or **Refresh host** for one), with **Stop** while it runs. When it's
+      greyed, a line under it says why, as in "Tick Status or Logged-on users to refresh them". With
       **Logged-on users** ticked, a note says "People's names: keep the file private."
     - **Preview** shows the rows in the list's own order; a click on a column title sorts them
       there while the window is open. What goes out follows Preview.

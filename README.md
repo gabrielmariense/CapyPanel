@@ -15,7 +15,7 @@ the details you need and their web pages a click away, and it finds the Windows 
 nobody uses any more on a PC so you can delete them. For your servers and switches, it opens an
 SSH terminal right beside their list.
 
-> **Status: beta (0.30.1).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Status: beta (0.31.0).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > unzip it and run CapyPanel.exe. It updates itself when you say so.
 
 ![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers, Profile cleanup and SSH](docs/images/home-dark.png)

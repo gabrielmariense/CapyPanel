@@ -1,7 +1,8 @@
-from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
+from PySide6.QtGui import QColor, QFocusEvent, QKeyEvent, QPalette
 from PySide6.QtWidgets import QButtonGroup, QFrame, QLabel, QToolButton, QVBoxLayout, QWidget
 
+from capypanel.ui import keyboard
 from capypanel.ui.icons import tabler_icon
 
 RAIL_WIDTH = 52
@@ -43,6 +44,10 @@ class ToolRail(QWidget):
         self._layout.addStretch(1)
         self._layout.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignHCenter)
         self._layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        for button in (self.home_button, self.help_button, self.settings_button):
+            button.installEventFilter(self)
+        self.stop = keyboard.OneStop(self.in_order(), self._tools.checkedButton)
+        self._tools.buttonToggled.connect(lambda _b, _on: self.stop.settle())
         self.restyle()
 
     def add_tool(self, tool_id: str, icon: str) -> QToolButton:
@@ -59,8 +64,40 @@ class ToolRail(QWidget):
         badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         badge.hide()
         self.badges[tool_id] = badge
+        button.installEventFilter(self)
+        self.stop.reset(self.in_order())
         self.restyle()
         return button
+
+    def in_order(self) -> list[QToolButton]:
+        return [self.home_button, *self.buttons.values(), self.help_button, self.settings_button]
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """Qt's own arrows click each tool they reach in an exclusive group: these only move."""
+        if not isinstance(watched, QToolButton):
+            return super().eventFilter(watched, event)
+        if event.type() == QEvent.Type.KeyPress and isinstance(event, QKeyEvent):
+            key = Qt.Key(event.key())
+            step = {Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}.get(key, 0)
+            shown = [b for b in self.in_order() if b.isVisible() and b.isEnabled()]
+            if step and not event.modifiers() and watched in shown:
+                index = shown.index(watched) + step
+                if 0 <= index < len(shown):
+                    shown[index].setFocus(Qt.FocusReason.OtherFocusReason)
+                return True
+            plain = not event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
+            if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and plain:
+                watched.click()
+                return True
+        if event.type() == QEvent.Type.FocusIn and isinstance(event, QFocusEvent):
+            tool = self._tools.checkedButton()
+            tabbed = event.reason() in (Qt.FocusReason.TabFocusReason,
+                                        Qt.FocusReason.BacktabFocusReason)  # fmt: skip
+            others = [b for b in self._tools.buttons() if b is not tool]
+            if tabbed and tool is not None and watched in others:
+                tool.setFocus(event.reason())
+                return True
+        return super().eventFilter(watched, event)
 
     def set_badge(self, tool_id: str, count: int) -> None:
         badge = self.badges[tool_id]

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QMenu,
     QStackedWidget,
+    QTreeWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -33,7 +34,12 @@ from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.list_workspace.panels import NavigationPane, natural_key, offers_typed
+from capypanel.ui.list_workspace.panels import (
+    NavigationPane,
+    fill_sort_menu,
+    natural_key,
+    offers_typed,
+)
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window.tool import Shell, Tool
@@ -172,6 +178,10 @@ class ProfilesTool(Tool):
         self.show_groups = QAction(self)
         self.show_tags = QAction(self)
         self.show_details = QAction(self)
+        self.sort_menu = QMenu(self)
+        self.sort_menu.aboutToShow.connect(
+            lambda: (self.sort_menu.clear(), fill_sort_menu(self.sort_menu, self.shown_table()))
+        )
         shown = self.prefs.get(SHOWN_KEY)
         shown = shown if isinstance(shown, dict) else {}
         for action, key, pane in (
@@ -264,7 +274,12 @@ class ProfilesTool(Tool):
         return self.nav if self.nav.isVisible() else self.middle
 
     def view_actions(self) -> list[list[QAction]]:
-        return [[self.show_groups, self.show_tags, self.show_details]]
+        panes = [self.show_groups, self.show_tags, self.show_details]
+        return [panes, [self.sort_menu.menuAction()]]
+
+    def shown_table(self) -> QTreeWidget:
+        page = self._pages.get(self.tabs.current())
+        return page.table.tree if page is not None else self.hosts_page.table.tree
 
     def save_state(self) -> None:
         outer, inner = self.splitter.sizes(), self.inner.sizes()
@@ -453,6 +468,7 @@ class ProfilesTool(Tool):
         self.show_groups.setText(_("&Groups pane"))
         self.show_tags.setText(_("T&ags pane"))
         self.show_details.setText(_("&Details pane"))
+        self.sort_menu.setTitle(_("So&rt by"))
         self.hosts_page.retranslate()
         for page in self._pages.values():
             page.show_again()

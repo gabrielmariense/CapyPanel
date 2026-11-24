@@ -278,7 +278,7 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     assert menus["&View"] == [
         "Hom&e", "&Hosts", "&Printers", "Profile clean&up", "SSH", "&Groups pane", "T&ags pane",
         "&Details pane", "&Customize the details panel…",
-        "Show users' do&main",
+        "So&rt by", "Co&lumns", "Show users' do&main",
         "T&oolbar", "&Status bar",
     ]  # fmt: skip
     inventory = [label(a) for a in window.hosts.toolbar.inventory_menu.actions() if a.text()]

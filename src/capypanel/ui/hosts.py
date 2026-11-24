@@ -277,8 +277,6 @@ class TagEdit(QFrame):
                 self._remove(last)
                 self.input.setText(last.text)
                 return True
-        if event.type() in (QEvent.Type.FocusIn, QEvent.Type.FocusOut):
-            self._show_focus(event.type() == QEvent.Type.FocusIn)
         if (
             isinstance(event, QFocusEvent)
             and event.type() == QEvent.Type.FocusOut
@@ -287,12 +285,6 @@ class TagEdit(QFrame):
             self.add_text(self.input.text())
             self.input.clear()
         return super().eventFilter(watched, event)
-
-    def _show_focus(self, focused: bool) -> None:
-        # Stylesheets can't see focus inside a child, so the field carries it as a property.
-        self.setProperty("focused", focused)
-        self.style().unpolish(self)
-        self.style().polish(self)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         self.input.setFocus()

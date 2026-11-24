@@ -8,11 +8,13 @@ import sys
 from ctypes import wintypes as wt
 from dataclasses import dataclass
 from pathlib import Path
+from typing import NamedTuple
 
 from capypanel.core import i18n
 from capypanel.core.hosts.model import MAX_ADDRESS
-from capypanel.core.ssh import holder
+from capypanel.core.ssh import holder, terminals
 from capypanel.core.ssh.host import DEFAULT_PORT, SshInfo, is_login, is_port
+from capypanel.core.ssh.terminals import Terminal
 from capypanel.core.updates import NO_SPLASH
 
 log = logging.getLogger(__name__)
@@ -65,11 +67,15 @@ def tab_command(destination: str, info: SshInfo) -> list[str]:
     return argv
 
 
-def connect(destination: str, info: SshInfo, name: str = "") -> subprocess.Popen[bytes]:
+def connect(
+    destination: str, info: SshInfo, name: str = "", terminal: Terminal | None = None
+) -> subprocess.Popen[bytes]:
     exe = ssh_exe()
     if exe is None:
         raise SshMissing
     argv = command_line(exe, destination, info)
+    if terminal is not None:
+        return terminals.start(terminal, argv, name or destination)
     log.info("Starting ssh.exe %s", subprocess.list2cmdline(argv[1:]))
     return subprocess.Popen(  # noqa: S603 -- CapyPanel's own exe; ssh.exe's arguments checked
         [*own_start(), *holder.args_for(argv, name or destination, i18n.language())],
@@ -87,18 +93,25 @@ def own_start() -> list[str]:
     return [sys.executable, "-m", "capypanel"]
 
 
-def open_windows() -> int:
-    """Other windows of this copy hold its files, which an update can't replace."""
+class Copies(NamedTuple):
+    windows: int
+    others: int
+
+
+def other_copies() -> Copies:
+    """Other processes of this copy hold its files, which an update can't replace."""
     if not getattr(sys, "frozen", False):
-        return 0
+        return Copies(0, 0)
     exe = Path(sys.executable)
     me = os.getpid()
     session = _session(me)
-    return sum(
-        1
+    found = [
+        running
         for running in _running(exe.name)
         if running.pid != me and running.session == session and _same_file(running.path, exe)
-    )
+    ]
+    windows = sum(1 for running in found if holder.FLAG in running.command_line.split())
+    return Copies(windows, len(found) - windows)
 
 
 @dataclass(frozen=True)
@@ -106,6 +119,7 @@ class Running:
     pid: int
     path: str
     session: int | None
+    command_line: str = ""
 
 
 def _same_file(path: str, exe: Path) -> bool:
@@ -152,6 +166,16 @@ _k32.ProcessIdToSessionId.argtypes = (wt.DWORD, ctypes.POINTER(wt.DWORD))
 _k32.ProcessIdToSessionId.restype = wt.BOOL
 _k32.CloseHandle.argtypes = (wt.HANDLE,)
 _k32.CloseHandle.restype = wt.BOOL
+_ntdll = ctypes.WinDLL("ntdll")
+_ntdll.NtQueryInformationProcess.argtypes = (
+    wt.HANDLE, ctypes.c_int, ctypes.c_void_p, wt.ULONG, ctypes.POINTER(wt.ULONG)
+)  # fmt: skip
+_ntdll.NtQueryInformationProcess.restype = ctypes.c_long
+_COMMAND_LINE = 60  # ProcessCommandLineInformation, Windows 8.1 and later
+
+
+class _UnicodeString(ctypes.Structure):
+    _fields_ = (("Length", wt.USHORT), ("MaximumLength", wt.USHORT), ("Buffer", ctypes.c_void_p))
 
 
 def _running(exe_name: str) -> list[Running]:
@@ -166,7 +190,7 @@ def _running(exe_name: str) -> list[Running]:
         while more:
             if entry.szExeFile.casefold() == exe_name.casefold():
                 pid = int(entry.th32ProcessID)
-                found.append(Running(pid, _image_path(pid), _session(pid)))
+                found.append(Running(pid, _image_path(pid), _session(pid), _command_line(pid)))
             more = _k32.Process32NextW(snapshot, ctypes.byref(entry))
     finally:
         _k32.CloseHandle(snapshot)
@@ -192,3 +216,23 @@ def _session(pid: int) -> int | None:
     if not _k32.ProcessIdToSessionId(pid, ctypes.byref(session)):
         return None
     return session.value
+
+
+def _command_line(pid: int) -> str:
+    process = _k32.OpenProcess(_QUERY_LIMITED_INFORMATION, False, pid)
+    if not process:
+        return ""
+    try:
+        size = wt.ULONG(0)
+        _ntdll.NtQueryInformationProcess(process, _COMMAND_LINE, None, 0, ctypes.byref(size))
+        if not size.value:
+            return ""
+        found = ctypes.create_string_buffer(size.value)
+        if _ntdll.NtQueryInformationProcess(
+            process, _COMMAND_LINE, found, size, ctypes.byref(size)
+        ):
+            return ""
+        text = _UnicodeString.from_buffer(found)
+        return ctypes.wstring_at(text.Buffer, text.Length // 2) if text.Buffer else ""
+    finally:
+        _k32.CloseHandle(process)

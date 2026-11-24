@@ -1,3 +1,4 @@
+import ctypes
 import os
 import subprocess
 import sys
@@ -113,7 +114,7 @@ def test_capypanel_starts_itself_by_its_exe_or_from_source(
     assert launch.own_start() == [sys.executable]
 
 
-def test_open_windows_are_this_exe_s_other_copies_in_this_session(
+def test_other_copies_are_this_exe_s_other_processes_in_this_session(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     exe = tmp_path / "CapyPanel" / "CapyPanel.exe"
@@ -122,26 +123,29 @@ def test_open_windows_are_this_exe_s_other_copies_in_this_session(
         path.parent.mkdir()
         path.touch()
     me = os.getpid()
+    window = f'"{exe}" --ssh-holder --lang=en --host=web-01 -- ssh.exe -- web-01'
     running = [
-        Running(me, str(exe), 1),
-        Running(101, str(exe), 1),
-        Running(102, str(exe).upper(), 1),  # a holder, its path as Windows may spell it
-        Running(103, str(exe), 2),
-        Running(104, str(other), 1),
-        Running(105, "", 1),  # Windows wouldn't say
+        Running(me, str(exe), 1, f'"{exe}"'),
+        Running(101, str(exe), 1, window),
+        Running(102, str(exe).upper(), 1, window),  # its path as Windows may spell it
+        Running(103, str(exe), 2, window),
+        Running(104, str(other), 1, window),
+        Running(105, "", 1, window),  # Windows wouldn't say
+        Running(106, str(exe), 1, f'"{exe}"'),
+        Running(107, str(exe), 1, ""),
     ]
     monkeypatch.setattr(sys, "frozen", True, raising=False)
     monkeypatch.setattr(sys, "executable", str(exe))
     monkeypatch.setattr(launch, "_running", lambda name: running if name == exe.name else [])
     monkeypatch.setattr(launch, "_session", lambda pid: 1)
-    assert launch.open_windows() == 2
+    assert launch.other_copies() == launch.Copies(windows=2, others=2)
 
 
-def test_from_source_no_window_holds_files_an_update_replaces(
+def test_from_source_no_copy_holds_files_an_update_replaces(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(launch, "_running", lambda name: pytest.fail("never looked"))
-    assert launch.open_windows() == 0
+    assert launch.other_copies() == (0, 0)
 
 
 def test_windows_list_of_processes_has_this_one() -> None:
@@ -152,6 +156,9 @@ def test_windows_list_of_processes_has_this_one() -> None:
         me = [r for r in launch._running(exe.name) if r.pid == os.getpid()]
     [found] = me
     assert Path(found.path).is_file() and found.session == launch._session(os.getpid())
+    own = ctypes.WinDLL("kernel32").GetCommandLineW
+    own.restype = ctypes.c_wchar_p
+    assert found.command_line == own()
 
 
 def test_nothing_starts_for_an_address_it_refuses(monkeypatch: pytest.MonkeyPatch) -> None:

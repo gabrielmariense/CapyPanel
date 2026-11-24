@@ -24,9 +24,14 @@ host que você adiciona aqui já aparece no Hosts, e vice-versa.
    configurações dele.
 4. Clique em **Adicionar**.
 
-Grupos, tags, **Mover para ▸**, **Tags ▸** e encontrar um host funcionam como no Hosts: veja
-[Listas de hosts](../hosts/host-lists.pt-BR.md). Para trazer muitos hosts de uma vez, use o
-**Importar hosts…** da ferramenta Hosts; eles aparecem aqui também, na porta 22.
+Grupos, tags, **Mover para ▸**, **Tags ▸** e encontrar um host funcionam como no Hosts: veja [Listas
+de hosts](../hosts/host-lists.pt-BR.md). Para trazer muitos hosts de uma vez, use o **Inventário >
+Importar hosts…**, aqui ou no Hosts. As colunas **Porta SSH** e **Login SSH** trazem a porta de cada
+servidor e o nome com que entrar (veja [Adicionar hosts de uma
+planilha](../hosts/host-lists.pt-BR.md#host-lists-add-hosts-from-a-spreadsheet)). Uma lista vazia
+também oferece o botão.
+
+![Importar hosts com servidores SSH colados: as colunas Porta SSH e Login SSH depois de Grupo, e uma linha deixada de fora pela porta](../images/import-ssh-servers-dark-pt-BR.png)
 
 ??? note "Mais sobre adicionar hosts"
 
@@ -98,15 +103,19 @@ verificar menos hosts, clique com o botão direito num host para **Atualizar hos
     rígido pode contar cada verificação como uma tentativa de login que falhou e bloquear este
     PC."
 
+    A mesma página define o **Tamanho do texto** e o **Histórico de rolagem** do terminal, e onde o
+    **Conectar numa janela separada** abre (veja
+    [Configurações e arquivos](../settings-and-files.pt-BR.md#settings-ssh-general)).
+
 ## Conectar <a id="ssh-connect"></a>
 
 1. Selecione um host, ou vários.
 2. Clique em **Conectar** na barra de ferramentas, dê dois cliques no host ou pressione **Enter**.
 3. Uma aba abre ao lado da lista, com o nome do host, e o ssh.exe conecta nela. Uma segunda
    conexão ao mesmo host é "srv-01 (2)".
-4. Na primeira vez que você acessa um servidor, o ssh.exe pergunta, em inglês: "Are you sure you
-   want to continue connecting (yes/no/[fingerprint])?" Digite **yes**, em inglês, e pressione
-   **Enter**.
+4. Na primeira vez que você acessa um servidor deste PC, uma faixa no pé da aba avisa, e o ssh.exe
+   pergunta, em inglês: "Are you sure you want to continue connecting (yes/no/[fingerprint])?"
+   Digite **yes**, não só y, e pressione **Enter**.
 5. Digite a senha se ele pedir. Nada aparece enquanto você digita.
 
 ![A aba de uma conexão ao lado da aba Hosts: o prompt do servidor e alguma saída no terminal](../images/ssh-terminal-dark-pt-BR.png)
@@ -120,6 +129,13 @@ porta 22 e as configurações do próprio ssh.exe.
     - Na pergunta da chave do host, só **yes** (em maiúsculas ou minúsculas) ou a impressão digital
       do servidor aceitam. "y" ou "sim" fazem o ssh.exe perguntar de novo, e **Enter** sozinho
       responde não, o que encerra a conexão com "Host key verification failed."
+    - A faixa da primeira conexão só aparece quando o ssh.exe vai perguntar: o CapyPanel procura o
+      servidor nos seus arquivos `known_hosts` antes, como o ssh.exe faz. Ela sai com o **×** dela
+      ou quando a conexão termina, e o **Reconectar** verifica de novo. Uma janela separada não
+      tem faixa.
+
+      ![Uma primeira conexão: a pergunta do ssh.exe no terminal, e a faixa no pé da aba dizendo para digitar yes](../images/ssh-first-connection-dark-pt-BR.png)
+
     - O CapyPanel conecta no máximo dez hosts de uma vez: "Só os 10 primeiros conectam de uma vez."
     - O ssh.exe lê a sua própria config do SSH (`%USERPROFILE%\.ssh\config`) e as suas chaves,
       então uma chave, um host de salto ou um algoritmo mais antigo funcionam como em qualquer
@@ -136,8 +152,9 @@ Toda tecla que você digita vai para o servidor, menos estas:
 | **Ctrl+C** | Copia o texto que você selecionou; sem nada selecionado, vai para o servidor e para o programa em execução |
 | **Ctrl+Shift+C** / **Ctrl+Shift+V** | Copiar / colar |
 | **Ctrl+=** / **Ctrl+-** | Texto maior / menor |
+| **Ctrl+Shift+F** | Pesquisar no terminal |
 | **Ctrl+Tab** / **Ctrl+Shift+Tab** | A próxima aba / a anterior, inclusive a aba Hosts: o jeito de sair de um terminal |
-| **Ctrl+Shift+W** | Fechar a aba |
+| **Ctrl+Shift+W** | Fechar a aba, ou a janela para onde ela foi |
 | **Ctrl+0** a **Ctrl+4**, **Ctrl+,** | A página inicial, as ferramentas e as Configurações, com as teclas que o **Atalhos de teclado** dá a eles |
 
 Então F1, Esc, F5, Ctrl+F e o Ctrl+Q do Sair vão para o servidor enquanto um terminal tem o
@@ -145,7 +162,21 @@ teclado. Na aba Hosts toda tecla funciona como sempre, e escolher um grupo, uma 
 esquerda, ou o **Ctrl+F**, traz essa aba para a frente.
 
 Selecione texto com o mouse para copiá-lo. O botão direito abre **Copiar**, **Colar**,
-**Selecionar tudo** e **Limpar histórico de rolagem**; ele nunca cola sozinho.
+**Selecionar tudo**, **Pesquisar…**, **Salvar todo o texto…**, **Limpar histórico de rolagem** e
+**Mover para uma nova janela**; ele nunca cola sozinho.
+
+Um programa que pede o mouse, como o htop, o mc ou o vim com o mouse ligado, recebe cliques,
+arrastes e a roda; segure o **Shift** ali para selecionar texto ou abrir o menu. No less ou no man
+a roda rola. Um endereço web fica sublinhado embaixo do mouse: **Ctrl+clique** o abre no
+navegador.
+
+O **Pesquisar…** (Ctrl+Shift+F) abre uma caixa no canto de cima à direita do terminal. Ela começa
+no resultado mais novo: o **Enter** vai para os mais antigos e o **Shift+Enter** para os mais
+recentes, com **Diferenciar maiúsculas de minúsculas** e uma contagem, como "3 de 4". O **Esc** a
+fecha. O **Salvar todo o texto…** grava o histórico de rolagem e a tela num arquivo `.txt` com o
+nome do servidor e a hora, cada linha inteira.
+
+![A caixa de pesquisa sobre o terminal: error digitado, 3 de 4, e cada resultado marcado em âmbar](../images/ssh-find-dark-pt-BR.png)
 
 ??? note "Mais sobre o terminal"
 
@@ -157,32 +188,20 @@ Selecione texto com o mouse para copiá-lo. O botão direito abre **Copiar**, **
       trocado por um que se lê. O texto é Cascadia Mono, ou Consolas onde o Cascadia Mono não
       estiver instalado; os caracteres de linha, de bloco e do Powerline são desenhados pelo
       CapyPanel, então as caixas se juntam sem falhas.
-    - O tamanho do texto é um só para todas as abas, e fica guardado para a próxima vez.
-    - Uma linha longa demais para a aba continua na fileira seguinte, e é copiada como uma linha
-      só, então é colada inteira.
-    - Cada aba guarda as últimas 10.000 linhas. Nada do que você digita, cola ou vê vai para o log
-      ou é salvo, e nada de uma conexão sobrevive ao CapyPanel além do tamanho do texto.
-
-??? note "O que o terminal ainda não faz"
-
-    - O mouse só seleciona texto. Programas como o mc e o htop não recebem cliques: use as teclas
-      deles.
-    - Os links na saída não são clicáveis. Selecione um e copie.
-    - Não há pesquisa no histórico de rolagem. Botão direito > **Selecionar tudo**, copie e
-      pesquise num editor de texto. O histórico também não pode ser salvo num arquivo; copie do
-      mesmo jeito.
-    - O histórico de rolagem guarda as últimas 10.000 linhas, e isso não é uma configuração.
-    - As linhas já exibidas não se reorganizam quando a aba muda de largura, então uma aba mais
-      estreita corta o fim delas na borda direita.
-    - O sinal sonoro não faz som nem mostra nada.
-    - O cursor é sempre um bloco, mesmo quando um programa pede uma barra, como o vim enquanto você
-      digita.
-    - O tamanho do texto muda com Ctrl+= e Ctrl+-, não nas Configurações.
+    - O tamanho do texto é um só para todas as abas: Ctrl+= e Ctrl+-, ou o **Tamanho do texto**
+      em Configurações › SSH › Geral.
+    - As linhas se reorganizam quando a aba muda de largura, na tela e no histórico de rolagem.
+      Uma linha longa demais para a aba é copiada como uma linha só, então é colada inteira.
+    - Um sinal sonoro numa aba que não está na frente marca a aba com um sino âmbar, "Tocou a
+      campainha", até você abri-la, e o botão do CapyPanel na barra de tarefas pisca quando o
+      CapyPanel não está na frente. Não há som.
+    - O cursor toma a forma que um programa pede: bloco, sublinhado ou barra, fixo ou piscando.
+    - Cada aba guarda as últimas 10.000 linhas, ou o que o **Histórico de rolagem** em
+      Configurações › SSH › Geral diz. Nada do que você digita, cola ou vê vai para o log ou fica
+      guardado, a não ser que você salve.
     - Leitores de tela não leem o terminal, e os temas de contraste do Windows não mudam a
-      aparência dele.
-
-    Para qualquer um desses, o [Conectar numa janela separada](#conectar-numa-janela-separada) abre
-    o host no terminal do próprio Windows.
+      aparência dele. Para isso, o [Conectar numa janela separada](#conectar-numa-janela-separada)
+      abre o host no terminal do próprio Windows.
 
 ## Quando uma conexão termina <a id="ssh-when-a-connection-ends"></a>
 
@@ -202,13 +221,32 @@ A aba fica, com a última tela, para você ler como terminou. Uma faixa no pé d
     - O **Ctrl+Shift+W**, o **×** da aba ou o **Fechar aba** fecham a aba. Uma aba ainda conectada
       pergunta antes, "Fechar a conexão com {host}?", com "O que ainda estiver rodando nela no
       servidor pode parar."
-    - Clique com o botão direito numa aba para **Reconectar**, **Fechar**, **Fechar as outras** e
-      **Fechar as que terminaram**. Fechar várias conexões abertas pergunta uma vez só.
+    - Clique com o botão direito numa aba para **Reconectar**, **Mover para uma nova janela**,
+      **Fechar**, **Fechar as outras** e **Fechar as que terminaram**; as duas últimas valem só
+      para abas. Fechar várias conexões abertas pergunta uma vez só.
     - A marca de cada aba diz como ela está: **Conexão aberta**, **Terminou com um erro** ou
       **Terminou**.
-    - Sair do CapyPanel com conexões abertas pergunta uma vez, como em "Sair do CapyPanel com 2
-      conexões abertas?" e "Todas são fechadas, e o que ainda estiver rodando nelas nos servidores
-      pode parar."
+    - Sair do CapyPanel com conexões abertas, em abas ou em janelas próprias, pergunta uma vez, como
+      em "Sair do CapyPanel com 2 conexões abertas?" e "Todas são fechadas, e o que ainda estiver
+      rodando nelas nos servidores pode parar."
+
+## Mover uma conexão para uma janela própria <a id="ssh-move-a-connection-to-its-own-window"></a>
+
+Para pôr um terminal num segundo monitor ao lado da lista, clique com o botão direito na aba dele,
+ou no terminal, e escolha **Mover para uma nova janela**. A mesma conexão, ainda rodando, abre numa
+janela só com o terminal dela, onde a aba estava e do tamanho dela, com o nome da aba e SSH no
+título.
+
+- Nessa janela, o menu do botão direito do terminal tem **Voltar para uma aba**: a conexão volta
+  como a última aba, na frente.
+- Fechar a janela fecha a conexão, perguntando antes enquanto ela está aberta, como uma aba faz;
+  o **Ctrl+Shift+W** também. Quando a conexão termina, a faixa dela oferece **Fechar janela**.
+- O terminal mantém ali as teclas de copiar, colar e tamanho do texto. Ctrl+Tab e Ctrl+Shift+Tab
+  não fazem nada, e todas as outras teclas vão para o servidor, inclusive Ctrl+0 a Ctrl+4 e
+  Ctrl+,.
+
+Essa janela continua sendo o terminal do CapyPanel, com o menu e as teclas dele. O **Conectar numa
+janela separada**, abaixo, roda o ssh.exe sozinho, fora do CapyPanel.
 
 ## Conectar numa janela separada <a id="ssh-connect-in-a-separate-window"></a>
 
@@ -216,14 +254,26 @@ Clique com o botão direito num host e escolha **Conectar numa janela separada**
 ssh.exe numa janela própria, fora do CapyPanel": ali as suas teclas nunca passam pelo CapyPanel, e
 a janela faz tudo o que o console do Windows faz.
 
-Se o ssh.exe terminar com um erro, a janela fica aberta para você ler o motivo; pressione qualquer
-tecla para fechá-la. Embaixo da mensagem do ssh.exe ela diz "A conexão com {host} terminou com um
-erro. A mensagem do ssh.exe está acima." e "Pressione qualquer tecla para fechar esta janela." Uma
-tecla pressionada no primeiro segundo depois dessas palavras é ignorada, para que um Enter a mais
-não feche a janela antes da leitura. Depois de um fim normal ela fecha sozinha, e fechar a janela
-encerra o ssh.exe.
+O **Abrir em**, em Configurações › SSH › Geral, escolhe onde ele abre: **Uma janela de console**
+(de início), o **Windows Terminal** quando ele está neste PC, ou **Outro programa…**, que pede o
+programa e os argumentos dele. Nos argumentos, `{ssh}` representa o ssh.exe com o endereço, a
+porta e o login do servidor, e `{name}` o nome do servidor, para o título de uma janela ou aba. O
+**Salvar** fica cinza até o programa existir e os argumentos terem `{ssh}`. Para o Windows
+Terminal, o CapyPanel usa `new-tab --title {name} -- {ssh}`.
 
-Para instalar uma atualização, feche essas janelas antes (veja
+![A janela Outro programa de terminal: o caminho do programa com Escolher…, e os argumentos start -- {ssh}](../images/ssh-terminal-program-dark-pt-BR.png)
+
+Num programa de terminal, as configurações do próprio programa decidem se a janela dele fica aberta
+depois de um erro, e nada do CapyPanel roda nele, então uma atualização não espera por ele.
+
+Numa janela de console, se o ssh.exe terminar com um erro, a janela fica aberta para você ler o
+motivo; pressione qualquer tecla para fechá-la. Embaixo da mensagem do ssh.exe ela diz "A conexão
+com {host} terminou com um erro. A mensagem do ssh.exe está acima." e "Pressione qualquer tecla para
+fechar esta janela." Uma tecla pressionada no primeiro segundo depois dessas palavras é ignorada,
+para que um Enter a mais não feche a janela antes da leitura. Depois de um fim normal ela fecha
+sozinha, e fechar a janela encerra o ssh.exe.
+
+Para instalar uma atualização, feche as janelas de console antes (veja
 [Atualizar o CapyPanel](../download.pt-BR.md#atualizar-o-capypanel)).
 
 ## Aparelhos antigos e a sua config do SSH <a id="ssh-old-devices-and-your-ssh-config"></a>
@@ -255,9 +305,9 @@ ssh.exe procura, ou no agente OpenSSH do Windows.
     | **Painel de detalhes** (direita) | O host selecionado, abaixo do nome e do status, com **Conectar** e **Atualizar**: **Conexão** (endereço, porta, Entrar como, grupo), **Tags** e **Notas**. Clique em qualquer valor para copiá-lo |
     | **Barra de status** | A lista aberta e as contagens dela, como no Hosts |
 
-    O **Inventário** traz **Adicionar host…** (Ctrl+N), **Adicionar grupo…**, **Gerenciar
-    grupos…** e **Classificar grupos de A a Z**. A lista suspensa troca de lista, cria uma com
-    **Nova lista…** e abre o **Gerenciar listas de hosts…** nas Configurações, como no Hosts.
+    O **Inventário** traz **Adicionar host…** (Ctrl+N), **Adicionar grupo…**, **Gerenciar grupos…**,
+    **Classificar grupos de A a Z** e **Importar hosts…**. A lista suspensa troca de lista, cria uma
+    com **Nova lista…** e abre o **Gerenciar listas de hosts…** nas Configurações, como no Hosts.
 
 ??? note "A tabela e os menus dela"
 
@@ -282,6 +332,8 @@ As mensagens do próprio CapyPanel:
 | <a id="ssh-bad-address"></a>"Não é possível conectar a “{host}”: o endereço ou o campo Entrar como tem um espaço, começa com “-” ou tem um caractere como ; & \| ou aspas." | A lista tem um endereço ou nome que o ssh.exe não pode receber | Corrija com o **Editar selecionado…** |
 | <a id="ssh-connect-limit"></a>"Só os 10 primeiros conectam de uma vez." | Mais de dez hosts estavam selecionados | Conecte o resto numa segunda vez |
 | <a id="ssh-no-address-skipped"></a>"2 hosts não têm endereço e foram ignorados." | Esses hosts só têm um nome | Acrescente o endereço deles |
+| <a id="ssh-terminal-program-not-started"></a>"Não foi possível iniciar o …: …. Configurações › SSH › Geral diz onde as janelas separadas abrem." | O programa de terminal escolhido para as janelas separadas não pôde rodar: mudou de lugar, foi desinstalado, ou o Windows o recusou | Corrija o **Abrir em** em Configurações › SSH › Geral, ou escolha **Uma janela de console** |
+| <a id="ssh-text-not-saved"></a>"Não foi possível salvar “…”: …" depois do **Salvar todo o texto…** | O Windows recusou gravar o arquivo, muitas vezes porque a pasta é somente leitura ou o disco está cheio | Salve em outra pasta |
 | <a id="ssh-port-closed"></a>**Porta fechada** | O host está ligado, mas o servidor SSH dele está desligado ou escuta em outra porta | Confira a porta, ou ligue o serviço SSH do servidor |
 
 As mensagens do ssh.exe vêm em inglês, como ele escreve, porque é isso que você pesquisaria:

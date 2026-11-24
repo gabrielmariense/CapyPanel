@@ -2,7 +2,7 @@ import math
 from collections.abc import Sequence
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtGui import QMouseEvent, QPalette, QResizeEvent
+from PySide6.QtGui import QKeyEvent, QMouseEvent, QPalette, QResizeEvent
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -23,6 +23,10 @@ MASCOT_HEIGHT = 150
 TILE_SIZE = (330, 84)
 TILE_GAP = 14
 ICON_SIZE = 24
+PRESS_KEYS = (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space)
+KEYPAD = Qt.KeyboardModifier.KeypadModifier
+ARROWS = {Qt.Key.Key_Left: (0, -1), Qt.Key.Key_Right: (0, 1),
+          Qt.Key.Key_Up: (-1, 0), Qt.Key.Key_Down: (1, 0)}  # fmt: skip
 
 
 class ToolTile(QFrame):
@@ -36,6 +40,7 @@ class ToolTile(QFrame):
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.setFixedSize(*TILE_SIZE)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.badge = QLabel()
         self.badge.setObjectName("tileBadge")
         self.badge.setFixedSize(44, 44)
@@ -83,6 +88,12 @@ class ToolTile(QFrame):
             event.position().toPoint()
         ):
             self.clicked.emit()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() in PRESS_KEYS and not event.modifiers() & ~KEYPAD:
+            self.clicked.emit()
+            return
+        super().keyPressEvent(event)
 
 
 class HomePage(QWidget):
@@ -147,6 +158,19 @@ class HomePage(QWidget):
             self._grid.removeWidget(tile)
         for index, tile in enumerate(self.tiles):
             self._grid.addWidget(tile, index // columns, index % columns)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        step = ARROWS.get(Qt.Key(event.key()))
+        tile = next((t for t in self.tiles if t.hasFocus()), None)
+        if step is None or tile is None or event.modifiers() & ~KEYPAD or not self._columns:
+            super().keyPressEvent(event)
+            return
+        index = self.tiles.index(tile)
+        row, column = divmod(index, self._columns)
+        row, column = row + step[0], column + step[1]
+        to = row * self._columns + column
+        if 0 <= column < self._columns and 0 <= to < len(self.tiles):
+            self.tiles[to].setFocus(Qt.FocusReason.OtherFocusReason)
 
     def minimumSizeHint(self) -> QSize:
         return QSize(TILE_SIZE[0] + 80, super().minimumSizeHint().height())

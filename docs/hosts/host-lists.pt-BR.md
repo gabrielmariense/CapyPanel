@@ -107,19 +107,20 @@ ao grupo que estava escolhido.
 
 ## Adicionar hosts de uma planilha <a id="host-lists-add-hosts-from-a-spreadsheet"></a>
 
-1. **Inventário > Importar hosts…**.
+1. **Inventário > Importar hosts…**, no Hosts ou no SSH.
 2. Cole uma lista na caixa de cima, ou clique em **Abrir um arquivo CSV…** para um arquivo `.csv`
    ou `.txt`. As linhas preenchem a prévia abaixo.
 3. Confira a prévia, e escolha para onde vão os hosts sem grupo em **Hosts sem grupo vão para:**.
 4. Clique em **Adicionar {n} hosts**. Nada muda na sua lista antes disso.
 
-Três formatos são entendidos, e o **Formatos…** mostra cada um com um exemplo:
+Quatro formatos são entendidos, e o **Formatos…** mostra cada um com um exemplo:
 
 | Formato | Como é |
 |---|---|
 | **Nomes de host** | Um nome de computador por linha |
 | **Nome e endereço** | Um nome e, depois, o nome do computador na rede ou o endereço IP, separados por vírgula, ou duas colunas copiadas do Excel |
-| **CSV com cabeçalho** | Uma primeira linha dando nome às colunas: `nome, endereço, grupo, tags, notas` |
+| **CSV com cabeçalho** | Uma primeira linha dando nome às colunas: `nome, endereço, grupo, porta SSH, login SSH, tags, notas` |
+| **Servidores SSH** | O mesmo, com **Porta SSH** e **Login SSH** preenchidos para os servidores que você acessa por SSH. "Uma célula vazia usa o padrão: para o nome, o Entrar como do grupo, se ele tiver um; senão, as configurações do próprio ssh.exe." |
 
 Um host que já está na sua lista é ignorado, nunca sobrescrito.
 
@@ -134,13 +135,18 @@ Um host que já está na sua lista é ignorado, nunca sobrescrito.
     - Uma tabela copiada com as colunas alinhadas por espaços, em vez de tabulações, também é lida,
       desde que a primeira linha seja o cabeçalho e nomeie pelo menos duas colunas, uma delas o
       nome.
+    - A **Porta SSH** e o **Login SSH** são achados por esses títulos, em inglês ou em português, ou
+      por **Entrar como**; nunca só por porta, usuário ou login, que uma lista de PCs pode usar para
+      a porta de um switch ou a pessoa na mesa. Uma linha com uma porta ou um nome que o ssh.exe não
+      aceita diz o motivo, como em "Não é uma porta SSH: digite um número de 1 a 65535", e fica de
+      fora.
     - Uma lista com mais do que um nome e um endereço, e sem linha de cabeçalho, não pode ser lida:
       o CapyPanel não adivinha qual coluna é qual.
 
 ??? note "Corrigir linhas na prévia"
 
-    A prévia mostra **Nome**, **Endereço**, um **Aviso**, **Grupo**, **Tags** e **Notas** para cada
-    linha. Clique com o botão direito numa linha:
+    A prévia mostra **Nome**, **Endereço**, um **Aviso**, **Grupo**, **Porta SSH**, **Login SSH**,
+    **Tags** e **Notas** para cada linha. Clique com o botão direito numa linha:
 
     - **Editar célula** (F2) altera o valor sob o ponteiro; dois cliques fazem o mesmo.
     - **Colocar no grupo ▸** coloca as linhas selecionadas num grupo, escolhido na árvore.
@@ -170,16 +176,18 @@ só lê a lista, então funciona também numa somente leitura.
 
 ??? note "Mais sobre o Relatório"
 
-    - As **Colunas** vêm em três quadros: **Host** (Nome, Endereço, Grupo), **Tags e notas** e
-      **Última verificação** (Status, Usuários logados). Cada um tem **Todas · Nenhuma**. As
-      marcações são guardadas assim que você as muda. Guarde o seu próprio conjunto com **Salvar
-      como predefinição…**; marcações que não correspondem a nenhuma predefinição aparecem como
-      **Personalizado**.
-    - A **Última verificação** vem da última atualização, com a hora dela ao lado do nome do
-      quadro. Um host que ninguém verificou mostra **Não verificado** na prévia, e uma célula vazia
-      no arquivo. Um botão embaixo das marcas verifica esses hosts de novo agora, com o nome de
-      quantos são (**Atualizar 3 hosts**, ou **Atualizar host** para um só), com **Parar** enquanto
-      corre. Com **Usuários logados** marcado, um aviso diz "Nomes de pessoas: guarde em sigilo."
+    - As **Colunas** vêm em três quadros: **Host** (Nome, Endereço, Grupo, Porta SSH, Login SSH),
+      **Tags e notas** e **Última verificação** (Status, Usuários logados). Cada um tem **Todas ·
+      Nenhuma**. As marcações são guardadas assim que você as muda. Guarde o seu próprio conjunto
+      com **Salvar como predefinição…**; marcações que não correspondem a nenhuma predefinição
+      aparecem como **Personalizado**.
+    - A **Última verificação** vem da última atualização, com a hora dela ao lado do nome do quadro.
+      Um host que ninguém verificou mostra **Não verificado** na prévia, e uma célula vazia no
+      arquivo. Um botão embaixo das marcas verifica esses hosts de novo agora, com o nome de quantos
+      são (**Atualizar 3 hosts**, ou **Atualizar host** para um só), com **Parar** enquanto corre.
+      Quando ele está cinza, uma linha embaixo diz o motivo, como em "Marque Status ou Usuários
+      logados para atualizá-los". Com **Usuários logados** marcado, um aviso diz "Nomes de pessoas:
+      guarde em sigilo."
     - A **Prévia** mostra as linhas na ordem da própria lista; um clique no título de uma coluna as
       ordena ali enquanto a janela está aberta. O que sai segue a Prévia.
     - O **Copiar** põe as linhas na área de transferência com tabulações, e a janela fica aberta. O

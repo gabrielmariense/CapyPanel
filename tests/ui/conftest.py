@@ -29,14 +29,9 @@ def qapp() -> Iterator[QApplication]:
 
 @pytest.fixture(autouse=True)
 def free_windows(qapp: QApplication) -> Iterator[None]:
-    """Else every later theme switch restyles them (minutes over the suite). Never after a
-    switch: deleting a restyled window can crash Qt."""
-    from capypanel.ui.themes import engine as themes
-
-    before, generation = set(qapp.topLevelWidgets()), themes.generation()
+    """Else every later theme switch restyles them (minutes over the suite)."""
+    before = set(qapp.topLevelWidgets())
     yield
-    if themes.generation() != generation:
-        return
     popup = Qt.WindowType.Popup
     for widget in qapp.topLevelWidgets():
         if widget not in before and widget.windowFlags() & popup != popup:
@@ -95,19 +90,23 @@ def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
 def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
     """ssh.exe never starts and no real port is knocked on: a tab runs cmd.exe, off the network."""
     from capypanel.core.remote.status import PortState
-    from capypanel.core.ssh import launch
+    from capypanel.core.ssh import known, launch, terminals
     from capypanel.ui.ssh_tool import refresh
 
     started: list[tuple[str, object]] = []
     monkeypatch.setattr(
-        launch, "connect", lambda address, info, name="": started.append((address, info))
+        launch,
+        "connect",
+        lambda address, info, name="", terminal=None: started.append((address, info)),
     )
+    monkeypatch.setattr(terminals, "ready_here", lambda env=None: [])
 
     def in_tab(address: str, info: object) -> list[str]:
         started.append((address, info))
         return [CMD, "/d"]
 
     monkeypatch.setattr(launch, "tab_command", in_tab)
+    monkeypatch.setattr(known, "asks_to_trust", lambda _address, _info: False)
     monkeypatch.setattr(refresh, "port_state", lambda _host, _port: (PortState.NO_ANSWER, None))
     return started
 

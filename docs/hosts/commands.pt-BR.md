@@ -22,12 +22,15 @@ vêm depois, quatro por fileira.
 ??? note "Todos os lugares onde um comando começa"
 
     - **Botão direito num host:** **Conectar** em negrito, **Atualizar host**, os seus quatro
-      primeiros comandos rápidos, **Todos os comandos…** e **Abrir na Limpeza de perfis**, e depois
-      **Copiar ▸**, **Editar…**, **Mover para ▸**, **Tags ▸** e **Remover**. Com vários hosts
-      selecionados, o menu traz o que funciona em todos eles: **Conectar**, **Atualizar {n}
-      hosts**, **Abrir {n} hosts na Limpeza de perfis**, **Comandos como ▸**, **Copiar ▸**,
-      **Mover para ▸**, **Tags ▸** e **Remover**. O **Abrir na Limpeza de perfis** escaneia os
-      hosts na [Limpeza de perfis](../profiles/user-profiles.pt-BR.md#escanear-os-perfis-de-um-pc).
+      primeiros comandos rápidos, **Todos os comandos…**, **Abrir na Limpeza de perfis** e **Abrir
+      no SSH**, e depois **Copiar ▸**, **Editar…**, **Mover para ▸**, **Tags ▸** e **Remover**. Com
+      vários hosts selecionados, o menu traz o que funciona em todos eles: **Conectar**, **Atualizar
+      {n} hosts**, **Abrir {n} hosts na Limpeza de perfis**, **Abrir {n} hosts no SSH**, **Comandos
+      como ▸**, **Copiar ▸**, **Mover para ▸**, **Tags ▸** e **Remover**. O **Abrir na Limpeza de
+      perfis** escaneia os hosts na [Limpeza de
+      perfis](../profiles/user-profiles.pt-BR.md#escanear-os-perfis-de-um-pc), e o **Abrir no SSH**
+      abre cada um numa aba de conexão da [ferramenta SSH](../ssh/ssh.pt-BR.md#conectar), com a
+      porta e o Entrar como dele, até dez de uma vez.
     - **A barra de ferramentas:** o **Comandos** abre a janela Comandos para o host selecionado. A
       seta dele lista todos os comandos por grupo (**Verificar**, **Pastas**, **Ferramentas
       administrativas**, **Usuários**, **Impressoras** e **Energia**) e termina com **Todos os
