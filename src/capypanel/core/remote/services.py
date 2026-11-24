@@ -15,7 +15,7 @@ STATES = {
     5: "continuing", 6: "pausing", 7: "paused",
 }  # fmt: skip
 _NOT_ACTIVE = 1062  # ERROR_SERVICE_NOT_ACTIVE: stopping one that's already stopped
-_BUSY = 1061  # ERROR_SERVICE_CANNOT_ACCEPT_CTRL: asked to stop while it's still stopping
+_BUSY = 1061  # ERROR_SERVICE_CANNOT_ACCEPT_CTRL: a stop or a start is still under way
 
 
 class NotStopped(TimeoutError):
@@ -87,7 +87,7 @@ def _stop(service: int, sleep: Callable[[float], None]) -> None:
             raise error
         if not _advapi32.QueryServiceStatus(service, ctypes.byref(status)):
             raise last_error()
-        if status.state != _STOPPING:
+        if status.state not in (_STOPPED, _STOPPING):
             raise error
     waited = 0.0
     while status.state != _STOPPED:
