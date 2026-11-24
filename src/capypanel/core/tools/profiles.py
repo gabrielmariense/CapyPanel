@@ -31,12 +31,6 @@ class ConnectionProfile:
     extra: Mapping[str, Any] = field(default_factory=dict)
 
 
-def login_label(login: str, tool: str = "") -> str:
-    if login == "none":
-        return _("asked by {tool} itself").format(tool=tool) if tool else _("asked by the tool")
-    return {"account": _("user and password"), "password": _("password only")}.get(login, login)
-
-
 def logins_of(tool: ToolDefinition) -> tuple[str, ...]:
     if not tool.wants_password:
         return ("none",)

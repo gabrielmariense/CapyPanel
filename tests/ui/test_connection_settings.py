@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QMenu,
+    QMessageBox,
     QWidget,
 )
 
@@ -19,6 +20,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ConnectionProfile
+from capypanel.ui import dialogs
 from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ProfileDialog, ProfilesSection, ToolsSection
@@ -79,10 +81,14 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
     assert dialog.tool.currentData() == "ultravnc"
     assert list(dialog.option_boxes) == ["securevnc"]
-    assert [dialog.login.itemData(i) for i in range(dialog.login.count())] == [
-        "account", "password", "none",
+    assert dialog.viewer_asks.isChecked() and dialog.capypanel_asks.isEnabled()
+    assert dialog.viewer_asks.text() == "UltraVNC Viewer's window"
+    assert [dialog.login.itemText(i) for i in range(dialog.login.count())] == [
+        "Sends user and password", "Sends the password only",
     ]  # fmt: skip
-    assert dialog.login.itemText(2) == "Asked by UltraVNC Viewer itself"
+    assert not dialog.login.isEnabled()
+    assert dialog.login.toolTip() == "UltraVNC Viewer asks for them in its own window."
+    assert dialog.profile("new").login == "none"
     assert dialog.port.text() == "Default (5900)"
     realvnc = dialog.tool.findData("realvnc")
     assert dialog.tool.itemText(realvnc) == "RealVNC Viewer (not installed on this PC)"
@@ -118,8 +124,9 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
         assert label is not None and options_label is not None
         assert label.geometry().center().y() == dialog.settings_state.geometry().center().y()
         controls: list[QWidget] = [
-            dialog.name, dialog.tool, dialog.login, dialog.port, dialog.settings_state,
-            dialog.choose_settings, dialog.default_settings, dialog.options_area,
+            dialog.name, dialog.tool, dialog.viewer_asks, dialog.capypanel_asks, dialog.login,
+            dialog.port, dialog.settings_state, dialog.choose_settings, dialog.default_settings,
+            dialog.options_area,
         ]  # fmt: skip
 
         def places() -> list[QRect]:
@@ -180,10 +187,80 @@ def test_a_row_the_tool_doesnt_use_is_greyed_with_its_reason(catalogs: Catalogs)
     assert dialog.no_options.toolTip() == "RealVNC Viewer has no options to set here."
     dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
     assert not dialog.login.isEnabled() and len(dialog.option_boxes) == 3
-    assert dialog.login.toolTip() == (
-        "CapyPanel asks for nothing: Remote Desktop Connection asks for the user and password "
-        "itself when it connects."
+    assert not dialog.capypanel_asks.isEnabled() and dialog.viewer_asks.isChecked()
+    assert dialog.capypanel_asks.toolTip() == (
+        "Remote Desktop Connection always asks in its own window."
     )
+    assert dialog.login.toolTip() == "Remote Desktop Connection asks for them in its own window."
+
+
+def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[QMessageBox] = []
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: shown.append(box) or 0)
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
+    dialog.capypanel_asks.click()
+    [box] = shown
+    assert box.windowTitle() == "The password would go on UltraVNC Viewer's command line"
+    assert box.text().startswith("A command line can be recorded by security tools")
+    keep = box.defaultButton()
+    assert keep is not None and keep.text() == "Keep UltraVNC Viewer's window"
+    assert box.escapeButton() is keep
+    assert dialog.viewer_asks.isChecked()
+    dialog.capypanel_asks.click()
+    assert len(shown) == 1 and dialog.capypanel_asks.isChecked() and dialog.login.isEnabled()
+    assert dialog.profile("new").login == "account"
+
+
+def test_use_capypanel_in_the_warning_keeps_capypanel(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def use(box: QMessageBox) -> int:
+        [button] = [b for b in box.buttons() if b.text() == "Use CapyPanel"]
+        button.click()
+        return 0
+
+    monkeypatch.setattr(dialogs, "run_modal", use)
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
+    dialog.capypanel_asks.click()
+    dialog.login.setCurrentIndex(dialog.login.findData("password"))
+    assert dialog.profile("new").login == "password"
+
+
+def test_an_edited_profile_and_a_password_kept_off_the_command_line_never_warn(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def never(_box: QMessageBox) -> int:
+        raise AssertionError("no warning here")
+
+    monkeypatch.setattr(dialogs, "run_modal", never)
+    tools = [e.item for e in catalogs.tools.all()]
+    vnc = ConnectionProfile("vnc", "ultravnc", login="none", name="VNC")
+    editing = ProfileDialog(None, "Edit", tools, {"ultravnc"}, vnc)
+    assert editing.viewer_asks.isChecked()
+    editing.capypanel_asks.click()
+    assert editing.profile("vnc").login == "account"
+    realvnc = ProfileDialog(None, "New", tools, {"ultravnc"})
+    realvnc.tool.setCurrentIndex(realvnc.tool.findData("realvnc"))
+    realvnc.capypanel_asks.click()
+    assert realvnc.profile("r").login == "account" and realvnc.login.isEnabled()
+
+
+def test_a_duplicate_is_a_new_profile_and_warns_too(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[QMessageBox] = []
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: shown.append(box) or 0)
+    page = ProfilesSection(catalogs, None)
+    _answer(monkeypatch, lambda dialog: dialog.capypanel_asks.click())
+    _select(page, "ultravnc")
+    page.duplicate()
+    assert len(shown) == 1
+    [copy] = [p for p in catalogs.profiles.all() if p.name == "UltraVNC (copy)"]
+    assert copy.login == "none"
 
 
 def test_starter_profiles_can_be_duplicated_edited_and_deleted(
@@ -351,13 +428,16 @@ def test_files_that_arent_used_are_named_with_the_reason(
 def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
     page = ProfilesSection(catalogs, None)
     rows = range(page.list.topLevelItemCount())
-    [rdp] = [i for r in rows if (i := page.list.topLevelItem(r)) and i.text(0) == "Remote Desktop"]
-    assert rdp.text(2) == "asked by Remote Desktop Connection itself"
-    assert "asks for the user and password itself" in rdp.toolTip(2)
+    header = page.list.headerItem()
+    assert header is not None and header.text(2) == "Password typed in"
+    shown = {i.text(0): i.text(2) for r in rows if (i := page.list.topLevelItem(r))}
+    assert shown["Remote Desktop"] == "Remote Desktop Connection's window"
+    assert shown["UltraVNC"] == "UltraVNC Viewer's window"
     tools = [e.item for e in catalogs.tools.all()]
-    dialog = ProfileDialog(None, "New", tools, {"rdp"})
-    dialog.tool.setCurrentIndex(dialog.tool.findData("rdp"))
-    assert dialog.login.currentText() == "Asked by Remote Desktop Connection itself"
+    dialog = ProfileDialog(None, "New", tools, {"mstsc"})
+    dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
+    assert dialog.viewer_asks.text() == "Remote Desktop Connection's window"
+    assert dialog.profile("rdp").login == "none"
 
 
 def test_a_new_profile_is_written_at_once(
@@ -369,6 +449,7 @@ def test_a_new_profile_is_written_at_once(
 
     def fill(dialog: ProfileDialog) -> None:
         dialog.name.setText("Clinics (SecureVNC)")
+        dialog.capypanel_asks.setChecked(True)
         dialog.login.setCurrentIndex(dialog.login.findData("account"))
         dialog.option_boxes["securevnc"].setChecked(True)
 

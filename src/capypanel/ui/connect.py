@@ -240,9 +240,9 @@ class Connector:
             text = _(
                 "With this profile, {tool} asks for the user and password in its own window. "
                 "CapyPanel keeps them off its command line, where security tools and Windows' own "
-                "auditing can copy them into their logs. To have CapyPanel pass them anyway, edit "
-                "the profile in Settings › Hosts › Connecting › Connection profiles and pick "
-                "“User and password” under Credentials."
+                "auditing can copy them into their logs. To have CapyPanel ask for them anyway, "
+                "edit the profile in Settings › Hosts › Connecting › Connection profiles and pick "
+                "CapyPanel under “Password typed in”."
             )
             help_links.information(
                 owner,

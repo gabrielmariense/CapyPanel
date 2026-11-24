@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-24 09:53-0300\n"
+"POT-Creation-Date: 2026-11-24 10:36-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,9 +111,6 @@ msgid "&Copy row"
 msgstr ""
 
 msgid "&Create"
-msgstr ""
-
-msgid "&Credentials:"
 msgstr ""
 
 msgid "&Customize the details panel…"
@@ -555,6 +552,11 @@ msgstr ""
 msgid "A click on a line shows the profile in the table."
 msgstr ""
 
+msgid ""
+"A command line can be recorded by security tools and Windows' own "
+"auditing, and read by this PC's administrators."
+msgstr ""
+
 msgid "A connection profile must be a JSON object."
 msgstr ""
 
@@ -967,12 +969,6 @@ msgstr ""
 msgid "CapyPanel asked for it at {when}."
 msgstr ""
 
-#, python-brace-format
-msgid ""
-"CapyPanel asks for nothing: {tool} asks for the user and password itself "
-"when it connects."
-msgstr ""
-
 msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
@@ -1028,6 +1024,12 @@ msgid "CapyPanel — dark"
 msgstr ""
 
 msgid "CapyPanel — light"
+msgstr ""
+
+msgid "CapyPanel: password only"
+msgstr ""
+
+msgid "CapyPanel: user and password"
 msgstr ""
 
 msgid "Change path…"
@@ -2334,6 +2336,10 @@ msgstr ""
 msgid "Keep running in the tray"
 msgstr ""
 
+#, python-brace-format
+msgid "Keep {tool}'s window"
+msgstr ""
+
 msgid "Kept"
 msgstr ""
 
@@ -3176,6 +3182,12 @@ msgstr ""
 msgid "Password for {profile}"
 msgstr ""
 
+msgid "Password typed &in:"
+msgstr ""
+
+msgid "Password typed in"
+msgstr ""
+
 msgid "Passwords"
 msgstr ""
 
@@ -3928,6 +3940,12 @@ msgstr ""
 msgid "Send a message…"
 msgstr ""
 
+msgid "Sends the password only"
+msgstr ""
+
+msgid "Sends user and password"
+msgstr ""
+
 msgid "Separate windows"
 msgstr ""
 
@@ -4041,9 +4059,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Signs in as {user}"
-msgstr ""
-
-msgid "Signs in with"
 msgstr ""
 
 msgid "Size"
@@ -4546,6 +4561,10 @@ msgid "The new version didn't pass its self-test"
 msgstr ""
 
 msgid "The parent group doesn't exist."
+msgstr ""
+
+#, python-brace-format
+msgid "The password would go on {tool}'s command line"
 msgstr ""
 
 #, python-brace-format
@@ -5054,6 +5073,9 @@ msgstr ""
 msgid "Use &defaults"
 msgstr ""
 
+msgid "Use CapyPanel"
+msgstr ""
+
 msgid "Use account"
 msgstr ""
 
@@ -5304,9 +5326,9 @@ msgid ""
 "With this profile, {tool} asks for the user and password in its own "
 "window. CapyPanel keeps them off its command line, where security tools "
 "and Windows' own auditing can copy them into their logs. To have "
-"CapyPanel pass them anyway, edit the profile in Settings › Hosts › "
-"Connecting › Connection profiles and pick “User and password” under "
-"Credentials."
+"CapyPanel ask for them anyway, edit the profile in Settings › Hosts › "
+"Connecting › Connection profiles and pick CapyPanel under “Password typed"
+" in”."
 msgstr ""
 
 msgid "Yellow"
@@ -5396,13 +5418,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "as {account}"
-msgstr ""
-
-msgid "asked by the tool"
-msgstr ""
-
-#, python-brace-format
-msgid "asked by {tool} itself"
 msgstr ""
 
 msgid "asset tag"
@@ -5554,9 +5569,6 @@ msgstr ""
 msgid "open {what}"
 msgstr ""
 
-msgid "password only"
-msgstr ""
-
 msgid "port"
 msgstr ""
 
@@ -5681,9 +5693,6 @@ msgid "tried at {time}"
 msgstr ""
 
 msgid "user"
-msgstr ""
-
-msgid "user and password"
 msgstr ""
 
 msgid "v2c: a community string. v3: a user, with a password and encryption."
@@ -6384,7 +6393,15 @@ msgid "{tool} (not installed on this PC)"
 msgstr ""
 
 #, python-brace-format
+msgid "{tool} always asks in its own window."
+msgstr ""
+
+#, python-brace-format
 msgid "{tool} asks for the password"
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} asks for them in its own window."
 msgstr ""
 
 #, python-brace-format
@@ -6424,6 +6441,10 @@ msgid ""
 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it "
 "is. The path is saved for everyone on this PC; you can also change it "
 "later in Settings › Hosts › Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "{tool}'s window"
 msgstr ""
 
 #, python-brace-format
