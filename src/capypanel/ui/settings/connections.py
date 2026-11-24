@@ -229,6 +229,8 @@ class ProfileDialog(QDialog):
         if tool.id != self._first_tool:
             self._first_tool, self._has_settings, self.new_settings = tool.id, False, None
         self._show_settings(None)
+        if profile is None and self.capypanel_asks.isChecked():
+            self._capypanel_picked(True)
 
     def _show_login(self) -> None:
         tool = self._current_tool()

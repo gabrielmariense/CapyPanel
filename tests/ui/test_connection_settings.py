@@ -214,6 +214,20 @@ def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
     assert dialog.profile("new").login == "account"
 
 
+def test_a_new_profile_moved_to_ultravnc_with_capypanel_picked_warns_then(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[QMessageBox] = []
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: shown.append(box) or 0)
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
+    dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
+    dialog.capypanel_asks.click()
+    assert not shown and dialog.capypanel_asks.isChecked()
+    dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
+    assert len(shown) == 1 and dialog.viewer_asks.isChecked()
+
+
 def test_use_capypanel_in_the_warning_keeps_capypanel(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
