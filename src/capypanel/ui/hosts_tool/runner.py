@@ -544,6 +544,14 @@ class Runner(QObject):
                 then()
 
         def failed(error: BaseException) -> None:
+            if isinstance(error, services.NotStopped):
+                text = _(
+                    "The Print Spooler on {host} hasn't stopped after {seconds} seconds, so it "
+                    "wasn't started again. Run Restart Print Spooler again in a minute; if it "
+                    "still hasn't stopped, restart the PC."
+                ).format(host=escape(target.name), seconds=f"{services.STOP_TIMEOUT:.0f}")
+                report("spooler", Outcome(text, error))
+                return
             again = lambda: self.restart_spooler(target, report, then)  # noqa: E731
             action = _("restart the Print Spooler")
             self._fail(report, "spooler", action, target, error, again)

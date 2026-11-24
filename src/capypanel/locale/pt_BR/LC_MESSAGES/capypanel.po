@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 23:26-0300\n"
+"POT-Creation-Date: 2026-11-24 09:36-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -4103,6 +4103,10 @@ msgstr "Os serviços do Windows no PC."
 
 msgid "The PC's event logs."
 msgstr "Os logs de eventos do PC."
+
+#, python-brace-format
+msgid "The Print Spooler on {host} hasn't stopped after {seconds} seconds, so it wasn't started again. Run Restart Print Spooler again in a minute; if it still hasn't stopped, restart the PC."
+msgstr "O Spooler de Impressão em {host} não parou em {seconds} segundos, então não foi iniciado de novo. Use Reiniciar o Spooler de Impressão outra vez daqui a um minuto; se ainda não tiver parado, reinicie o PC."
 
 msgid "The View menu, on the menu bar, shows and hides this screen's panels, like Tags and Details."
 msgstr "O menu Exibir, na barra de menus, mostra e oculta os painéis desta tela, como Tags e Detalhes."
