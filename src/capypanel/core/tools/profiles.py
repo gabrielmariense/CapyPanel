@@ -40,7 +40,7 @@ def login_label(login: str, tool: str = "") -> str:
 def logins_of(tool: ToolDefinition) -> tuple[str, ...]:
     if not tool.wants_password:
         return ("none",)
-    return ("account", "password") if tool.wants_user else ("password",)
+    return ("account", "password", "none") if tool.wants_user else ("password", "none")
 
 
 def check_fits(profile: ConnectionProfile, tool: ToolDefinition) -> None:

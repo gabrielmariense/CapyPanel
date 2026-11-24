@@ -40,6 +40,28 @@ def test_the_ultravnc_starter_uses_the_securevnc_plugin(tmp_path: Path) -> None:
     assert ultravnc is not None and ultravnc.options == ("securevnc",)
 
 
+def test_the_ultravnc_starter_leaves_the_password_to_the_viewer(tmp_path: Path) -> None:
+    ProfileStore(tmp_path / "profiles").place_starters()
+    ultravnc = ProfileStore(tmp_path / "profiles").find("ultravnc")
+    assert ultravnc is not None and ultravnc.login == "none"
+
+
+def test_an_ultravnc_profile_already_on_a_pc_keeps_passing_the_password(tmp_path: Path) -> None:
+    folder = tmp_path / "profiles"
+    folder.mkdir()
+    older = {"schema": 1, "id": "ultravnc", "name": "UltraVNC", "tool": "ultravnc",
+             "login": "account", "options": ["securevnc"]}  # fmt: skip
+    (folder / "ultravnc.json").write_text(json.dumps(older), encoding="utf-8")
+    added = {"schema": 1, "starters_added": ["realvnc", "remote-desktop", "ultravnc"]}
+    (folder / "_profiles.json").write_text(json.dumps(added), encoding="utf-8")
+    store = ProfileStore(folder)
+    store.place_starters()
+    store.restore_starters()
+    kept = ProfileStore(folder).find("ultravnc")
+    assert kept is not None and kept.login == "account"
+    assert json.loads((folder / "ultravnc.json").read_text(encoding="utf-8")) == older
+
+
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
     for starter in ("realvnc", "remote-desktop", "ultravnc"):

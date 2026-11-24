@@ -544,11 +544,12 @@ class Runner(QObject):
                 then()
 
         def failed(error: BaseException) -> None:
-            if isinstance(error, services.NotStopped):
+            if isinstance(error, services.NotStopped) and error.state == "stopping":
                 text = _(
-                    "The Print Spooler on {host} hasn't stopped after {seconds} seconds, so it "
-                    "wasn't started again. Run Restart Print Spooler again in a minute; if it "
-                    "still hasn't stopped, restart the PC."
+                    "The Print Spooler on {host} is still stopping after {seconds} seconds, so "
+                    "CapyPanel didn't start it again. Until it runs, {host} can't print. In a "
+                    "minute, run Restart Print Spooler again: it waits for the stop, then starts "
+                    "it. If it's still stopping, restart the PC."
                 ).format(host=escape(target.name), seconds=f"{services.STOP_TIMEOUT:.0f}")
                 report("spooler", Outcome(text, error))
                 return

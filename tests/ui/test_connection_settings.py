@@ -80,8 +80,9 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
     assert dialog.tool.currentData() == "ultravnc"
     assert list(dialog.option_boxes) == ["securevnc"]
     assert [dialog.login.itemData(i) for i in range(dialog.login.count())] == [
-        "account", "password",
+        "account", "password", "none",
     ]  # fmt: skip
+    assert dialog.login.itemText(2) == "Asked by UltraVNC Viewer itself"
     assert dialog.port.text() == "Default (5900)"
     realvnc = dialog.tool.findData("realvnc")
     assert dialog.tool.itemText(realvnc) == "RealVNC Viewer (not installed on this PC)"

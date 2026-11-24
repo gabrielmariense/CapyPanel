@@ -78,6 +78,7 @@ COMMAND_SHORTCUTS = {
 }
 RECENT_PATHS = 10
 QUICK_KEY = "quick_commands"
+NOTES_KEY = "notes_seen"
 FACTS_AFTER = 1_500  # ms
 WATCH_EVERY = 15_000  # ms
 WATCH_FOR = timedelta(minutes=20)
@@ -115,6 +116,7 @@ class HostsTool(ListWorkspace):
         credentials = SessionCredentials()
         self.connector = Connector(self, Catalogs.for_paths(shell.paths), credentials)
         self.connector.open_settings = lambda: self._shell.open_settings("connections")
+        self.connector.first_time = self._first_time
         self.details.profile_menu.aboutToShow.connect(
             lambda: self._fill_details_profile_menu(self.details.profile_menu)
         )
@@ -244,6 +246,15 @@ class HostsTool(ListWorkspace):
             and not command.risky
         ]
         return [*super().key_commands(), *own]
+
+    def _first_time(self, note: str) -> bool:
+        kept = self.prefs.get(NOTES_KEY)
+        seen = [n for n in kept if isinstance(n, str)] if isinstance(kept, list) else []
+        if note in seen:
+            return False
+        self.prefs[NOTES_KEY] = [*seen, note]
+        self._shell.save_prefs()
+        return True
 
     def save_state(self) -> None:
         super().save_state()

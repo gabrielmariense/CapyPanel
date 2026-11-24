@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-24 09:36-0300\n"
+"POT-Creation-Date: 2026-11-24 09:44-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2201,8 +2201,8 @@ msgstr "É do próprio Windows. Nunca é excluído aqui."
 msgid "It's outside the Users folder. CapyPanel only deletes profiles inside {folder}."
 msgstr "Fica fora da pasta Users. O CapyPanel só exclui perfis dentro de {folder}."
 
-msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
-msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
+msgid "It's passed to the viewer on its command line, which administrators of this PC can see and security tools can record."
+msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver e ferramentas de segurança podem registrar."
 
 msgid "Its address or name, as in the host list"
 msgstr "O endereço ou nome, como na lista de hosts"
@@ -4105,8 +4105,8 @@ msgid "The PC's event logs."
 msgstr "Os logs de eventos do PC."
 
 #, python-brace-format
-msgid "The Print Spooler on {host} hasn't stopped after {seconds} seconds, so it wasn't started again. Run Restart Print Spooler again in a minute; if it still hasn't stopped, restart the PC."
-msgstr "O Spooler de Impressão em {host} não parou em {seconds} segundos, então não foi iniciado de novo. Use Reiniciar o Spooler de Impressão outra vez daqui a um minuto; se ainda não tiver parado, reinicie o PC."
+msgid "The Print Spooler on {host} is still stopping after {seconds} seconds, so CapyPanel didn't start it again. Until it runs, {host} can't print. In a minute, run Restart Print Spooler again: it waits for the stop, then starts it. If it's still stopping, restart the PC."
+msgstr "O Spooler de Impressão em {host} ainda está parando depois de {seconds} segundos, então o CapyPanel não o iniciou de novo. Até ele voltar, {host} não imprime. Daqui a um minuto, use Reiniciar o Spooler de Impressão outra vez: o comando espera o spooler parar e depois o inicia. Se ainda estiver parando, reinicie o PC."
 
 msgid "The View menu, on the menu bar, shows and hides this screen's panels, like Tags and Details."
 msgstr "O menu Exibir, na barra de menus, mostra e oculta os painéis desta tela, como Tags e Detalhes."
@@ -4972,6 +4972,10 @@ msgstr "Lista de impressoras do Windows"
 
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
+
+#, python-brace-format
+msgid "With this profile, {tool} asks for the user and password in its own window. CapyPanel keeps them off its command line, where security tools and Windows' own auditing can copy them into their logs. To have CapyPanel pass them anyway, edit the profile in Settings › Hosts › Connecting › Connection profiles and pick “User and password” under Credentials."
+msgstr "Com este perfil, o próprio {tool} pede o usuário e a senha numa janela dele. O CapyPanel não os coloca na linha de comando, onde ferramentas de segurança e a auditoria do próprio Windows podem copiá-los para os registros delas. Para o CapyPanel passá-los mesmo assim, edite o perfil em Configurações › Hosts › Conexão › Perfis de conexão e escolha “Usuário e senha” em Credenciais."
 
 msgid "Yellow"
 msgstr "Amarelo"
@@ -6016,6 +6020,10 @@ msgstr "{title} · {when}"
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"
 msgstr "{tool} (não instalado neste PC)"
+
+#, python-brace-format
+msgid "{tool} asks for the password"
+msgstr "O {tool} pede a senha"
 
 #, python-brace-format
 msgid "{tool} can't be given a password."

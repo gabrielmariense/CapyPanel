@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-24 09:36-0300\n"
+"POT-Creation-Date: 2026-11-24 09:44-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2313,7 +2313,7 @@ msgstr ""
 
 msgid ""
 "It's passed to the viewer on its command line, which administrators of "
-"this PC can see."
+"this PC can see and security tools can record."
 msgstr ""
 
 msgid "Its address or name, as in the host list"
@@ -4315,9 +4315,10 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"The Print Spooler on {host} hasn't stopped after {seconds} seconds, so it"
-" wasn't started again. Run Restart Print Spooler again in a minute; if it"
-" still hasn't stopped, restart the PC."
+"The Print Spooler on {host} is still stopping after {seconds} seconds, so"
+" CapyPanel didn't start it again. Until it runs, {host} can't print. In a"
+" minute, run Restart Print Spooler again: it waits for the stop, then "
+"starts it. If it's still stopping, restart the PC."
 msgstr ""
 
 msgid ""
@@ -5298,6 +5299,16 @@ msgid "Windows' printer list"
 msgstr ""
 
 msgid "With No group, the groups inside it go directly under Groups."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"With this profile, {tool} asks for the user and password in its own "
+"window. CapyPanel keeps them off its command line, where security tools "
+"and Windows' own auditing can copy them into their logs. To have "
+"CapyPanel pass them anyway, edit the profile in Settings › Hosts › "
+"Connecting › Connection profiles and pick “User and password” under "
+"Credentials."
 msgstr ""
 
 msgid "Yellow"
@@ -6372,6 +6383,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} asks for the password"
 msgstr ""
 
 #, python-brace-format

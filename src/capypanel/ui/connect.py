@@ -35,6 +35,7 @@ from capypanel.ui.notes import hint
 log = logging.getLogger(__name__)
 MANY_CONNECTIONS = 5
 MAX_TEXT = 256
+VIEWER_ASKS = "viewer-asks"
 DEFAULT_PORT = 5900
 
 
@@ -84,7 +85,7 @@ class CredentialDialog(QDialog):
         used = _("Used only for hosts with this connection profile.")
         how = (
             _("It's passed to the viewer on its command line, which administrators of this PC "
-              "can see.")
+              "can see and security tools can record.")
             if on_command_line
             else _("It's handed to the viewer privately, never on its command line.")
         )  # fmt: skip
@@ -132,6 +133,7 @@ class Connector:
         self.catalogs = catalogs
         self.credentials = credentials
         self.open_settings: Callable[[], None] | None = None
+        self.first_time: Callable[[str], bool] = lambda _note: False
         # Each server's login types, asked once per run: UltraVNC up to 1.6.1 counts every
         # asking as a failed login, and turns this PC away after six.
         self._offered: dict[tuple[str, int], tuple[int, ...]] = {}
@@ -234,6 +236,20 @@ class Connector:
                         owner,
                         place="connect-password-not-saved",
                     )  # fmt: skip
+        elif tool.credentials == "arguments" and self.first_time(VIEWER_ASKS):
+            text = _(
+                "With this profile, {tool} asks for the user and password in its own window. "
+                "CapyPanel keeps them off its command line, where security tools and Windows' own "
+                "auditing can copy them into their logs. To have CapyPanel pass them anyway, edit "
+                "the profile in Settings › Hosts › Connecting › Connection profiles and pick "
+                "“User and password” under Credentials."
+            )
+            help_links.information(
+                owner,
+                _("{tool} asks for the password").format(tool=tool.name),
+                text.format(tool=tool.name),
+                place="connecting-set-up-connection-profiles",
+            )
         settings = self.catalogs.profiles.settings_path(profile)
         started = 0
         for request in requests:

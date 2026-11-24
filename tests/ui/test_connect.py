@@ -449,6 +449,26 @@ def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
     assert len(account.password.text()) == 256 and len(account.user.text()) == 256
 
 
+def test_a_profile_whose_viewer_asks_passes_nothing_and_says_so_once(
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def must_not_ask(_dialog: CredentialDialog) -> int:
+        raise AssertionError("CapyPanel asks for nothing when the viewer asks")
+
+    monkeypatch.setattr(CredentialDialog, "exec", must_not_ask)
+    noted: list[str] = []
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: noted.append(box.text()) or 0)
+    connector = window.hosts.connector
+    asks = ConnectionProfile("asks", "ultravnc", login="none", name="Asks")
+    connector.catalogs.profiles.save(asks)
+    for _turn in range(2):
+        assert connector.connect([Request("PC-Z", Target("PC-Z"), "asks")]) == 1
+    assert [launch[3] for launch in launched] == [None, None]
+    assert len(noted) == 1
+    assert noted[0].startswith("With this profile, UltraVNC Viewer asks for the user and password")
+    assert window.hosts.prefs["notes_seen"] == ["viewer-asks"]
+
+
 def test_hosts_with_no_profile_anywhere_use_the_shared_default(
     window: CapyWindow, launched: list[Launch]
 ) -> None:

@@ -180,6 +180,10 @@ def add_link(box: QMessageBox, place: str) -> None:
     key(box, lambda: place)
 
 
+def information(parent: QWidget | None, title: str, text: str, *, place: str) -> None:
+    _show(QMessageBox.Icon.Information, parent, title, text, place)
+
+
 def warning(parent: QWidget | None, title: str, text: str, *, place: str) -> None:
     _show(QMessageBox.Icon.Warning, parent, title, text, place)
 
