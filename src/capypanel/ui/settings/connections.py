@@ -3,7 +3,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSpinBox,
     QStackedWidget,
+    QStyle,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -36,7 +37,7 @@ from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError, logins_of
 from capypanel.ui import dialogs, help_links
 from capypanel.ui.connect import ask_for_program
-from capypanel.ui.dialogs import ok_cancel, quiet_default
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
 from capypanel.ui.settings.pages import Page, Section, SettingRow, add_rows
@@ -70,6 +71,24 @@ class _WidestRadio(QRadioButton):
         widest = max((metrics.horizontalAdvance(text) for text in self._texts), default=0)
         extra = max(widest - metrics.horizontalAdvance(self.text()), 0)
         return QSize(hint.width() + extra, hint.height())
+
+
+class _UnderText(QWidget):
+    """Holds `field` with its left edge under `radio`'s text."""
+
+    def __init__(self, radio: QRadioButton, field: QWidget) -> None:
+        super().__init__()
+        self._radio = radio
+        self._row = QHBoxLayout(self)
+        self._row.setContentsMargins(0, 0, 0, 0)
+        self._row.addWidget(field)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        style, radio = self._radio.style(), self._radio
+        indicator = style.pixelMetric(QStyle.PixelMetric.PM_ExclusiveIndicatorWidth, None, radio)
+        spacing = style.pixelMetric(QStyle.PixelMetric.PM_RadioButtonLabelSpacing, None, radio)
+        self._row.setContentsMargins(indicator + spacing, 0, 0, 0)
+        super().showEvent(event)
 
 
 class _RowLabel(QLabel):
@@ -113,12 +132,6 @@ class ProfileDialog(QDialog):
         self.capypanel_asks = QRadioButton("CapyPanel")
         self.capypanel_asks.clicked.connect(self._capypanel_picked)
         self.viewer_asks.toggled.connect(lambda _on: self._show_login())
-        asks = QWidget()
-        asks_row = QHBoxLayout(asks)
-        asks_row.setContentsMargins(0, 0, 0, 0)
-        asks_row.addWidget(self.viewer_asks)
-        asks_row.addWidget(self.capypanel_asks)
-        asks_row.addStretch(1)
         self.asks_label = QLabel(_("Password typed &in:"))
         self.asks_label.setBuddy(self.viewer_asks)
         self.login = QComboBox()
@@ -169,8 +182,9 @@ class ProfileDialog(QDialog):
         form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
         form.addRow(_("&Tool:"), self.tool)
-        form.addRow(self.asks_label, asks)
-        form.addRow("", self.login)
+        form.addRow(self.asks_label, self.viewer_asks)
+        form.addRow("", self.capypanel_asks)
+        form.addRow("", _UnderText(self.capypanel_asks, self.login))
         form.addRow(_("P&ort:"), self.port)
         form.addRow(_("Settings:"), self.settings_state)
         form.addRow("", settings_buttons)
@@ -204,6 +218,8 @@ class ProfileDialog(QDialog):
         self.login.clear()
         for login in sends:
             self.login.addItem(sends_label(login), login)
+        if not sends:
+            self.login.addItem(_("Sends nothing"), "none")
         self.login.setCurrentIndex(max(self.login.findData(wanted), 0))
         self.viewer_asks.setText(_("{tool}'s window").format(tool=tool.name))
         self.capypanel_asks.setEnabled(bool(sends))
@@ -238,7 +254,9 @@ class ProfileDialog(QDialog):
         by_capypanel = self.capypanel_asks.isChecked()
         self.asks_label.setBuddy(self.capypanel_asks if by_capypanel else self.viewer_asks)
         self.login.setEnabled(by_capypanel and self.login.count() > 1)
-        if not by_capypanel:
+        if not self.capypanel_asks.isEnabled():
+            self.login.setToolTip(_("{tool} always asks in its own window.").format(tool=name))
+        elif not by_capypanel:
             self.login.setToolTip(_("{tool} asks for them in its own window.").format(tool=name))
         elif self.login.count() > 1:
             self.login.setToolTip("")
@@ -265,7 +283,6 @@ class ProfileDialog(QDialog):
             _("Keep {tool}'s window").format(tool=tool.name), QMessageBox.ButtonRole.RejectRole
         )
         box.setDefaultButton(keep)
-        quiet_default(keep)
         box.setEscapeButton(keep)
         help_links.add_link(box, "connecting-set-up-connection-profiles")
         dialogs.run_modal(box)

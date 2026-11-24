@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-24 10:36-0300\n"
+"POT-Creation-Date: 2026-11-24 12:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -3749,6 +3749,9 @@ msgstr "Enviar uma mensagem para {user}…"
 
 msgid "Send a message…"
 msgstr "Enviar uma mensagem…"
+
+msgid "Sends nothing"
+msgstr "Não envia nada"
 
 msgid "Sends the password only"
 msgstr "Envia só a senha"

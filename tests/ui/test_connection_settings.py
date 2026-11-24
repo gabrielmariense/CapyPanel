@@ -188,10 +188,9 @@ def test_a_row_the_tool_doesnt_use_is_greyed_with_its_reason(catalogs: Catalogs)
     dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
     assert not dialog.login.isEnabled() and len(dialog.option_boxes) == 3
     assert not dialog.capypanel_asks.isEnabled() and dialog.viewer_asks.isChecked()
-    assert dialog.capypanel_asks.toolTip() == (
-        "Remote Desktop Connection always asks in its own window."
-    )
-    assert dialog.login.toolTip() == "Remote Desktop Connection asks for them in its own window."
+    always = "Remote Desktop Connection always asks in its own window."
+    assert dialog.capypanel_asks.toolTip() == always and dialog.login.toolTip() == always
+    assert dialog.login.currentText() == "Sends nothing"
 
 
 def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
@@ -207,7 +206,7 @@ def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
     assert box.text().startswith("A command line can be recorded by security tools")
     keep = box.defaultButton()
     assert keep is not None and keep.text() == "Keep UltraVNC Viewer's window"
-    assert box.escapeButton() is keep
+    assert box.escapeButton() is keep and keep.objectName() != "quietDefault"
     assert dialog.viewer_asks.isChecked()
     dialog.capypanel_asks.click()
     assert len(shown) == 1 and dialog.capypanel_asks.isChecked() and dialog.login.isEnabled()
