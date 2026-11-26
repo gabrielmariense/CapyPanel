@@ -182,9 +182,9 @@ class ProfileDialog(QDialog):
             name_label.setMinimumWidth(max(widths))
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
-        layout.setSpacing(0)
         layout.addLayout(form)
-        layout.addSpacing(spacing.WINDOW)
+        # The form takes its row spacing from this layout, so the gap is topped up, not reset.
+        layout.addSpacing(spacing.WINDOW - max(layout.spacing(), 0))
         self.help_button = help_links.HelpButton("connecting-set-up-connection-profiles")
         layout.addLayout(help_links.row(self.help_button, self.buttons))
 

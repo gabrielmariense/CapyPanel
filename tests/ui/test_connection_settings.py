@@ -152,6 +152,8 @@ def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
             assert len(shown) == len(dialog.option_boxes) == options, tool
             assert dialog.height() == dialog.sizeHint().height(), tool
             assert _gap_above_buttons(dialog) == spacing.WINDOW, tool
+            name, tool_box, port = _places(dialog, top)
+            assert tool_box.top() > name.bottom() + 1 and port.top() > tool_box.bottom() + 1, tool
             tops.append(_places(dialog, top))
             heights[tool] = dialog.height()
         assert tops == [tops[0]] * len(tops)
