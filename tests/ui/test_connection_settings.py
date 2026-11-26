@@ -154,6 +154,20 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
         qapp.removeEventFilter(fitter)
 
 
+def test_the_list_under_capypanel_lines_up_with_the_other_fields(
+    qapp: QApplication, catalogs: Catalogs
+) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {tool.id for tool in tools})
+    try:
+        _shown(dialog)
+        name = QRect(dialog.name.mapTo(dialog, QPoint(0, 0)), dialog.name.size())
+        login = QRect(dialog.login.mapTo(dialog, QPoint(0, 0)), dialog.login.size())
+        assert (login.left(), login.right()) == (name.left(), name.right())
+    finally:
+        dialog.close()
+
+
 def test_the_options_label_stays_on_the_first_option_s_line_beside_a_tall_tick_box(
     qapp: QApplication, catalogs: Catalogs
 ) -> None:
@@ -243,7 +257,35 @@ def test_use_capypanel_in_the_warning_keeps_capypanel(
     assert dialog.profile("new").login == "password"
 
 
-def test_an_edited_profile_and_a_password_kept_off_the_command_line_never_warn(
+def test_an_existing_profile_switched_from_the_viewer_s_window_warns_once(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[QMessageBox] = []
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: shown.append(box) or 0)
+    tools = [e.item for e in catalogs.tools.all()]
+    vnc = ConnectionProfile("vnc", "ultravnc", login="none", name="VNC")
+    editing = ProfileDialog(None, "Edit", tools, {"ultravnc"}, vnc)
+    assert editing.viewer_asks.isChecked()
+    editing.capypanel_asks.click()
+    assert len(shown) == 1 and editing.viewer_asks.isChecked()
+    editing.capypanel_asks.click()
+    assert len(shown) == 1 and editing.profile("vnc").login == "account"
+
+
+def test_an_existing_realvnc_profile_moved_to_ultravnc_warns(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[QMessageBox] = []
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: shown.append(box) or 0)
+    tools = [e.item for e in catalogs.tools.all()]
+    real = ConnectionProfile("real", "realvnc", login="account", name="Real")
+    editing = ProfileDialog(None, "Edit", tools, {"ultravnc"}, real)
+    assert editing.capypanel_asks.isChecked() and not shown
+    editing.tool.setCurrentIndex(editing.tool.findData("ultravnc"))
+    assert len(shown) == 1 and editing.viewer_asks.isChecked()
+
+
+def test_a_profile_already_passing_the_password_and_one_kept_off_the_command_line_never_warn(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def never(_box: QMessageBox) -> int:
@@ -251,10 +293,12 @@ def test_an_edited_profile_and_a_password_kept_off_the_command_line_never_warn(
 
     monkeypatch.setattr(dialogs, "run_modal", never)
     tools = [e.item for e in catalogs.tools.all()]
-    vnc = ConnectionProfile("vnc", "ultravnc", login="none", name="VNC")
+    vnc = ConnectionProfile("vnc", "ultravnc", login="account", name="VNC")
     editing = ProfileDialog(None, "Edit", tools, {"ultravnc"}, vnc)
-    assert editing.viewer_asks.isChecked()
+    editing.viewer_asks.click()
     editing.capypanel_asks.click()
+    editing.tool.setCurrentIndex(editing.tool.findData("realvnc"))
+    editing.tool.setCurrentIndex(editing.tool.findData("ultravnc"))
     assert editing.profile("vnc").login == "account"
     realvnc = ProfileDialog(None, "New", tools, {"ultravnc"})
     realvnc.tool.setCurrentIndex(realvnc.tool.findData("realvnc"))

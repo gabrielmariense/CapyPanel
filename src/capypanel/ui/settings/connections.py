@@ -3,7 +3,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QShowEvent
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSpinBox,
     QStackedWidget,
-    QStyle,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -73,24 +72,6 @@ class _WidestRadio(QRadioButton):
         return QSize(hint.width() + extra, hint.height())
 
 
-class _UnderText(QWidget):
-    """Holds `field` with its left edge under `radio`'s text."""
-
-    def __init__(self, radio: QRadioButton, field: QWidget) -> None:
-        super().__init__()
-        self._radio = radio
-        self._row = QHBoxLayout(self)
-        self._row.setContentsMargins(0, 0, 0, 0)
-        self._row.addWidget(field)
-
-    def showEvent(self, event: QShowEvent) -> None:
-        style, radio = self._radio.style(), self._radio
-        indicator = style.pixelMetric(QStyle.PixelMetric.PM_ExclusiveIndicatorWidth, None, radio)
-        spacing = style.pixelMetric(QStyle.PixelMetric.PM_RadioButtonLabelSpacing, None, radio)
-        self._row.setContentsMargins(indicator + spacing, 0, 0, 0)
-        super().showEvent(event)
-
-
 class _RowLabel(QLabel):
     """As tall as its field: Qt caps a form label at 7/4 of its text line, from the row's top."""
 
@@ -118,7 +99,15 @@ class ProfileDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(title)
         self._tools = {tool.id: tool for tool in tools}
-        self._new = profile is None if new is None else new
+        is_new = profile is None if new is None else new
+        saved_tool = self._tools.get(profile.tool) if profile else None
+        self._on_command_line = bool(
+            profile is not None
+            and not is_new
+            and profile.login != "none"
+            and saved_tool is not None
+            and saved_tool.credentials == "arguments"
+        )
         self._warned = False
         self.name = QLineEdit(profile.name if profile else "")
         self.name.setMaxLength(MAX_PROFILE_NAME)
@@ -184,7 +173,7 @@ class ProfileDialog(QDialog):
         form.addRow(_("&Tool:"), self.tool)
         form.addRow(self.asks_label, self.viewer_asks)
         form.addRow("", self.capypanel_asks)
-        form.addRow("", _UnderText(self.capypanel_asks, self.login))
+        form.addRow("", self.login)
         form.addRow(_("P&ort:"), self.port)
         form.addRow(_("Settings:"), self.settings_state)
         form.addRow("", settings_buttons)
@@ -267,7 +256,7 @@ class ProfileDialog(QDialog):
         tool = self._current_tool()
         if not checked or tool is None or tool.credentials != "arguments":
             return
-        if not self._new or self._warned:
+        if self._on_command_line or self._warned:
             return
         self._warned = True
         box = QMessageBox(
