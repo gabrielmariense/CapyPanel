@@ -469,7 +469,10 @@ def test_a_profile_whose_viewer_asks_passes_nothing_and_says_so_once(
     assert connector.connect([Request("PC-Z", Target("PC-Z"), "asks")]) == 1
     assert [launch[3] for launch in launched] == [None, None, None]
     [(text, viewers_before)] = noted
-    assert text.startswith("With this profile, UltraVNC Viewer asks for the user and password")
+    assert text == (
+        "UltraVNC Viewer asks for the user and password when it connects. To type them in "
+        "CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+    )
     assert viewers_before == 0
     assert window.hosts.prefs["notes_seen"] == ["viewer-asks"]
 

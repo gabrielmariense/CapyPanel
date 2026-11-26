@@ -79,7 +79,6 @@ PLACES: dict[str, str] = {
     "connect-password-not-saved": "hosts/connecting/",
     "connect-password-not-deleted": "hosts/connecting/",
     "connect-couldnt-start": "hosts/connecting/",
-    "connect-settings-file-unusable": "hosts/connecting/",
     "connect-settings-not-saved": "hosts/connecting/",
     "command-access-denied": "hosts/commands/",
     "command-no-folder": "hosts/commands/",

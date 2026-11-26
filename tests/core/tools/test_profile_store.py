@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from capypanel.core import winsec
+from capypanel.core import files, winsec
 from capypanel.core.tools.profile_store import ProfileStore, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
@@ -162,6 +162,30 @@ def test_a_settings_file_is_kept_beside_its_profile_and_goes_with_it(
     store.save(clinics, b"[options]\r\na=1\r\n")
     store.delete("clinics")
     assert not path.exists()
+
+
+def test_a_password_saved_in_a_settings_file_is_never_written_and_old_ones_are_emptied(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = ProfileStore(tmp_path / "profiles")
+    saved = b"[connection]\r\nhost=\r\npassword=a1b2c3d4e5f60718\r\n[options]\r\nviewonly=1\r\n"
+    emptied = saved.replace(b"a1b2c3d4e5f60718", b"")
+    clinics = ConnectionProfile("clinics", "ultravnc", name="Clinics", settings_file="clinics.vnc")
+    store.save(clinics, saved)
+    path = store.folder / "clinics.vnc"
+    assert path.read_bytes() == emptied
+    plain = ConnectionProfile("plain", "ultravnc", name="Plain", settings_file="plain.vnc")
+    store.save(plain, b"[options]\r\nviewonly=1\r\n")
+    path.write_bytes(saved)
+    written: list[Path] = []
+    write = files.write_atomic
+    monkeypatch.setattr(files, "write_atomic", lambda p, data: written.append(p) or write(p, data))
+    monkeypatch.setattr(ProfileStore, "can_edit", lambda _self: False)
+    ProfileStore(store.folder).empty_saved_passwords()
+    assert written == [] and path.read_bytes() == saved
+    monkeypatch.setattr(ProfileStore, "can_edit", lambda _self: True)
+    ProfileStore(store.folder).empty_saved_passwords()
+    assert written == [path] and path.read_bytes() == emptied
 
 
 def test_a_new_tool_s_starter_joins_an_existing_folder_once(tmp_path: Path) -> None:

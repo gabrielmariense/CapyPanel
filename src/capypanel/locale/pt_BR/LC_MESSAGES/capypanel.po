@@ -545,9 +545,6 @@ msgstr "Um clique vai para a aba do host."
 msgid "A click on a line shows the profile in the table."
 msgstr "Um clique numa linha mostra o perfil na tabela."
 
-msgid "A command line can be recorded by security tools and Windows' own auditing, and read by this PC's administrators."
-msgstr "Uma linha de comando pode ser registrada por ferramentas de segurança e pela auditoria do próprio Windows, e lida pelos administradores deste PC."
-
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
 
@@ -875,9 +872,6 @@ msgstr "C$"
 msgid "C$ share"
 msgstr "Compartilhamento C$"
 
-msgid "C&hoose file…"
-msgstr "Escol&her arquivo…"
-
 msgid "C&hoose…"
 msgstr "Escol&her…"
 
@@ -932,6 +926,12 @@ msgstr "Cancelar o restante e sair"
 msgid "Cancelled."
 msgstr "Cancelado."
 
+msgid "CapyPanel (password only)"
+msgstr "CapyPanel (só a senha)"
+
+msgid "CapyPanel (user and password)"
+msgstr "CapyPanel (usuário e senha)"
+
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
 msgstr "O CapyPanel pediu às {when}."
@@ -971,6 +971,10 @@ msgstr "O CapyPanel é feito com os seguintes softwares:"
 msgid "CapyPanel keeps the computers and printers you look after in one window. You can see which are on and who's signed in, connect to them, run commands and check the toner. These cards show you around."
 msgstr "O CapyPanel reúne numa janela só os computadores e as impressoras sob seus cuidados. Dá para ver quais estão ligados e quem está conectado, conectar a eles, rodar comandos e conferir o toner. Estes cartões mostram o caminho."
 
+#, python-brace-format
+msgid "CapyPanel passes it to {tool} on the command line, where security tools and this PC's admins can see it."
+msgstr "O CapyPanel passa a senha ao {tool} pela linha de comando, onde ferramentas de segurança e os administradores deste PC podem vê-la."
+
 msgid "CapyPanel reads printers over SNMP and never changes anything on them. Most answer to the community \"public\". If yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
 msgstr "O CapyPanel lê as impressoras por SNMP e nunca muda nada nelas. A maioria responde à comunidade \"public\". Se as suas usam outra, ou SNMP v3, ajuste em Configurações › Impressoras › Conexão."
 
@@ -983,12 +987,6 @@ msgstr "CapyPanel — escuro"
 
 msgid "CapyPanel — light"
 msgstr "CapyPanel — claro"
-
-msgid "CapyPanel: password only"
-msgstr "CapyPanel: só senha"
-
-msgid "CapyPanel: user and password"
-msgstr "CapyPanel: usuário e senha"
 
 msgid "Change path…"
 msgstr "Alterar caminho…"
@@ -1062,10 +1060,6 @@ msgstr "Verifica se {host} responde, como o Atualizar do Hosts"
 
 msgid "Choose a program: a file whose name ends in .exe."
 msgstr "Escolha um programa: um arquivo cujo nome termina em .exe."
-
-#, python-brace-format
-msgid "Choose a {tool} settings file"
-msgstr "Escolha um arquivo de configurações do {tool}"
 
 msgid "Choose the program."
 msgstr "Escolha o programa."
@@ -1433,10 +1427,6 @@ msgstr "Não foi possível iniciar o {program}: {error}. Configurações › SSH
 #, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
 msgstr "Não foi possível iniciar o {tool} para {target}: {error}"
-
-#, python-brace-format
-msgid "Couldn't use “{file}”: {error}"
-msgstr "Não foi possível usar “{file}”: {error}"
 
 #, python-brace-format
 msgid "Couldn't write “{path}”: {error}"
@@ -1960,10 +1950,6 @@ msgstr "Do grupo “{group}”: {profile}"
 msgid "From their groups"
 msgstr "Do grupo de cada um"
 
-#, python-brace-format
-msgid "From “{file}”"
-msgstr "De “{file}”"
-
 msgid "General"
 msgstr "Geral"
 
@@ -2193,18 +2179,12 @@ msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
 msgstr "Ele reiniciou às {at} e respondeu de novo às {now}. Clique para mostrá-lo."
 
-msgid "It's handed to the viewer privately, never on its command line."
-msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
-
 msgid "It's one of Windows' own. It's never deleted here."
 msgstr "É do próprio Windows. Nunca é excluído aqui."
 
 #, python-brace-format
 msgid "It's outside the Users folder. CapyPanel only deletes profiles inside {folder}."
 msgstr "Fica fora da pasta Users. O CapyPanel só exclui perfis dentro de {folder}."
-
-msgid "It's passed to the viewer on its command line, which administrators of this PC can see and security tools can record."
-msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver e ferramentas de segurança podem registrar."
 
 msgid "Its address or name, as in the host list"
 msgstr "O endereço ou nome, como na lista de hosts"
@@ -2223,10 +2203,6 @@ msgstr "Manter na &bandeja"
 
 msgid "Keep running in the tray"
 msgstr "Manter aberto na bandeja"
-
-#, python-brace-format
-msgid "Keep {tool}'s window"
-msgstr "Manter a janela do {tool}"
 
 msgid "Kept"
 msgstr "Guardada"
@@ -2260,6 +2236,10 @@ msgstr "Última reinicialização"
 
 msgid "Last used"
 msgstr "Último uso"
+
+#, python-brace-format
+msgid "Let {tool} ask"
+msgstr "Deixar o {tool} pedir"
 
 msgid "License"
 msgstr "Licença"
@@ -2920,10 +2900,6 @@ msgstr "Abre a tela do host escolhido. A ferramenta usada vem do perfil de conex
 msgid "Opens {path}"
 msgstr "Abre {path}"
 
-#, python-brace-format
-msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
-msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
-
 msgid "Optional: asked the first time it's needed"
 msgstr "Opcional: pedida na primeira vez que precisar"
 
@@ -3018,11 +2994,11 @@ msgstr "Se&nha"
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
 
-msgid "Password typed &in:"
-msgstr "Senha &digitada em:"
+msgid "Password only"
+msgstr "Só a senha"
 
 msgid "Password typed in"
-msgstr "Senha digitada em"
+msgstr "Senha digitada no"
 
 msgid "Passwords"
 msgstr "Senhas"
@@ -3718,6 +3694,9 @@ msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
 msgid "Searches every printer in the list (Ctrl+F)"
 msgstr "Pesquisa todas as impressoras da lista (Ctrl+F)"
 
+msgid "Security tools may log this password"
+msgstr "Ferramentas de segurança podem registrar esta senha"
+
 msgid "See examples in Formats…"
 msgstr "Veja exemplos em Formatos…"
 
@@ -3749,12 +3728,6 @@ msgstr "Enviar uma mensagem para {user}…"
 
 msgid "Send a message…"
 msgstr "Enviar uma mensagem…"
-
-msgid "Sends the password only"
-msgstr "Envia só a senha"
-
-msgid "Sends user and password"
-msgstr "Envia usuário e senha"
 
 msgid "Separate windows"
 msgstr "Janelas separadas"
@@ -4315,10 +4288,6 @@ msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
 
 #, python-brace-format
-msgid "The password would go on {tool}'s command line"
-msgstr "A senha iria para a linha de comando do {tool}"
-
-#, python-brace-format
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
 msgstr "O espaço reservado “{{{name}}}” é usado com o método de credencial “{method}”."
 
@@ -4411,6 +4380,12 @@ msgstr "A atualização para a {new} não foi instalada."
 #, python-brace-format
 msgid "The update to {new} wasn't installed. You still have CapyPanel {current}. {why}."
 msgstr "A atualização para a {new} não foi instalada. Você continua com o CapyPanel {current}. {why}."
+
+msgid "The viewer gets it on the command line, where security tools and this PC's admins can see it."
+msgstr "O visualizador recebe a senha pela linha de comando, onde ferramentas de segurança e os administradores deste PC podem vê-la."
+
+msgid "The viewer gets it privately, never on the command line."
+msgstr "O visualizador recebe a senha de forma privada, nunca pela linha de comando."
 
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
@@ -4711,6 +4686,13 @@ msgstr "Digite o nome do usuário."
 msgid "Type yes, then press Enter."
 msgstr "Digite yes (em inglês) e pressione Enter."
 
+msgid "Typed in CapyPanel"
+msgstr "Digitada no CapyPanel"
+
+#, python-brace-format
+msgid "Typed in {tool}"
+msgstr "Digitada no {tool}"
+
 msgid "Unchanged"
 msgstr "Sem alteração"
 
@@ -4782,8 +4764,8 @@ msgstr "Atualizando para a {version}…"
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
-msgid "Use CapyPanel"
-msgstr "Usar o CapyPanel"
+msgid "Use CapyPanel anyway"
+msgstr "Usar o CapyPanel mesmo assim"
 
 msgid "Use account"
 msgstr "Usar conta"
@@ -4819,6 +4801,9 @@ msgstr "Usada só para ver quem está logado e nos comandos que você executa em
 msgid "User"
 msgstr "Usuário"
 
+msgid "User and password"
+msgstr "Usuário e senha"
+
 #, python-brace-format
 msgid "User profiles on {host}"
 msgstr "Perfis de usuário em {host}"
@@ -4839,10 +4824,6 @@ msgstr "Versão"
 msgctxt "guide"
 msgid "View"
 msgstr "Exibir"
-
-#, python-brace-format
-msgid "Viewer settings (*{extension})"
-msgstr "Configurações do visualizador (*{extension})"
 
 msgid "WMI directly"
 msgstr "WMI direto"
@@ -4994,10 +4975,6 @@ msgstr "Lista de impressoras do Windows"
 
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
-
-#, python-brace-format
-msgid "With this profile, {tool} asks for the user and password in its own window. CapyPanel keeps them off its command line, where security tools and Windows' own auditing can copy them into their logs. To have CapyPanel ask for them anyway, edit the profile in Settings › Hosts › Connecting › Connection profiles and pick CapyPanel under “Password typed in”."
-msgstr "Com este perfil, o próprio {tool} pede o usuário e a senha numa janela dele. O CapyPanel não os coloca na linha de comando, onde ferramentas de segurança e a auditoria do próprio Windows podem copiá-los para os registros delas. Para o CapyPanel pedir mesmo assim, edite o perfil em Configurações › Hosts › Conexão › Perfis de conexão e escolha CapyPanel em “Senha digitada em”."
 
 msgid "Yellow"
 msgstr "Amarelo"
@@ -6031,12 +6008,12 @@ msgid "{tool} (not installed on this PC)"
 msgstr "{tool} (não instalado neste PC)"
 
 #, python-brace-format
-msgid "{tool} asks for the password"
-msgstr "O {tool} pede a senha"
+msgid "{tool} asks for the user and password when it connects. To type them in CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+msgstr "O {tool} pede o usuário e a senha ao conectar. Para digitá-los no CapyPanel, mude este perfil em Configurações › Hosts › Conexão."
 
 #, python-brace-format
-msgid "{tool} asks for them in its own window."
-msgstr "O {tool} pede esses dados na janela dele."
+msgid "{tool} asks for these when it connects."
+msgstr "O {tool} pede isso ao conectar."
 
 #, python-brace-format
 msgid "{tool} can't be given a password."
@@ -6055,20 +6032,20 @@ msgid "{tool} has no option “{option}”."
 msgstr "O {tool} não tem a opção “{option}”."
 
 #, python-brace-format
-msgid "{tool} has no other way to log in."
-msgstr "{tool} não tem outra forma de entrar."
-
-#, python-brace-format
 msgid "{tool} not found"
 msgstr "{tool} não encontrado"
+
+#, python-brace-format
+msgid "{tool} only takes a password."
+msgstr "O {tool} só aceita a senha."
 
 #, python-brace-format
 msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings › Hosts › Connecting."
 msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho é salvo para todos neste PC; você também pode alterá-lo depois em Configurações › Hosts › Conexão."
 
 #, python-brace-format
-msgid "{tool}'s window"
-msgstr "Janela do {tool}"
+msgid "{tool} will ask for the password"
+msgstr "O {tool} vai pedir a senha"
 
 #, python-brace-format
 msgid "{user} (disconnected)"

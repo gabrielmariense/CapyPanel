@@ -84,10 +84,10 @@ class CredentialDialog(QDialog):
         form.addRow("", self.remember)
         used = _("Used only for hosts with this connection profile.")
         how = (
-            _("It's passed to the viewer on its command line, which administrators of this PC "
-              "can see and security tools can record.")
+            _("The viewer gets it on the command line, where security tools and this PC's "
+              "admins can see it.")
             if on_command_line
-            else _("It's handed to the viewer privately, never on its command line.")
+            else _("The viewer gets it privately, never on the command line.")
         )  # fmt: skip
         note = hint(f"{used} {how}")
         self.buttons = ok_cancel(self, _("Connect"))
@@ -238,15 +238,12 @@ class Connector:
                     )  # fmt: skip
         elif tool.credentials == "arguments" and self.first_time(VIEWER_ASKS):
             text = _(
-                "With this profile, {tool} asks for the user and password in its own window. "
-                "CapyPanel keeps them off its command line, where security tools and Windows' own "
-                "auditing can copy them into their logs. To have CapyPanel ask for them anyway, "
-                "edit the profile in Settings › Hosts › Connecting › Connection profiles and pick "
-                "CapyPanel under “Password typed in”."
+                "{tool} asks for the user and password when it connects. To type them in "
+                "CapyPanel instead, change this profile in Settings › Hosts › Connecting."
             )
             help_links.information(
                 owner,
-                _("{tool} asks for the password").format(tool=tool.name),
+                _("{tool} will ask for the password").format(tool=tool.name),
                 text.format(tool=tool.name),
                 place="connecting-set-up-connection-profiles",
             )

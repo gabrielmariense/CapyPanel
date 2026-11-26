@@ -265,7 +265,9 @@ class HostsTool(ListWorkspace):
     @classmethod
     def prepare(cls, paths: settings.Paths) -> None:
         try:
-            ProfileStore(paths.profiles_dir).place_starters()
+            store = ProfileStore(paths.profiles_dir)
+            store.place_starters()
+            store.empty_saved_passwords()
         except OSError:
             log.exception("Couldn't place the connection profiles in %s", paths.profiles_dir)
 

@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -12,16 +13,20 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QMenu,
     QMessageBox,
+    QPushButton,
     QWidget,
 )
 
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import HostList
+from capypanel.core.tools import definitions
 from capypanel.core.tools.catalog import Catalogs
+from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import dialogs
 from capypanel.ui.dialogs import ScreenFit
+from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ProfileDialog, ProfilesSection, ToolsSection
 
@@ -82,12 +87,13 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
     assert dialog.tool.currentData() == "ultravnc"
     assert list(dialog.option_boxes) == ["securevnc"]
     assert dialog.viewer_asks.isChecked() and dialog.capypanel_asks.isEnabled()
-    assert dialog.viewer_asks.text() == "UltraVNC Viewer's window"
+    assert dialog.viewer_asks.text() == "Typed in UltraVNC Viewer"
+    assert dialog.capypanel_asks.text() == "Typed in CapyPanel"
     assert [dialog.login.itemText(i) for i in range(dialog.login.count())] == [
-        "Sends user and password", "Sends the password only",
+        "User and password", "Password only",
     ]  # fmt: skip
     assert not dialog.login.isEnabled()
-    assert dialog.login.toolTip() == "UltraVNC Viewer asks for them in its own window."
+    assert dialog.login.toolTip() == "UltraVNC Viewer asks for these when it connects."
     assert dialog.profile("new").login == "none"
     assert dialog.port.text() == "Default (5900)"
     realvnc = dialog.tool.findData("realvnc")
@@ -120,24 +126,20 @@ def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
     dialog = ProfileDialog(None, "New", tools, names)
     vnc = ConnectionProfile("vnc", "ultravnc", name="VNC")
     editing = ProfileDialog(None, "Edit", tools, names, vnc)
+    kept = replace(vnc, settings_file="vnc.vnc")
+    with_file = ProfileDialog(None, "Edit", tools, names, kept)
     try:
         _shown(dialog)
         top: list[QWidget] = [dialog.name, dialog.tool, dialog.port]
         password: list[QWidget] = [dialog.viewer_asks, dialog.capypanel_asks, dialog.login]
-        settings_row: list[QWidget] = [
-            dialog.settings_state, dialog.choose_settings, dialog.default_settings
-        ]  # fmt: skip
-        rows = {
-            "ultravnc": (True, True, 1),
-            "realvnc": (True, False, 0),
-            "mstsc": (False, False, 3),
-        }
+        settings_row: list[QWidget] = [dialog.settings_state, dialog.default_settings]
+        rows = {"ultravnc": (True, 1), "realvnc": (True, 0), "mstsc": (False, 3)}
         tops, heights = [], {}
-        for tool, (asks, reads, options) in rows.items():
+        for tool, (asks, options) in rows.items():
             dialog.tool.setCurrentIndex(dialog.tool.findData(tool))
             QApplication.processEvents()
             assert [w.isVisible() for w in password] == [asks] * 3, tool
-            assert [w.isVisible() for w in settings_row] == [reads] * 3, tool
+            assert not any(w.isVisible() for w in settings_row), tool
             shown = [box for box in dialog.findChildren(QCheckBox) if box.isVisible()]
             assert len(shown) == len(dialog.option_boxes) == options, tool
             assert dialog.height() == dialog.sizeHint().height(), tool
@@ -147,15 +149,20 @@ def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
         assert heights["realvnc"] < heights["ultravnc"]
         dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
         QApplication.processEvents()
-        before = _places(dialog, [*top, *password, *settings_row])
+        before = _places(dialog, [*top, *password])
         dialog.resize(dialog.width(), dialog.height() + 60)
         QApplication.processEvents()
-        assert _places(dialog, [*top, *password, *settings_row]) == before
+        assert _places(dialog, [*top, *password]) == before
         _shown(editing)
         assert editing.height() == heights["ultravnc"]
+        _shown(with_file)
+        assert all(w.isVisible() for w in (with_file.settings_state, with_file.default_settings))
+        assert with_file.height() > heights["ultravnc"]
+        assert _places(with_file, [with_file.name, with_file.tool, with_file.port]) == tops[0]
     finally:
         dialog.close()
         editing.close()
+        with_file.close()
         qapp.removeEventFilter(fitter)
 
 
@@ -195,21 +202,59 @@ def test_the_options_label_stays_on_the_first_option_s_line_beside_a_tall_tick_b
 def test_rows_a_tool_doesnt_use_are_left_out(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
-    settings_row = (dialog.settings_state, dialog.choose_settings, dialog.default_settings)
+    settings_row = (dialog.settings_state, dialog.default_settings)
     password = (dialog.asks_label, dialog.viewer_asks, dialog.capypanel_asks, dialog.login)
-    assert dialog.choose_settings.isEnabled() and not dialog.default_settings.isEnabled()
-    assert dialog.choose_settings.toolTip().startswith("Optional: a .vnc file saved from Ultra")
-    assert dialog.default_settings.toolTip() == "This profile already uses the viewer's defaults."
-    dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
+    assert all(w.isVisibleTo(dialog) for w in password)
     assert not any(w.isVisibleTo(dialog) for w in settings_row)
+    dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
     assert all(w.isVisibleTo(dialog) for w in password) and dialog.option_boxes == {}
     assert not any(box.isVisibleTo(dialog) for box in dialog.findChildren(QCheckBox))
     dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
-    assert not any(w.isVisibleTo(dialog) for w in (*password, *settings_row))
+    assert not any(w.isVisibleTo(dialog) for w in password)
     assert dialog.viewer_asks.isChecked() and len(dialog.option_boxes) == 3
     assert dialog.profile("rdp").login == "none"
     dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
-    assert all(w.isVisibleTo(dialog) for w in (*password, *settings_row))
+    assert all(w.isVisibleTo(dialog) for w in password)
+
+
+def test_a_tool_that_takes_only_a_password_says_so(qapp: QApplication) -> None:
+    only = definitions.from_data(
+        {
+            "schema": 1, "id": "plainvnc", "name": "Plain VNC", "kind": "vnc", "port": 5900,
+            "credentials": "vnc_password_file",
+            "arguments": [["{address}::{port}"], ["-passwordfile", "{password_file}"]],
+        }
+    )  # fmt: skip
+    dialog = ProfileDialog(None, "New", [only], {"plainvnc"})
+    dialog.capypanel_asks.click()
+    assert [dialog.login.itemText(i) for i in range(dialog.login.count())] == ["Password only"]
+    assert not dialog.login.isEnabled()
+    assert dialog.login.toolTip() == "Plain VNC only takes a password."
+
+
+def test_only_a_profile_that_already_has_a_settings_file_shows_it(catalogs: Catalogs) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    kept = ConnectionProfile("clinic", "ultravnc", name="Clinic", settings_file="clinic-x.vnc")
+    new = ProfileDialog(None, "New", tools, {"ultravnc"})
+    assert "C&hoose file…" not in [b.text() for b in new.findChildren(QPushButton)]
+    assert new.profile("new").settings_file == ""
+    assert (
+        ProfileDialog(None, "Copy", tools, {"ultravnc"}, kept, new=True)
+        .profile("clinic-2")
+        .settings_file
+        == "clinic-2.vnc"
+    )
+    dialog = ProfileDialog(None, "Edit", tools, {"ultravnc"}, kept)
+    settings_row = (dialog.settings_state, dialog.default_settings)
+    assert all(w.isVisibleTo(dialog) for w in settings_row)
+    assert dialog.settings_state.text() == "Its own settings file"
+    assert dialog.profile("clinic").settings_file == "clinic-x.vnc"
+    dialog.default_settings.click()
+    assert dialog.settings_state.text() == "The viewer's defaults"
+    assert not dialog.default_settings.isEnabled()
+    assert dialog.default_settings.toolTip() == "This profile already uses the viewer's defaults."
+    assert all(w.isVisibleTo(dialog) for w in settings_row)
+    assert dialog.profile("clinic").settings_file == ""
 
 
 def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
@@ -221,10 +266,13 @@ def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
     dialog.capypanel_asks.click()
     [box] = shown
-    assert box.windowTitle() == "The password would go on UltraVNC Viewer's command line"
-    assert box.text().startswith("A command line can be recorded by security tools")
+    assert box.windowTitle() == "Security tools may log this password"
+    assert box.text() == (
+        "CapyPanel passes it to UltraVNC Viewer on the command line, where security tools and "
+        "this PC's admins can see it."
+    )
     keep = box.defaultButton()
-    assert keep is not None and keep.text() == "Keep UltraVNC Viewer's window"
+    assert keep is not None and keep.text() == "Let UltraVNC Viewer ask"
     assert box.escapeButton() is keep and keep.objectName() != "quietDefault"
     assert dialog.viewer_asks.isChecked()
     dialog.capypanel_asks.click()
@@ -250,7 +298,7 @@ def test_use_capypanel_in_the_warning_keeps_capypanel(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def use(box: QMessageBox) -> int:
-        [button] = [b for b in box.buttons() if b.text() == "Use CapyPanel"]
+        [button] = [b for b in box.buttons() if b.text() == "Use CapyPanel anyway"]
         button.click()
         return 0
 
@@ -376,42 +424,15 @@ def test_a_folder_the_user_cannot_write_is_read_only(
     assert not any(_menu(page.fill_row_menu, enabled_only=True))
 
 
-def _choose_settings_file(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
-    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *_args, **_kw: (str(path), ""))
-
-
-def test_a_file_that_isnt_viewer_settings_is_refused(
-    catalogs: Catalogs,
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    help_boxes: list[tuple[str, str]],
-) -> None:
-    junk = tmp_path / "notes.vnc"
-    junk.write_text("just some notes", encoding="utf-8")
-    _choose_settings_file(monkeypatch, junk)
+def test_with_a_settings_file_the_file_decides_not_the_options(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
-    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
-    dialog.choose_settings.click()
-    assert [place for _text, place in help_boxes] == ["connect-settings-file-unusable"]
-    assert dialog.new_settings is None
-    assert dialog.settings_state.text() == "The viewer's defaults"
-
-
-def test_with_a_settings_file_the_file_decides_not_the_options(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    template = tmp_path / "secure.vnc"
-    template.write_bytes(b"[options]\r\nUseDSMPlugin=1\r\nDSMPlugin=SecureVNCPlugin64.dsm\r\n")
-    _choose_settings_file(monkeypatch, template)
-    tools = [e.item for e in catalogs.tools.all()]
-    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
-    dialog.name.setText("Secure")
-    dialog.option_boxes["securevnc"].setChecked(True)
-    dialog.choose_settings.click()
+    kept = ConnectionProfile(
+        "secure", "ultravnc", options=("securevnc",), name="Secure", settings_file="secure.vnc"
+    )
+    dialog = ProfileDialog(None, "Edit", tools, {"ultravnc"}, kept)
     box = dialog.option_boxes["securevnc"]
     assert not box.isEnabled() and not box.isChecked()
     assert dialog.profile("secure").options == ()
-    assert dialog.new_settings is not None and b"UseDSMPlugin=1" in dialog.new_settings
     dialog.default_settings.click()
     assert dialog.option_boxes["securevnc"].isEnabled()
 
@@ -493,8 +514,8 @@ def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs)
     header = page.list.headerItem()
     assert header is not None and header.text(2) == "Password typed in"
     shown = {i.text(0): i.text(2) for r in rows if (i := page.list.topLevelItem(r))}
-    assert shown["Remote Desktop"] == "Remote Desktop Connection's window"
-    assert shown["UltraVNC"] == "UltraVNC Viewer's window"
+    assert shown["Remote Desktop"] == "Remote Desktop Connection"
+    assert shown["UltraVNC"] == "UltraVNC Viewer"
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"mstsc"})
     dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
@@ -558,37 +579,46 @@ def test_tool_paths_chosen_here_are_written_at_once(
     assert back is not None and not back.item.executable
 
 
-def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+def test_a_profile_s_settings_file_is_kept_copied_without_a_password_and_dropped(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    template = tmp_path / "saved from viewer.vnc"
-    template.write_bytes(b"[connection]\r\nhost=10.0.0.9\r\n[options]\r\nviewonly=1\r\n")
-    _choose_settings_file(monkeypatch, template)
+    folder = catalogs.profiles.folder
+    saved = b"[connection]\r\nhost=\r\npassword=a1b2c3d4e5f60718\r\n[options]\r\nviewonly=1\r\n"
+    emptied = b"[connection]\r\nhost=\r\npassword=\r\n[options]\r\nviewonly=1\r\n"
+    view = ConnectionProfile("view-only", "ultravnc", name="View only", settings_file="v.vnc")
+    catalogs.profiles.save(view, emptied)
+    (folder / "v.vnc").write_bytes(saved)
     page = ProfilesSection(catalogs, None)
 
-    def fill(dialog: ProfileDialog) -> None:
-        dialog.name.setText("View only")
-        assert dialog.settings_state.text() == "The viewer's defaults"
-        dialog.choose_settings.click()
-        assert dialog.settings_state.text() == "From “saved from viewer.vnc”"
-
-    _answer(monkeypatch, fill)
-    page.add()
-    profile = catalogs.profiles.find("view-only")
-    assert profile is not None and profile.settings_file == "view-only.vnc"
-    copied = catalogs.profiles.folder / "view-only.vnc"
-    assert copied.read_bytes() == b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
+    _select(page, "view-only")
+    _answer(monkeypatch, lambda dialog: dialog.name.setText("View only, renamed"))
+    page.edit()
+    edited = catalogs.profiles.find("view-only")
+    assert edited is not None and edited.name == "View only, renamed"
+    assert edited.settings_file == "v.vnc" and (folder / "v.vnc").read_bytes() == saved
 
     _select(page, "view-only")
     _answer(monkeypatch, lambda dialog: dialog.name.setText("View only 2"))
     page.duplicate()
+    assert (folder / "view-only-2.vnc").read_bytes() == emptied
+
     _select(page, "view-only")
     _answer(monkeypatch, lambda dialog: dialog.default_settings.click())
     page.edit()
-    assert not copied.exists()
-    assert (catalogs.profiles.folder / "view-only-2.vnc").read_bytes() == (
-        b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
-    )
+    dropped = catalogs.profiles.find("view-only")
+    assert dropped is not None and dropped.settings_file == ""
+    assert not (folder / "v.vnc").exists()
+
+
+def test_at_start_a_password_saved_in_a_settings_file_is_emptied(tmp_path: Path) -> None:
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    paths = settings.resolve_paths(tmp_path)
+    clinic = ConnectionProfile("clinic", "ultravnc", name="Clinic", settings_file="clinic.vnc")
+    ProfileStore(paths.profiles_dir).save(clinic, b"[options]\r\nviewonly=1\r\n")
+    path = paths.profiles_dir / "clinic.vnc"
+    path.write_bytes(b"[connection]\r\npassword=a1b2c3d4e5f60718\r\n")
+    HostsTool.prepare(paths)
+    assert path.read_bytes() == b"[connection]\r\npassword=\r\n"
 
 
 def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> None:
