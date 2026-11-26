@@ -52,6 +52,13 @@ class Ready:
     tool: ToolDefinition
 
 
+def command_line_warning(tool: str) -> str:
+    return _(
+        "{tool} gets it on its command line, which security software often logs and other "
+        "admins of this PC can see."
+    ).format(tool=tool)
+
+
 class CredentialDialog(QDialog):
     def __init__(
         self,
@@ -83,12 +90,12 @@ class CredentialDialog(QDialog):
         )  # fmt: skip
         form.addRow("", self.remember)
         used = _("Used only for hosts with this connection profile.")
+        tool = ready.tool.name
         how = (
-            _("The viewer gets it on the command line, where security tools and this PC's "
-              "admins can see it.")
+            command_line_warning(tool)
             if on_command_line
-            else _("The viewer gets it privately, never on the command line.")
-        )  # fmt: skip
+            else _("{tool} gets it privately, never on its command line.").format(tool=tool)
+        )
         note = hint(f"{used} {how}")
         self.buttons = ok_cancel(self, _("Connect"))
         layout = QVBoxLayout(self)
@@ -238,7 +245,7 @@ class Connector:
                     )  # fmt: skip
         elif tool.credentials == "arguments" and self.first_time(VIEWER_ASKS):
             text = _(
-                "{tool} asks for the user and password when it connects. To type them in "
+                "{tool} asks for the user and password when it connects. To save them in "
                 "CapyPanel instead, change this profile in Settings › Hosts › Connecting."
             )
             help_links.information(

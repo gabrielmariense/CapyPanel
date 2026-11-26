@@ -798,6 +798,10 @@ msgstr "Como"
 msgid "Ask each time"
 msgstr "Perguntar sempre"
 
+#, python-brace-format
+msgid "Asked for by {tool}"
+msgstr "Pedida pelo {tool}"
+
 msgid "Asked when needed"
 msgstr "Pedida quando precisar"
 
@@ -926,12 +930,6 @@ msgstr "Cancelar o restante e sair"
 msgid "Cancelled."
 msgstr "Cancelado."
 
-msgid "CapyPanel (password only)"
-msgstr "CapyPanel (só a senha)"
-
-msgid "CapyPanel (user and password)"
-msgstr "CapyPanel (usuário e senha)"
-
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
 msgstr "O CapyPanel pediu às {when}."
@@ -970,10 +968,6 @@ msgstr "O CapyPanel é feito com os seguintes softwares:"
 
 msgid "CapyPanel keeps the computers and printers you look after in one window. You can see which are on and who's signed in, connect to them, run commands and check the toner. These cards show you around."
 msgstr "O CapyPanel reúne numa janela só os computadores e as impressoras sob seus cuidados. Dá para ver quais estão ligados e quem está conectado, conectar a eles, rodar comandos e conferir o toner. Estes cartões mostram o caminho."
-
-#, python-brace-format
-msgid "CapyPanel passes it to {tool} on the command line, where security tools and this PC's admins can see it."
-msgstr "O CapyPanel passa a senha ao {tool} pela linha de comando, onde ferramentas de segurança e os administradores deste PC podem vê-la."
 
 msgid "CapyPanel reads printers over SNMP and never changes anything on them. Most answer to the community \"public\". If yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
 msgstr "O CapyPanel lê as impressoras por SNMP e nunca muda nada nelas. A maioria responde à comunidade \"public\". Se as suas usam outra, ou SNMP v3, ajuste em Configurações › Impressoras › Conexão."
@@ -2237,10 +2231,6 @@ msgstr "Última reinicialização"
 msgid "Last used"
 msgstr "Último uso"
 
-#, python-brace-format
-msgid "Let {tool} ask"
-msgstr "Deixar o {tool} pedir"
-
 msgid "License"
 msgstr "Licença"
 
@@ -2990,15 +2980,15 @@ msgstr "Parceiro {partner}, usuário {user}. Guardada no Gerenciador de Credenci
 msgid "Pass&word"
 msgstr "Se&nha"
 
+msgid "Password"
+msgstr "Senha"
+
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
 
 msgid "Password only"
 msgstr "Só a senha"
-
-msgid "Password typed in"
-msgstr "Senha digitada no"
 
 msgid "Passwords"
 msgstr "Senhas"
@@ -3615,11 +3605,26 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
+msgid "Save the password in CapyPanel"
+msgstr "Salvar a senha no CapyPanel"
+
+msgid "Save the password in CapyPanel?"
+msgstr "Salvar a senha no CapyPanel?"
+
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
 
 msgid "Saved credentials"
 msgstr "Credenciais salvas"
+
+msgid "Saved in CapyPanel"
+msgstr "Salva no CapyPanel"
+
+msgid "Saved in CapyPanel (password only)"
+msgstr "Salva no CapyPanel (só a senha)"
+
+msgid "Saved in CapyPanel (user and password)"
+msgstr "Salva no CapyPanel (usuário e senha)"
 
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
@@ -3693,9 +3698,6 @@ msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
 
 msgid "Searches every printer in the list (Ctrl+F)"
 msgstr "Pesquisa todas as impressoras da lista (Ctrl+F)"
-
-msgid "Security tools may log this password"
-msgstr "Ferramentas de segurança podem registrar esta senha"
 
 msgid "See examples in Formats…"
 msgstr "Veja exemplos em Formatos…"
@@ -4381,12 +4383,6 @@ msgstr "A atualização para a {new} não foi instalada."
 msgid "The update to {new} wasn't installed. You still have CapyPanel {current}. {why}."
 msgstr "A atualização para a {new} não foi instalada. Você continua com o CapyPanel {current}. {why}."
 
-msgid "The viewer gets it on the command line, where security tools and this PC's admins can see it."
-msgstr "O visualizador recebe a senha pela linha de comando, onde ferramentas de segurança e os administradores deste PC podem vê-la."
-
-msgid "The viewer gets it privately, never on the command line."
-msgstr "O visualizador recebe a senha de forma privada, nunca pela linha de comando."
-
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
 
@@ -4686,13 +4682,6 @@ msgstr "Digite o nome do usuário."
 msgid "Type yes, then press Enter."
 msgstr "Digite yes (em inglês) e pressione Enter."
 
-msgid "Typed in CapyPanel"
-msgstr "Digitada no CapyPanel"
-
-#, python-brace-format
-msgid "Typed in {tool}"
-msgstr "Digitada no {tool}"
-
 msgid "Unchanged"
 msgstr "Sem alteração"
 
@@ -4764,9 +4753,6 @@ msgstr "Atualizando para a {version}…"
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
-msgid "Use CapyPanel anyway"
-msgstr "Usar o CapyPanel mesmo assim"
-
 msgid "Use account"
 msgstr "Usar conta"
 
@@ -4793,7 +4779,7 @@ msgid "Used for Refresh's logged-on users and the commands run on this PC, not f
 msgstr "Usada para os usuários logados do Atualizar e os comandos executados neste PC, não para o Conectar."
 
 msgid "Used only for hosts with this connection profile."
-msgstr "Usado só nos hosts com este perfil de conexão."
+msgstr "Usada só nos hosts com este perfil de conexão."
 
 msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr "Usada só para ver quem está logado e nos comandos que você executa em um host."
@@ -6008,8 +5994,8 @@ msgid "{tool} (not installed on this PC)"
 msgstr "{tool} (não instalado neste PC)"
 
 #, python-brace-format
-msgid "{tool} asks for the user and password when it connects. To type them in CapyPanel instead, change this profile in Settings › Hosts › Connecting."
-msgstr "O {tool} pede o usuário e a senha ao conectar. Para digitá-los no CapyPanel, mude este perfil em Configurações › Hosts › Conexão."
+msgid "{tool} asks for the user and password when it connects. To save them in CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+msgstr "O {tool} pede o usuário e a senha ao conectar. Para salvá-los no CapyPanel, mude este perfil em Configurações › Hosts › Conexão."
 
 #, python-brace-format
 msgid "{tool} asks for these when it connects."
@@ -6026,6 +6012,14 @@ msgstr "O {tool} não aceita receber um arquivo de configurações."
 #, python-brace-format
 msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
+
+#, python-brace-format
+msgid "{tool} gets it on its command line, which security software often logs and other admins of this PC can see."
+msgstr "O {tool} recebe a senha pela linha de comando, que programas de segurança costumam registrar e outros administradores deste PC podem ver."
+
+#, python-brace-format
+msgid "{tool} gets it privately, never on its command line."
+msgstr "O {tool} recebe a senha de forma privada, nunca pela linha de comando."
 
 #, python-brace-format
 msgid "{tool} has no option “{option}”."

@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMenu,
-    QMessageBox,
     QPushButton,
     QRadioButton,
     QSizePolicy,
@@ -32,8 +31,8 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError, logins_of
-from capypanel.ui import dialogs, help_links, spacing
-from capypanel.ui.connect import ask_for_program
+from capypanel.ui import help_links, spacing
+from capypanel.ui.connect import ask_for_program, command_line_warning
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
@@ -47,12 +46,16 @@ def sends_label(login: str) -> str:
     return _("User and password") if login == "account" else _("Password only")
 
 
-def typed_in_label(login: str, tool: str) -> str:
+def asked_by(tool: str) -> str:
+    return _("Asked for by {tool}").format(tool=tool)
+
+
+def password_label(login: str, tool: str) -> str:
     if login == "none":
-        return tool
+        return asked_by(tool)
     if login == "account":
-        return _("CapyPanel (user and password)")
-    return _("CapyPanel (password only)")
+        return _("Saved in CapyPanel (user and password)")
+    return _("Saved in CapyPanel (password only)")
 
 
 class _WidestRadio(QRadioButton):
@@ -115,8 +118,8 @@ class ProfileDialog(QDialog):
             self.tool.addItem(text.format(tool=tool.name), tool.id)
         wanted = profile.tool if profile else next((t.id for t in tools if t.id in installed), "")
         self.tool.setCurrentIndex(max(self.tool.findData(wanted), 0))
-        self.viewer_asks = _WidestRadio([_("Typed in {tool}").format(tool=t.name) for t in tools])
-        self.capypanel_asks = QRadioButton(_("Typed in CapyPanel"))
+        self.viewer_asks = _WidestRadio([asked_by(t.name) for t in tools])
+        self.capypanel_asks = QRadioButton(_("Saved in CapyPanel"))
         self.capypanel_asks.clicked.connect(self._capypanel_picked)
         self.viewer_asks.toggled.connect(lambda _on: self._show_login())
         self.asks_label = QLabel(_("&Password:"))
@@ -210,7 +213,7 @@ class ProfileDialog(QDialog):
         for login in sends:
             self.login.addItem(sends_label(login), login)
         self.login.setCurrentIndex(max(self.login.findData(wanted), 0))
-        self.viewer_asks.setText(_("Typed in {tool}").format(tool=tool.name))
+        self.viewer_asks.setText(asked_by(tool.name))
         (self.capypanel_asks if by_capypanel and sends else self.viewer_asks).setChecked(True)
         for field in (self.viewer_asks, self.capypanel_asks, self.login):
             self._form.setRowVisible(field, bool(sends))
@@ -267,23 +270,9 @@ class ProfileDialog(QDialog):
         if self._on_command_line or self._warned:
             return
         self._warned = True
-        box = QMessageBox(
-            QMessageBox.Icon.Warning,
-            _("Security tools may log this password"),
-            _("CapyPanel passes it to {tool} on the command line, where security tools and this "
-              "PC's admins can see it.").format(tool=tool.name),
-            parent=self,
-        )  # fmt: skip
-        box.setTextFormat(Qt.TextFormat.PlainText)
-        use = box.addButton(_("Use CapyPanel anyway"), QMessageBox.ButtonRole.AcceptRole)
-        keep = box.addButton(
-            _("Let {tool} ask").format(tool=tool.name), QMessageBox.ButtonRole.RejectRole
-        )
-        box.setDefaultButton(keep)
-        box.setEscapeButton(keep)
-        help_links.add_link(box, "connecting-set-up-connection-profiles")
-        dialogs.run_modal(box)
-        if box.clickedButton() is not use:
+        question = _("Save the password in CapyPanel?")
+        text = f"{question} {command_line_warning(tool.name)}"
+        if not confirm(self, _("Save the password in CapyPanel"), text, _("Save")):
             self.viewer_asks.setChecked(True)
 
     def _show_settings(self) -> None:
@@ -383,7 +372,7 @@ class ProfilesSection(SharedSection):
         )
         self._show_folder_state()
         self.for_everyone(self.can_edit)
-        self.list = grid_table([_("Profile"), _("Tool"), _("Password typed in")])
+        self.list = grid_table([_("Profile"), _("Tool"), _("Password")])
         self.list.setColumnWidth(0, 190)
         self.list.setColumnWidth(1, 150)
         self.list.itemSelectionChanged.connect(self._update_buttons)
@@ -443,7 +432,7 @@ class ProfilesSection(SharedSection):
         for profile in sorted(self.store.all(), key=lambda p: p.name.casefold()):
             entry = self.catalogs.tools.find(profile.tool)
             tool = entry.item.name if entry else profile.tool
-            item = QTreeWidgetItem([profile.name, tool, typed_in_label(profile.login, tool)])
+            item = QTreeWidgetItem([profile.name, tool, password_label(profile.login, tool)])
             item.setData(0, Qt.ItemDataRole.UserRole, profile.id)
             for column in range(3):
                 item.setToolTip(column, item.text(column))
