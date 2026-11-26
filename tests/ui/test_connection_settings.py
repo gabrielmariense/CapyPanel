@@ -24,7 +24,7 @@ from capypanel.core.tools import definitions
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.core.tools.profiles import ConnectionProfile
-from capypanel.ui import dialogs
+from capypanel.ui import dialogs, spacing
 from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.settings import connections
@@ -116,6 +116,14 @@ def _places(dialog: QWidget, widgets: list[QWidget]) -> list[QRect]:
     return [QRect(w.mapTo(dialog, QPoint(0, 0)), w.size()) for w in widgets]
 
 
+def _gap_above_buttons(dialog: QWidget) -> int:
+    layout = dialog.layout()
+    assert layout is not None
+    form, buttons = layout.itemAt(0), layout.itemAt(layout.count() - 1)
+    assert form is not None and buttons is not None
+    return buttons.geometry().top() - (form.geometry().top() + form.geometry().height())
+
+
 def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
     qapp: QApplication, catalogs: Catalogs
 ) -> None:
@@ -143,6 +151,7 @@ def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
             shown = [box for box in dialog.findChildren(QCheckBox) if box.isVisible()]
             assert len(shown) == len(dialog.option_boxes) == options, tool
             assert dialog.height() == dialog.sizeHint().height(), tool
+            assert _gap_above_buttons(dialog) == spacing.WINDOW, tool
             tops.append(_places(dialog, top))
             heights[tool] = dialog.height()
         assert tops == [tops[0]] * len(tops)
@@ -158,6 +167,7 @@ def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
         _shown(with_file)
         assert all(w.isVisible() for w in (with_file.settings_state, with_file.default_settings))
         assert with_file.height() > heights["ultravnc"]
+        assert _gap_above_buttons(with_file) == spacing.WINDOW
         assert _places(with_file, [with_file.name, with_file.tool, with_file.port]) == tops[0]
     finally:
         dialog.close()

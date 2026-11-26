@@ -32,7 +32,7 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError, logins_of
-from capypanel.ui import dialogs, help_links
+from capypanel.ui import dialogs, help_links, spacing
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
@@ -182,7 +182,9 @@ class ProfileDialog(QDialog):
             name_label.setMinimumWidth(max(widths))
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
+        layout.setSpacing(0)
         layout.addLayout(form)
+        layout.addSpacing(spacing.WINDOW)
         self.help_button = help_links.HelpButton("connecting-set-up-connection-profiles")
         layout.addLayout(help_links.row(self.help_button, self.buttons))
 
