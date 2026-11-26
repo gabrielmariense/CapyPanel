@@ -106,7 +106,11 @@ def _shown(dialog: QWidget) -> None:
     QApplication.processEvents()
 
 
-def test_every_tool_keeps_the_profile_window_s_size_and_places(
+def _places(dialog: QWidget, widgets: list[QWidget]) -> list[QRect]:
+    return [QRect(w.mapTo(dialog, QPoint(0, 0)), w.size()) for w in widgets]
+
+
+def test_each_tool_shows_only_its_own_rows_under_name_tool_and_port(
     qapp: QApplication, catalogs: Catalogs
 ) -> None:
     tools = [e.item for e in catalogs.tools.all()]
@@ -118,36 +122,37 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
     editing = ProfileDialog(None, "Edit", tools, names, vnc)
     try:
         _shown(dialog)
-        form = dialog.findChild(QFormLayout)
-        label = form.labelForField(dialog.settings_state) if form else None
-        options_label = form.labelForField(dialog.options_area) if form else None
-        assert label is not None and options_label is not None
-        assert label.geometry().center().y() == dialog.settings_state.geometry().center().y()
-        controls: list[QWidget] = [
-            dialog.name, dialog.tool, dialog.viewer_asks, dialog.capypanel_asks, dialog.login,
-            dialog.port, dialog.settings_state, dialog.choose_settings, dialog.default_settings,
-            dialog.options_area,
+        top: list[QWidget] = [dialog.name, dialog.tool, dialog.port]
+        password: list[QWidget] = [dialog.viewer_asks, dialog.capypanel_asks, dialog.login]
+        settings_row: list[QWidget] = [
+            dialog.settings_state, dialog.choose_settings, dialog.default_settings
         ]  # fmt: skip
-
-        def places() -> list[QRect]:
-            shown = [*controls, *dialog.findChildren(QCheckBox)]
-            return [QRect(c.mapTo(dialog, QPoint(0, 0)), c.size()) for c in shown]
-
-        seen = []
-        for tool in ("mstsc", "realvnc", "ultravnc", "mstsc"):
+        rows = {
+            "ultravnc": (True, True, 1),
+            "realvnc": (True, False, 0),
+            "mstsc": (False, False, 3),
+        }
+        tops, heights = [], {}
+        for tool, (asks, reads, options) in rows.items():
             dialog.tool.setCurrentIndex(dialog.tool.findData(tool))
             QApplication.processEvents()
-            assert all(c.isVisible() for c in controls), tool
-            first = next(iter(dialog.option_boxes.values()), dialog.no_options)
-            line = first.mapTo(dialog, first.rect().center()).y()
-            assert line == options_label.geometry().center().y(), tool
-            seen.append((dialog.size(), dialog.sizeHint(), places()))
-        assert seen == [seen[0]] * len(seen)
+            assert [w.isVisible() for w in password] == [asks] * 3, tool
+            assert [w.isVisible() for w in settings_row] == [reads] * 3, tool
+            shown = [box for box in dialog.findChildren(QCheckBox) if box.isVisible()]
+            assert len(shown) == len(dialog.option_boxes) == options, tool
+            assert dialog.height() == dialog.sizeHint().height(), tool
+            tops.append(_places(dialog, top))
+            heights[tool] = dialog.height()
+        assert tops == [tops[0]] * len(tops)
+        assert heights["realvnc"] < heights["ultravnc"]
+        dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
+        QApplication.processEvents()
+        before = _places(dialog, [*top, *password, *settings_row])
         dialog.resize(dialog.width(), dialog.height() + 60)
         QApplication.processEvents()
-        assert places() == seen[0][2]
+        assert _places(dialog, [*top, *password, *settings_row]) == before
         _shown(editing)
-        assert editing.size() == seen[0][0]
+        assert editing.height() == heights["ultravnc"]
     finally:
         dialog.close()
         editing.close()
@@ -159,6 +164,7 @@ def test_the_list_under_capypanel_lines_up_with_the_other_fields(
 ) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {tool.id for tool in tools})
+    dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
     try:
         _shown(dialog)
         name = QRect(dialog.name.mapTo(dialog, QPoint(0, 0)), dialog.name.size())
@@ -178,33 +184,32 @@ def test_the_options_label_stays_on_the_first_option_s_line_beside_a_tall_tick_b
         dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
         _shown(dialog)
         form = dialog.findChild(QFormLayout)
-        label = form.labelForField(dialog.options_area) if form else None
-        assert label is not None
         first = next(iter(dialog.option_boxes.values()))
+        label = form.labelForField(first) if form else None
+        assert label is not None
         assert first.mapTo(dialog, first.rect().center()).y() == label.geometry().center().y()
     finally:
         dialog.close()
 
 
-def test_a_row_the_tool_doesnt_use_is_greyed_with_its_reason(catalogs: Catalogs) -> None:
+def test_rows_a_tool_doesnt_use_are_left_out(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
     settings_row = (dialog.settings_state, dialog.choose_settings, dialog.default_settings)
+    password = (dialog.asks_label, dialog.viewer_asks, dialog.capypanel_asks, dialog.login)
     assert dialog.choose_settings.isEnabled() and not dialog.default_settings.isEnabled()
     assert dialog.choose_settings.toolTip().startswith("Optional: a .vnc file saved from Ultra")
     assert dialog.default_settings.toolTip() == "This profile already uses the viewer's defaults."
     dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
-    assert not any(w.isEnabled() for w in settings_row)
-    assert {w.toolTip() for w in settings_row} == {"RealVNC Viewer doesn't use a settings file."}
-    assert dialog.settings_state.text() == "The viewer's defaults"
-    assert dialog.options_area.currentIndex() == 1 and not dialog.no_options.isEnabled()
-    assert dialog.no_options.toolTip() == "RealVNC Viewer has no options to set here."
+    assert not any(w.isVisibleTo(dialog) for w in settings_row)
+    assert all(w.isVisibleTo(dialog) for w in password) and dialog.option_boxes == {}
+    assert not any(box.isVisibleTo(dialog) for box in dialog.findChildren(QCheckBox))
     dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
-    assert not dialog.login.isEnabled() and len(dialog.option_boxes) == 3
-    assert not dialog.capypanel_asks.isEnabled() and dialog.viewer_asks.isChecked()
-    always = "Remote Desktop Connection always asks in its own window."
-    assert dialog.capypanel_asks.toolTip() == always and dialog.login.toolTip() == always
-    assert dialog.login.currentText() == "Sends nothing"
+    assert not any(w.isVisibleTo(dialog) for w in (*password, *settings_row))
+    assert dialog.viewer_asks.isChecked() and len(dialog.option_boxes) == 3
+    assert dialog.profile("rdp").login == "none"
+    dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
+    assert all(w.isVisibleTo(dialog) for w in (*password, *settings_row))
 
 
 def test_picking_capypanel_for_a_new_ultravnc_profile_warns_once(
@@ -493,7 +498,7 @@ def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs)
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"mstsc"})
     dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
-    assert dialog.viewer_asks.text() == "Remote Desktop Connection's window"
+    assert not dialog.viewer_asks.isVisibleTo(dialog)
     assert dialog.profile("rdp").login == "none"
 
 

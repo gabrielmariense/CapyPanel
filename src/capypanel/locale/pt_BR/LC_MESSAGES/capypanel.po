@@ -3750,9 +3750,6 @@ msgstr "Enviar uma mensagem para {user}…"
 msgid "Send a message…"
 msgstr "Enviar uma mensagem…"
 
-msgid "Sends nothing"
-msgstr "Não envia nada"
-
 msgid "Sends the password only"
 msgstr "Envia só a senha"
 
@@ -6034,10 +6031,6 @@ msgid "{tool} (not installed on this PC)"
 msgstr "{tool} (não instalado neste PC)"
 
 #, python-brace-format
-msgid "{tool} always asks in its own window."
-msgstr "O {tool} sempre pede na janela dele."
-
-#, python-brace-format
 msgid "{tool} asks for the password"
 msgstr "O {tool} pede a senha"
 
@@ -6058,16 +6051,8 @@ msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
 
 #, python-brace-format
-msgid "{tool} doesn't use a settings file."
-msgstr "{tool} não usa arquivo de configurações."
-
-#, python-brace-format
 msgid "{tool} has no option “{option}”."
 msgstr "O {tool} não tem a opção “{option}”."
-
-#, python-brace-format
-msgid "{tool} has no options to set here."
-msgstr "{tool} não tem opções para definir aqui."
 
 #, python-brace-format
 msgid "{tool} has no other way to log in."

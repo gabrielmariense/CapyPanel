@@ -20,7 +20,6 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QSizePolicy,
     QSpinBox,
-    QStackedWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -141,45 +140,49 @@ class ProfileDialog(QDialog):
         self.default_settings = QPushButton(_("Use &defaults"))
         self.choose_settings.clicked.connect(self._choose_settings)
         self.default_settings.clicked.connect(self._use_default_settings)
-        settings_buttons = QWidget()
-        buttons_row = QHBoxLayout(settings_buttons)
+        self._settings_buttons = QWidget()
+        buttons_row = QHBoxLayout(self._settings_buttons)
         buttons_row.setContentsMargins(0, 0, 0, 0)
         buttons_row.addWidget(self.choose_settings)
         buttons_row.addWidget(self.default_settings)
         buttons_row.addStretch(1)
         self._option_places: list[QCheckBox] = []
-        more_options = QWidget()
-        more_column = QVBoxLayout(more_options)
+        self._more_options = QWidget()
+        more_column = QVBoxLayout(self._more_options)
         more_column.setContentsMargins(0, 0, 0, 0)
-        for place in range(max(max((len(t.options) for t in tools), default=0), 1)):
+        for place in range(max((len(t.options) for t in tools), default=0)):
             box = QCheckBox(" ")
             policy = box.sizePolicy()
-            policy.setRetainSizeWhenHidden(True)
             policy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
             box.setSizePolicy(policy)
             if place:
                 more_column.addWidget(box)
             self._option_places.append(box)
-        self.no_options = QLabel(_("None"))
-        self.no_options.setEnabled(False)
-        self.options_area = QStackedWidget()
-        self.options_area.addWidget(self._option_places[0])
-        self.options_area.addWidget(self.no_options)
-        self.options_area.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.option_boxes: dict[str, QCheckBox] = {}
 
-        form = QFormLayout()
+        self._form = form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
         form.addRow(_("&Tool:"), self.tool)
+        form.addRow(_("P&ort:"), self.port)
         form.addRow(self.asks_label, self.viewer_asks)
         form.addRow("", self.capypanel_asks)
         form.addRow("", self.login)
-        form.addRow(_("P&ort:"), self.port)
         form.addRow(_("Settings:"), self.settings_state)
-        form.addRow("", settings_buttons)
-        form.addRow(_RowLabel(_("Options:"), self.options_area), self.options_area)
+        form.addRow("", self._settings_buttons)
+        if self._option_places:
+            first = self._option_places[0]
+            form.addRow(_RowLabel(_("Options:"), first), first)
         if len(self._option_places) > 1:
-            form.addRow("", more_options)
+            form.addRow("", self._more_options)
+        # A form's label column is as wide as its visible labels: hiding a row would move fields.
+        widths = [
+            label.sizeHint().width()
+            for row in range(form.rowCount())
+            if (item := form.itemAt(row, QFormLayout.ItemRole.LabelRole))
+            and (label := item.widget()) is not None
+        ]
+        if widths and (name_label := form.labelForField(self.name)) is not None:
+            name_label.setMinimumWidth(max(widths))
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
@@ -207,14 +210,11 @@ class ProfileDialog(QDialog):
         self.login.clear()
         for login in sends:
             self.login.addItem(sends_label(login), login)
-        if not sends:
-            self.login.addItem(_("Sends nothing"), "none")
         self.login.setCurrentIndex(max(self.login.findData(wanted), 0))
         self.viewer_asks.setText(_("{tool}'s window").format(tool=tool.name))
-        self.capypanel_asks.setEnabled(bool(sends))
-        always = _("{tool} always asks in its own window.").format(tool=tool.name)
-        self.capypanel_asks.setToolTip("" if sends else always)
         (self.capypanel_asks if by_capypanel and sends else self.viewer_asks).setChecked(True)
+        for field in (self.viewer_asks, self.capypanel_asks, self.login):
+            self._form.setRowVisible(field, bool(sends))
         self._show_login()
         ticked = set(profile.options) if profile else set()
         options = list(tool.options)
@@ -226,16 +226,27 @@ class ProfileDialog(QDialog):
                 self.option_boxes[options[index]] = box
             if index:
                 box.setVisible(index < len(options))
-        self.options_area.setCurrentIndex(0 if options else 1)
-        self.no_options.setToolTip(_("{tool} has no options to set here.").format(tool=tool.name))
+        if self._option_places:
+            self._form.setRowVisible(self._option_places[0], bool(options))
+        if len(self._option_places) > 1:
+            self._form.setRowVisible(self._more_options, len(options) > 1)
         self.port.setSpecialValueText(
             _("Default ({port})").format(port=tool.port) if tool.port else _("Default")
         )
         if tool.id != self._first_tool:
             self._first_tool, self._has_settings, self.new_settings = tool.id, False, None
+        for row in (self.settings_state, self._settings_buttons):
+            self._form.setRowVisible(row, tool.settings_file is not None)
         self._show_settings(None)
-        if profile is None and self.capypanel_asks.isChecked():
-            self._capypanel_picked(True)
+        if profile is None:
+            self._fit_height()
+            if self.capypanel_asks.isChecked():
+                self._capypanel_picked(True)
+
+    def _fit_height(self) -> None:
+        if (layout := self.layout()) is not None:
+            layout.activate()
+        self.resize(self.width(), self.sizeHint().height())
 
     def _show_login(self) -> None:
         tool = self._current_tool()
@@ -243,9 +254,7 @@ class ProfileDialog(QDialog):
         by_capypanel = self.capypanel_asks.isChecked()
         self.asks_label.setBuddy(self.capypanel_asks if by_capypanel else self.viewer_asks)
         self.login.setEnabled(by_capypanel and self.login.count() > 1)
-        if not self.capypanel_asks.isEnabled():
-            self.login.setToolTip(_("{tool} always asks in its own window.").format(tool=name))
-        elif not by_capypanel:
+        if not by_capypanel:
             self.login.setToolTip(_("{tool} asks for them in its own window.").format(tool=name))
         elif self.login.count() > 1:
             self.login.setToolTip("")
@@ -287,6 +296,7 @@ class ProfileDialog(QDialog):
             text = _("The viewer's defaults")
         self.settings_state.setText(text)
         tool = self._current_tool()
+        reads = tool is not None and tool.settings_file is not None
         if tool is not None and tool.settings_file is not None:
             note = _(
                 "Optional: a {extension} file saved from {tool}. It's used exactly as saved, "
@@ -298,14 +308,6 @@ class ProfileDialog(QDialog):
             self.default_settings.setToolTip(
                 "" if self._has_settings else _("This profile already uses the viewer's defaults.")
             )
-            reads = True
-        else:
-            name = tool.name if tool is not None else ""
-            unused = _("{tool} doesn't use a settings file.").format(tool=name)
-            for widget in (self.settings_state, self.choose_settings, self.default_settings):
-                widget.setToolTip(unused)
-            reads = False
-        self.settings_state.setEnabled(reads)
         self.choose_settings.setEnabled(reads)
         self.default_settings.setEnabled(reads and self._has_settings)
         for box in self.option_boxes.values():
