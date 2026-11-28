@@ -94,7 +94,7 @@ class ProfileStore:
         old = self.find(profile.id)
         self._seed()
         if settings is not None and profile.settings_file:
-            kept = viewer_settings.without_password(settings) or settings
+            kept = viewer_settings.emptied(settings) or settings
             files.write_atomic(self.folder / profile.settings_file, kept)
         self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
         if old is not None and old.settings_file not in ("", profile.settings_file):
@@ -110,7 +110,7 @@ class ProfileStore:
             if path is None:
                 continue
             try:
-                emptied = viewer_settings.without_password(path.read_bytes())
+                emptied = viewer_settings.emptied(path.read_bytes())
                 if emptied is not None:
                     files.write_atomic(path, emptied)
                     log.info("Saved password emptied in %s", path)

@@ -41,7 +41,7 @@ def clean(raw: bytes, clear: Collection[str]) -> bytes:
     return "".join(lines).encode(encoding)
 
 
-def without_password(raw: bytes) -> bytes | None:
+def emptied(raw: bytes) -> bytes | None:
     try:
         text, _encoding = _decode(raw)
         saved = any(

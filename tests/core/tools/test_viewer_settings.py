@@ -43,7 +43,7 @@ def test_a_saved_password_is_always_emptied() -> None:
 
 
 def test_only_a_file_with_a_saved_password_is_given_back_emptied() -> None:
-    emptied = viewer_settings.without_password(SAVED.encode("cp1252"))
+    emptied = viewer_settings.emptied(SAVED.encode("cp1252"))
     assert emptied == SAVED.replace("a1b2c3d4e5f60718", "").encode("cp1252")
 
 
@@ -51,7 +51,7 @@ def test_only_a_file_with_a_saved_password_is_given_back_emptied() -> None:
     "raw", [ULTRAVNC.encode("cp1252"), b"[c]\r\npassword=\r\n", b"just text\r\n", b"MZ\x90\x00"]
 )
 def test_a_file_with_no_saved_password_is_left_alone(raw: bytes) -> None:
-    assert viewer_settings.without_password(raw) is None
+    assert viewer_settings.emptied(raw) is None
 
 
 def test_any_code_page_and_utf16_survive_unchanged() -> None:
