@@ -47,7 +47,7 @@ The other fields are optional:
    below.
 3. Check the preview, and pick where printers with no group go under **Printers with no group go
    to:**.
-4. Click **Add {n} printers**. Nothing changes in your list before that, and nothing contacts a
+4. Click **Add 3 printers**. Nothing changes in your list before that, and nothing contacts a
    printer: the first Refresh does.
 
 ![Import printers with Windows' printer list pasted in: two printers ready to add, and two in red whose Windows port isn't an address](../images/import-printers-dark.png)
@@ -216,7 +216,7 @@ details**.
 ??? note "Right-click menus"
 
     A printer's menu holds **Open web page** in bold (it's what a double-click does), **Refresh
-    printer** (or **Refresh {n} printers** with several selected), **Copy ▸**, **Edit selected…**
+    printer** (or **Refresh 3 printers** with several selected), **Copy ▸**, **Edit selected…**
     for one printer, **Move to ▸**, **Tags ▸** and **Remove**. **Copy ▸** lists the columns in the
     table's order. A group's menu ends with **Refresh group**, which reads its printers and those of
     the groups inside it.

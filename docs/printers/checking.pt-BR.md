@@ -12,7 +12,7 @@ então uma lista somente leitura pode ser atualizada como qualquer outra.
 1. Clique em **Atualizar todas** na barra de ferramentas (**F5**). Ele lê todas as impressoras que
    a tabela mostra, ou seja, o grupo, a tag ou a pesquisa que você escolheu.
 2. Para ler só algumas, use o botão direito numa impressora para **Atualizar impressora**, em
-   várias para **Atualizar {n} impressoras**, ou num grupo para **Atualizar grupo** (com os grupos
+   várias para **Atualizar 3 impressoras**, ou num grupo para **Atualizar grupo** (com os grupos
    de dentro). O **Atualizar** do painel de detalhes lê a impressora que ele mostra.
 3. A barra de status as conta enquanto são lidas, oito por vez, com um botão **Parar**.
 

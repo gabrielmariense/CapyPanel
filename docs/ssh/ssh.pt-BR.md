@@ -91,7 +91,7 @@ todos os hosts exibidos, oito de cada vez, e não faz login em nada.
 
 Pare o mouse sobre um status para ver quando foi verificado e qual endereço respondeu. Para
 verificar menos hosts, clique com o botão direito num host para **Atualizar host** (ou **Atualizar
-{n} hosts**), ou num grupo para **Atualizar grupo**, que verifica os subgrupos também.
+3 hosts**), ou num grupo para **Atualizar grupo**, que verifica os subgrupos também.
 
 ??? note "Configurações › SSH › Geral"
 
@@ -121,7 +121,7 @@ verificar menos hosts, clique com o botão direito num host para **Atualizar hos
 ![A aba de uma conexão ao lado da aba Hosts: o prompt do servidor e alguma saída no terminal](../images/ssh-terminal-dark-pt-BR.png)
 
 Para conectar a um servidor que não está na lista, digite o nome ou endereço dele na caixa de
-pesquisa. Enquanto nenhum host da lista for ele, a tabela oferece **Conectar a {host}**, que usa a
+pesquisa. Enquanto nenhum host da lista for ele, a tabela oferece **Conectar a DESK-07**, que usa a
 porta 22 e as configurações do próprio ssh.exe.
 
 ??? note "Mais sobre conectar"

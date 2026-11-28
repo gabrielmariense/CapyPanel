@@ -25,7 +25,7 @@ vêm depois, quatro por fileira.
       primeiros comandos rápidos, **Todos os comandos…**, **Abrir na Limpeza de perfis** e **Abrir
       no SSH**, e depois **Copiar ▸**, **Editar…**, **Mover para ▸**, **Tags ▸** e **Remover**. Com
       vários hosts selecionados, o menu traz o que funciona em todos eles: **Conectar**, **Atualizar
-      {n} hosts**, **Abrir {n} hosts na Limpeza de perfis**, **Abrir {n} hosts no SSH**, **Comandos
+      3 hosts**, **Abrir 3 hosts na Limpeza de perfis**, **Abrir 3 hosts no SSH**, **Comandos
       como ▸**, **Copiar ▸**, **Mover para ▸**, **Tags ▸** e **Remover**. O **Abrir na Limpeza de
       perfis** escaneia os hosts na [Limpeza de
       perfis](../profiles/user-profiles.pt-BR.md#escanear-os-perfis-de-um-pc), e o **Abrir no SSH**
@@ -175,7 +175,9 @@ notificação do Windows diz "{host} está online de novo".
 2. Escolha uma impressora travada e clique em **Limpar fila…** para excluir os documentos
    aguardando nela.
 3. Ou clique em **Reiniciar o Spooler de Impressão…**, que para todas as impressoras daquele PC por
-   alguns segundos; os documentos aguardando ficam, e saem quando ele volta.
+   alguns segundos; os documentos aguardando ficam, e saem quando ele volta. Um spooler que ainda
+   está parando depois de 30 segundos não é iniciado, e o CapyPanel avisa; use o comando de novo
+   daqui a um minuto, e ele espera o spooler parar antes de iniciá-lo.
 
 Os dois perguntam antes. Estas são as impressoras do próprio PC, não as que um usuário adicionou de
 um servidor de impressão, nem as impressoras de rede da
@@ -208,7 +210,7 @@ um servidor de impressão, nem as impressoras de rede da
 
 A janela Comandos reúne todos os comandos de um PC, com a resposta ao lado. Abra-a pelo botão
 **Comandos**, pelo **Todos os comandos…**, ou, para um endereço que não está na sua lista, pelo
-**Conectar > Conexão manual…** (Ctrl+M) ou pelo **Conectar a {host}…** de uma pesquisa.
+**Conectar > Conexão manual…** (Ctrl+M) ou pelo **Conectar a DESK-07…** de uma pesquisa.
 
 1. Escolha ou digite o PC na caixa **Host**, no topo. O **Perfil** e o **Conectar**, na mesma
    linha, abrem uma conexão com ele.

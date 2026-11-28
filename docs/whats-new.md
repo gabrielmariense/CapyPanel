@@ -3,6 +3,23 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.31.1 <a id="whats-new-0311"></a>
+
+- On a new install, the UltraVNC profile leaves the password to UltraVNC Viewer's own window, so
+  it's no longer on a command line, which security software often logs. The first Connect with it
+  says so once. Profiles already on your PC stay as they are. See [Set up connection
+  profiles](hosts/connecting.md#connecting-set-up-connection-profiles).
+- A connection profile's window shows only the rows its tool uses. For UltraVNC and RealVNC,
+  **Password** is **Asked for by** the viewer or **Saved in CapyPanel**, and saving it for UltraVNC
+  asks first. The profiles list has a **Password** column.
+- A new UltraVNC profile can't pick a viewer settings file any more. A profile that has one keeps
+  it, and CapyPanel empties any password saved inside it.
+- Restart Print Spooler no longer leaves a PC without its spooler. One still stopping after 30
+  seconds isn't started, and CapyPanel says so; run it again in a minute, and it waits for the stop,
+  then starts the spooler.
+- The window that lists an update's changes no longer opens with the keyboard ring around its list,
+  and neither does any window opened with the mouse.
+
 ## 0.31.0 <a id="whats-new-0310"></a>
 
 - CapyPanel works from the keyboard alone in the main window, Settings, Hosts, Printers, SSH and
@@ -23,7 +40,7 @@ The changes in each release that you'll notice. The
   to type yes, not just y.
 - **Import hosts…** reads **SSH port** and **SSH login** columns, and SSH's **Inventory** has it
   too. Hosts' Report writes both, ticked in **For Import**.
-- In Hosts, right-click a host for **Open in SSH**, or several for **Open {n} hosts in SSH**.
+- In Hosts, right-click a host for **Open in SSH**, or several for **Open 3 hosts in SSH**.
 - A portable copy's first start ends Home's guide with a card on what the copy keeps beside it, with
   **Open the userdata folder**.
 - The main window opens sooner on a slow PC: about 0.7 s on one we measured.
@@ -118,7 +135,7 @@ The changes in each release that you'll notice. The
   stays.
 - In Hosts, right-click one or more hosts for **Open in Profile cleanup**: each opens there in a
   tab of its own, scanned.
-- Type a PC that isn't in Hosts' list into the search box, and **Connect to {host}…** opens the
+- Type a PC that isn't in Hosts' list into the search box, and **Connect to DESK-07…** opens the
   manual connection with it filled in. Profile cleanup's **Scan** button now shows the same way,
   even while other hosts match part of the name.
 - **Connect with**, in the Details panel, ends with **Connection profiles…**, which opens their

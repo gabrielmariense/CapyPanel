@@ -15,7 +15,7 @@ guarda também as suas impressoras, com os detalhes de que você precisa e a pá
 clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
 excluí-los. Para os seus servidores e switches, abre um terminal SSH ao lado da lista deles.
 
-> **Situação: beta (0.31.0).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Situação: beta (0.31.1).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > descompacte e rode o CapyPanel.exe. Ele se atualiza quando você manda.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras, Limpeza de perfis e SSH](docs/images/home-dark-pt-BR.png)

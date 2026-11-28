@@ -23,8 +23,8 @@ The Details panel's first row is always **Refresh**, **Commands** (the
     - **Right-click a host:** **Connect** in bold, **Refresh host**, your first four quick commands,
       **All commands…**, **Open in Profile cleanup** and **Open in SSH**, then **Copy ▸**,
       **Edit…**, **Move to ▸**, **Tags ▸** and **Remove**. With several hosts selected the menu
-      holds what works on all of them: **Connect**, **Refresh {n} hosts**, **Open {n} hosts in
-      Profile cleanup**, **Open {n} hosts in SSH**, **Commands run as ▸**, **Copy ▸**, **Move to
+      holds what works on all of them: **Connect**, **Refresh 3 hosts**, **Open 3 hosts in
+      Profile cleanup**, **Open 3 hosts in SSH**, **Commands run as ▸**, **Copy ▸**, **Move to
       ▸**, **Tags ▸** and **Remove**. **Open in Profile cleanup** scans the hosts in [Profile
       cleanup](../profiles/user-profiles.md#scan-a-pcs-profiles), and **Open in SSH** opens each in
       a connection tab of [the SSH tool](../ssh/ssh.md#connect), with its port and Log in as, up to
@@ -158,7 +158,9 @@ Details with **Cancel restart**. Once the PC answers again, a Windows notificati
    and **Jobs**.
 2. Pick a stuck printer and click **Clear queue…** to delete the documents waiting on it.
 3. Or click **Restart Print Spooler…**, which stops every printer on that PC for a few seconds;
-   documents waiting stay, and print once it's back.
+   documents waiting stay, and print once it's back. A spooler still stopping after 30 seconds
+   isn't started, and CapyPanel says so; run it again in a minute, and it waits for the stop
+   before starting the spooler.
 
 Both ask first. These are the PC's own printers, not the ones a user added from a print server, and
 not the network printers of the [Printers tool](../printers/printers.md).
@@ -189,7 +191,7 @@ not the network printers of the [Printers tool](../printers/printers.md).
 
 The Commands window holds every command for one PC, with its answer beside it. Open it with the
 **Commands** button, **All commands…**, or, for an address that isn't in your list, **Connect >
-Manual connection…** (Ctrl+M) or a search's **Connect to {host}…**.
+Manual connection…** (Ctrl+M) or a search's **Connect to DESK-07…**.
 
 1. Pick or type the PC in the **Host** box on top. **Profile** and **Connect**, on the same line,
    open a connection to it.

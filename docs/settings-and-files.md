@@ -125,22 +125,23 @@ and **Restore default** gives back the one it came with.
 
 ## Hosts > Connecting <a id="settings-hosts-connecting"></a>
 
-![Settings > Hosts > Connecting: Connection profiles and Remote tools, each marked Everyone on this PC, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
+![Settings > Hosts > Connecting: Connection profiles with their Password column, and Remote tools, each marked Everyone on this PC, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
 
 **Everyone on this PC**: both sections, **Connection profiles** and **Remote tools**, carry the
 mark, with "A change here reaches everyone on this PC." under the title.
 
 | Setting | What it does | To begin with |
 |---|---|---|
-| **Connection profiles** | The table **Profile \| Tool \| Signs in with**, with **Add…**, **Edit…**, **Delete…** and **Restore built-in…** (see [Set up connection profiles](hosts/connecting.md#set-up-connection-profiles)) | UltraVNC, RealVNC, Remote Desktop |
+| **Connection profiles** | The table **Profile \| Tool \| Password**, with **Add…**, **Edit…**, **Delete…** and **Restore built-in…** (see [Set up connection profiles](hosts/connecting.md#set-up-connection-profiles)) | UltraVNC, RealVNC, Remote Desktop |
 | **Hosts with no profile use** | "The profile a host connects with when it has none of its own." | UltraVNC |
 | **Remote tools** | The table **Tool \| Status \| Where**, with **Change path…** and **Download**: where each tool is installed | Found by itself |
 | **Read PC data with** | How CapyPanel reads the PC facts, programs, mapped drives and user profiles of other PCs: **Automatic (recommended)**, **WMI directly** or **WMI through PowerShell** (see [How CapyPanel reads other PCs](hosts/checking.md#read-a-pcs-facts)) | Automatic |
 
 ??? note "More about profiles and tools"
 
-    - A row's right-click adds **Duplicate…**, and a double-click edits. Remote Desktop's sign-in
-      reads "asked by Remote Desktop Connection itself".
+    - A row's right-click adds **Duplicate…**, and a double-click edits. The **Password** column
+      reads "Asked for by" and the viewer's name, "Saved in CapyPanel (user and password)" or
+      "Saved in CapyPanel (password only)".
     - **Restore built-in…** brings back the profiles CapyPanel ships with, and is greyed while none
       is missing. It asks first, naming them, and adds "Profiles you changed or made yourself stay
       as they are." Cancel is the default button.

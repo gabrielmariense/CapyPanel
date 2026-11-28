@@ -49,7 +49,7 @@ Os outros campos são opcionais:
    prévia logo abaixo.
 3. Confira a prévia e escolha para onde vão as impressoras sem grupo em **Impressoras sem grupo vão
    para:**.
-4. Clique em **Adicionar {n} impressoras**. Nada muda na sua lista antes disso, e nenhuma
+4. Clique em **Adicionar 3 impressoras**. Nada muda na sua lista antes disso, e nenhuma
    impressora é contatada: quem faz isso é o primeiro Atualizar.
 
 ![O Importar impressoras com a lista de impressoras do Windows colada: duas impressoras prontas para adicionar e duas em vermelho, cuja porta do Windows não é um endereço](../images/import-printers-dark-pt-BR.png)
@@ -223,7 +223,7 @@ predefinição que vem pronta é **Todos os detalhes**.
 ??? note "Menus do botão direito"
 
     O menu de uma impressora tem **Abrir página web** em negrito (é o que o clique duplo faz),
-    **Atualizar impressora** (ou **Atualizar {n} impressoras** com várias selecionadas), **Copiar
+    **Atualizar impressora** (ou **Atualizar 3 impressoras** com várias selecionadas), **Copiar
     ▸**, **Editar selecionado…** para uma impressora, **Mover para ▸**, **Tags ▸** e **Remover**. O
     **Copiar ▸** lista as colunas na ordem da tabela. O menu de um grupo termina com **Atualizar
     grupo**, que lê as impressoras dele e as dos grupos de dentro.

@@ -131,22 +131,23 @@ o **Restaurar padrão** devolve a que ele tinha de início.
 
 ## Hosts > Conexão <a id="settings-hosts-connecting"></a>
 
-![Configurações > Hosts > Conexão: Perfis de conexão e Ferramentas remotas, cada uma marcada Todos neste PC, e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
+![Configurações > Hosts > Conexão: Perfis de conexão com a coluna Senha, e Ferramentas remotas, cada uma marcada Todos neste PC, e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
 
 **Todos neste PC**: as duas seções, **Perfis de conexão** e **Ferramentas remotas**, têm a marca,
 com "Uma mudança aqui vale para todos neste PC." embaixo do título.
 
 | Configuração | O que faz | De início |
 |---|---|---|
-| **Perfis de conexão** | A tabela **Perfil \| Ferramenta \| Entra com**, com **Adicionar…**, **Editar…**, **Excluir…** e **Restaurar originais…** (veja [Configurar os perfis de conexão](hosts/connecting.pt-BR.md#configurar-os-perfis-de-conexao)) | UltraVNC, RealVNC, Remote Desktop |
+| **Perfis de conexão** | A tabela **Perfil \| Ferramenta \| Senha**, com **Adicionar…**, **Editar…**, **Excluir…** e **Restaurar originais…** (veja [Configurar os perfis de conexão](hosts/connecting.pt-BR.md#configurar-os-perfis-de-conexao)) | UltraVNC, RealVNC, Remote Desktop |
 | **Hosts sem perfil usam** | "O perfil com que um host conecta quando não tem um próprio." | UltraVNC |
 | **Ferramentas remotas** | A tabela **Ferramenta \| Status \| Onde**, com **Alterar caminho…** e **Baixar**: onde cada ferramenta está instalada | Encontradas sozinhas |
 | **Ler dados dos PCs com** | Como o CapyPanel lê os dados do PC, os programas, as unidades mapeadas e os perfis de usuário de outros PCs: **Automático (recomendado)**, **WMI direto** ou **WMI pelo PowerShell** (veja [Como o CapyPanel lê outros PCs](hosts/checking.pt-BR.md#ler-os-dados-de-um-pc)) | Automático |
 
 ??? note "Mais sobre perfis e ferramentas"
 
-    - O botão direito numa linha acrescenta **Duplicar…**, e um clique duplo edita. A entrada da
-      Área de Trabalho Remota lê "o próprio Remote Desktop Connection pede".
+    - O botão direito numa linha acrescenta **Duplicar…**, e um clique duplo edita. A coluna
+      **Senha** diz "Pedida pelo" e o nome do visualizador, "Salva no CapyPanel (usuário e
+      senha)" ou "Salva no CapyPanel (só a senha)".
     - **Restaurar originais…** traz de volta os perfis que vêm com o CapyPanel, e fica apagado
       enquanto não falta nenhum. Ele pergunta antes, dizendo os nomes, e acrescenta "Os perfis que
       você alterou ou criou continuam como estão." Cancelar é o botão padrão.
