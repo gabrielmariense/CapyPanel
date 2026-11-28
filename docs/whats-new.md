@@ -14,9 +14,9 @@ The changes in each release that you'll notice. The
   asks first. The profiles list has a **Password** column.
 - A new UltraVNC profile can't pick a viewer settings file any more. A profile that has one keeps
   it, and CapyPanel empties any password saved inside it.
-- Restart Print Spooler no longer leaves a PC without its spooler. One still stopping after 30
-  seconds isn't started, and CapyPanel says so; run it again in a minute, and it waits for the stop,
-  then starts the spooler.
+- Restart Print Spooler now says when the spooler is still stopping after 30 seconds, so it wasn't
+  started. Run it again in a minute: it waits for the stop, then starts the spooler. Before, that
+  second run failed.
 - The window that lists an update's changes no longer opens with the keyboard ring around its list,
   and neither does any window opened with the mouse.
 

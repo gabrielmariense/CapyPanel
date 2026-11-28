@@ -15,11 +15,11 @@ As mudanças de cada versão que você vai notar. As
   UltraVNC pergunta antes. A lista de perfis tem a coluna **Senha**.
 - Um perfil novo do UltraVNC não pode mais escolher um arquivo de configurações do visualizador. Um
   perfil que já tem um continua com ele, e o CapyPanel apaga qualquer senha salva dentro dele.
-- O Reiniciar o Spooler de Impressão não deixa mais um PC sem o spooler. Um que ainda está parando
-  depois de 30 segundos não é iniciado, e o CapyPanel avisa; use o comando de novo daqui a um
-  minuto, e ele espera o spooler parar e depois o inicia.
+- O Reiniciar o Spooler de Impressão agora avisa quando o spooler ainda está parando depois de 30
+  segundos e por isso não foi iniciado. Use o comando de novo daqui a um minuto: ele espera o
+  spooler parar e depois o inicia. Antes, essa segunda tentativa falhava.
 - A janela que lista as mudanças de uma atualização não abre mais com o anel do teclado em volta da
-  lista, e nenhuma janela aberta com o mouse abre.
+  lista, e nenhuma janela aberta com o mouse abre assim.
 
 ## 0.31.0 <a id="whats-new-0310"></a>
 
