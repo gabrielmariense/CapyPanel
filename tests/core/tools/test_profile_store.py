@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from capypanel.core import winsec
+from capypanel.core import files, winsec
 from capypanel.core.tools.profile_store import ProfileStore, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
@@ -38,6 +38,28 @@ def test_the_ultravnc_starter_uses_the_securevnc_plugin(tmp_path: Path) -> None:
     ProfileStore(tmp_path / "profiles").place_starters()
     ultravnc = ProfileStore(tmp_path / "profiles").find("ultravnc")
     assert ultravnc is not None and ultravnc.options == ("securevnc",)
+
+
+def test_the_ultravnc_starter_leaves_the_password_to_the_viewer(tmp_path: Path) -> None:
+    ProfileStore(tmp_path / "profiles").place_starters()
+    ultravnc = ProfileStore(tmp_path / "profiles").find("ultravnc")
+    assert ultravnc is not None and ultravnc.login == "none"
+
+
+def test_an_ultravnc_profile_already_on_a_pc_keeps_passing_the_password(tmp_path: Path) -> None:
+    folder = tmp_path / "profiles"
+    folder.mkdir()
+    older = {"schema": 1, "id": "ultravnc", "name": "UltraVNC", "tool": "ultravnc",
+             "login": "account", "options": ["securevnc"]}  # fmt: skip
+    (folder / "ultravnc.json").write_text(json.dumps(older), encoding="utf-8")
+    added = {"schema": 1, "starters_added": ["realvnc", "remote-desktop", "ultravnc"]}
+    (folder / "_profiles.json").write_text(json.dumps(added), encoding="utf-8")
+    store = ProfileStore(folder)
+    store.place_starters()
+    store.restore_starters()
+    kept = ProfileStore(folder).find("ultravnc")
+    assert kept is not None and kept.login == "account"
+    assert json.loads((folder / "ultravnc.json").read_text(encoding="utf-8")) == older
 
 
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
@@ -140,6 +162,30 @@ def test_a_settings_file_is_kept_beside_its_profile_and_goes_with_it(
     store.save(clinics, b"[options]\r\na=1\r\n")
     store.delete("clinics")
     assert not path.exists()
+
+
+def test_a_password_saved_in_a_settings_file_is_never_written_and_old_ones_are_emptied(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = ProfileStore(tmp_path / "profiles")
+    saved = b"[connection]\r\nhost=\r\npassword=a1b2c3d4e5f60718\r\n[options]\r\nviewonly=1\r\n"
+    emptied = saved.replace(b"a1b2c3d4e5f60718", b"")
+    clinics = ConnectionProfile("clinics", "ultravnc", name="Clinics", settings_file="clinics.vnc")
+    store.save(clinics, saved)
+    path = store.folder / "clinics.vnc"
+    assert path.read_bytes() == emptied
+    plain = ConnectionProfile("plain", "ultravnc", name="Plain", settings_file="plain.vnc")
+    store.save(plain, b"[options]\r\nviewonly=1\r\n")
+    path.write_bytes(saved)
+    written: list[Path] = []
+    write = files.write_atomic
+    monkeypatch.setattr(files, "write_atomic", lambda p, data: written.append(p) or write(p, data))
+    monkeypatch.setattr(ProfileStore, "can_edit", lambda _self: False)
+    ProfileStore(store.folder).empty_saved_passwords()
+    assert written == [] and path.read_bytes() == saved
+    monkeypatch.setattr(ProfileStore, "can_edit", lambda _self: True)
+    ProfileStore(store.folder).empty_saved_passwords()
+    assert written == [path] and path.read_bytes() == emptied
 
 
 def test_a_new_tool_s_starter_joins_an_existing_folder_once(tmp_path: Path) -> None:

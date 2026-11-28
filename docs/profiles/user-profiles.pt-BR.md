@@ -30,7 +30,7 @@ novo.
    hosts"): cada um abre numa aba por trás.
 
 No Hosts, o botão direito num host oferece **Abrir na Limpeza de perfis**, e com vários
-selecionados, **Abrir {n} hosts na Limpeza de perfis**: o CapyPanel vem para cá e abre cada um numa
+selecionados, **Abrir 3 hosts na Limpeza de perfis**: o CapyPanel vem para cá e abre cada um numa
 aba própria, escaneado. Um host que já tem aba não é lido de novo. Se o aviso acima ainda não foi
 aceito, ele vem antes, e cancelá-lo não abre nada.
 

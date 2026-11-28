@@ -92,7 +92,7 @@ the first result, and **Esc** to end the search and go back to the group you had
       status only the hosts shown. **Report** offers the results as what to export.
     - **Down** and **Enter** in the box never connect, so a typo can't reach the wrong PC. In the
       table, a double-click and Enter connect as usual.
-    - While no host's name or address is what you typed, case aside, **Connect to {host}…** shows
+    - While no host's name or address is what you typed, case aside, **Connect to DESK-07…** shows
       in the empty table or as the list's last line under the rows (see
       [Connect to an address that isn't in the list](connecting.md#connect-to-an-address-that-isnt-in-the-list)).
       A text with a space, such as a group's name, never offers it.
@@ -105,7 +105,7 @@ the first result, and **Esc** to end the search and go back to the group you had
 2. Paste a list into the box at the top, or click **Open a CSV file…** for a `.csv` or `.txt`
    file. The rows fill the preview below.
 3. Check the preview, and pick where hosts with no group go under **Hosts with no group go to:**.
-4. Click **Add {n} hosts**. Nothing changes in your list before that.
+4. Click **Add 3 hosts**. Nothing changes in your list before that.
 
 Four shapes are understood, and **Formats…** shows each one with an example:
 
@@ -263,7 +263,7 @@ A new list asks for a **Name** and who it's **For:** **Everyone on this PC (shar
 | <a id="hosts-no-header-row"></a>"This list needs a header row." | The pasted list has more than a name and an address, but no first line naming the columns | Add a header row; **Formats…** shows how |
 | <a id="hosts-import-duplicate"></a>"Already in the list, in “Front desk”" or "Same name as row 7" | The host is already in your list, or twice in the file | Nothing: it's skipped, never overwritten |
 | <a id="hosts-import-bad-row"></a>"No name", "Not a computer name or IP address", "No address: the name must then be the computer's name on the network" | That row can't be added | Fix the row in the preview, or leave it out |
-| <a id="hosts-search-no-match"></a>"No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching. For a PC that isn't in the list, **Connect to {host}…** |
+| <a id="hosts-search-no-match"></a>"No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching. For a PC that isn't in the list, **Connect to DESK-07…** |
 | <a id="hosts-list-other-user"></a>**Not used: made by another user** | A shared list made by someone who isn't an administrator | Ask an administrator to replace or delete it |
 | <a id="hosts-list-gone"></a>"The list “…” doesn't exist anymore, so it's no longer among your lists." | Its file was moved, renamed or deleted outside CapyPanel | If it was moved, open it where it is now with **Open list…** |
 | <a id="hosts-list-file-error"></a>"Couldn't open “…”: …", "Couldn't create “…”: …", "Couldn't write “…”: …", "Couldn't save the list: …", "Couldn't save the copy: …" or "Couldn't reload the list: …" | Windows refused the list's file. Its reason follows the colon: no rights to the folder, a full disk, or the file open in another program | Fix what the reason names, then try again |

@@ -9,18 +9,21 @@ empacota ou baixa.
 1. Dê um clique duplo no host, aperte **Enter** ou clique em **Conectar** na barra de ferramentas.
 2. Na primeira vez, o CapyPanel encontra o visualizador sozinho. Se ele não estiver instalado, o
    CapyPanel pede para instalá-lo ou localizar o `.exe`.
-3. Digite a senha quando ela for pedida. Ela fica guardada até o CapyPanel fechar, ou no
-   Gerenciador de Credenciais do Windows se você marcar **Lembrar neste computador**.
+3. Digite a senha quando ela for pedida. Um perfil em **Pedida pelo** visualizador deixa isso para
+   a janela do próprio visualizador. Um perfil em **Salva no CapyPanel** pede a senha no
+   CapyPanel e a guarda até o CapyPanel fechar, ou no Gerenciador de Credenciais do Windows se
+   você marcar **Lembrar neste computador**.
 
-Selecione vários hosts e aperte **Enter** para abrir cada um na sua própria janela; a senha de cada
-perfil é pedida no máximo uma vez, e mais de cinco de uma vez pergunta antes.
+Selecione vários hosts e aperte **Enter** para abrir cada um na sua própria janela; uma senha que o
+CapyPanel guarda é pedida no máximo uma vez por perfil, e mais de cinco hosts de uma vez pergunta
+antes.
 
 ??? note "As ferramentas, e como elas recebem a senha"
 
-    | Ferramenta | Como o CapyPanel entrega a senha |
+    | Ferramenta | Como a senha chega a ela |
     |---|---|
-    | **UltraVNC Viewer** | Na linha de comando (o único jeito que o UltraVNC aceita). Administradores do seu PC podem ver linhas de comando; o log nunca mostra a senha |
-    | **RealVNC Viewer** | Por um pipe privado que só a sua conta do Windows pode abrir, lido uma vez. Nada é gravado em disco nem vai para a linha de comando |
+    | **UltraVNC Viewer** | **Pedida pelo UltraVNC Viewer** (o perfil de uma instalação nova): o CapyPanel não passa nada, e a janela do próprio visualizador pede. **Salva no CapyPanel**: pela linha de comando, o único jeito que o UltraVNC aceita. Programas de segurança costumam registrar linhas de comando, e outros administradores do seu PC podem vê-las. O log do próprio CapyPanel nunca mostra a senha |
+    | **RealVNC Viewer** | **Salva no CapyPanel** (como o perfil dele começa): por um pipe privado que só a sua conta do Windows pode abrir, lido uma vez. Nada é gravado em disco nem vai para a linha de comando. **Pedida pelo RealVNC Viewer**: a janela do próprio visualizador pede |
     | **Remote Desktop Connection** | Não entrega: o próprio cliente de Área de Trabalho Remota pede a senha |
 
     O Remote Desktop Connection vem com o Windows, então o CapyPanel o encontra na `System32`. Um
@@ -31,24 +34,28 @@ perfil é pedida no máximo uma vez, e mais de cinco de uma vez pergunta antes.
 
 ??? note "Senhas"
 
-    - No VNC, o CapyPanel pede a senha de um perfil na primeira vez que você conecta com ele e a
-      lembra, por perfil, até fechar. Hosts com outro perfil nunca a recebem.
+    - Num perfil VNC em **Salva no CapyPanel**, o CapyPanel pede a senha na primeira vez que você
+      conecta com ele e a lembra, por perfil, até fechar. Hosts com outro perfil nunca a recebem.
+    - A janela que pede diz "Usada só nos hosts com este perfil de conexão." e depois como o
+      visualizador a recebe: "O UltraVNC Viewer recebe a senha pela linha de comando, que
+      programas de segurança costumam registrar e outros administradores deste PC podem ver.",
+      ou "O RealVNC Viewer recebe a senha de forma privada, nunca pela linha de comando."
     - Toda janela que pede uma senha tem o **Lembrar neste computador**, desmarcado: "O Windows a
       guarda no Gerenciador de Credenciais para a sua conta do Windows. Senão, o CapyPanel a
       esquece ao fechar e pede uma vez na próxima." Em nenhum dos dois casos o CapyPanel grava uma
       senha num arquivo próprio. Uma janela começa marcada: quando um PC recusa uma conta cuja senha
       você tinha lembrado e o CapyPanel a pede de novo, para que digitá-la de novo a mantenha salva.
     - Senhas VNC clássicas têm no máximo 8 caracteres, então a caixa de senha de um perfil UltraVNC
-      "só senha" para em 8.
+      em **Só a senha** para em 8.
 
 ??? note "A verificação de login, antes de o UltraVNC mandar uma senha"
 
     O login VNC clássico por senha usa só os 8 primeiros caracteres da senha, e sua troca pode ser
-    quebrada offline. Por isso, antes de um perfil UltraVNC de **usuário e senha** conectar, o
-    CapyPanel pergunta a cada servidor quais tipos de login ele oferece: ele lê a saudação do
-    servidor e desliga sem fazer login. Cada servidor é consultado uma vez enquanto o CapyPanel está
-    aberto, e de novo só quando não deu para ler. Um servidor que não aceita usuário e senha é
-    pulado, com uma mensagem, e nunca recebe sua senha.
+    quebrada offline. Por isso, antes de um perfil UltraVNC que salva **usuário e senha** no
+    CapyPanel conectar, o CapyPanel pergunta a cada servidor quais tipos de login ele oferece: ele
+    lê a saudação do servidor e desliga sem fazer login. Cada servidor é consultado uma vez enquanto
+    o CapyPanel está aberto, e de novo só quando não deu para ler. Um servidor que não aceita
+    usuário e senha é pulado, com uma mensagem, e nunca recebe sua senha.
 
     - A verificação leva poucos milissegundos por host numa rede local.
     - Um servidor que não pode ser consultado (inacessível, ou recusando conexões) ainda abre no
@@ -62,8 +69,9 @@ perfil é pedida no máximo uma vez, e mais de cinco de uma vez pergunta antes.
 
 ## Escolher como um host conecta <a id="connecting-choose-how-a-host-connects"></a>
 
-Um **perfil de conexão** diz como um host conecta: a **ferramenta**, o **login** (usuário e senha,
-ou só senha) e as **opções** da ferramenta, como o **plugin SecureVNC** do UltraVNC.
+Um **perfil de conexão** diz como um host conecta: a **ferramenta**, onde a **senha** é digitada
+(no visualizador, ou salva no CapyPanel) e as **opções** da ferramenta, como o **plugin SecureVNC**
+do UltraVNC.
 
 - **Para um grupo:** botão direito nele > **Perfil de conexão**. Todos os hosts dentro dele o
   seguem, a menos que definam o próprio.
@@ -99,14 +107,37 @@ em lugar nenhum usam o padrão.
 
 Abra **Configurações > Hosts > Conexão > Perfis de conexão** (ou **Conectar > Perfis de conexão…**)
 para adicionar, editar, duplicar, excluir ou restaurar os que vêm com o CapyPanel. Cada perfil tem
-um nome, uma ferramenta, um login, as opções da ferramenta e uma porta (em branco para a da própria
-ferramenta). A janela tem as mesmas linhas para toda ferramenta: uma linha que a ferramenta não usa
-fica cinza, e a dica dela diz o motivo.
+um **Nome**, uma **Ferramenta** e uma **Porta** (em branco para a da própria ferramenta), e depois
+só as linhas que a ferramenta usa. As colunas da lista são **Perfil**, **Ferramenta** e **Senha**.
 
-O CapyPanel começa com **UltraVNC** e **RealVNC**, ambos com "usuário e senha", e **Remote
-Desktop**. O do UltraVNC vem com o **SecureVNC plugin** marcado: um servidor sem o plugin conecta
-mesmo assim, depois de o UltraVNC Viewer perguntar se segue sem criptografia. **Hosts sem perfil
-usam**, a última linha, é o perfil dos hosts que não têm um próprio.
+![Um perfil novo do UltraVNC: Nome, Ferramenta e Porta, depois a Senha em Pedida pelo UltraVNC Viewer, a lista Usuário e senha em cinza e a opção SecureVNC plugin](../images/profile-password-viewer-dark-pt-BR.png)
+
+- **Senha** (UltraVNC e RealVNC): **Pedida pelo** visualizador, onde um perfil novo começa, ou
+  **Salva no CapyPanel**. Pedida pelo visualizador, o CapyPanel não passa nada e a janela do próprio
+  visualizador pede. Salva no CapyPanel, o CapyPanel a pede no primeiro Conectar e a repassa. A
+  lista embaixo das duas diz **Usuário e senha** ou **Só a senha**; ela fica cinza enquanto o
+  visualizador pede.
+- **Opções**: o **SecureVNC plugin** do UltraVNC, e as da Área de Trabalho Remota (abaixo). A Área
+  de Trabalho Remota não tem a parte da senha.
+
+Escolher **Salva no CapyPanel** no UltraVNC pergunta antes: "Salvar a senha no CapyPanel? O
+UltraVNC Viewer recebe a senha pela linha de comando, que programas de segurança costumam
+registrar e outros administradores deste PC podem ver." O **Cancelar** é o padrão, e volta a
+escolha. A pergunta vem num perfil novo ou duplicado, e num perfil que já existe na primeira vez
+que uma mudança poria a senha na linha de comando. O RealVNC nunca pergunta: a senha dele vai
+por um pipe privado.
+
+O CapyPanel começa com **UltraVNC**, **RealVNC** e **Remote Desktop**. Numa instalação nova, o do
+UltraVNC fica em **Pedida pelo UltraVNC Viewer**, com o **SecureVNC plugin** marcado: um servidor
+sem o plugin conecta mesmo assim, depois de o UltraVNC Viewer perguntar se segue sem
+criptografia. O do RealVNC fica em **Salva no CapyPanel (usuário e senha)**. Uma atualização deixa
+os perfis que já estão num PC como estão. **Hosts sem perfil usam**, a última linha, é o perfil
+dos hosts que não têm um próprio.
+
+Na primeira vez que você conecta com um perfil cujo visualizador pede, quando esse visualizador
+receberia a senha pela linha de comando (o UltraVNC), um aviso diz isso uma vez por conta do
+Windows: "O UltraVNC Viewer pede o usuário e a senha ao conectar. Para salvá-los no CapyPanel,
+mude este perfil em Configurações › Hosts › Conexão."
 
 ??? note "Onde os perfis ficam, e quem pode alterá-los"
 
@@ -121,20 +152,24 @@ usam**, a última linha, é o perfil dos hosts que não têm um próprio.
     - Um perfil pode indicar um visualizador que não está instalado neste PC (ele aparece marcado).
       O CapyPanel pede o visualizador só na hora de conectar.
 
-??? note "UltraVNC: um arquivo de configurações do visualizador"
+??? note "UltraVNC: o arquivo de configurações próprio de um perfil"
 
-    Para todo o resto que o UltraVNC oferece (qualidade, escala, só visualização, tela cheia e
-    assim por diante), um perfil do UltraVNC pode levar um arquivo de configurações:
+    Antes da 0.31.1, um perfil do UltraVNC podia levar um arquivo de configurações `.vnc` salvo
+    no UltraVNC Viewer. Um perfil novo não pode mais escolher um. Um perfil que já tem um continua
+    a usá-lo: a janela dele mostra **Ajustes:** "Arquivo de configurações próprio", e o **Usar
+    padrões** tira o arquivo quando você salva. O **Duplicar…** o copia.
 
-    1. No UltraVNC Viewer, ajuste as opções e salve a conexão como um arquivo `.vnc`.
-    2. No editor de perfil, **Ajustes > Escolher arquivo…** e selecione-o.
-       **Usar padrões** volta às configurações do próprio visualizador.
+    O arquivo fica junto do perfil (`profiles\<id>.vnc`) e é usado como foi salvo, inclusive o
+    plugin de criptografia; só o `host` é esvaziado. Enquanto um perfil tem arquivo, as opções
+    dele ficam desligadas: quem decide é o arquivo. Ao conectar, o visualizador recebe uma cópia
+    temporária, apagada um minuto depois.
 
-    No **Adicionar** ou no **Salvar**, o CapyPanel copia o arquivo para junto do perfil
-    (`profiles\<id>.vnc`). Ele é usado **exatamente como foi salvo**, inclusive o plugin de
-    criptografia; só o `host` é esvaziado. Enquanto um perfil tem arquivo, as opções dele ficam
-    desligadas: quem decide é o arquivo. Ao conectar, o visualizador recebe uma cópia temporária,
-    apagada um minuto depois.
+    Uma senha salva dentro do arquivo é apagada: nessa cópia, em todo arquivo que o CapyPanel
+    grava e, a cada início, nos arquivos que já estão na pasta de perfis, quando a sua conta do
+    Windows pode gravar ali. Um arquivo `.vnc` guarda a senha com a criptografia de chave fixa do
+    VNC, que ferramentas gratuitas desfazem, e toda conta do PC pode ler a pasta de perfis. Um
+    arquivo que o CapyPanel não consegue ler como configurações do visualizador fica como está, e
+    o Conectar diz o motivo (veja [Mensagens que você pode ver](#connecting-messages-you-may-see)).
 
 ??? note "Perfis de Área de Trabalho Remota"
 
@@ -211,7 +246,7 @@ endereço, escolha um **Perfil** e clique em **Conectar**. Um endereço com port
 PC na lista aberta (veja [A janela Comandos](commands.pt-BR.md#a-janela-comandos)).
 
 Ou digite-o na caixa de pesquisa acima da tabela de hosts. Enquanto nenhum host da lista tiver
-esse nome ou endereço, o **Conectar a {host}…** aparece, na tabela vazia ou como a última linha
+esse nome ou endereço, o **Conectar a DESK-07…** aparece, na tabela vazia ou como a última linha
 da lista, embaixo das linhas. Ele abre a mesma janela com o PC já em **Host**; nada se conecta até
 você clicar em **Conectar** lá.
 
@@ -220,11 +255,10 @@ você clicar em **Conectar** lá.
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
 | <a id="connect-name-not-address"></a>O nome de um host não pode ser usado como endereço | Ele não tem endereço, e um nome como "Ala 2A - Posto" não é um nome de computador | Edite o host e acrescente o endereço; o CapyPanel oferece isso |
-| <a id="connect-login-check-skipped"></a>Um servidor pulado pela verificação de login | Ele não aceita usuário e senha, então nunca recebeu a sua | Use um perfil "só senha" para ele |
+| <a id="connect-login-check-skipped"></a>Um servidor pulado pela verificação de login | Ele não aceita usuário e senha, então nunca recebeu a sua | Use um perfil em **Só a senha** para ele |
 | <a id="connect-profile-not-available"></a>"não disponível neste PC" | Um host ou grupo cita um perfil que este PC não tem | Escolha outro perfil, ou adicione esse |
 | <a id="connect-viewer-not-found"></a>O visualizador pede para ser instalado ou localizado | O visualizador VNC não foi encontrado | Instale-o, ou mostre ao CapyPanel onde está o `.exe` |
 | <a id="connect-password-not-saved"></a>"Não foi possível salvar a senha no Gerenciador de Credenciais do Windows: …", e depois "Ela fica guardada até o CapyPanel fechar." | O Windows recusou salvá-la, então o CapyPanel só a guarda até fechar | Nada por enquanto. Se continuar acontecendo, procure as entradas do CapyPanel em Painel de Controle › **Gerenciador de Credenciais** › **Credenciais do Windows** |
 | <a id="connect-password-not-deleted"></a>"Não foi possível apagar a senha salva no Gerenciador de Credenciais do Windows: …" | O Windows recusou apagá-la, então ela continua salva | Apague-a você mesmo lá: Painel de Controle › **Gerenciador de Credenciais** › **Credenciais do Windows**, em "CapyPanel/" |
-| <a id="connect-couldnt-start"></a>"Não foi possível iniciar o … para …: …" | O Windows não conseguiu abrir a ferramenta remota, como a Área de Trabalho Remota ou o visualizador VNC. O motivo vem depois dos dois-pontos | Confira o caminho da ferramenta em **Ferramentas remotas**, em Configurações › Hosts › Conexão |
-| <a id="connect-settings-file-unusable"></a>"Não foi possível usar “…”: …" | Um perfil de conexão cita um arquivo de configurações do visualizador que não pode ser lido | Escolha outro arquivo no perfil, ou corrija esse |
+| <a id="connect-couldnt-start"></a>"Não foi possível iniciar o … para …: …" | O Windows não conseguiu abrir a ferramenta remota, como a Área de Trabalho Remota ou o visualizador VNC, ou o arquivo de configurações próprio de um perfil do UltraVNC não pôde ser lido. O motivo vem depois dos dois-pontos | Confira o caminho da ferramenta em **Ferramentas remotas**, em Configurações › Hosts › Conexão |
 | <a id="connect-settings-not-saved"></a>"Não foi possível salvar os perfis de conexão: …", "Não foi possível salvar como os PCs são lidos: …" ou "Não foi possível salvar onde as ferramentas estão: …" | O Windows recusou gravar essa parte de Configurações › Hosts › Conexão. O motivo vem depois dos dois-pontos. Uma parte para todos neste PC precisa de um administrador | Resolva o que o motivo diz e faça a alteração de novo |

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 23:26-0300\n"
+"POT-Creation-Date: 2026-11-24 12:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -113,9 +113,6 @@ msgstr "&Copiar linha"
 
 msgid "&Create"
 msgstr "&Criar"
-
-msgid "&Credentials:"
-msgstr "&Credenciais:"
 
 msgid "&Customize the details panel…"
 msgstr "Personali&zar o painel de detalhes…"
@@ -801,6 +798,10 @@ msgstr "Como"
 msgid "Ask each time"
 msgstr "Perguntar sempre"
 
+#, python-brace-format
+msgid "Asked for by {tool}"
+msgstr "Pedida pelo {tool}"
+
 msgid "Asked when needed"
 msgstr "Pedida quando precisar"
 
@@ -875,9 +876,6 @@ msgstr "C$"
 msgid "C$ share"
 msgstr "Compartilhamento C$"
 
-msgid "C&hoose file…"
-msgstr "Escol&her arquivo…"
-
 msgid "C&hoose…"
 msgstr "Escol&her…"
 
@@ -935,10 +933,6 @@ msgstr "Cancelado."
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
 msgstr "O CapyPanel pediu às {when}."
-
-#, python-brace-format
-msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
-msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha ao conectar."
 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
@@ -1060,10 +1054,6 @@ msgstr "Verifica se {host} responde, como o Atualizar do Hosts"
 
 msgid "Choose a program: a file whose name ends in .exe."
 msgstr "Escolha um programa: um arquivo cujo nome termina em .exe."
-
-#, python-brace-format
-msgid "Choose a {tool} settings file"
-msgstr "Escolha um arquivo de configurações do {tool}"
 
 msgid "Choose the program."
 msgstr "Escolha o programa."
@@ -1431,10 +1421,6 @@ msgstr "Não foi possível iniciar o {program}: {error}. Configurações › SSH
 #, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
 msgstr "Não foi possível iniciar o {tool} para {target}: {error}"
-
-#, python-brace-format
-msgid "Couldn't use “{file}”: {error}"
-msgstr "Não foi possível usar “{file}”: {error}"
 
 #, python-brace-format
 msgid "Couldn't write “{path}”: {error}"
@@ -1958,10 +1944,6 @@ msgstr "Do grupo “{group}”: {profile}"
 msgid "From their groups"
 msgstr "Do grupo de cada um"
 
-#, python-brace-format
-msgid "From “{file}”"
-msgstr "De “{file}”"
-
 msgid "General"
 msgstr "Geral"
 
@@ -2191,18 +2173,12 @@ msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
 msgstr "Ele reiniciou às {at} e respondeu de novo às {now}. Clique para mostrá-lo."
 
-msgid "It's handed to the viewer privately, never on its command line."
-msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
-
 msgid "It's one of Windows' own. It's never deleted here."
 msgstr "É do próprio Windows. Nunca é excluído aqui."
 
 #, python-brace-format
 msgid "It's outside the Users folder. CapyPanel only deletes profiles inside {folder}."
 msgstr "Fica fora da pasta Users. O CapyPanel só exclui perfis dentro de {folder}."
-
-msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
-msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
 
 msgid "Its address or name, as in the host list"
 msgstr "O endereço ou nome, como na lista de hosts"
@@ -2914,10 +2890,6 @@ msgstr "Abre a tela do host escolhido. A ferramenta usada vem do perfil de conex
 msgid "Opens {path}"
 msgstr "Abre {path}"
 
-#, python-brace-format
-msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
-msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
-
 msgid "Optional: asked the first time it's needed"
 msgstr "Opcional: pedida na primeira vez que precisar"
 
@@ -3008,9 +2980,15 @@ msgstr "Parceiro {partner}, usuário {user}. Guardada no Gerenciador de Credenci
 msgid "Pass&word"
 msgstr "Se&nha"
 
+msgid "Password"
+msgstr "Senha"
+
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
+
+msgid "Password only"
+msgstr "Só a senha"
 
 msgid "Passwords"
 msgstr "Senhas"
@@ -3627,11 +3605,26 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
+msgid "Save the password in CapyPanel"
+msgstr "Salvar a senha no CapyPanel"
+
+msgid "Save the password in CapyPanel?"
+msgstr "Salvar a senha no CapyPanel?"
+
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
 
 msgid "Saved credentials"
 msgstr "Credenciais salvas"
+
+msgid "Saved in CapyPanel"
+msgstr "Salva no CapyPanel"
+
+msgid "Saved in CapyPanel (password only)"
+msgstr "Salva no CapyPanel (só a senha)"
+
+msgid "Saved in CapyPanel (user and password)"
+msgstr "Salva no CapyPanel (usuário e senha)"
 
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
@@ -3850,9 +3843,6 @@ msgstr "Desconecta um usuário da conta; o que não foi salvo se perde."
 #, python-brace-format
 msgid "Signs in as {user}"
 msgstr "Entra como {user}"
-
-msgid "Signs in with"
-msgstr "Entra com"
 
 msgid "Size"
 msgstr "Tamanho"
@@ -4103,6 +4093,10 @@ msgstr "Os serviços do Windows no PC."
 
 msgid "The PC's event logs."
 msgstr "Os logs de eventos do PC."
+
+#, python-brace-format
+msgid "The Print Spooler on {host} is still stopping after {seconds} seconds, so it wasn't started again. Try again in a minute."
+msgstr "O Spooler de Impressão em {host} ainda está parando após {seconds} segundos, então não foi iniciado de novo. Tente outra vez daqui a um minuto."
 
 msgid "The View menu, on the menu bar, shows and hides this screen's panels, like Tags and Details."
 msgstr "O menu Exibir, na barra de menus, mostra e oculta os painéis desta tela, como Tags e Detalhes."
@@ -4785,13 +4779,16 @@ msgid "Used for Refresh's logged-on users and the commands run on this PC, not f
 msgstr "Usada para os usuários logados do Atualizar e os comandos executados neste PC, não para o Conectar."
 
 msgid "Used only for hosts with this connection profile."
-msgstr "Usado só nos hosts com este perfil de conexão."
+msgstr "Usada só nos hosts com este perfil de conexão."
 
 msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr "Usada só para ver quem está logado e nos comandos que você executa em um host."
 
 msgid "User"
 msgstr "Usuário"
+
+msgid "User and password"
+msgstr "Usuário e senha"
 
 #, python-brace-format
 msgid "User profiles on {host}"
@@ -4813,10 +4810,6 @@ msgstr "Versão"
 msgctxt "guide"
 msgid "View"
 msgstr "Exibir"
-
-#, python-brace-format
-msgid "Viewer settings (*{extension})"
-msgstr "Configurações do visualizador (*{extension})"
 
 msgid "WMI directly"
 msgstr "WMI direto"
@@ -5058,13 +5051,6 @@ msgstr "e mais {n}…"
 msgid "as {account}"
 msgstr "como {account}"
 
-msgid "asked by the tool"
-msgstr "a própria ferramenta pede"
-
-#, python-brace-format
-msgid "asked by {tool} itself"
-msgstr "o próprio {tool} pede"
-
 msgid "asset tag"
 msgstr "patrimônio"
 
@@ -5208,9 +5194,6 @@ msgstr "nada excluído"
 msgid "open {what}"
 msgstr "abrir {what}"
 
-msgid "password only"
-msgstr "só senha"
-
 msgid "port"
 msgstr "porta"
 
@@ -5336,9 +5319,6 @@ msgstr "tentativa às {time}"
 
 msgid "user"
 msgstr "usuário"
-
-msgid "user and password"
-msgstr "usuário e senha"
 
 msgid "v2c: a community string. v3: a user, with a password and encryption."
 msgstr "v2c: uma comunidade. v3: um usuário, com senha e criptografia."
@@ -6014,6 +5994,14 @@ msgid "{tool} (not installed on this PC)"
 msgstr "{tool} (não instalado neste PC)"
 
 #, python-brace-format
+msgid "{tool} asks for the user and password when it connects. To save them in CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+msgstr "O {tool} pede o usuário e a senha ao conectar. Para salvá-los no CapyPanel, mude este perfil em Configurações › Hosts › Conexão."
+
+#, python-brace-format
+msgid "{tool} asks for these when it connects."
+msgstr "O {tool} pede isso ao conectar."
+
+#, python-brace-format
 msgid "{tool} can't be given a password."
 msgstr "O {tool} não aceita receber uma senha."
 
@@ -6026,28 +6014,32 @@ msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
 
 #, python-brace-format
-msgid "{tool} doesn't use a settings file."
-msgstr "{tool} não usa arquivo de configurações."
+msgid "{tool} gets it on its command line, which security software often logs and other admins of this PC can see."
+msgstr "O {tool} recebe a senha pela linha de comando, que programas de segurança costumam registrar e outros administradores deste PC podem ver."
+
+#, python-brace-format
+msgid "{tool} gets it privately, never on its command line."
+msgstr "O {tool} recebe a senha de forma privada, nunca pela linha de comando."
 
 #, python-brace-format
 msgid "{tool} has no option “{option}”."
 msgstr "O {tool} não tem a opção “{option}”."
 
 #, python-brace-format
-msgid "{tool} has no options to set here."
-msgstr "{tool} não tem opções para definir aqui."
-
-#, python-brace-format
-msgid "{tool} has no other way to log in."
-msgstr "{tool} não tem outra forma de entrar."
-
-#, python-brace-format
 msgid "{tool} not found"
 msgstr "{tool} não encontrado"
 
 #, python-brace-format
+msgid "{tool} only takes a password."
+msgstr "O {tool} só aceita a senha."
+
+#, python-brace-format
 msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings › Hosts › Connecting."
 msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho é salvo para todos neste PC; você também pode alterá-lo depois em Configurações › Hosts › Conexão."
+
+#, python-brace-format
+msgid "{tool} will ask for the password"
+msgstr "O {tool} vai pedir a senha"
 
 #, python-brace-format
 msgid "{user} (disconnected)"

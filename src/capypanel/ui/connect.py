@@ -35,6 +35,7 @@ from capypanel.ui.notes import hint
 log = logging.getLogger(__name__)
 MANY_CONNECTIONS = 5
 MAX_TEXT = 256
+VIEWER_ASKS = "viewer-asks"
 DEFAULT_PORT = 5900
 
 
@@ -49,6 +50,13 @@ class Request:
 class Ready:
     profile: ConnectionProfile
     tool: ToolDefinition
+
+
+def command_line_warning(tool: str) -> str:
+    return _(
+        "{tool} gets it on its command line, which security software often logs and other "
+        "admins of this PC can see."
+    ).format(tool=tool)
 
 
 class CredentialDialog(QDialog):
@@ -82,12 +90,12 @@ class CredentialDialog(QDialog):
         )  # fmt: skip
         form.addRow("", self.remember)
         used = _("Used only for hosts with this connection profile.")
+        tool = ready.tool.name
         how = (
-            _("It's passed to the viewer on its command line, which administrators of this PC "
-              "can see.")
+            command_line_warning(tool)
             if on_command_line
-            else _("It's handed to the viewer privately, never on its command line.")
-        )  # fmt: skip
+            else _("{tool} gets it privately, never on its command line.").format(tool=tool)
+        )
         note = hint(f"{used} {how}")
         self.buttons = ok_cancel(self, _("Connect"))
         layout = QVBoxLayout(self)
@@ -132,6 +140,7 @@ class Connector:
         self.catalogs = catalogs
         self.credentials = credentials
         self.open_settings: Callable[[], None] | None = None
+        self.first_time: Callable[[str], bool] = lambda _note: False
         # Each server's login types, asked once per run: UltraVNC up to 1.6.1 counts every
         # asking as a failed login, and turns this PC away after six.
         self._offered: dict[tuple[str, int], tuple[int, ...]] = {}
@@ -234,6 +243,17 @@ class Connector:
                         owner,
                         place="connect-password-not-saved",
                     )  # fmt: skip
+        elif tool.credentials == "arguments" and self.first_time(VIEWER_ASKS):
+            text = _(
+                "{tool} asks for the user and password when it connects. To save them in "
+                "CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+            )
+            help_links.information(
+                owner,
+                _("{tool} will ask for the password").format(tool=tool.name),
+                text.format(tool=tool.name),
+                place="connecting-set-up-connection-profiles",
+            )
         settings = self.catalogs.profiles.settings_path(profile)
         started = 0
         for request in requests:

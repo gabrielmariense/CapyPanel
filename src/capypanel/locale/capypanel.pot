@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 23:26-0300\n"
+"POT-Creation-Date: 2026-11-28 07:35-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,9 +111,6 @@ msgid "&Copy row"
 msgstr ""
 
 msgid "&Create"
-msgstr ""
-
-msgid "&Credentials:"
 msgstr ""
 
 msgid "&Customize the details panel…"
@@ -823,6 +820,10 @@ msgstr ""
 msgid "Ask each time"
 msgstr ""
 
+#, python-brace-format
+msgid "Asked for by {tool}"
+msgstr ""
+
 msgid "Asked when needed"
 msgstr ""
 
@@ -904,9 +905,6 @@ msgstr ""
 msgid "C$ share"
 msgstr ""
 
-msgid "C&hoose file…"
-msgstr ""
-
 msgid "C&hoose…"
 msgstr ""
 
@@ -965,12 +963,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"CapyPanel asks for nothing: {tool} asks for the user and password itself "
-"when it connects."
 msgstr ""
 
 msgid "CapyPanel asks for them again when it needs them."
@@ -1105,10 +1097,6 @@ msgid "Checks whether {host} answers, as Hosts' Refresh does"
 msgstr ""
 
 msgid "Choose a program: a file whose name ends in .exe."
-msgstr ""
-
-#, python-brace-format
-msgid "Choose a {tool} settings file"
 msgstr ""
 
 msgid "Choose the program."
@@ -1479,10 +1467,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
-msgstr ""
-
-#, python-brace-format
-msgid "Couldn't use “{file}”: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -2044,10 +2028,6 @@ msgstr ""
 msgid "From their groups"
 msgstr ""
 
-#, python-brace-format
-msgid "From “{file}”"
-msgstr ""
-
 msgid "General"
 msgstr ""
 
@@ -2299,9 +2279,6 @@ msgstr ""
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
 msgstr ""
 
-msgid "It's handed to the viewer privately, never on its command line."
-msgstr ""
-
 msgid "It's one of Windows' own. It's never deleted here."
 msgstr ""
 
@@ -2309,11 +2286,6 @@ msgstr ""
 msgid ""
 "It's outside the Users folder. CapyPanel only deletes profiles inside "
 "{folder}."
-msgstr ""
-
-msgid ""
-"It's passed to the viewer on its command line, which administrators of "
-"this PC can see."
 msgstr ""
 
 msgid "Its address or name, as in the host list"
@@ -3075,13 +3047,6 @@ msgstr ""
 msgid "Opens {path}"
 msgstr ""
 
-#, python-brace-format
-msgid ""
-"Optional: a {extension} file saved from {tool}. It's used exactly as "
-"saved, including its encryption plugin; only the host is emptied, since "
-"the address comes from the host you open."
-msgstr ""
-
 msgid "Optional: asked the first time it's needed"
 msgstr ""
 
@@ -3172,8 +3137,14 @@ msgstr ""
 msgid "Pass&word"
 msgstr ""
 
+msgid "Password"
+msgstr ""
+
 #, python-brace-format
 msgid "Password for {profile}"
+msgstr ""
+
+msgid "Password only"
 msgstr ""
 
 msgid "Passwords"
@@ -3817,10 +3788,25 @@ msgstr ""
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
+msgid "Save the password in CapyPanel"
+msgstr ""
+
+msgid "Save the password in CapyPanel?"
+msgstr ""
+
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Saved credentials"
+msgstr ""
+
+msgid "Saved in CapyPanel"
+msgstr ""
+
+msgid "Saved in CapyPanel (password only)"
+msgstr ""
+
+msgid "Saved in CapyPanel (user and password)"
 msgstr ""
 
 msgid "Saved in Credential Manager:"
@@ -4041,9 +4027,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Signs in as {user}"
-msgstr ""
-
-msgid "Signs in with"
 msgstr ""
 
 msgid "Size"
@@ -4311,6 +4294,12 @@ msgid "The PC's Windows services."
 msgstr ""
 
 msgid "The PC's event logs."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"The Print Spooler on {host} is still stopping after {seconds} seconds, so"
+" it wasn't started again. Try again in a minute."
 msgstr ""
 
 msgid ""
@@ -5086,6 +5075,9 @@ msgstr ""
 msgid "User"
 msgstr ""
 
+msgid "User and password"
+msgstr ""
+
 #, python-brace-format
 msgid "User profiles on {host}"
 msgstr ""
@@ -5105,10 +5097,6 @@ msgstr ""
 
 msgctxt "guide"
 msgid "View"
-msgstr ""
-
-#, python-brace-format
-msgid "Viewer settings (*{extension})"
 msgstr ""
 
 msgid "WMI directly"
@@ -5382,13 +5370,6 @@ msgstr ""
 msgid "as {account}"
 msgstr ""
 
-msgid "asked by the tool"
-msgstr ""
-
-#, python-brace-format
-msgid "asked by {tool} itself"
-msgstr ""
-
 msgid "asset tag"
 msgstr ""
 
@@ -5538,9 +5519,6 @@ msgstr ""
 msgid "open {what}"
 msgstr ""
 
-msgid "password only"
-msgstr ""
-
 msgid "port"
 msgstr ""
 
@@ -5665,9 +5643,6 @@ msgid "tried at {time}"
 msgstr ""
 
 msgid "user"
-msgstr ""
-
-msgid "user and password"
 msgstr ""
 
 msgid "v2c: a community string. v3: a user, with a password and encryption."
@@ -6368,6 +6343,16 @@ msgid "{tool} (not installed on this PC)"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{tool} asks for the user and password when it connects. To save them in "
+"CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} asks for these when it connects."
+msgstr ""
+
+#, python-brace-format
 msgid "{tool} can't be given a password."
 msgstr ""
 
@@ -6380,7 +6365,13 @@ msgid "{tool} can't be given a user name."
 msgstr ""
 
 #, python-brace-format
-msgid "{tool} doesn't use a settings file."
+msgid ""
+"{tool} gets it on its command line, which security software often logs "
+"and other admins of this PC can see."
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} gets it privately, never on its command line."
 msgstr ""
 
 #, python-brace-format
@@ -6388,15 +6379,11 @@ msgid "{tool} has no option “{option}”."
 msgstr ""
 
 #, python-brace-format
-msgid "{tool} has no options to set here."
-msgstr ""
-
-#, python-brace-format
-msgid "{tool} has no other way to log in."
-msgstr ""
-
-#, python-brace-format
 msgid "{tool} not found"
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} only takes a password."
 msgstr ""
 
 #, python-brace-format
@@ -6404,6 +6391,10 @@ msgid ""
 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it "
 "is. The path is saved for everyone on this PC; you can also change it "
 "later in Settings › Hosts › Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} will ask for the password"
 msgstr ""
 
 #, python-brace-format

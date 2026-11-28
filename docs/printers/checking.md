@@ -11,7 +11,7 @@ refreshed like any other.
 
 1. Click **Refresh all** on the toolbar (**F5**). It reads every printer the table shows, which is
    the group, tag or search you have picked.
-2. To read only some, right-click a printer for **Refresh printer**, several for **Refresh {n}
+2. To read only some, right-click a printer for **Refresh printer**, several for **Refresh 3
    printers**, or a group for **Refresh group** (with the groups inside it). The Details panel's
    **Refresh** reads the printer it shows.
 3. The status bar counts them as they're read, eight at a time, with a **Stop** button.

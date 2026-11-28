@@ -23,8 +23,8 @@ The Details panel's first row is always **Refresh**, **Commands** (the
     - **Right-click a host:** **Connect** in bold, **Refresh host**, your first four quick commands,
       **All commands…**, **Open in Profile cleanup** and **Open in SSH**, then **Copy ▸**,
       **Edit…**, **Move to ▸**, **Tags ▸** and **Remove**. With several hosts selected the menu
-      holds what works on all of them: **Connect**, **Refresh {n} hosts**, **Open {n} hosts in
-      Profile cleanup**, **Open {n} hosts in SSH**, **Commands run as ▸**, **Copy ▸**, **Move to
+      holds what works on all of them: **Connect**, **Refresh 3 hosts**, **Open 3 hosts in
+      Profile cleanup**, **Open 3 hosts in SSH**, **Commands run as ▸**, **Copy ▸**, **Move to
       ▸**, **Tags ▸** and **Remove**. **Open in Profile cleanup** scans the hosts in [Profile
       cleanup](../profiles/user-profiles.md#scan-a-pcs-profiles), and **Open in SSH** opens each in
       a connection tab of [the SSH tool](../ssh/ssh.md#connect), with its port and Log in as, up to
@@ -158,7 +158,9 @@ Details with **Cancel restart**. Once the PC answers again, a Windows notificati
    and **Jobs**.
 2. Pick a stuck printer and click **Clear queue…** to delete the documents waiting on it.
 3. Or click **Restart Print Spooler…**, which stops every printer on that PC for a few seconds;
-   documents waiting stay, and print once it's back.
+   documents waiting stay, and print once it's back. A spooler still stopping after 30 seconds
+   isn't started, and CapyPanel says so; run it again in a minute, and it waits for the stop
+   before starting the spooler.
 
 Both ask first. These are the PC's own printers, not the ones a user added from a print server, and
 not the network printers of the [Printers tool](../printers/printers.md).
@@ -189,7 +191,7 @@ not the network printers of the [Printers tool](../printers/printers.md).
 
 The Commands window holds every command for one PC, with its answer beside it. Open it with the
 **Commands** button, **All commands…**, or, for an address that isn't in your list, **Connect >
-Manual connection…** (Ctrl+M) or a search's **Connect to {host}…**.
+Manual connection…** (Ctrl+M) or a search's **Connect to DESK-07…**.
 
 1. Pick or type the PC in the **Host** box on top. **Profile** and **Connect**, on the same line,
    open a connection to it.
@@ -234,5 +236,6 @@ and stays until you close it.
 | <a id="command-access-denied"></a>"Couldn't log off bruno on DESK-02: access denied. It needs an admin account on that PC." | The account isn't an administrator there | **Try another account…** asks for one, and for which PCs, then runs the command again |
 | <a id="command-nobody-signed-in"></a>"… (nobody signed in)" on a greyed command | The last refresh, under 10 minutes old, found nobody at the PC | Refresh the host if someone has signed in since |
 | <a id="command-no-folder"></a>"there's no folder there." | The path in **Open a path…** isn't a folder | Check the path |
+| <a id="command-spooler-still-stopping"></a>"The Print Spooler on DESK-02 is still stopping after 30 seconds, so it wasn't started again. Try again in a minute." | The spooler took more than 30 seconds to stop, so CapyPanel didn't start it again. Until it runs again, that PC can't print | In a minute, run **Restart Print Spooler…** again: it waits for the stop, then starts the spooler. If it's still stopping after that, restart the PC |
 | <a id="command-timed-out"></a>"Couldn't … on DESK-02: it took too long to answer." | No answer came in time: the PC is busy, the network is slow, or the command got stuck there | Try again. If it keeps happening, check the PC |
 | <a id="command-windows-error"></a>"Couldn't … on DESK-02: Windows error …." | Windows on that PC refused the command with a code CapyPanel has no words for | Try again. The code is one of Windows' system error codes, which Microsoft lists by number |

@@ -10,7 +10,7 @@ them. To keep them, export them with **Report** (see
 
 1. Click **Refresh all** on the toolbar (**F5**). It checks every host the table shows: the group
    you picked with its subgroups, a tag, All hosts, No group, or a search's results.
-2. To check only some, right-click one host for **Refresh host**, several for **Refresh {n}
+2. To check only some, right-click one host for **Refresh host**, several for **Refresh 3
    hosts**, or a group for **Refresh group**.
 3. The status bar shows the progress, 8 hosts at a time, with a **Stop** button.
 
@@ -20,7 +20,7 @@ them. To keep them, export them with **Report** (see
       shown** panel, tick status and logged-on users, and click **Run**. CapyPanel remembers the
       ticks, and **F5** runs them without opening the panel (it's ignored while a check is already
       running).
-    - **Refresh host** reads one host's status, logged-on users and PC facts. **Refresh {n} hosts**
+    - **Refresh host** reads one host's status, logged-on users and PC facts. **Refresh 3 hosts**
       and **Refresh group** read status and logged-on users; PC facts are read one PC at a time.
     - Checking who is logged on to more than 50 hosts asks first.
     - A host without an address, whose name isn't a computer name, is skipped with a note in the

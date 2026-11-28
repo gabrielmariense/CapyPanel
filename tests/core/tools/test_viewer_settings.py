@@ -18,6 +18,8 @@ ULTRAVNC = (
     "DSMPlugin=SecureVNCPlugin64.dsm\r\nquality=8\r\n"
 )
 
+SAVED = ULTRAVNC.replace("port=5900\r\n", "port=5900\r\npassword=a1b2c3d4e5f60718\r\n")
+
 RECORDER = """
 import json, sys
 args = sys.argv[2:]
@@ -32,6 +34,24 @@ open(sys.argv[1], "w", encoding="utf-8").write(json.dumps({"args": args, "config
 def test_only_the_host_is_emptied_and_the_rest_kept_exactly_as_saved() -> None:
     cleaned = viewer_settings.clean(ULTRAVNC.encode("cp1252"), CLEAR).decode("cp1252")
     assert cleaned == ULTRAVNC.replace("host=10.0.0.9", "host=")
+
+
+def test_a_saved_password_is_always_emptied() -> None:
+    cleaned = viewer_settings.clean(SAVED.encode("cp1252"), CLEAR).decode("cp1252")
+    assert cleaned == SAVED.replace("host=10.0.0.9", "host=").replace("a1b2c3d4e5f60718", "")
+    assert viewer_settings.clean(b"[c]\r\nPassword=1\r\n", ()) == b"[c]\r\nPassword=\r\n"
+
+
+def test_only_a_file_with_a_saved_password_is_given_back_emptied() -> None:
+    emptied = viewer_settings.emptied(SAVED.encode("cp1252"))
+    assert emptied == SAVED.replace("a1b2c3d4e5f60718", "").encode("cp1252")
+
+
+@pytest.mark.parametrize(
+    "raw", [ULTRAVNC.encode("cp1252"), b"[c]\r\npassword=\r\n", b"just text\r\n", b"MZ\x90\x00"]
+)
+def test_a_file_with_no_saved_password_is_left_alone(raw: bytes) -> None:
+    assert viewer_settings.emptied(raw) is None
 
 
 def test_any_code_page_and_utf16_survive_unchanged() -> None:
@@ -85,14 +105,16 @@ def test_the_viewer_gets_a_cleaned_copy_never_the_shared_file(tmp_path: Path) ->
         }
     )  # fmt: skip
     shared = tmp_path / "clinics.vnc"
-    shared.write_bytes(ULTRAVNC.encode("cp1252"))
+    shared.write_bytes(SAVED.encode("cp1252"))
     process = launch(tool, Path(sys.executable), Target("pc1"), Credential("", "pw"), (), shared)
     assert process.wait(30) == 0
     received = json.loads(out.read_text(encoding="utf-8"))
     config = received["args"][1]
     assert received["args"] == ["-config", config, "pc1::5900", "-password", "pw"]
     assert Path(config) != shared and Path(config).suffix == ".vnc"
-    assert received["config"] == ULTRAVNC.replace("host=10.0.0.9", "host=")
-    assert shared.read_bytes() == ULTRAVNC.encode("cp1252")
+    assert received["config"] == SAVED.replace("host=10.0.0.9", "host=").replace(
+        "a1b2c3d4e5f60718", ""
+    )
+    assert shared.read_bytes() == SAVED.encode("cp1252")
     launch(tool, Path(sys.executable), Target("pc1"), Credential("", "pw")).wait(30)
     assert json.loads(out.read_text(encoding="utf-8"))["args"] == ["pc1::5900", "-password", "pw"]

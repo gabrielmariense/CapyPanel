@@ -99,7 +99,7 @@ ao grupo que estava escolhido.
     - A **Seta para baixo** e o **Enter** na caixa nunca conectam, então um erro de digitação não
       chega ao PC errado. Na tabela, o clique duplo e o Enter conectam como sempre.
     - Enquanto nenhum host tiver como nome ou endereço o que você digitou, sem contar maiúsculas, o
-      **Conectar a {host}…** aparece na tabela vazia ou como a última linha da lista (veja
+      **Conectar a DESK-07…** aparece na tabela vazia ou como a última linha da lista (veja
       [Conectar a um endereço que não está na lista](connecting.pt-BR.md#conectar-a-um-endereco-que-nao-esta-na-lista)).
       Um texto com espaço, como o nome de um grupo, nunca o oferece.
     - O **×** na caixa também encerra a pesquisa, e escolher um grupo ou uma tag, ou trocar de lista
@@ -111,7 +111,7 @@ ao grupo que estava escolhido.
 2. Cole uma lista na caixa de cima, ou clique em **Abrir um arquivo CSV…** para um arquivo `.csv`
    ou `.txt`. As linhas preenchem a prévia abaixo.
 3. Confira a prévia, e escolha para onde vão os hosts sem grupo em **Hosts sem grupo vão para:**.
-4. Clique em **Adicionar {n} hosts**. Nada muda na sua lista antes disso.
+4. Clique em **Adicionar 3 hosts**. Nada muda na sua lista antes disso.
 
 Quatro formatos são entendidos, e o **Formatos…** mostra cada um com um exemplo:
 
@@ -277,7 +277,7 @@ Uma lista nova pede um **Nome** e para quem ela é, em **Para:** **Todos neste P
 | <a id="hosts-no-header-row"></a>"Esta lista precisa de uma linha de cabeçalho." | A lista colada tem mais do que um nome e um endereço, mas nenhuma primeira linha dando nome às colunas | Acrescente um cabeçalho; o **Formatos…** mostra como |
 | <a id="hosts-import-duplicate"></a>"Já está na lista, em “Recepção”" ou "Mesmo nome da linha 7" | O host já está na sua lista, ou aparece duas vezes no arquivo | Nada: ele é ignorado, nunca sobrescrito |
 | <a id="hosts-import-bad-row"></a>"Sem nome", "Não é um nome de computador nem um endereço IP", "Sem endereço: o nome precisa ser o nome do computador na rede" | Essa linha não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |
-| <a id="hosts-search-no-match"></a>"Nenhum host corresponde a “…”." | A pesquisa não achou nada | Confira a grafia, ou mostre a coluna que você está pesquisando. Para um PC que não está na lista, **Conectar a {host}…** |
+| <a id="hosts-search-no-match"></a>"Nenhum host corresponde a “…”." | A pesquisa não achou nada | Confira a grafia, ou mostre a coluna que você está pesquisando. Para um PC que não está na lista, **Conectar a DESK-07…** |
 | <a id="hosts-list-other-user"></a>**Não usada: criada por outro usuário** | Uma lista compartilhada criada por alguém que não é administrador | Peça a um administrador para substituí-la ou excluí-la |
 | <a id="hosts-list-gone"></a>"A lista “…” não existe mais, então saiu das suas listas." | O arquivo dela foi movido, renomeado ou excluído fora do CapyPanel | Se ela foi movida, abra-a onde está agora com **Abrir lista…** |
 | <a id="hosts-list-file-error"></a>"Não foi possível abrir “…”: …", "Não foi possível criar “…”: …", "Não foi possível gravar “…”: …", "Não foi possível salvar a lista: …", "Não foi possível salvar a cópia: …" ou "Não foi possível recarregar a lista: …" | O Windows recusou o arquivo da lista. O motivo vem depois dos dois-pontos: sem direitos na pasta, disco cheio, ou o arquivo aberto em outro programa | Resolva o que o motivo diz e tente de novo |

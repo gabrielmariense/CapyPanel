@@ -9,7 +9,14 @@ from capywindow import CapyWindow
 from message_boxes import help_place
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox, QToolButton
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialogButtonBox,
+    QLabel,
+    QMenu,
+    QMessageBox,
+    QToolButton,
+)
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -204,17 +211,30 @@ def test_many_hosts_at_once_are_confirmed_first(
     assert window.hosts.connector.connect(requests[:5]) == 5
 
 
+def _hint(dialog: CredentialDialog) -> str:
+    [note] = [label for label in dialog.findChildren(QLabel) if label.objectName() == "hint"]
+    return note.text()
+
+
 def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: CapyWindow) -> None:
     connector = window.hosts.connector
     password_only = CredentialDialog(
         None, connector.resolve("vnc-password"), "PC-A", on_command_line=True
     )
     assert not password_only.wants_user
+    assert _hint(password_only) == (
+        "Used only for hosts with this connection profile. UltraVNC Viewer gets it on its "
+        "command line, which security software often logs and other admins of this PC can see."
+    )
     ok = password_only.buttons.button(QDialogButtonBox.StandardButton.Ok)
     password_only.password.setText("x")
     assert ok.isEnabled()
     account = CredentialDialog(None, connector.resolve("pis"), "PI-1", on_command_line=False)
     assert account.help_button.place() == "connecting-connect-to-a-host"
+    assert _hint(account) == (
+        "Used only for hosts with this connection profile. RealVNC Viewer gets it privately, "
+        "never on its command line."
+    )
     ok = account.buttons.button(QDialogButtonBox.StandardButton.Ok)
     account.password.setText("x")
     assert not ok.isEnabled()
@@ -447,6 +467,34 @@ def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
     account.password.setText("x" * 10_000)
     account.user.setText("u" * 10_000)
     assert len(account.password.text()) == 256 and len(account.user.text()) == 256
+
+
+def test_a_profile_whose_viewer_asks_passes_nothing_and_says_so_once(
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def must_not_ask(_dialog: CredentialDialog) -> int:
+        raise AssertionError("CapyPanel asks for nothing when the viewer asks")
+
+    monkeypatch.setattr(CredentialDialog, "exec", must_not_ask)
+    noted: list[tuple[str, int]] = []
+    # 0 stands for any answer but OK's: the note never cancels Connect.
+    monkeypatch.setattr(
+        dialogs, "run_modal", lambda box: noted.append((box.text(), len(launched))) or 0
+    )
+    connector = window.hosts.connector
+    asks = ConnectionProfile("asks", "ultravnc", login="none", name="Asks")
+    connector.catalogs.profiles.save(asks)
+    both = [Request("PC-Y", Target("PC-Y"), "asks"), Request("PC-Z", Target("PC-Z"), "asks")]
+    assert connector.connect(both) == 2
+    assert connector.connect([Request("PC-Z", Target("PC-Z"), "asks")]) == 1
+    assert [launch[3] for launch in launched] == [None, None, None]
+    [(text, viewers_before)] = noted
+    assert text == (
+        "UltraVNC Viewer asks for the user and password when it connects. To save them in "
+        "CapyPanel instead, change this profile in Settings › Hosts › Connecting."
+    )
+    assert viewers_before == 0
+    assert window.hosts.prefs["notes_seen"] == ["viewer-asks"]
 
 
 def test_hosts_with_no_profile_anywhere_use_the_shared_default(

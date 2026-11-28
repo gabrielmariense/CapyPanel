@@ -12,7 +12,7 @@ host as apaga. Para guardá-las, exporte-as pelo **Relatório** (veja
    a tabela mostra: o grupo escolhido com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
    resultados de uma pesquisa.
 2. Para verificar só alguns, use o botão direito num host para **Atualizar host**, em vários para
-   **Atualizar {n} hosts**, ou num grupo para **Atualizar grupo**.
+   **Atualizar 3 hosts**, ou num grupo para **Atualizar grupo**.
 3. A barra de status mostra o andamento, 8 hosts por vez, com um botão **Parar**.
 
 ??? note "Mais sobre o Atualizar"
@@ -22,7 +22,7 @@ host as apaga. Para guardá-las, exporte-as pelo **Relatório** (veja
       **Executar**. O CapyPanel lembra as marcações, e o **F5** as roda sem abrir o painel (ele é
       ignorado enquanto uma verificação já está rodando).
     - O **Atualizar host** lê o status, os usuários logados e os dados do PC de um host. O
-      **Atualizar {n} hosts** e o **Atualizar grupo** leem status e usuários logados; os dados do PC
+      **Atualizar 3 hosts** e o **Atualizar grupo** leem status e usuários logados; os dados do PC
       são lidos um PC por vez.
     - Verificar quem está logado em mais de 50 hosts pergunta antes.
     - Um host sem endereço, cujo nome não é um nome de computador, é pulado com um aviso na barra de

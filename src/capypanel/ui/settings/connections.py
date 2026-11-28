@@ -9,16 +9,15 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
-    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QMenu,
     QPushButton,
+    QRadioButton,
     QSizePolicy,
     QSpinBox,
-    QStackedWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -27,18 +26,13 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.tools import detect, viewer_settings
+from capypanel.core.tools import detect
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
-from capypanel.core.tools.profiles import (
-    ConnectionProfile,
-    ProfileError,
-    login_label,
-    logins_of,
-)
-from capypanel.ui import help_links
-from capypanel.ui.connect import ask_for_program
+from capypanel.core.tools.profiles import ConnectionProfile, ProfileError, logins_of
+from capypanel.ui import help_links, spacing
+from capypanel.ui.connect import ask_for_program, command_line_warning
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
@@ -48,10 +42,35 @@ from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with
 MAX_PROFILE_NAME = 64
 
 
-def asked_by_tool(tool: str) -> str:
-    return _(
-        "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
-    ).format(tool=tool)
+def sends_label(login: str) -> str:
+    return _("User and password") if login == "account" else _("Password only")
+
+
+def asked_by(tool: str) -> str:
+    return _("Asked for by {tool}").format(tool=tool)
+
+
+def password_label(login: str, tool: str) -> str:
+    if login == "none":
+        return asked_by(tool)
+    if login == "account":
+        return _("Saved in CapyPanel (user and password)")
+    return _("Saved in CapyPanel (password only)")
+
+
+class _WidestRadio(QRadioButton):
+    """As wide as its widest text, so the window's width holds when Tool changes the text."""
+
+    def __init__(self, texts: list[str]) -> None:
+        super().__init__()
+        self._texts = texts
+
+    def sizeHint(self) -> QSize:
+        hint = super().sizeHint()
+        metrics = self.fontMetrics()
+        widest = max((metrics.horizontalAdvance(text) for text in self._texts), default=0)
+        extra = max(widest - metrics.horizontalAdvance(self.text()), 0)
+        return QSize(hint.width() + extra, hint.height())
 
 
 class _RowLabel(QLabel):
@@ -75,10 +94,22 @@ class ProfileDialog(QDialog):
         tools: list[ToolDefinition],
         installed: set[str],
         profile: ConnectionProfile | None = None,
+        *,
+        new: bool | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
         self._tools = {tool.id: tool for tool in tools}
+        is_new = profile is None if new is None else new
+        saved_tool = self._tools.get(profile.tool) if profile else None
+        self._on_command_line = bool(
+            profile is not None
+            and not is_new
+            and profile.login != "none"
+            and saved_tool is not None
+            and saved_tool.credentials == "arguments"
+        )
+        self._warned = False
         self.name = QLineEdit(profile.name if profile else "")
         self.name.setMaxLength(MAX_PROFILE_NAME)
         self.tool = QComboBox()
@@ -87,64 +118,76 @@ class ProfileDialog(QDialog):
             self.tool.addItem(text.format(tool=tool.name), tool.id)
         wanted = profile.tool if profile else next((t.id for t in tools if t.id in installed), "")
         self.tool.setCurrentIndex(max(self.tool.findData(wanted), 0))
+        self.viewer_asks = _WidestRadio([asked_by(t.name) for t in tools])
+        self.capypanel_asks = QRadioButton(_("Saved in CapyPanel"))
+        self.capypanel_asks.clicked.connect(self._capypanel_picked)
+        self.viewer_asks.toggled.connect(lambda _on: self._show_login())
+        self.asks_label = QLabel(_("&Password:"))
+        self.asks_label.setBuddy(self.viewer_asks)
         self.login = QComboBox()
         self.login.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
         )
-        labels = [login_label(login, t.name) for t in tools for login in logins_of(t)]
-        self.login.setMinimumContentsLength(max(map(len, labels), default=0))
+        labels = [sends_label(login) for login in ("account", "password")]
+        self.login.setMinimumContentsLength(max(map(len, labels)))
         self.port = QSpinBox()
         self.port.setRange(0, 65535)
         self.port.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         self.port.setValue((profile.port or 0) if profile else 0)
         self._first_tool = profile.tool if profile else ""
         self._has_settings = bool(profile and profile.settings_file)
-        self.new_settings: bytes | None = None
+        self._had_settings = self._has_settings
+        self._settings_name = profile.settings_file if profile and not is_new else ""
         self.settings_state = QLabel()
-        self.choose_settings = QPushButton(_("C&hoose file…"))
         self.default_settings = QPushButton(_("Use &defaults"))
-        self.choose_settings.clicked.connect(self._choose_settings)
         self.default_settings.clicked.connect(self._use_default_settings)
-        settings_buttons = QWidget()
-        buttons_row = QHBoxLayout(settings_buttons)
+        self._settings_buttons = QWidget()
+        buttons_row = QHBoxLayout(self._settings_buttons)
         buttons_row.setContentsMargins(0, 0, 0, 0)
-        buttons_row.addWidget(self.choose_settings)
         buttons_row.addWidget(self.default_settings)
         buttons_row.addStretch(1)
         self._option_places: list[QCheckBox] = []
-        more_options = QWidget()
-        more_column = QVBoxLayout(more_options)
+        self._more_options = QWidget()
+        more_column = QVBoxLayout(self._more_options)
         more_column.setContentsMargins(0, 0, 0, 0)
-        for place in range(max(max((len(t.options) for t in tools), default=0), 1)):
+        for place in range(max((len(t.options) for t in tools), default=0)):
             box = QCheckBox(" ")
             policy = box.sizePolicy()
-            policy.setRetainSizeWhenHidden(True)
             policy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
             box.setSizePolicy(policy)
             if place:
                 more_column.addWidget(box)
             self._option_places.append(box)
-        self.no_options = QLabel(_("None"))
-        self.no_options.setEnabled(False)
-        self.options_area = QStackedWidget()
-        self.options_area.addWidget(self._option_places[0])
-        self.options_area.addWidget(self.no_options)
-        self.options_area.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.option_boxes: dict[str, QCheckBox] = {}
 
-        form = QFormLayout()
+        self._form = form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
         form.addRow(_("&Tool:"), self.tool)
-        form.addRow(_("&Credentials:"), self.login)
         form.addRow(_("P&ort:"), self.port)
+        form.addRow(self.asks_label, self.viewer_asks)
+        form.addRow("", self.capypanel_asks)
+        form.addRow("", self.login)
         form.addRow(_("Settings:"), self.settings_state)
-        form.addRow("", settings_buttons)
-        form.addRow(_RowLabel(_("Options:"), self.options_area), self.options_area)
+        form.addRow("", self._settings_buttons)
+        if self._option_places:
+            first = self._option_places[0]
+            form.addRow(_RowLabel(_("Options:"), first), first)
         if len(self._option_places) > 1:
-            form.addRow("", more_options)
+            form.addRow("", self._more_options)
+        # A form's label column is as wide as its visible labels: hiding a row would move fields.
+        widths = [
+            label.sizeHint().width()
+            for row in range(form.rowCount())
+            if (item := form.itemAt(row, QFormLayout.ItemRole.LabelRole))
+            and (label := item.widget()) is not None
+        ]
+        if widths and (name_label := form.labelForField(self.name)) is not None:
+            name_label.setMinimumWidth(max(widths))
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
+        # The form takes its row spacing from this layout, so the gap is topped up, not reset.
+        layout.addSpacing(spacing.WINDOW - max(layout.spacing(), 0))
         self.help_button = help_links.HelpButton("connecting-set-up-connection-profiles")
         layout.addLayout(help_links.row(self.help_button, self.buttons))
 
@@ -161,19 +204,20 @@ class ProfileDialog(QDialog):
         tool = self._current_tool()
         if tool is None:
             return
-        wanted_login = profile.login if profile else self.login.currentData()
-        self.login.clear()
-        for login in logins_of(tool):
-            text = login_label(login, tool.name)
-            self.login.addItem(text[:1].upper() + text[1:], login)
-        self.login.setCurrentIndex(max(self.login.findData(wanted_login), 0))
-        self.login.setEnabled(self.login.count() > 1)
-        if self.login.count() > 1:
-            self.login.setToolTip("")
-        elif logins_of(tool) == ("none",):
-            self.login.setToolTip(asked_by_tool(tool.name))
+        if profile is not None:
+            by_capypanel, wanted = profile.login != "none", profile.login
         else:
-            self.login.setToolTip(_("{tool} has no other way to log in.").format(tool=tool.name))
+            by_capypanel, wanted = self.capypanel_asks.isChecked(), self.login.currentData()
+        sends = [login for login in logins_of(tool) if login != "none"]
+        self.login.clear()
+        for login in sends:
+            self.login.addItem(sends_label(login), login)
+        self.login.setCurrentIndex(max(self.login.findData(wanted), 0))
+        self.viewer_asks.setText(asked_by(tool.name))
+        (self.capypanel_asks if by_capypanel and sends else self.viewer_asks).setChecked(True)
+        for field in (self.viewer_asks, self.capypanel_asks, self.login):
+            self._form.setRowVisible(field, bool(sends))
+        self._show_login()
         ticked = set(profile.options) if profile else set()
         options = list(tool.options)
         self.option_boxes = {}
@@ -184,77 +228,70 @@ class ProfileDialog(QDialog):
                 self.option_boxes[options[index]] = box
             if index:
                 box.setVisible(index < len(options))
-        self.options_area.setCurrentIndex(0 if options else 1)
-        self.no_options.setToolTip(_("{tool} has no options to set here.").format(tool=tool.name))
+        if self._option_places:
+            self._form.setRowVisible(self._option_places[0], bool(options))
+        if len(self._option_places) > 1:
+            self._form.setRowVisible(self._more_options, len(options) > 1)
         self.port.setSpecialValueText(
             _("Default ({port})").format(port=tool.port) if tool.port else _("Default")
         )
         if tool.id != self._first_tool:
-            self._first_tool, self._has_settings, self.new_settings = tool.id, False, None
-        self._show_settings(None)
+            self._first_tool, self._has_settings = tool.id, False
+        for row in (self.settings_state, self._settings_buttons):
+            self._form.setRowVisible(row, self._had_settings and tool.settings_file is not None)
+        self._show_settings()
+        if profile is None:
+            self._fit_height()
+            if self.capypanel_asks.isChecked():
+                self._capypanel_picked(True)
 
-    def _show_settings(self, chosen: str | None) -> None:
-        if chosen:
-            text = _("From “{file}”").format(file=chosen)
-        elif self._has_settings:
-            text = _("Its own settings file")
-        else:
-            text = _("The viewer's defaults")
-        self.settings_state.setText(text)
+    def _fit_height(self) -> None:
+        if (layout := self.layout()) is not None:
+            layout.activate()
+        self.resize(self.width(), self.sizeHint().height())
+
+    def _show_login(self) -> None:
         tool = self._current_tool()
-        if tool is not None and tool.settings_file is not None:
-            note = _(
-                "Optional: a {extension} file saved from {tool}. It's used exactly as saved, "
-                "including its encryption plugin; only the host is emptied, since the address "
-                "comes from the host you open."
-            ).format(extension=tool.settings_file.extension, tool=tool.name)
-            self.settings_state.setToolTip(note)
-            self.choose_settings.setToolTip(note)
-            self.default_settings.setToolTip(
-                "" if self._has_settings else _("This profile already uses the viewer's defaults.")
-            )
-            reads = True
+        name = tool.name if tool is not None else ""
+        by_capypanel = self.capypanel_asks.isChecked()
+        self.asks_label.setBuddy(self.capypanel_asks if by_capypanel else self.viewer_asks)
+        self.login.setEnabled(by_capypanel and self.login.count() > 1)
+        if not by_capypanel:
+            self.login.setToolTip(_("{tool} asks for these when it connects.").format(tool=name))
+        elif self.login.count() > 1:
+            self.login.setToolTip("")
         else:
-            name = tool.name if tool is not None else ""
-            unused = _("{tool} doesn't use a settings file.").format(tool=name)
-            for widget in (self.settings_state, self.choose_settings, self.default_settings):
-                widget.setToolTip(unused)
-            reads = False
-        self.settings_state.setEnabled(reads)
-        self.choose_settings.setEnabled(reads)
-        self.default_settings.setEnabled(reads and self._has_settings)
+            self.login.setToolTip(_("{tool} only takes a password.").format(tool=name))
+
+    def _capypanel_picked(self, checked: bool) -> None:
+        tool = self._current_tool()
+        if not checked or tool is None or tool.credentials != "arguments":
+            return
+        if self._on_command_line or self._warned:
+            return
+        self._warned = True
+        question = _("Save the password in CapyPanel?")
+        text = f"{question} {command_line_warning(tool.name)}"
+        if not confirm(self, _("Save the password in CapyPanel"), text, _("Save")):
+            self.viewer_asks.setChecked(True)
+
+    def _show_settings(self) -> None:
+        self.settings_state.setText(
+            _("Its own settings file") if self._has_settings else _("The viewer's defaults")
+        )
+        self.default_settings.setEnabled(self._has_settings)
+        self.default_settings.setToolTip(
+            "" if self._has_settings else _("This profile already uses the viewer's defaults.")
+        )
         for box in self.option_boxes.values():
             if self._has_settings:
                 box.setChecked(False)
             box.setEnabled(not self._has_settings)
             box.setToolTip(_("Set in the settings file") if self._has_settings else "")
 
-    def _choose_settings(self) -> None:
-        tool = self._current_tool()
-        if tool is None or tool.settings_file is None:
-            return
-        extension = tool.settings_file.extension
-        name, _filter = QFileDialog.getOpenFileName(
-            self,
-            _("Choose a {tool} settings file").format(tool=tool.name),
-            str(Path.home()),
-            _("Viewer settings (*{extension})").format(extension=extension),
-        )
-        if not name:
-            return
-        try:
-            content = viewer_settings.read(Path(name), tool.settings_file.clear)
-        except (OSError, viewer_settings.SettingsFileError) as e:
-            message = _("Couldn't use “{file}”: {error}").format(file=Path(name).name, error=e)
-            place = "connect-settings-file-unusable"
-            help_links.warning(self, "CapyPanel", message, place=place)
-            return
-        self._has_settings, self.new_settings = True, content
-        self._show_settings(Path(name).name)
-
     def _use_default_settings(self) -> None:
-        self._has_settings, self.new_settings = False, None
-        self._show_settings(None)
+        self._has_settings = False
+        self._show_settings()
 
     def _update_ok(self) -> None:
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
@@ -265,7 +302,7 @@ class ProfileDialog(QDialog):
             id=profile_id,
             name=self.name.text().strip(),
             tool=self.tool.currentData(),
-            login=self.login.currentData(),
+            login="none" if self.viewer_asks.isChecked() else self.login.currentData(),
             options=tuple(o for o, box in self.option_boxes.items() if box.isChecked()),
             port=self.port.value() or None,
             settings_file=self._settings_file(profile_id),
@@ -275,7 +312,7 @@ class ProfileDialog(QDialog):
         tool = self._current_tool()
         if not self._has_settings or tool is None or tool.settings_file is None:
             return ""
-        return f"{profile_id}{tool.settings_file.extension}"
+        return self._settings_name or f"{profile_id}{tool.settings_file.extension}"
 
 
 def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
@@ -335,7 +372,7 @@ class ProfilesSection(SharedSection):
         )
         self._show_folder_state()
         self.for_everyone(self.can_edit)
-        self.list = grid_table([_("Profile"), _("Tool"), _("Signs in with")])
+        self.list = grid_table([_("Profile"), _("Tool"), _("Password")])
         self.list.setColumnWidth(0, 190)
         self.list.setColumnWidth(1, 150)
         self.list.itemSelectionChanged.connect(self._update_buttons)
@@ -395,12 +432,10 @@ class ProfilesSection(SharedSection):
         for profile in sorted(self.store.all(), key=lambda p: p.name.casefold()):
             entry = self.catalogs.tools.find(profile.tool)
             tool = entry.item.name if entry else profile.tool
-            item = QTreeWidgetItem([profile.name, tool, login_label(profile.login, tool)])
+            item = QTreeWidgetItem([profile.name, tool, password_label(profile.login, tool)])
             item.setData(0, Qt.ItemDataRole.UserRole, profile.id)
             for column in range(3):
                 item.setToolTip(column, item.text(column))
-            if profile.login == "none":
-                item.setToolTip(2, asked_by_tool(tool))
             self.list.addTopLevelItem(item)
             if profile.id == select:
                 item.setSelected(True)
@@ -430,19 +465,21 @@ class ProfilesSection(SharedSection):
         menu.addSeparator()
         add_action(menu, _("&Delete…"), self.delete, picked)
 
-    def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
+    def _dialog(
+        self, title: str, profile: ConnectionProfile | None, *, new: bool = False
+    ) -> ProfileDialog:
         tools = [e.item for e in self.catalogs.tools.all()]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
-        return ProfileDialog(self, title, tools, installed, profile)
+        return ProfileDialog(self, title, tools, installed, profile, new=new)
 
     def _taken(self) -> dict[str, ConnectionProfile]:
         return {p.id: p for p in self.store.all()}
 
     def add(self) -> None:
-        dialog = self._dialog(_("New connection profile"), None)
+        dialog = self._dialog(_("New connection profile"), None, new=True)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             new = dialog.profile(make_id(dialog.name.text().strip(), self._taken()))
-            self._save(new, dialog.new_settings)
+            self._save(new)
 
     def edit(self) -> None:
         profile = self._selected()
@@ -451,21 +488,19 @@ class ProfilesSection(SharedSection):
         dialog = self._dialog(_("Edit connection profile"), profile)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             edited = replace(dialog.profile(profile.id), extra=profile.extra)
-            self._save(edited, dialog.new_settings)
+            self._save(edited)
 
     def duplicate(self) -> None:
         profile = self._selected()
         if profile is None or not self.can_edit:
             return
         copy = replace(profile, name=_("{profile} (copy)").format(profile=profile.name))
-        dialog = self._dialog(_("Duplicate connection profile"), copy)
+        dialog = self._dialog(_("Duplicate connection profile"), copy, new=True)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             new = dialog.profile(make_id(dialog.name.text().strip(), self._taken()))
-            content = dialog.new_settings
-            if content is None and new.settings_file:
-                content = self._settings_content(profile)
-                if content is None:
-                    new = replace(new, settings_file="")
+            content = self._settings_content(profile) if new.settings_file else None
+            if new.settings_file and content is None:
+                new = replace(new, settings_file="")
             self._save(new, content)
 
     def delete(self) -> None:

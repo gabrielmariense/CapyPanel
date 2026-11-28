@@ -111,6 +111,8 @@ def reason_place(error: BaseException) -> str:
         }[error.reason]
     if isinstance(error, PowerShellBlocked):
         return "pc-powershell-blocked"
+    if isinstance(error, services.NotStopped):
+        return "command-spooler-still-stopping"
     if isinstance(error, TimeoutError):
         return "command-timed-out"
     if isinstance(error, NotADirectoryError):
@@ -544,6 +546,13 @@ class Runner(QObject):
                 then()
 
         def failed(error: BaseException) -> None:
+            if isinstance(error, services.NotStopped) and error.state == "stopping":
+                text = _(
+                    "The Print Spooler on {host} is still stopping after {seconds} seconds, so it "
+                    "wasn't started again. Try again in a minute."
+                ).format(host=escape(target.name), seconds=f"{services.STOP_TIMEOUT:.0f}")
+                report("spooler", Outcome(text, error))
+                return
             again = lambda: self.restart_spooler(target, report, then)  # noqa: E731
             action = _("restart the Print Spooler")
             self._fail(report, "spooler", action, target, error, again)

@@ -79,11 +79,11 @@ PLACES: dict[str, str] = {
     "connect-password-not-saved": "hosts/connecting/",
     "connect-password-not-deleted": "hosts/connecting/",
     "connect-couldnt-start": "hosts/connecting/",
-    "connect-settings-file-unusable": "hosts/connecting/",
     "connect-settings-not-saved": "hosts/connecting/",
     "command-access-denied": "hosts/commands/",
     "command-no-folder": "hosts/commands/",
     "command-timed-out": "hosts/commands/",
+    "command-spooler-still-stopping": "hosts/commands/",
     "command-windows-error": "hosts/commands/",
     "pc-unreachable": "hosts/checking/",
     "pc-account-rejected": "hosts/checking/",
@@ -178,6 +178,10 @@ def add_link(box: QMessageBox, place: str) -> None:
         label.linkActivated.connect(lambda _href: open_place(place))
         label.setToolTip(url(place))
     key(box, lambda: place)
+
+
+def information(parent: QWidget | None, title: str, text: str, *, place: str) -> None:
+    _show(QMessageBox.Icon.Information, parent, title, text, place)
 
 
 def warning(parent: QWidget | None, title: str, text: str, *, place: str) -> None:

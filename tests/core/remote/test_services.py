@@ -70,14 +70,53 @@ def test_a_stopped_service_is_just_started(
     assert "start" in fake.calls and "query" not in fake.calls
 
 
-def test_a_service_that_wont_stop_gives_up_and_closes_its_handles(
+def test_a_service_still_stopping_at_30_s_is_named_so_and_never_started(
     monkeypatch: pytest.MonkeyPatch, reachable: None
 ) -> None:
     fake = FakeAdvapi(states=[])
     monkeypatch.setattr(services, "_advapi32", fake)
-    with pytest.raises(TimeoutError):
+    with pytest.raises(services.NotStopped) as caught:
         services.restart_service("192.0.2.10", services.SPOOLER, sleep=lambda s: None)
+    assert caught.value.state == "stopping"
+    assert fake.calls.count("query") == 60
     assert "start" not in fake.calls and fake.calls[-2:] == ["close 2", "close 1"]
+
+
+def test_a_stop_that_ends_in_the_last_half_second_is_started(
+    monkeypatch: pytest.MonkeyPatch, reachable: None
+) -> None:
+    fake = FakeAdvapi(states=[3] * 59 + [1])
+    monkeypatch.setattr(services, "_advapi32", fake)
+    services.restart_service("192.0.2.10", services.SPOOLER, sleep=lambda s: None)
+    assert fake.calls[-3:] == ["start", "close 2", "close 1"]
+
+
+def test_a_second_try_while_it_s_still_stopping_waits_then_starts(
+    monkeypatch: pytest.MonkeyPatch, reachable: None
+) -> None:
+    fake = FakeAdvapi(states=[3, 3, 1], stop_error=1061)  # ERROR_SERVICE_CANNOT_ACCEPT_CTRL
+    monkeypatch.setattr(services, "_advapi32", fake)
+    services.restart_service("192.0.2.10", services.SPOOLER, sleep=lambda s: None)
+    assert fake.calls[2:] == ["stop", "query", "query", "query", "start", "close 2", "close 1"]
+
+
+def test_a_second_try_that_finds_it_already_stopped_starts_it(
+    monkeypatch: pytest.MonkeyPatch, reachable: None
+) -> None:
+    fake = FakeAdvapi(states=[1], stop_error=1061)
+    monkeypatch.setattr(services, "_advapi32", fake)
+    services.restart_service("192.0.2.10", services.SPOOLER, sleep=lambda s: None)
+    assert fake.calls[2:] == ["stop", "query", "start", "close 2", "close 1"]
+
+
+def test_a_stop_refused_while_it_s_starting_says_why(
+    monkeypatch: pytest.MonkeyPatch, reachable: None
+) -> None:
+    fake = FakeAdvapi(states=[2], stop_error=1061)
+    monkeypatch.setattr(services, "_advapi32", fake)
+    with pytest.raises(RemoteError) as caught:
+        services.restart_service("192.0.2.10", services.SPOOLER, sleep=lambda s: None)
+    assert caught.value.code == 1061 and "start" not in fake.calls
 
 
 def test_a_refused_stop_says_why(monkeypatch: pytest.MonkeyPatch, reachable: None) -> None:

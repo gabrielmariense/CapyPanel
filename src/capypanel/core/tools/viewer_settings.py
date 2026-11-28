@@ -11,6 +11,8 @@ from capypanel.core.i18n import _
 log = logging.getLogger(__name__)
 MAX_SIZE = 256 * 1024  # real ones are a few KB
 KEEP_COPY_FOR = 60  # seconds; the viewer reads its settings as it starts
+# A saved VNC password is DES under a key every VNC viewer knows, so anyone can read it back.
+NEVER_KEPT = ("password",)
 
 
 class SettingsFileError(ValueError):
@@ -25,7 +27,7 @@ def read(path: Path, clear: Collection[str]) -> bytes:
 
 def clean(raw: bytes, clear: Collection[str]) -> bytes:
     text, encoding = _decode(raw)
-    cleared = {key.casefold() for key in clear}
+    cleared = {key.casefold() for key in (*clear, *NEVER_KEPT)}
     lines, settings = [], 0
     for line in text.splitlines(keepends=True):
         key = _key(line)
@@ -37,6 +39,20 @@ def clean(raw: bytes, clear: Collection[str]) -> bytes:
     if not settings:
         raise SettingsFileError(_("The file has no settings."))
     return "".join(lines).encode(encoding)
+
+
+def emptied(raw: bytes) -> bytes | None:
+    try:
+        text, _encoding = _decode(raw)
+        saved = any(
+            (key := _key(line)) is not None
+            and key.casefold() in NEVER_KEPT
+            and line.partition("=")[2].strip()
+            for line in text.splitlines()
+        )
+        return clean(raw, ()) if saved else None
+    except SettingsFileError:
+        return None
 
 
 def temp_copy(content: bytes, extension: str) -> Path:

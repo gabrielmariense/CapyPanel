@@ -22,12 +22,12 @@ def test_one_starter_profile_per_tool_and_each_fits_its_tool() -> None:
 
 
 def test_a_tool_offers_only_the_logins_it_supports() -> None:
-    assert profiles.logins_of(_tool("ultravnc")) == ("account", "password")
+    assert profiles.logins_of(_tool("ultravnc")) == ("account", "password", "none")
     no_user = definitions.from_data(
         {"schema": 1, "id": "t", "name": "T", "kind": "vnc", "credentials": "arguments",
          "arguments": [["{address}"], ["{password}"]]}
     )  # fmt: skip
-    assert profiles.logins_of(no_user) == ("password",)
+    assert profiles.logins_of(no_user) == ("password", "none")
     no_password = definitions.from_data(
         {"schema": 1, "id": "t", "name": "T", "kind": "vnc", "arguments": [["{address}"]]}
     )

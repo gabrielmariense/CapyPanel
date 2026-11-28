@@ -86,7 +86,7 @@ eight at a time, and logs in to nothing.
 | **Not checked** (grey) | Nobody has refreshed it yet |
 
 Hover over a status for when it was checked and which address answered. To check fewer, right-click
-a host for **Refresh host** (or **Refresh {n} hosts**), or a group for **Refresh group**, which
+a host for **Refresh host** (or **Refresh 3 hosts**), or a group for **Refresh group**, which
 checks its subgroups too.
 
 ??? note "Settings › SSH › General"
@@ -116,7 +116,7 @@ checks its subgroups too.
 ![A connection's tab beside the Hosts tab: the server's prompt and some output in the terminal](../images/ssh-terminal-dark.png)
 
 To connect to a server that isn't in the list, type its name or address in the search box. While no
-host of the list has it, the table offers **Connect to {host}**, which uses port 22 and ssh.exe's
+host of the list has it, the table offers **Connect to DESK-07**, which uses port 22 and ssh.exe's
 own settings.
 
 ??? note "More about connecting"

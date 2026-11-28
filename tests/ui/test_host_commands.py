@@ -15,7 +15,15 @@ from capypanel.core import settings
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.remote import access, host_printers, inventory, places, power, sessions
+from capypanel.core.remote import (
+    access,
+    host_printers,
+    inventory,
+    places,
+    power,
+    services,
+    sessions,
+)
 from capypanel.core.remote.access import Reason, RemoteError
 from capypanel.core.remote.host_printers import HostPrinter
 from capypanel.core.remote.inventory import DiskSpace, PcFacts, Program
@@ -219,6 +227,26 @@ def test_a_pc_that_doesnt_answer_says_so_in_red(
     assert "Couldn't open Startup folder on PC-1: it didn't answer." in strip.text()
     assert not strip.retry_button.isVisibleTo(window.hosts)
     assert ("folder",) not in [c[:1] for c in calls]
+
+
+def test_a_spooler_that_hasnt_stopped_says_it_wasnt_started_again(
+    window: CapyWindow, calls: list[Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def still_stopping(_host: str, _name: str, _account: Any = None) -> None:
+        raise services.NotStopped("stopping")
+
+    monkeypatch.setattr(services, "restart_service", still_stopping)
+    target = _select(window, "PC-1")
+    window.hosts.runner.restart_spooler(target, window.hosts.show_outcome)
+    _settle(window)
+    strip = window.hosts.result_strip
+    assert strip.property("failed") is True
+    assert strip.text().startswith(
+        "The Print Spooler on PC-1 is still stopping after 30 seconds, so it wasn't started "
+        "again. Try again in a minute."
+    )
+    assert strip.help_place() == "command-spooler-still-stopping"
+    assert not strip.retry_button.isVisibleTo(window.hosts)
 
 
 def test_log_off_asks_then_says_it_worked(

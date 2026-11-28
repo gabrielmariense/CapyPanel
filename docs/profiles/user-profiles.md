@@ -27,7 +27,7 @@ made-up profiles; **Help > Guide to this screen** shows it again.
 3. To scan several, pick them and click **Scan** on the toolbar ("Scan 3 hosts"): each opens in a
    tab behind.
 
-From Hosts, right-click a host for **Open in Profile cleanup**, or several for **Open {n} hosts in
+From Hosts, right-click a host for **Open in Profile cleanup**, or several for **Open 3 hosts in
 Profile cleanup**: CapyPanel comes here and opens each in a tab of its own, scanned. A host that
 already has a tab isn't read again. If the warning above hasn't been agreed to yet, it comes
 first, and cancelling it opens nothing.

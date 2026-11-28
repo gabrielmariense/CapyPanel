@@ -9,7 +9,7 @@ from typing import Any
 from capypanel.core import files, winsec
 from capypanel.core.files import can_create_files
 from capypanel.core.i18n import _
-from capypanel.core.tools import profiles
+from capypanel.core.tools import profiles, viewer_settings
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
 log = logging.getLogger(__name__)
@@ -94,12 +94,28 @@ class ProfileStore:
         old = self.find(profile.id)
         self._seed()
         if settings is not None and profile.settings_file:
-            files.write_atomic(self.folder / profile.settings_file, settings)
+            kept = viewer_settings.emptied(settings) or settings
+            files.write_atomic(self.folder / profile.settings_file, kept)
         self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
         if old is not None and old.settings_file not in ("", profile.settings_file):
             (self.folder / old.settings_file).unlink(missing_ok=True)
         log.info("Connection profile saved: %s (%s)", profile.id, profile.name)
         self.reload()
+
+    def empty_saved_passwords(self) -> None:
+        if not self.folder.is_dir() or not self.can_edit():
+            return
+        for profile in self._profiles.values():
+            path = self.settings_path(profile)
+            if path is None:
+                continue
+            try:
+                emptied = viewer_settings.emptied(path.read_bytes())
+                if emptied is not None:
+                    files.write_atomic(path, emptied)
+                    log.info("Saved password emptied in %s", path)
+            except OSError as e:
+                log.warning("Couldn't empty the saved password in %s: %s", path, e)
 
     def delete(self, profile_id: str) -> None:
         profile = self.find(profile_id)

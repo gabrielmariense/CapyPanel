@@ -3,6 +3,24 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.31.1 <a id="whats-new-0311"></a>
+
+- Numa instalação nova, o perfil do UltraVNC deixa a senha para a janela do próprio UltraVNC Viewer,
+  então ela não vai mais pela linha de comando, que programas de segurança costumam registrar. O
+  primeiro Conectar com ele avisa isso uma vez. Os perfis que já estão no seu PC ficam como estão.
+  Veja [Configurar os perfis de
+  conexão](hosts/connecting.pt-BR.md#connecting-set-up-connection-profiles).
+- A janela de um perfil de conexão mostra só as linhas que a ferramenta dele usa. No UltraVNC e no
+  RealVNC, a **Senha** é **Pedida pelo** visualizador ou **Salva no CapyPanel**, e salvá-la no
+  UltraVNC pergunta antes. A lista de perfis tem a coluna **Senha**.
+- Um perfil novo do UltraVNC não pode mais escolher um arquivo de configurações do visualizador. Um
+  perfil que já tem um continua com ele, e o CapyPanel apaga qualquer senha salva dentro dele.
+- O Reiniciar o Spooler de Impressão agora avisa quando o spooler ainda está parando depois de 30
+  segundos e por isso não foi iniciado. Use o comando de novo daqui a um minuto: ele espera o
+  spooler parar e depois o inicia. Antes, essa segunda tentativa falhava.
+- A janela que lista as mudanças de uma atualização não abre mais com o anel do teclado em volta da
+  lista, e nenhuma janela aberta com o mouse abre assim.
+
 ## 0.31.0 <a id="whats-new-0310"></a>
 
 - O CapyPanel funciona só com o teclado na janela principal, nas Configurações, no Hosts, no
@@ -25,7 +43,7 @@ As mudanças de cada versão que você vai notar. As
   você confia nele, e que é para digitar yes, não só y.
 - O **Importar hosts…** lê as colunas **Porta SSH** e **Login SSH**, e o **Inventário** do SSH
   também o tem. O Relatório do Hosts escreve as duas, marcadas no **Para importar**.
-- No Hosts, clique com o botão direito num host para **Abrir no SSH**, ou em vários para **Abrir {n}
+- No Hosts, clique com o botão direito num host para **Abrir no SSH**, ou em vários para **Abrir 3
   hosts no SSH**.
 - O primeiro início de uma cópia portátil termina o guia do Início com um cartão sobre o que a cópia
   guarda ao lado dela, com **Abrir a pasta userdata**.
@@ -131,7 +149,7 @@ As mudanças de cada versão que você vai notar. As
   serve. A tecla dela, Ctrl+3, continua a mesma.
 - No Hosts, o botão direito num ou em vários hosts oferece **Abrir na Limpeza de perfis**: cada um
   abre lá numa aba própria, escaneado.
-- Digite na caixa de pesquisa do Hosts um PC que não está na lista, e o **Conectar a {host}…** abre
+- Digite na caixa de pesquisa do Hosts um PC que não está na lista, e o **Conectar a DESK-07…** abre
   a conexão manual com ele preenchido. O botão **Escanear** da Limpeza de perfis agora aparece do
   mesmo jeito, mesmo quando outros hosts correspondem a parte do nome.
 - O **Conectar com**, no painel de detalhes, termina com **Perfis de conexão…**, que abre as

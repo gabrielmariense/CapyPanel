@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QAbstractScrollArea,
     QApplication,
     QCheckBox,
+    QDialog,
     QLabel,
     QLineEdit,
     QPushButton,
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
 from capypanel.ui import focus_ring, help_links
 from capypanel.ui.focus_ring import OUT, Ring
 from capypanel.ui.keyboard import Keyboard
+from capypanel.ui.list_workspace.panels import SearchBox
 from capypanel.ui.themes import engine as themes
 
 K = Qt.Key
@@ -44,12 +46,16 @@ def _shown(widget: QWidget) -> None:
     assert QApplication.activeWindow() is widget
 
 
+def _settle() -> None:
+    for _turn in range(2):  # the ring, and a label's link mark, come a turn after the focus
+        QApplication.processEvents()
+
+
 def _press(key: K) -> QWidget | None:
     focus = QApplication.focusWidget()
     assert focus is not None
     QTest.keyClick(focus, key)
-    for _turn in range(2):  # a label marks its link a turn after the focus comes
-        QApplication.processEvents()
+    _settle()
     return QApplication.focusWidget()
 
 
@@ -86,6 +92,37 @@ def test_tab_rings_a_button_and_a_click_takes_the_ring_away(keys: Keyboard) -> N
     QApplication.processEvents()
     assert QApplication.focusWidget() is second and _ring(keys) is None
     assert _press(K.Key_Backtab) is first and _ring(keys) is not None
+    window.close()
+
+
+def test_a_window_s_first_show_rings_nothing_until_a_key_moves_the_focus(keys: Keyboard) -> None:
+    table, close = _office(), QPushButton("Close")
+    dialog = QDialog()
+    column = QVBoxLayout(dialog)
+    column.addWidget(table)
+    column.addWidget(close)
+    dialog.resize(420, 320)
+    table.setCurrentItem(_item(table, 0))
+    _shown(dialog)
+    _settle()
+    assert QApplication.focusWidget() is table and _ring(keys) is None
+    assert _press(K.Key_Down) is table and table.currentItem() is _item(table, 1)
+    assert _ring(keys) is not None
+    QTest.mouseClick(close, Qt.MouseButton.LeftButton)
+    _settle()
+    assert QApplication.focusWidget() is close and _ring(keys) is None
+    assert _press(K.Key_Tab) is table and _ring(keys) is not None
+    dialog.close()
+
+
+def test_a_key_that_moves_the_focus_rings_where_it_lands(keys: Keyboard) -> None:
+    search, table = SearchBox(), _office()
+    search.to_results.connect(lambda: table.setFocus(Qt.FocusReason.TabFocusReason))
+    window = _window(search, table)
+    table.setCurrentItem(_item(table, 0))
+    QTest.mouseClick(search, Qt.MouseButton.LeftButton)
+    QTest.keyClicks(search, "desk")
+    assert _press(K.Key_Return) is table and _ring(keys) is not None
     window.close()
 
 
